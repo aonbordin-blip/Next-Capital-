@@ -1,0 +1,6 @@
+{
+  "name": "MotoLease Calculator - คำนวณค่างวดรถจักรยานยนต์",
+  "description": "ระบบคำนวณค่างวดและจัดไฟแนนซ์รถจักรยานยนต์ตามใบเสนอราคา (Proposal) พร้อมตารางเปรียบเทียบงวดผ่อนและพิมพ์ใบเสนอราคา",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
