@@ -35,6 +35,7 @@ import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
+import { InstallAppBanner } from './components/InstallAppBanner';
 
 export default function App() {
   // Form states
@@ -274,6 +275,11 @@ ${
             </button>
           </div>
         </header>
+
+        {/* In-App PWA Install Banner */}
+        <div className="pt-2">
+          <InstallAppBanner />
+        </div>
 
         {/* Selected Bike Banner if active */}
         {selectedBike && (

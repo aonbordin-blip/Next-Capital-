@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" rx="90" fill="#ffffff" />
+  <path d="
+  M 112 72
+  L 416 72
+  L 398 138
+  L 332 138
+  L 286 264
+  L 240 138
+  L 160 138
+  L 102 348
+  L 38 348
+  Z
+" fill="#1C449C" />
+  <path d="
+  M 112 72
+  L 416 72
+  L 398 138
+  L 332 138
+  L 286 264
+  L 240 138
+  L 160 138
+  L 102 348
+  L 38 348
+  Z
+" fill="#F5A81C" transform="rotate(180 250 250)" />
+</svg>
