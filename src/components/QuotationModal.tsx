@@ -117,24 +117,29 @@ export const QuotationModal: React.FC<Props> = ({
 ━━━━━━━━━━━━━━━━━━━━
 🏍️ รุ่นรถ: ${modelName}
 🏷️ ราคารถตัวเปล่า: ${formatBaht(result.baseVehiclePrice)}
+💰 เงินดาวน์: ${formatBaht(result.downAmount)} (${result.downPercent.toFixed(1)}%)
+🛵 ยอดจัดเฉพาะตัวรถ: ${formatBaht(result.vehicleFinanceAmount)}
 ${
-  result.insurancePremium > 0
-    ? `🛡️ ประกันภัย: ${result.insurancePlanName} (+${formatBaht(result.insurancePremium)})\n📦 ราคารวมเบี้ยประกัน: ${formatBaht(result.vehiclePrice)}\n`
-    : `🏷️ ราคารถรวม: ${formatBaht(result.vehiclePrice)}\n`
-}💰 เงินดาวน์: ${formatBaht(result.downAmount)} (${result.downPercent.toFixed(1)}%)
-💳 ยอดจัดไฟแนนซ์: ${formatBaht(result.financeAmount)}
+  result.insuranceTotalWithVat > 0
+    ? `🛡️ ประกันภัย: ${result.insurancePlanName}
+   • ค่าเบี้ยประกัน: ${formatBaht(result.insuranceBasePremium)}
+   • ภาษี VAT 7%: ${formatBaht(result.insuranceVat, true)}
+   • ค่าเบี้ยรวมภาษี 7%: ${formatBaht(result.insuranceTotalWithVat, true)}\n`
+    : ''
+}💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(result.financeAmount, true)}
 📊 ข้อเสนอ: ${result.proposalName} (${result.proposalCode})
 ⏱️ ระยะเวลาผ่อน: ${result.term} งวด (${(result.term / 12).toFixed(1)} ปี)
 📈 อัตราดอกเบี้ย: ${result.rateDisplayText}
+💵 ดอกเบี้ยต่อเดือน: ${formatBaht(result.monthlyInterest, true)} /เดือน
+💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(result.totalInterest, true)}
 
 ✨ ค่างวดต่อเดือน: ${formatBaht(result.monthlyInstallment)} /เดือน
 (รวมภาษีมูลค่าเพิ่ม 7% เรียบร้อยแล้ว)
 ━━━━━━━━━━━━━━━━━━━━
 💵 สรุปค่าใช้จ่ายสัญญา:
-• ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(result.totalInterest)}
-• ยอดรวมก่อน VAT: ${formatBaht(result.totalBeforeVat)}
-• ภาษีมูลค่าเพิ่ม VAT 7%: ${formatBaht(result.vatAmount)}
-• ยอดชำระรวมทั้งสิ้น: ${formatBaht(result.totalWithVat)}
+• ยอดรวมทั้งสัญญา: ${formatBaht(result.totalWithVat, true)}
+• มูลค่าก่อน VAT: ${formatBaht(result.totalBeforeVat, true)}
+• ภาษีมูลค่าเพิ่ม VAT 7%: ${formatBaht(result.vatAmount, true)}
 ${
   result.totalDriveAwayCost > result.downAmount
     ? `• เงินพร้อมออกรถสุทธิ: ${formatBaht(result.totalDriveAwayCost)}`
@@ -330,36 +335,56 @@ ${
                     {formatBaht(result.baseVehiclePrice)}
                   </td>
                 </tr>
-                {result.insurancePremium > 0 && (
-                  <tr className="bg-blue-50/50">
-                    <td className="py-2.5 px-4 font-semibold text-blue-950">
-                      + เบี้ยประกันอุบัติเหตุ PA ({result.insurancePlanName})
-                    </td>
-                    <td className="py-2.5 px-4 text-right text-blue-900 font-bold">
-                      +{formatBaht(result.insurancePremium)}
-                    </td>
-                  </tr>
-                )}
-                <tr className="bg-slate-50/80 font-bold">
-                  <td className="py-2.5 px-4 text-slate-900">
-                    2. ราคารถรวมจัดไฟแนนซ์ (Total Vehicle Price with Insurance)
-                  </td>
-                  <td className="py-2.5 px-4 text-right font-bold text-slate-900">
-                    {formatBaht(result.vehiclePrice)}
-                  </td>
-                </tr>
                 <tr>
                   <td className="py-2.5 px-4 font-medium text-slate-700">
-                    3. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
+                    2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
                   </td>
                   <td className="py-2.5 px-4 text-right text-emerald-700 font-semibold">
                     - {formatBaht(result.downAmount)}
                   </td>
                 </tr>
-                <tr className="bg-slate-50/50 font-semibold">
-                  <td className="py-2.5 px-4 text-slate-800">4. ยอดจัดไฟแนนซ์ (Finance Amount)</td>
-                  <td className="py-2.5 px-4 text-right text-slate-900 font-bold">
-                    {formatBaht(result.financeAmount)}
+                <tr className="bg-slate-50/70 font-semibold">
+                  <td className="py-2.5 px-4 text-slate-800">
+                    3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-bold text-slate-900">
+                    {formatBaht(result.vehicleFinanceAmount)}
+                  </td>
+                </tr>
+                {result.insuranceTotalWithVat > 0 && (
+                  <>
+                    <tr className="bg-blue-50/40">
+                      <td className="py-2 px-4 text-blue-900 pl-6">
+                        • ค่าเบี้ยประกันภัย PA ({result.insurancePlanName})
+                      </td>
+                      <td className="py-2 px-4 text-right text-blue-900 font-medium">
+                        +{formatBaht(result.insuranceBasePremium)}
+                      </td>
+                    </tr>
+                    <tr className="bg-blue-50/40">
+                      <td className="py-2 px-4 text-blue-900 pl-6">
+                        • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
+                      </td>
+                      <td className="py-2 px-4 text-right text-blue-900 font-medium">
+                        +{formatBaht(result.insuranceVat, true)}
+                      </td>
+                    </tr>
+                    <tr className="bg-blue-50/80 font-bold border-y border-blue-200/60">
+                      <td className="py-2.5 px-4 text-blue-950">
+                        + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
+                      </td>
+                      <td className="py-2.5 px-4 text-right text-blue-900 font-bold">
+                        +{formatBaht(result.insuranceTotalWithVat, true)}
+                      </td>
+                    </tr>
+                  </>
+                )}
+                <tr className="bg-indigo-50/60 font-bold">
+                  <td className="py-2.5 px-4 text-indigo-950">
+                    4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
+                  </td>
+                  <td className="py-2.5 px-4 text-right text-indigo-900 font-extrabold">
+                    {formatBaht(result.financeAmount, true)}
                   </td>
                 </tr>
                 <tr>
@@ -372,7 +397,15 @@ ${
                 </tr>
                 <tr>
                   <td className="py-2.5 px-4 text-slate-700">
-                    6. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
+                    6. ดอกเบี้ยรายเดือน (Monthly Interest)
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-medium text-slate-800">
+                    {formatBaht(result.monthlyInterest, true)} /เดือน
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-4 text-slate-700">
+                    7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
                     {result.minInterestApplied && (
                       <span className="text-[10px] text-rose-500 ml-1 font-semibold">
                         (เกณฑ์ขั้นต่ำ 7,000 บ.)
@@ -380,29 +413,31 @@ ${
                     )}
                   </td>
                   <td className="py-2.5 px-4 text-right font-medium">
-                    {formatBaht(result.totalInterest)}
+                    {formatBaht(result.totalInterest, true)}
                   </td>
                 </tr>
                 <tr className="bg-slate-50/60">
                   <td className="py-2.5 px-4 font-medium text-slate-700">
-                    7. มูลค่ารวมก่อนภาษีมูลค่าเพิ่ม (Total Before VAT)
+                    8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
                   </td>
-                  <td className="py-2.5 px-4 text-right font-medium">
-                    {formatBaht(result.totalBeforeVat)}
+                  <td className="py-2.5 px-4 text-right font-bold text-slate-900">
+                    {formatBaht(result.totalWithVat, true)}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-4 text-slate-700">8. ภาษีมูลค่าเพิ่ม VAT 7%</td>
-                  <td className="py-2.5 px-4 text-right font-medium">
-                    {formatBaht(result.vatAmount)}
+                  <td className="py-2.5 px-4 text-slate-500 text-[11px]">
+                    (จำแนก: ยอดก่อน VAT {formatBaht(result.totalBeforeVat, true)} + VAT 7% {formatBaht(result.vatAmount, true)})
+                  </td>
+                  <td className="py-2.5 px-4 text-right text-slate-500 text-[11px]">
+                    ภาษี VAT 7%: {formatBaht(result.vatAmount, true)}
                   </td>
                 </tr>
-                <tr className="bg-blue-50/60 font-bold border-t border-blue-200">
-                  <td className="py-3 px-4 text-blue-950">
-                    9. มูลค่ารวมทั้งสัญญารวม VAT (Total with VAT)
+                <tr className="bg-blue-100/70 font-bold border-t-2 border-blue-400">
+                  <td className="py-3 px-4 text-blue-950 text-sm">
+                    ⭐ ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
                   </td>
-                  <td className="py-3 px-4 text-right text-blue-950 font-extrabold">
-                    {formatBaht(result.totalWithVat)}
+                  <td className="py-3 px-4 text-right text-blue-950 text-base font-extrabold">
+                    {formatBaht(result.monthlyInstallment)} /งวด
                   </td>
                 </tr>
               </tbody>

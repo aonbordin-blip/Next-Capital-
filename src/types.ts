@@ -54,26 +54,31 @@ export interface BikePreset {
 export interface CalculationResult {
   proposalCode: string;
   proposalName: string;
-  baseVehiclePrice: number;
+  baseVehiclePrice: number; // ราคารถตัวเปล่า เช่น 71,500
+  vehiclePrice: number; // ราคารถ (คงไว้เพื่อ backward compatibility)
+  downAmount: number; // เงินดาวน์
+  downPercent: number; // เงินดาวน์ %
+  vehicleFinanceAmount: number; // ยอดจัดเฉพาะตัวรถ (ราคารถ - เงินดาวน์) เช่น 71,500
   insurancePlan: InsurancePlan;
   insurancePlanName: string;
   insuranceYears: InsuranceYears;
-  insurancePremium: number;
-  vehiclePrice: number; // Includes insurance premium as requested by user
-  downAmount: number;
-  downPercent: number;
-  financeAmount: number;
-  term: number;
+  insurancePremium: number; // เบี้ยประกันสุทธิ เช่น 3,987
+  insuranceBasePremium: number; // เบี้ยประกันสุทธิ เช่น 3,987
+  insuranceVat: number; // ภาษีมูลค่าเพิ่ม 7% ของเบี้ยประกัน เช่น 279.09
+  insuranceTotalWithVat: number; // เบี้ยประกันรวมภาษี 7% เช่น 4,266.09
+  financeAmount: number; // ยอดจัดไฟแนนซ์รวม (ยอดจัดตัวรถ + เบี้ยประกันรวมภาษี) เช่น 75,766.09
+  term: number; // ระยะเวลาผ่อน เช่น 36
   rateDisplayText: string;
-  monthlyRate: number;
+  monthlyRate: number; // อัตราดอกเบี้ยต่อเดือน เช่น 0.0109 (1.09%)
   annualRate: number;
   isAnnualRate: boolean;
-  totalInterest: number;
+  monthlyInterest: number; // ดอกเบี้ยต่อเดือน เช่น 825.850381
+  totalInterest: number; // ดอกเบี้ยรวมทั้งสัญญา เช่น 29,730.613716
   minInterestApplied: boolean;
-  totalBeforeVat: number;
-  vatAmount: number;
-  totalWithVat: number;
-  monthlyInstallment: number;
+  totalBeforeVat: number; // มูลค่ารวมก่อนภาษีมูลค่าเพิ่ม (ถอด VAT 7%)
+  vatAmount: number; // ภาษีมูลค่าเพิ่ม 7% รวม
+  totalWithVat: number; // ยอดรวมทั้งสัญญา (ยอดจัด + ดอกเบี้ยรวม) เช่น 105,496.703716
+  monthlyInstallment: number; // ค่างวดต่อเดือน เช่น 2,930
   remarkText: string;
   // Day of delivery costs
   registrationFee: number;

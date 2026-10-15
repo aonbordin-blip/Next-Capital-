@@ -145,15 +145,21 @@ export default function App() {
 บริษัท: บมจ. เน็กซ์ แคปปิตอล (NCAP)
 ข้อเสนอ: ${currentCalculation.proposalName} (${currentCalculation.proposalCode})
 ราคารถตัวเปล่า: ${formatBaht(currentCalculation.baseVehiclePrice)}
+เงินดาวน์: ${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)
+ยอดจัดเฉพาะตัวรถ: ${formatBaht(currentCalculation.vehicleFinanceAmount)}
 ${
-  currentCalculation.insurancePremium > 0
-    ? `🛡️ ประกันภัย: ${currentCalculation.insurancePlanName} (+${formatBaht(currentCalculation.insurancePremium)})\n📦 ราคารวมเบี้ยประกัน: ${formatBaht(currentCalculation.vehiclePrice)}\n`
-    : `🏷️ ราคารถรวม: ${formatBaht(currentCalculation.vehiclePrice)}\n`
-}เงินดาวน์: ${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)
-ยอดจัดไฟแนนซ์: ${formatBaht(currentCalculation.financeAmount)}
-ผ่อน: ${currentCalculation.term} งวด | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
+  currentCalculation.insuranceTotalWithVat > 0
+    ? `🛡️ ประกันภัย: ${currentCalculation.insurancePlanName}
+   • ค่าเบี้ยประกัน: ${formatBaht(currentCalculation.insuranceBasePremium)}
+   • ภาษี VAT 7%: ${formatBaht(currentCalculation.insuranceVat, true)}
+   • เบี้ยรวมภาษี 7%: ${formatBaht(currentCalculation.insuranceTotalWithVat, true)}\n`
+    : ''
+}💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(currentCalculation.financeAmount, true)}
+⏱️ ผ่อน: ${currentCalculation.term} งวด | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
+💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
+💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
 ⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
-รวมทั้งสิ้น: ${formatBaht(currentCalculation.totalWithVat)}`;
+รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}`;
 
     try {
       await navigator.clipboard.writeText(summary);
@@ -361,9 +367,9 @@ ${
                   <label className="text-[11px] text-slate-600 font-semibold">
                     ราคารถตัวเปล่า (บาท) *
                   </label>
-                  {currentCalculation.insurancePremium > 0 && (
+                  {currentCalculation.insuranceTotalWithVat > 0 && (
                     <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                      รวมประกัน: {formatBaht(currentCalculation.vehiclePrice)}
+                      + ประกันรวม VAT: {formatBaht(currentCalculation.insuranceTotalWithVat, true)}
                     </span>
                   )}
                 </div>
@@ -463,18 +469,17 @@ ${
                       ))}
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white/70 border border-blue-200/80 text-[11px] flex justify-between items-center text-blue-950">
-                      <div>
-                        <span className="font-bold block">
-                          เบี้ยประกัน {currentCalculation.insurancePlanName}:
-                        </span>
-                        <span className="text-[10px] text-slate-500">
-                          รวมเข้ากับราคารถสำหรับคำนวณยอดจัดแล้ว
+                    <div className="p-2.5 rounded-xl bg-white/80 border border-blue-200 text-[11px] text-blue-950 space-y-1">
+                      <div className="flex justify-between items-center font-bold">
+                        <span>{currentCalculation.insurancePlanName}:</span>
+                        <span className="text-blue-700 font-extrabold">
+                          +{formatBaht(currentCalculation.insuranceTotalWithVat, true)}
                         </span>
                       </div>
-                      <span className="text-sm font-extrabold text-blue-700">
-                        +{formatBaht(currentCalculation.insurancePremium)}
-                      </span>
+                      <div className="flex justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                        <span>เบี้ยสุทธิ {formatBaht(currentCalculation.insuranceBasePremium)} + VAT 7% ({formatBaht(currentCalculation.insuranceVat, true)})</span>
+                        <span className="text-blue-800 font-medium">รวมในยอดจัดไฟแนนซ์</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -490,7 +495,7 @@ ${
                   <button
                     type="button"
                     onClick={() => {
-                      const effectivePrice = currentCalculation.vehiclePrice;
+                      const effectivePrice = currentCalculation.baseVehiclePrice;
                       if (downMode === 'amount') {
                         const pct =
                           effectivePrice > 0 ? (downValue / effectivePrice) * 100 : 15;
@@ -511,7 +516,7 @@ ${
                 <input
                   type="number"
                   min="0"
-                  max={downMode === 'percent' ? 100 : currentCalculation.vehiclePrice}
+                  max={downMode === 'percent' ? 100 : currentCalculation.baseVehiclePrice}
                   step={downMode === 'percent' ? 1 : 1000}
                   value={downValue || ''}
                   onChange={(e) => setDownValue(Number(e.target.value))}
@@ -726,33 +731,46 @@ ${
               {/* Summary Grid - Translucent Glass Chips */}
               <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-200/60 text-left text-[11px]">
                 <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
-                  <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์:</div>
+                  <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์รวม:</div>
                   <span className="font-bold text-slate-900 text-xs">
-                    {formatBaht(currentCalculation.financeAmount)}
+                    {formatBaht(currentCalculation.financeAmount, true)}
                   </span>
-                  {currentCalculation.insurancePremium > 0 && (
-                    <div className="text-[9px] text-blue-700 font-semibold">
-                      (รวมเบี้ย PA {formatBaht(currentCalculation.insurancePremium)})
+                  {currentCalculation.insuranceTotalWithVat > 0 ? (
+                    <div className="text-[9px] text-blue-700 font-semibold truncate">
+                      (รถ {formatBaht(currentCalculation.vehicleFinanceAmount)} + PA+VAT {formatBaht(currentCalculation.insuranceTotalWithVat, true)})
+                    </div>
+                  ) : (
+                    <div className="text-[9px] text-slate-500">
+                      (ยอดจัดตัวรถ)
                     </div>
                   )}
                 </div>
                 <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
-                  <div className="text-[10px] text-slate-400 font-medium">ดอกเบี้ยรวมทั้งสัญญา:</div>
+                  <div className="text-[10px] text-slate-400 font-medium">ดอกเบี้ยรายเดือน:</div>
                   <span className="font-bold text-slate-900 text-xs">
-                    {formatBaht(currentCalculation.totalInterest)}
+                    {formatBaht(currentCalculation.monthlyInterest, true)} /งวด
                   </span>
+                  <div className="text-[9px] text-slate-500">
+                    รวมทั้งสัญญา: {formatBaht(currentCalculation.totalInterest, true)}
+                  </div>
                 </div>
                 <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
-                  <div className="text-[10px] text-slate-400 font-medium">มูลค่ารวมก่อน VAT:</div>
+                  <div className="text-[10px] text-slate-400 font-medium">ยอดรวมทั้งสัญญา:</div>
                   <span className="font-bold text-slate-900 text-xs">
-                    {formatBaht(currentCalculation.totalBeforeVat)}
+                    {formatBaht(currentCalculation.totalWithVat, true)}
                   </span>
+                  <div className="text-[9px] text-slate-500">
+                    (ยอดจัด + ดอกเบี้ยรวม)
+                  </div>
                 </div>
                 <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
-                  <div className="text-[10px] text-slate-400 font-medium">ภาษีมูลค่าเพิ่ม VAT 7%:</div>
+                  <div className="text-[10px] text-slate-400 font-medium">ภาษีมูลค่าเพิ่มในสัญญา (7%):</div>
                   <span className="font-bold text-slate-900 text-xs">
-                    {formatBaht(currentCalculation.vatAmount)}
+                    {formatBaht(currentCalculation.vatAmount, true)}
                   </span>
+                  <div className="text-[9px] text-slate-500">
+                    ยอดก่อน VAT: {formatBaht(currentCalculation.totalBeforeVat, true)}
+                  </div>
                 </div>
               </div>
 

@@ -296,32 +296,40 @@ export function calculateLease(
   const proposal = PROPOSALS[proposalKey];
   const safeBasePrice = Math.max(0, price || 0);
 
-  // Insurance premium computation based on Lockton Group PA Plan A / Plan B
-  let insurancePremium = 0;
-  let insurancePlanName = 'ไม่รับความคุ้มครอง PA';
-  if (insurancePlan !== 'none' && INSURANCE_PLANS[insurancePlan]) {
-    const planDetail = INSURANCE_PLANS[insurancePlan];
-    insurancePremium = planDetail.premiums[insuranceYears] || 0;
-    insurancePlanName = `${planDetail.name} (คุ้มครอง ${insuranceYears} ปี)`;
-  }
-
-  // Requirement: "เมื่อเลือกแผน เลือกปีคุ้มครอง ค่าเบี้ยให้รวมเข้ากับราคารถเลยนะ"
-  const totalVehiclePrice = safeBasePrice + insurancePremium;
-  const safePrice = totalVehiclePrice;
-
-  // Compute effective down amount and percent
+  // Compute effective down amount and percent based on base vehicle price
   let downAmount = 0;
   let downPercent = 0;
 
   if (downMode === 'percent') {
     downPercent = Math.max(0, Math.min(100, downValue || 0));
-    downAmount = safePrice * (downPercent / 100);
+    downAmount = safeBasePrice * (downPercent / 100);
   } else {
-    downAmount = Math.max(0, Math.min(safePrice, downValue || 0));
-    downPercent = safePrice > 0 ? (downAmount / safePrice) * 100 : 0;
+    downAmount = Math.max(0, Math.min(safeBasePrice, downValue || 0));
+    downPercent = safeBasePrice > 0 ? (downAmount / safeBasePrice) * 100 : 0;
   }
 
-  let financeAmount = Math.max(0, safePrice - downAmount);
+  // ยอดจัดเฉพาะตัวรถ (ราคารถ - เงินดาวน์ เช่น 71,500)
+  const vehicleFinanceAmount = Math.max(0, safeBasePrice - downAmount);
+
+  // Insurance premium computation:
+  // ค่าเบี้ยประกันให้นำมาคำนวณภาษี 7% ก่อน แล้วค่อยมารวมกับราคารถ เป็นยอดจัดไฟแนนซ์
+  // ตัวอย่าง: ค่าเบี้ยประกัน 3,987 * 7% = 279.09 ค่าเบี้ยรวมภาษี = 4,266.09
+  // มารวมกับ 71,500 = 75,766.09 (ยอดจัดไฟแนนซ์)
+  let insuranceBasePremium = 0;
+  let insuranceVat = 0;
+  let insuranceTotalWithVat = 0;
+  let insurancePlanName = 'ไม่รับความคุ้มครอง PA';
+
+  if (insurancePlan !== 'none' && INSURANCE_PLANS[insurancePlan]) {
+    const planDetail = INSURANCE_PLANS[insurancePlan];
+    insuranceBasePremium = planDetail.premiums[insuranceYears] || 0;
+    insurancePlanName = `${planDetail.name} (คุ้มครอง ${insuranceYears} ปี)`;
+    insuranceVat = Number((insuranceBasePremium * 0.07).toFixed(2));
+    insuranceTotalWithVat = Number((insuranceBasePremium + insuranceVat).toFixed(2));
+  }
+
+  // ยอดจัดไฟแนนซ์รวม = ยอดจัดตัวรถ + ค่าเบี้ยประกันรวมภาษี 7%
+  const financeAmount = Number((vehicleFinanceAmount + insuranceTotalWithVat).toFixed(2));
 
   // Fallback term if invalid for proposal
   let validTerm = term;
@@ -384,25 +392,37 @@ export function calculateLease(
     remarkText = 'มีเกณฑ์ดอกเบี้ยรวมขั้นต่ำ 7,000 บาท';
   }
 
-  // Calculate Interest
+  // Calculate Interest:
+  // คำนวณดอกเบี้ยรายเดือน = ยอดจัด * ดอกเบี้ยรายเดือน (เช่น 75,766.09 * 1.09% = 825.850381)
+  // ดอกเบี้ยรวมทั้งสัญญา = ดอกเบี้ยรายเดือน * จำนวนงวด (เช่น 825.850381 * 36 = 29,730.613716)
+  let monthlyInterest = 0;
   let totalInterest = 0;
+
   if (isAnnualRate) {
+    monthlyInterest = financeAmount * (annualRate / 12);
     totalInterest = financeAmount * annualRate * (validTerm / 12);
   } else {
-    totalInterest = financeAmount * monthlyRate * validTerm;
+    monthlyInterest = financeAmount * monthlyRate;
+    totalInterest = monthlyInterest * validTerm;
   }
 
   let minInterestApplied = false;
   if (proposalKey === 'second_hand' && totalInterest < 7000 && financeAmount > 0) {
     totalInterest = 7000;
+    monthlyInterest = validTerm > 0 ? 7000 / validTerm : 0;
     minInterestApplied = true;
     remarkText = 'ปรับใช้ดอกเบี้ยขั้นต่ำตามเกณฑ์ 7,000 บาท';
   }
 
-  const totalBeforeVat = financeAmount + totalInterest;
-  const vatAmount = totalBeforeVat * 0.07;
-  const totalWithVat = totalBeforeVat + vatAmount;
-  const monthlyInstallment = validTerm > 0 ? totalWithVat / validTerm : 0;
+  // ยอดรวมทั้งสัญญา = ยอดจัดไฟแนนซ์ + ดอกเบี้ยรวมทั้งสัญญา (เช่น 75,766.09 + 29,730.613716 = 105,496.703716)
+  const totalWithVat = financeAmount + totalInterest;
+
+  // ค่างวดต่อเดือน = ยอดรวมทั้งสัญญา / จำนวนงวด (เช่น 105,496.703716 / 36 = 2,930.46 -> ปัดเป็น 2,930 บาท)
+  const monthlyInstallment = validTerm > 0 ? Math.round(totalWithVat / validTerm) : 0;
+
+  // การจำแนก VAT 7% ตามหลักเกณฑ์ภาษีเช่าซื้อ
+  const vatAmount = Number(((totalWithVat * 7) / 107).toFixed(2));
+  const totalBeforeVat = Number((totalWithVat - vatAmount).toFixed(2));
 
   const totalDriveAwayCost = downAmount + registrationFee + theftInsuranceFee;
 
@@ -410,19 +430,24 @@ export function calculateLease(
     proposalCode: proposal.code,
     proposalName: proposal.name,
     baseVehiclePrice: safeBasePrice,
+    vehiclePrice: safeBasePrice,
+    downAmount,
+    downPercent,
+    vehicleFinanceAmount,
     insurancePlan,
     insurancePlanName,
     insuranceYears,
-    insurancePremium,
-    vehiclePrice: safePrice,
-    downAmount,
-    downPercent,
+    insurancePremium: insuranceBasePremium,
+    insuranceBasePremium,
+    insuranceVat,
+    insuranceTotalWithVat,
     financeAmount,
     term: validTerm,
     rateDisplayText,
     monthlyRate,
     annualRate,
     isAnnualRate,
+    monthlyInterest,
     totalInterest,
     minInterestApplied,
     totalBeforeVat,

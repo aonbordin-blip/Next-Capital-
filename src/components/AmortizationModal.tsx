@@ -19,9 +19,9 @@ export const AmortizationModal: React.FC<Props> = ({
   const term = result.term;
   const principalPerMonth = term > 0 ? result.financeAmount / term : 0;
   const interestPerMonth = term > 0 ? result.totalInterest / term : 0;
-  const beforeVatPerMonth = principalPerMonth + interestPerMonth;
-  const vatPerMonth = beforeVatPerMonth * 0.07;
-  const monthlyInstallment = beforeVatPerMonth + vatPerMonth;
+  const monthlyInstallment = result.monthlyInstallment;
+  const vatPerMonth = (monthlyInstallment * 7) / 107;
+  const beforeVatPerMonth = monthlyInstallment - vatPerMonth;
 
   // Generate rows
   const rows = [];
