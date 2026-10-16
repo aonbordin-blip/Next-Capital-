@@ -159,7 +159,7 @@ export const InsuranceDocModal: React.FC<Props> = ({
         y: 0,
         scrollX: 0,
         scrollY: 0,
-        onclone: (clonedDoc) => {
+        onclone: (clonedDoc, clonedElement) => {
           // Remove problematic external CSS rules that cause oklch color parsing errors
           clonedDoc.querySelectorAll('style').forEach((st) => {
             if (
@@ -200,20 +200,58 @@ export const InsuranceDocModal: React.FC<Props> = ({
             }
           `;
           clonedDoc.head.appendChild(cleanStyle);
+
+          // Clear body and mount ONLY the insurance export element to eliminate any mobile viewport overlays or clipping
+          const target = clonedDoc.getElementById('ncap-insurance-export-root') || clonedElement;
+          if (target) {
+            clonedDoc.body.innerHTML = '';
+            clonedDoc.body.appendChild(target);
+
+            target.style.position = 'static';
+            target.style.display = 'block';
+            target.style.visibility = 'visible';
+            target.style.opacity = '1';
+            target.style.zIndex = '1';
+            target.style.left = '0';
+            target.style.top = '0';
+            target.style.margin = '0 auto';
+            target.style.width = '780px';
+            target.style.backgroundColor = '#ffffff';
+          }
         },
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('ไม่สามารถประมวลผลรูปภาพเอกสารได้');
+      }
+
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      // Standard formal margins (8mm)
+      const margin = 8;
+      const maxPrintHeight = pageHeight - margin * 2; // 281mm
+      let printWidth = pageWidth - margin * 2; // 194mm
+      let printHeight = (canvas.height * printWidth) / canvas.width;
+
+      // If document exceeds single A4 page height, scale proportionally to fit cleanly on 1 page
+      if (printHeight > maxPrintHeight) {
+        const scale = maxPrintHeight / printHeight;
+        printHeight = maxPrintHeight;
+        printWidth = printWidth * scale;
+      }
+
+      const xPos = margin + (pageWidth - margin * 2 - printWidth) / 2;
+      const yPos = margin;
+
+      pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight);
       pdf.save(
         `NCAP-CoveragePlan-${planKey.toUpperCase()}-${activeYears}Y-${new Date().toISOString().slice(0, 10)}.pdf`
       );
@@ -940,55 +978,50 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                   textAlign: 'center',
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    marginBottom: '2px',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '10.5px',
-                      fontWeight: '700',
-                      color: isSelected
-                        ? isPlanB
-                          ? '#92400e'
-                          : '#1e40af'
-                        : '#475569',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    ความคุ้มครอง {y} ปี
-                  </span>
-                  {isSelected && (
+                {isSelected && (
+                  <div style={{ marginBottom: '2px' }}>
                     <span
                       style={{
                         fontSize: '8.5px',
                         backgroundColor: isPlanB ? '#d97706' : '#2563eb',
                         color: '#ffffff',
-                        padding: '1px 5px',
+                        padding: '1px 7px',
                         borderRadius: '4px',
                         fontWeight: '700',
+                        display: 'inline-block',
                         whiteSpace: 'nowrap',
                       }}
                     >
                       ★ แผนที่เลือก
                     </span>
-                  )}
+                  </div>
+                )}
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: isSelected
+                      ? isPlanB
+                        ? '#92400e'
+                        : '#1e40af'
+                      : '#475569',
+                    whiteSpace: 'nowrap',
+                    lineHeight: '1.25',
+                  }}
+                >
+                  ความคุ้มครอง {y} ปี
                 </div>
                 <div
                   style={{
-                    fontSize: '13px',
+                    fontSize: '13.5px',
                     fontWeight: '800',
                     color: isSelected
                       ? isPlanB
                         ? '#92400e'
                         : '#1e40af'
                       : '#0f172a',
-                    lineHeight: '1.2',
+                    lineHeight: '1.25',
+                    marginTop: '2px',
                     whiteSpace: 'nowrap',
                   }}
                 >
