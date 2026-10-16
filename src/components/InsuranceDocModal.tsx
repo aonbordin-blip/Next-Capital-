@@ -65,6 +65,43 @@ export const InsuranceDocModal: React.FC<Props> = ({
 
   // Refs
   const exportTemplateRef = useRef<HTMLDivElement>(null);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const previewDocRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState<number>(1);
+  const [previewHeight, setPreviewHeight] = useState<number>(1050);
+  const [zoomMode, setZoomMode] = useState<'fit' | '100'>('fit');
+
+  // Auto-scale preview to fit screen perfectly on mobile devices
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const measureAndScale = () => {
+      if (previewDocRef.current) {
+        const h = previewDocRef.current.scrollHeight;
+        if (h > 0) setPreviewHeight(h);
+      }
+      if (previewContainerRef.current) {
+        const containerWidth = previewContainerRef.current.clientWidth - 16;
+        if (containerWidth > 0 && containerWidth < 780) {
+          const s = Math.max(0.3, containerWidth / 780);
+          setPreviewScale(s);
+        } else {
+          setPreviewScale(1);
+        }
+      }
+    };
+
+    measureAndScale();
+    const t1 = setTimeout(measureAndScale, 60);
+    const t2 = setTimeout(measureAndScale, 250);
+
+    window.addEventListener('resize', measureAndScale);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', measureAndScale);
+    };
+  }, [isOpen, activePlan, activeYears]);
 
   if (!isOpen) return null;
 
@@ -1312,17 +1349,68 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
 
             {/* Live Document Preview Card */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between px-1">
+              <div className="flex flex-wrap items-center justify-between gap-1.5 px-1">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  ตัวอย่างเอกสารที่จะพิมพ์ / บันทึกเป็น PDF (เฉพาะ{planDetail.name}):
+                  ตัวอย่างเอกสาร ({planDetail.name}):
                 </span>
-                <span className="text-[11px] text-slate-400">ขนาด 1 หน้า A4 • สีสว่าง สบายตา</span>
+                
+                {/* Responsive View Mode Switcher */}
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center bg-slate-200/90 p-0.5 rounded-lg border border-slate-300">
+                    <button
+                      type="button"
+                      onClick={() => setZoomMode('fit')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        zoomMode === 'fit'
+                          ? 'bg-white text-blue-700 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      พอดีหน้าจอ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomMode('100')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        zoomMode === '100'
+                          ? 'bg-white text-blue-700 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ขนาดจริง (100%)
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-400 hidden sm:inline">1 หน้า A4</span>
+                </div>
               </div>
 
-              <div className="bg-slate-200/80 p-2 sm:p-4 rounded-2xl flex justify-center overflow-x-auto shadow-inner">
-                <div className="bg-white rounded-xl shadow-lg border border-slate-300 transform scale-[0.98] sm:scale-100 origin-top">
-                  {renderDocumentContent()}
+              {/* Dynamic Scaling Container */}
+              <div
+                ref={previewContainerRef}
+                className={`bg-slate-200/80 p-1.5 sm:p-4 rounded-2xl flex justify-center shadow-inner ${
+                  zoomMode === '100' ? 'overflow-x-auto' : 'overflow-hidden'
+                }`}
+              >
+                <div
+                  style={{
+                    width: zoomMode === '100' ? '780px' : `${Math.round(780 * previewScale)}px`,
+                    height: zoomMode === '100' ? 'auto' : `${Math.round(previewHeight * previewScale)}px`,
+                    position: 'relative',
+                    transition: 'width 0.15s ease, height 0.15s ease',
+                  }}
+                  className="bg-white rounded-xl shadow-lg border border-slate-300 overflow-hidden shrink-0"
+                >
+                  <div
+                    ref={previewDocRef}
+                    style={{
+                      width: '780px',
+                      transform: zoomMode === '100' ? 'none' : `scale(${previewScale})`,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    {renderDocumentContent()}
+                  </div>
                 </div>
               </div>
             </div>
