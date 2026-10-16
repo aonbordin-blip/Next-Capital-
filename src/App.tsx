@@ -29,6 +29,7 @@ import {
 } from './data/proposals';
 import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears } from './types';
 import { ProposalInfoModal } from './components/ProposalInfoModal';
+import { ProposalSelectModal } from './components/ProposalSelectModal';
 import { BikePresetsModal } from './components/BikePresetsModal';
 import { QuotationModal } from './components/QuotationModal';
 import { AmortizationModal } from './components/AmortizationModal';
@@ -59,6 +60,7 @@ export default function App() {
   const [selectedBike, setSelectedBike] = useState<BikePreset | null>(null);
 
   // Modals
+  const [showProposalSelector, setShowProposalSelector] = useState<boolean>(false);
   const [showProposalInfo, setShowProposalInfo] = useState<boolean>(false);
   const [showBikePresets, setShowBikePresets] = useState<boolean>(false);
   const [showQuotation, setShowQuotation] = useState<boolean>(false);
@@ -337,24 +339,39 @@ ${
                   </button>
                 </div>
                 <div className="relative">
+                  <button
+                    type="button"
+                    id="proposal-select-trigger"
+                    onClick={() => setShowProposalSelector(true)}
+                    className="w-full glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-semibold outline-none flex items-center justify-between cursor-pointer hover:border-blue-400 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                      <span className="truncate text-xs font-bold text-slate-900">
+                        {currentProposal.name}
+                      </span>
+                      <span className="font-mono text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 whitespace-nowrap flex-shrink-0">
+                        ({currentProposal.code})
+                      </span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  </button>
+
+                  {/* Hidden accessibility select synced with state */}
                   <select
                     id="proposal-select"
                     value={proposalKey}
                     onChange={(e) => handleProposalChange(e.target.value as ProposalKey)}
-                    className="w-full appearance-none glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-semibold outline-none pr-8 cursor-pointer"
+                    className="sr-only"
+                    tabIndex={-1}
+                    aria-hidden="true"
                   >
-                    <option value="small_bike">Small Bike (MS.MTS.0082/2568)</option>
-                    <option value="fazzio">FAZZIO เท่านั้น (MS.MTS.0376/2569)</option>
-                    <option value="top_small">Top Small / AEC (MS.MTS.0093/2568)</option>
-                    <option value="vespa">VESPA / LAMBRETTA (MS.MTS.0351/2569)</option>
-                    <option value="honda_yamaha">
-                      Honda, Yamaha 250-399 CC. (MS.MTS.0098/2569)
-                    </option>
-                    <option value="second_hand">
-                      รถมือสอง 2 ND (MP.MAP.0080/2568)
-                    </option>
+                    <option value="small_bike">Small Bike (0082/2568)</option>
+                    <option value="fazzio">FAZZIO (0376/2569)</option>
+                    <option value="top_small">Top Small/AEC (0093/2568)</option>
+                    <option value="vespa">VESPA/LAMBRETTA (0351/2569)</option>
+                    <option value="honda_yamaha">Honda/Yamaha (0098/2569)</option>
+                    <option value="second_hand">รถมือสอง 2ND (0080/2568)</option>
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
                   <span>{currentProposal.category}</span>
@@ -835,6 +852,13 @@ ${
       </div>
 
       {/* Modals */}
+      <ProposalSelectModal
+        isOpen={showProposalSelector}
+        onClose={() => setShowProposalSelector(false)}
+        selectedKey={proposalKey}
+        onSelectProposal={(key) => handleProposalChange(key)}
+      />
+
       <ProposalInfoModal
         isOpen={showProposalInfo}
         onClose={() => setShowProposalInfo(false)}

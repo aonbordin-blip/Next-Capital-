@@ -46,16 +46,27 @@ export const BikePresetsModal: React.FC<Props> = ({
                 เลือกรุ่นรถจักรยานยนต์ยอดนิยม
               </h2>
               <p className="text-xs text-slate-500">
-                เลือกรุ่นเพื่อกรอกราคาและตั้งค่าข้อเสนอ (Proposal) ให้อัตโนมัติ
+                ข้อมูลราคาแนะนำทางการ (MSRP) อัปเดตล่าสุด 2568 - 2569 พร้อมผูก Proposal ให้อัตโนมัติ
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Source & Updated Badge Banner */}
+        <div className="px-6 py-2 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-purple-50/50 border-b border-blue-100/80 flex items-center justify-between text-[11px] text-blue-950 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-blue-800">🏷️ ราคาเผยแพร่ทางการ (MSRP):</span>
+            <span className="text-slate-600">อ้างอิงจาก Thai Honda, Yamaha, Vespa และ Lambretta ประเทศไทย</span>
+          </div>
+          <span className="font-bold text-blue-800 bg-white/80 px-2.5 py-0.5 rounded-full border border-blue-200/80 text-[10.5px] shadow-2xs">
+            พร้อมใช้งาน {BIKE_PRESETS.length} รุ่น
+          </span>
         </div>
 
         {/* Search & Filter */}
@@ -125,7 +136,7 @@ export const BikePresetsModal: React.FC<Props> = ({
 
                 <div className="pt-2 border-t border-slate-100 flex items-end justify-between">
                   <div>
-                    <div className="text-[10px] text-slate-400">ราคาแนะนำ</div>
+                    <div className="text-[10px] text-slate-400 font-medium">ราคาแนะนำทางการ (MSRP)</div>
                     <div className="text-sm font-bold text-slate-900">
                       ฿{bike.price.toLocaleString()}
                     </div>
