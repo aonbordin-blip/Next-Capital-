@@ -18,7 +18,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Receipt,
-  Share2,
+  Download,
+  Printer,
   UserCheck,
 } from 'lucide-react';
 import {
@@ -37,6 +38,7 @@ import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
+import { InsuranceDocModal } from './components/InsuranceDocModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
 
 export default function App() {
@@ -105,6 +107,7 @@ export default function App() {
   const [showBikePresets, setShowBikePresets] = useState<boolean>(false);
   const [showQuotation, setShowQuotation] = useState<boolean>(false);
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
+  const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
 
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
@@ -500,13 +503,15 @@ ${
                       ความคุ้มครองประกันภัย (Group PA)
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowInsuranceModal(true)}
-                    className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <Info className="w-3 h-3" /> ดูความคุ้มครอง
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowInsuranceModal(true)}
+                      className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Info className="w-3 h-3" /> เปรียบเทียบ
+                    </button>
+                  </div>
                 </div>
 
                 {/* Plan Selector Buttons */}
@@ -588,6 +593,7 @@ ${
                         <span className="text-blue-800 font-medium">รวมในยอดจัดไฟแนนซ์</span>
                       </div>
                     </div>
+
                   </div>
                 )}
               </div>
@@ -765,31 +771,58 @@ ${
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-1 flex gap-2">
+              {/* Action Buttons: 2 beautiful, modern primary action buttons */}
+              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* 1. Coverage Plan Button */}
                 <button
                   type="button"
-                  onClick={handleQuickCopy}
-                  className="flex-1 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 active:scale-[0.99] text-white py-2.5 px-3 rounded-xl text-xs font-bold shadow-md shadow-blue-800/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  onClick={() => setShowInsuranceDoc(true)}
+                  className="group relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:from-blue-600 hover:via-indigo-500 hover:to-blue-700 active:scale-[0.98] text-white py-2.5 px-3.5 rounded-xl font-bold shadow-md shadow-blue-800/20 transition-all flex items-center justify-between cursor-pointer border border-blue-500/30"
+                  title="ดาวน์โหลดแผนความคุ้มครองประกันภัย (Group PA)"
                 >
-                  {copyFeedback ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-300" /> คัดลอกแล้ว!
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-3.5 h-3.5" /> คัดลอกสรุปข้อความ
-                    </>
-                  )}
+                  <div className="flex items-center gap-2.5 text-left">
+                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-4.5 h-4.5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                        แผนความคุ้มครอง
+                        <span className="text-[10px] bg-white/20 text-blue-100 px-1.5 py-0.2 rounded font-semibold">
+                          PDF
+                        </span>
+                      </div>
+                      <div className="text-[10.5px] text-blue-100/80 font-normal leading-tight mt-0.5">
+                        {currentCalculation.insurancePlanName} ({insuranceYears} ปี)
+                      </div>
+                    </div>
+                  </div>
+                  <Download className="w-3.5 h-3.5 text-blue-200 group-hover:translate-y-0.5 transition-transform shrink-0" />
                 </button>
+
+                {/* 2. Quotation Button */}
                 <button
                   type="button"
                   onClick={() => setShowQuotation(true)}
-                  className="glass-pill hover:bg-white text-slate-700 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
-                  title="พิมพ์ใบเสนอราคา"
+                  className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:via-slate-700 hover:to-indigo-900 active:scale-[0.98] text-white py-2.5 px-3.5 rounded-xl font-bold shadow-md shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-slate-700/50"
+                  title="พิมพ์ใบเสนอราคาเช่าซื้อ (Quotation)"
                 >
-                  <FileText className="w-3.5 h-3.5 text-blue-700" />
-                  <span>ใบเสนอราคา</span>
+                  <div className="flex items-center gap-2.5 text-left">
+                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <FileText className="w-4.5 h-4.5 text-amber-300" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                        ใบเสนอราคา
+                        <span className="text-[10px] bg-amber-400/25 text-amber-200 px-1.5 py-0.2 rounded font-semibold">
+                          พิมพ์
+                        </span>
+                      </div>
+                      <div className="text-[10.5px] text-slate-300 font-normal leading-tight mt-0.5">
+                        งวดละ {formatBaht(currentCalculation.monthlyInstallment)} บ.
+                      </div>
+                    </div>
+                  </div>
+                  <Printer className="w-3.5 h-3.5 text-slate-400 group-hover:scale-110 transition-transform shrink-0" />
                 </button>
               </div>
             </div>
@@ -899,7 +932,7 @@ ${
               )}
 
               {/* Footer Actions on Result Card */}
-              <div className="mt-3 pt-2 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="mt-3 pt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
                 <button
                   type="button"
                   onClick={() => setShowSchedule(true)}
@@ -907,13 +940,15 @@ ${
                 >
                   <Table className="w-3.5 h-3.5" /> ตารางแจกแจงรายงวด
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowQuotation(true)}
-                  className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5" /> ใบเสนอราคาทางการ
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuotation(true)}
+                    className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5" /> ใบเสนอราคาทางการ
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -980,6 +1015,21 @@ ${
         selectedPlan={insurancePlan}
         selectedYears={insuranceYears}
         onSelectPlan={(plan, years) => {
+          setInsurancePlan(plan);
+          setInsuranceYears(years);
+        }}
+        onOpenDoc={() => setShowInsuranceDoc(true)}
+      />
+
+      <InsuranceDocModal
+        isOpen={showInsuranceDoc}
+        onClose={() => setShowInsuranceDoc(false)}
+        result={currentCalculation}
+        selectedPlan={insurancePlan === 'none' ? 'plan_b' : insurancePlan}
+        selectedYears={insuranceYears}
+        selectedBikeName={selectedBike?.name}
+        officerInfo={officerDisplay}
+        onUpdatePlan={(plan, years) => {
           setInsurancePlan(plan);
           setInsuranceYears(years);
         }}

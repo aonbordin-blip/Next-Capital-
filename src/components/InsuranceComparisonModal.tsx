@@ -9,6 +9,7 @@ interface Props {
   selectedPlan: InsurancePlan;
   selectedYears: InsuranceYears;
   onSelectPlan: (plan: InsurancePlan, years: InsuranceYears) => void;
+  onOpenDoc?: () => void;
 }
 
 export const InsuranceComparisonModal: React.FC<Props> = ({
@@ -17,6 +18,7 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
   selectedPlan,
   selectedYears,
   onSelectPlan,
+  onOpenDoc,
 }) => {
   if (!isOpen) return null;
 
@@ -275,7 +277,7 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between">
+        <div className="p-4 bg-slate-50 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => {
@@ -286,13 +288,28 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
           >
             ไม่รับความคุ้มครอง (0 บาท)
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
-          >
-            ตกลง / ปิดหน้าต่าง
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenDoc && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenDoc();
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>พิมพ์/ดาวน์โหลดแผนความคุ้มครอง (PDF)</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+            >
+              ตกลง / ปิดหน้าต่าง
+            </button>
+          </div>
         </div>
       </div>
     </div>
