@@ -21,6 +21,7 @@ interface Props {
   onClose: () => void;
   result: CalculationResult;
   selectedBikeName?: string;
+  officerInfo?: string;
 }
 
 export const QuotationModal: React.FC<Props> = ({
@@ -28,13 +29,23 @@ export const QuotationModal: React.FC<Props> = ({
   onClose,
   result,
   selectedBikeName,
+  officerInfo = 'บดินทร์ (6683)',
 }) => {
   const [dealerName, setDealerName] = useState<string>(
     'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
   );
+  const [officerNameAndCode, setOfficerNameAndCode] = useState<string>(officerInfo);
   const [customerName, setCustomerName] = useState<string>('คุณลูกค้า');
   const [customerPhone, setCustomerPhone] = useState<string>('08X-XXX-XXXX');
   const [modelName, setModelName] = useState<string>(selectedBikeName || 'รถจักรยานยนต์');
+
+  // Keep officer name and code in sync with prop updates
+  React.useEffect(() => {
+    if (officerInfo) {
+      setOfficerNameAndCode(officerInfo);
+    }
+  }, [officerInfo]);
+
   const [quotationDate] = useState<string>(
     new Date().toLocaleDateString('th-TH', {
       year: 'numeric',
@@ -205,6 +216,7 @@ export const QuotationModal: React.FC<Props> = ({
     const text = `📋 ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
 ━━━━━━━━━━━━━━━━━━━━
 🏢 ผู้เสนอ: ${dealerName}
+👨‍💼 ผู้เสนอราคา/เจ้าหน้าที่: ${officerNameAndCode || 'บดินทร์ (6683)'}
 👤 ลูกค้า: ${customerName} ${customerPhone ? `(${customerPhone})` : ''}
 📅 วันที่: ${quotationDate}
 ━━━━━━━━━━━━━━━━━━━━
@@ -238,8 +250,7 @@ ${
     ? `• เงินพร้อมออกรถสุทธิ: ${formatBaht(result.totalDriveAwayCost)}`
     : ''
 }
-📌 หมายเหตุ: ${result.remarkText}
-* ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital • พัฒนาระบบโดย Bordin 6683`;
+📌 หมายเหตุ: ${result.remarkText}`;
 
     try {
       await navigator.clipboard.writeText(text);
@@ -684,7 +695,7 @@ ${
             <div>
               <div style={{ height: '36px' }} />
               <div style={{ borderBottom: '1px dotted #94a3b8', width: '200px', margin: '0 auto 6px auto' }} />
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>( {dealerName || 'ผู้เสนอราคา / เจ้าหน้าที่'} )</div>
+              <div style={{ fontWeight: '600', color: '#1e293b' }}>( {officerNameAndCode || 'ผู้เสนอราคา / เจ้าหน้าที่'} )</div>
               <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>ผู้เสนอราคา / เจ้าหน้าที่</div>
             </div>
             <div>
@@ -696,8 +707,8 @@ ${
           </div>
 
           {/* Note */}
-          <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.35 }}>
-            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital • พัฒนาระบบโดย Bordin 6683
+          <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>
+            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ • พัฒนาระบบโดย Bordin 6683
           </div>
         </div>
       </div>
@@ -830,11 +841,11 @@ ${
                 </div>
               </div>
 
-              {/* Customer & Vehicle Info Inputs */}
+              {/* Customer, Officer & Vehicle Info Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 text-xs">
                 <div className="space-y-2">
                   <div className="font-semibold text-slate-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลลูกค้า
+                    <User className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลลูกค้า & ผู้เสนอราคา
                   </div>
                   <div className="grid grid-cols-3 gap-2 items-center">
                     <span className="text-slate-500">ชื่อลูกค้า:</span>
@@ -853,6 +864,16 @@ ${
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 leading-normal"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <span className="text-slate-500 font-medium text-blue-900">ผู้เสนอราคา:</span>
+                    <input
+                      type="text"
+                      placeholder="ชื่อและโค้ด เช่น บดินทร์ (6683)"
+                      value={officerNameAndCode}
+                      onChange={(e) => setOfficerNameAndCode(e.target.value)}
+                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 font-semibold text-blue-900 leading-normal focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -874,6 +895,12 @@ ${
                     <span className="text-slate-500">รหัสข้อเสนอ:</span>
                     <span className="col-span-2 font-mono text-[11px] text-slate-800 font-bold">
                       {result.proposalCode}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <span className="text-slate-500">ลงชื่อในใบ:</span>
+                    <span className="col-span-2 text-[11px] text-blue-950 font-bold truncate">
+                      ( {officerNameAndCode || 'ผู้เสนอราคา / เจ้าหน้าที่'} )
                     </span>
                   </div>
                 </div>
@@ -1057,23 +1084,31 @@ ${
 
               {/* Signature & Note Footer */}
               <div className="pt-5 border-t border-slate-200 grid grid-cols-2 gap-8 text-center text-xs text-slate-500">
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div className="h-8 border-b border-dashed border-slate-300 w-3/4 mx-auto" />
-                  <div>ลงชื่อ ....................................................<br />( ผู้เสนอราคา / เจ้าหน้าที่ )</div>
+                  <div className="leading-relaxed">
+                    ลงชื่อ ....................................................<br />
+                    <span className="font-semibold text-slate-800">( {officerNameAndCode || 'ผู้เสนอราคา / เจ้าหน้าที่'} )</span><br />
+                    <span className="text-[10px] text-slate-400">ผู้เสนอราคา / เจ้าหน้าที่</span>
+                  </div>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div className="h-8 border-b border-dashed border-slate-300 w-3/4 mx-auto" />
-                  <div>ลงชื่อ ....................................................<br />( ลูกค้า / ผู้ขอเช่าซื้อ )</div>
+                  <div className="leading-relaxed">
+                    ลงชื่อ ....................................................<br />
+                    <span className="font-semibold text-slate-800">( {customerName || 'ลูกค้า / ผู้ขอเช่าซื้อ'} )</span><br />
+                    <span className="text-[10px] text-slate-400">ลูกค้า / ผู้ขอเช่าซื้อ</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="text-[10px] text-slate-400 text-center leading-relaxed">
-                * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital • พัฒนาระบบโดย Bordin 6683
+              <div className="text-[10px] text-slate-400 text-center">
+                * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
               </div>
               <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
                 <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>
                 <span>•</span>
-                <span className="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 shadow-2xs">
+                <span className="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                   by Bordin 6683
                 </span>
               </div>

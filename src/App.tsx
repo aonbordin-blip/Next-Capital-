@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Receipt,
   Share2,
+  UserCheck,
 } from 'lucide-react';
 import {
   PROPOSALS,
@@ -58,6 +59,45 @@ export default function App() {
 
   // Selected preset metadata
   const [selectedBike, setSelectedBike] = useState<BikePreset | null>(null);
+
+  // Officer / Representative Information (ชื่อและโค้ดเจ้าหน้าที่)
+  const [officerName, setOfficerName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_officer_name') ?? 'บดินทร์';
+    } catch {
+      return 'บดินทร์';
+    }
+  });
+  const [officerCode, setOfficerCode] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_officer_code') ?? '6683';
+    } catch {
+      return '6683';
+    }
+  });
+
+  const handleOfficerNameChange = (val: string) => {
+    setOfficerName(val);
+    try {
+      localStorage.setItem('ncap_officer_name', val);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleOfficerCodeChange = (val: string) => {
+    setOfficerCode(val);
+    try {
+      localStorage.setItem('ncap_officer_code', val);
+    } catch {
+      // ignore
+    }
+  };
+
+  const officerDisplay =
+    officerName && officerCode
+      ? `${officerName} (${officerCode})`
+      : officerName || (officerCode ? `โค้ด ${officerCode}` : 'ผู้เสนอราคา / เจ้าหน้าที่');
 
   // Modals
   const [showProposalSelector, setShowProposalSelector] = useState<boolean>(false);
@@ -145,6 +185,7 @@ export default function App() {
   const handleQuickCopy = async () => {
     const summary = `🛵 Next Capital MotoLease เสนอราคาค่างวด
 บริษัท: บมจ. เน็กซ์ แคปปิตอล (NCAP)
+👨‍💼 ผู้เสนอราคา: ${officerDisplay}
 ข้อเสนอ: ${currentCalculation.proposalName} (${currentCalculation.proposalCode})
 ราคารถตัวเปล่า: ${formatBaht(currentCalculation.baseVehiclePrice)}
 เงินดาวน์: ${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)
@@ -325,6 +366,51 @@ ${
           >
             {/* Input Form Card - Frosted Glass */}
             <div className="glass-card-primary rounded-2xl p-4 space-y-3 relative overflow-hidden">
+              {/* Officer Name & Code Card (ช่องใส่ชื่อและโค้ดของเจ้าหน้าที่) */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+                    <span>ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา</span>
+                  </label>
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                    ลงชื่อในใบเสนอราคา
+                  </span>
+                </div>
+                <div className="grid grid-cols-12 gap-2">
+                  <div className="col-span-7 sm:col-span-8">
+                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                      ชื่อเจ้าหน้าที่
+                    </label>
+                    <input
+                      type="text"
+                      value={officerName}
+                      onChange={(e) => handleOfficerNameChange(e.target.value)}
+                      placeholder="เช่น บดินทร์"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                    />
+                  </div>
+                  <div className="col-span-5 sm:col-span-4">
+                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                      โค้ด / รหัส
+                    </label>
+                    <input
+                      type="text"
+                      value={officerCode}
+                      onChange={(e) => handleOfficerCodeChange(e.target.value)}
+                      placeholder="เช่น 6683"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                  <span className="text-slate-400">แสดงในใบเสนอราคา:</span>
+                  <span className="font-semibold text-blue-950 truncate">
+                    ( {officerDisplay} )
+                  </span>
+                </div>
+              </div>
+
               {/* Proposal Select */}
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -879,6 +965,7 @@ ${
         onClose={() => setShowQuotation(false)}
         result={currentCalculation}
         selectedBikeName={selectedBike?.name}
+        officerInfo={officerDisplay}
       />
 
       <AmortizationModal
