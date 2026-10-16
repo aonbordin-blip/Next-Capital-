@@ -90,22 +90,22 @@ export const AmortizationModal: React.FC<Props> = ({
             <tbody className="divide-y divide-slate-100">
               {rows.map((row) => (
                 <tr key={row.month} className="hover:bg-slate-50">
-                  <td className="py-2 px-2 font-medium text-slate-700">
+                  <td className="pt-2.5 pb-3 px-2 font-medium text-slate-700 align-middle leading-normal">
                     งวดที่ {row.month}
                   </td>
-                  <td className="py-2 text-right text-slate-600">
+                  <td className="pt-2.5 pb-3 text-right text-slate-600 align-middle leading-normal">
                     {formatBaht(row.principal)}
                   </td>
-                  <td className="py-2 text-right text-slate-500">
+                  <td className="pt-2.5 pb-3 text-right text-slate-500 align-middle leading-normal">
                     {formatBaht(row.interest)}
                   </td>
-                  <td className="py-2 text-right text-slate-500">
+                  <td className="pt-2.5 pb-3 text-right text-slate-500 align-middle leading-normal">
                     {formatBaht(row.vat)}
                   </td>
-                  <td className="py-2 text-right font-semibold text-indigo-600">
+                  <td className="pt-2.5 pb-3 text-right font-semibold text-indigo-600 align-middle leading-normal">
                     {formatBaht(row.total)}
                   </td>
-                  <td className="py-2 text-right pr-2 text-slate-400">
+                  <td className="pt-2.5 pb-3 text-right pr-2 text-slate-400 align-middle leading-normal">
                     {formatBaht(row.remaining)}
                   </td>
                 </tr>

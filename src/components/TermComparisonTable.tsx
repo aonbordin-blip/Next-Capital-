@@ -60,7 +60,7 @@ export const TermComparisonTable: React.FC<Props> = ({
                       : 'hover:bg-white/70 text-slate-700'
                   }`}
                 >
-                  <td className="py-2.5 pl-2.5">
+                  <td className="pt-3 pb-3.5 pl-2.5 align-middle leading-normal">
                     <div className="flex items-center gap-1.5">
                       {isSelected ? (
                         <CheckCircle2 className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
@@ -73,13 +73,13 @@ export const TermComparisonTable: React.FC<Props> = ({
                       </span>
                     </div>
                   </td>
-                  <td className="py-2.5 text-right font-bold text-blue-700">
+                  <td className="pt-3 pb-3.5 text-right font-bold text-blue-700 align-middle leading-normal">
                     {formatBaht(item.monthlyInstallment)}
                   </td>
-                  <td className="py-2.5 text-right text-slate-500 font-normal hidden sm:table-cell">
+                  <td className="pt-3 pb-3.5 text-right text-slate-500 font-normal hidden sm:table-cell align-middle leading-normal">
                     {formatBaht(item.totalInterest)}
                   </td>
-                  <td className="py-2.5 text-right pr-2.5 text-slate-700 font-medium">
+                  <td className="pt-3 pb-3.5 text-right pr-2.5 text-slate-700 font-medium align-middle leading-normal">
                     {formatBaht(item.totalWithVat)}
                   </td>
                 </tr>
