@@ -433,7 +433,7 @@ ${
                     boxSizing: 'border-box',
                   }}
                 >
-                  {result.proposalCode} ({result.proposalName})
+                  {result.proposalCode}
                 </div>
               </div>
             </div>
