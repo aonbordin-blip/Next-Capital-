@@ -176,7 +176,7 @@ ${
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col justify-center items-center p-0 sm:p-4 select-none">
       {/* Dynamic Ambient Background Glowing Blobs for Glassmorphism Depth */}
-      <div className="no-print absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Next Capital Royal Blue Orb */}
         <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-500/20 blur-[100px] animate-blob-1" />
         {/* Golden Amber Accent Orb */}
@@ -218,13 +218,13 @@ ${
         </button>
       </div>
 
-      {/* Main Container - Frosted Glass Frame (Hidden when printing quotation) */}
+      {/* Main Container - Frosted Glass Frame */}
       <div
         className={`w-full transition-all duration-300 z-10 ${
           viewMode === 'mobile'
             ? 'max-w-[440px] h-screen sm:h-[900px] sm:max-h-[940px] sm:rounded-[36px]'
             : 'max-w-5xl h-auto min-h-[750px] sm:rounded-[32px] my-4'
-        } glass-container-frame no-print flex flex-col relative overflow-hidden`}
+        } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
