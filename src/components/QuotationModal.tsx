@@ -11,6 +11,10 @@ import {
   Download,
   Loader2,
   FileCheck2,
+  Image,
+  ChevronDown,
+  Sparkles,
+  Eye,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -48,9 +52,123 @@ export const QuotationModal: React.FC<Props> = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [pdfSuccessMessage, setPdfSuccessMessage] = useState<string | null>(null);
 
+  // Image Download States
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
+  const [imageSuccessMessage, setImageSuccessMessage] = useState<string | null>(null);
+  const [imageMenuOpen, setImageMenuOpen] = useState<boolean>(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
+
   const quotationRef = useRef<HTMLDivElement>(null);
+  const paymentHeroRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen) return null;
+
+  // Download clean image (PNG) of either the full quotation document or payment hero card
+  const handleDownloadImage = async (mode: 'full' | 'card' = 'full') => {
+    const targetElement = mode === 'card' ? paymentHeroRef.current : quotationRef.current;
+    if (!targetElement || isGeneratingImage) return;
+
+    setIsGeneratingImage(true);
+    setImageMenuOpen(false);
+    setImageSuccessMessage(null);
+
+    try {
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(targetElement, {
+        scale: 3, // Ultra-sharp 3x retina resolution (no blur on zoom)
+        useCORS: true,
+        logging: false,
+        backgroundColor: mode === 'card' ? '#1C449C' : '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 840,
+        onclone: (clonedDoc, clonedElement) => {
+          if (mode === 'full') {
+            // Force cloned element into exact standard sheet proportion and clean bounds
+            clonedElement.style.width = '794px';
+            clonedElement.style.maxWidth = '794px';
+            clonedElement.style.minWidth = '794px';
+            clonedElement.style.height = 'auto';
+            clonedElement.style.maxHeight = 'none';
+            clonedElement.style.overflow = 'visible';
+            clonedElement.style.boxSizing = 'border-box';
+            clonedElement.style.padding = '28px 32px';
+            clonedElement.style.margin = '0 auto';
+            clonedElement.style.background = '#ffffff';
+            clonedElement.style.borderRadius = '16px';
+            clonedElement.style.border = '1px solid #e2e8f0';
+            clonedElement.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.06)';
+
+            // Convert all input elements into clean, unclipped text spans
+            const inputs = clonedElement.querySelectorAll('input');
+            inputs.forEach((input) => {
+              const span = clonedDoc.createElement('span');
+              span.textContent = input.value || input.placeholder || '';
+              span.className = input.className;
+              span.style.display = 'inline-block';
+              span.style.width = 'auto';
+              span.style.maxWidth = '100%';
+              span.style.border = 'none';
+              span.style.background = 'transparent';
+              span.style.padding = '0';
+              span.style.color = '#0f172a';
+              if (input.parentNode) {
+                input.parentNode.replaceChild(span, input);
+              }
+            });
+
+            // Hide any elements with no-print or no-image class
+            const noImageEls = clonedElement.querySelectorAll('.no-print, .no-image');
+            noImageEls.forEach((el) => {
+              (el as HTMLElement).style.display = 'none';
+            });
+          } else {
+            // For card only mode, ensure stylish padding and clean text
+            clonedElement.style.width = '480px';
+            clonedElement.style.maxWidth = '480px';
+            clonedElement.style.padding = '24px';
+            clonedElement.style.borderRadius = '20px';
+            clonedElement.style.margin = '0 auto';
+            const noImageEls = clonedElement.querySelectorAll('.no-image');
+            noImageEls.forEach((el) => {
+              (el as HTMLElement).style.display = 'none';
+            });
+          }
+        },
+      });
+
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      setPreviewImageUrl(imgData);
+
+      // Trigger automatic file download
+      const link = document.createElement('a');
+      const cleanModelName = (modelName || 'NextCapital').replace(/\s+/g, '_');
+      link.download =
+        mode === 'card'
+          ? `การ์ดสรุปค่างวด_${cleanModelName}_NextCapital.png`
+          : `ใบเสนอราคา_${cleanModelName}_NextCapital.png`;
+      link.href = imgData;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setImageSuccessMessage(
+        mode === 'card'
+          ? 'บันทึกรูปภาพการ์ดค่างวดเรียบร้อยแล้ว'
+          : 'บันทึกรูปภาพใบเสนอราคาเรียบร้อยแล้ว (คมชัดระดับ HD)'
+      );
+      setTimeout(() => setImageSuccessMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to generate image:', err);
+      alert('เกิดข้อผิดพลาดในการสร้างรูปภาพ กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   // Standard A4 PDF Generation with Auto-Fit & Margins (Zero Truncation on Mobile & Desktop)
   const handleDownloadPdf = async () => {
@@ -59,7 +177,6 @@ export const QuotationModal: React.FC<Props> = ({
     setPdfSuccessMessage(null);
 
     try {
-      // Ensure web fonts are rendered before rasterizing
       if (document.fonts) {
         await document.fonts.ready;
       }
@@ -76,7 +193,6 @@ export const QuotationModal: React.FC<Props> = ({
         scrollY: 0,
         windowWidth: 840,
         onclone: (clonedDoc, clonedElement) => {
-          // Force cloned element into exact standard A4 sheet proportion and layout
           clonedElement.style.width = '794px';
           clonedElement.style.maxWidth = '794px';
           clonedElement.style.minWidth = '794px';
@@ -109,8 +225,8 @@ export const QuotationModal: React.FC<Props> = ({
             }
           });
 
-          // Ensure hide elements marked with no-print
-          const noPrintEls = clonedElement.querySelectorAll('.no-print');
+          // Ensure hide elements marked with no-print or no-image
+          const noPrintEls = clonedElement.querySelectorAll('.no-print, .no-image');
           noPrintEls.forEach((el) => {
             (el as HTMLElement).style.display = 'none';
           });
@@ -242,27 +358,28 @@ ${
     <div className="quotation-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
       <div className="quotation-paper-modal bg-slate-100 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-300">
         {/* Modal Action Bar (Hidden when printing) */}
-        <div className="no-print flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 bg-white/95 backdrop-blur-md gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-100 text-blue-800 rounded-xl">
-              <FileText className="w-5 h-5" />
+        <div className="no-print flex flex-wrap items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-white/95 backdrop-blur-md gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="p-1.5 sm:p-2 bg-blue-100 text-blue-800 rounded-xl">
+              <FileText className="w-4 h-4 sm:w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-xs sm:text-base font-bold text-slate-800">
                   ใบเสนอราคาเช่าซื้อ (Quotation)
                 </h2>
                 <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                  <FileCheck2 className="w-3 h-3 text-blue-600" /> รูปแบบ A4 พอดีขอบ
+                  <FileCheck2 className="w-3 h-3 text-blue-600" /> ขนาด A4 มาตรฐาน
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">
-                ขนาดกระดาษมาตรฐาน A4 (210 × 297 มม.) บันทึกเป็น PDF หรือพิมพ์ได้ทันที
+              <p className="text-[10px] sm:text-[11px] text-slate-500">
+                ดาวน์โหลดเป็นรูปภาพ PNG คมชัด หรือบันทึก PDF พอดีหน้า A4
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Quick Share to LINE */}
             <button
               onClick={handleCopyChatText}
               className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
@@ -270,7 +387,7 @@ ${
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5" /> คัดลอกสำเร็จ!
+                  <Check className="w-3.5 h-3.5" /> คัดลอกแล้ว!
                 </>
               ) : (
                 <>
@@ -279,24 +396,95 @@ ${
               )}
             </button>
 
+            {/* Direct Image Download Split-Button */}
+            <div className="relative">
+              <div className="inline-flex rounded-xl shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadImage('full')}
+                  disabled={isGeneratingImage}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-l-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                  title="ดาวน์โหลดเฉพาะส่วนใบเสนอราคานี้เป็นรูปภาพ PNG คมชัดสูง"
+                >
+                  {isGeneratingImage ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังสร้างรูป...
+                    </>
+                  ) : (
+                    <>
+                      <Image className="w-3.5 h-3.5" /> โหลดเป็นรูปภาพ
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageMenuOpen(!imageMenuOpen)}
+                  disabled={isGeneratingImage}
+                  className="px-2 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-r-xl border-l border-teal-500/50 transition-all cursor-pointer disabled:opacity-50"
+                  title="เลือกรูปแบบภาพที่จะดาวน์โหลด"
+                >
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${imageMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {/* Image Download Options Popover */}
+              {imageMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setImageMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-xs animate-fade-in">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadImage('full')}
+                      className="w-full px-3 py-2 text-left hover:bg-emerald-50 flex items-start gap-2 text-slate-700 cursor-pointer"
+                    >
+                      <Image className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-bold text-slate-900">รูปภาพใบเสนอราคา (เต็มแผ่น)</div>
+                        <div className="text-[10px] text-slate-500">
+                          เอาเฉพาะตัวเอกสารใบเสนอราคาเป๊ะๆ ไม่ติดขอบหรือหน้าจอแอป
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadImage('card')}
+                      className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-start gap-2 text-slate-700 border-t border-slate-100 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-bold text-slate-900">รูปภาพการ์ดค่างวด (เฉพาะการ์ด)</div>
+                        <div className="text-[10px] text-slate-500">
+                          การ์ดสีกรมท่าค่างวดรายเดือน สำหรับส่งแชต LINE
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Direct Instant A4 PDF Download Button */}
             <button
               onClick={handleDownloadPdf}
               disabled={isGeneratingPdf}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:opacity-95 text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-700/20 transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:opacity-95 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
               title="บันทึกเป็นไฟล์ PDF ขนาด A4 พอดีหน้ากระดาษ"
             >
               {isGeneratingPdf ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังสร้าง PDF...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> สร้าง PDF...
                 </>
               ) : (
                 <>
-                  <Download className="w-3.5 h-3.5" /> ดาวน์โหลด PDF (A4)
+                  <Download className="w-3.5 h-3.5" /> PDF (A4)
                 </>
               )}
             </button>
 
+            {/* Print Button */}
             <button
               onClick={handlePrint}
               className="flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
@@ -314,11 +502,22 @@ ${
           </div>
         </div>
 
-        {/* Success Alert Banner if PDF generated */}
-        {pdfSuccessMessage && (
-          <div className="no-print bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-5 py-2 flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span className="font-semibold">{pdfSuccessMessage}</span>
+        {/* Success Alert Banner if Image or PDF generated */}
+        {(imageSuccessMessage || pdfSuccessMessage) && (
+          <div className="no-print bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-4 sm:px-5 py-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="font-semibold">{imageSuccessMessage || pdfSuccessMessage}</span>
+            </div>
+            {previewImageUrl && (
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(true)}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline cursor-pointer shrink-0"
+              >
+                <Eye className="w-3.5 h-3.5" /> ดูภาพที่โหลด
+              </button>
+            )}
           </div>
         )}
 
@@ -354,7 +553,7 @@ ${
                   เลขที่เอกสาร: QT-{Math.floor(100000 + (result.vehiclePrice % 900000))}
                 </div>
                 <div className="flex items-center sm:justify-end gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400 no-print" />
+                  <Calendar className="w-3.5 h-3.5 text-slate-400 no-print no-image" />
                   <span>วันที่: {quotationDate}</span>
                 </div>
               </div>
@@ -364,7 +563,7 @@ ${
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/90 text-xs">
               <div className="space-y-1.5">
                 <div className="font-semibold text-slate-700 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลลูกค้า
+                  <User className="w-3.5 h-3.5 text-slate-400 no-image no-print" /> ข้อมูลลูกค้า
                 </div>
                 <div className="grid grid-cols-3 gap-2 items-center">
                   <span className="text-slate-500">ชื่อลูกค้า:</span>
@@ -389,7 +588,7 @@ ${
 
               <div className="space-y-1.5">
                 <div className="font-semibold text-slate-700 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลยานพาหนะและข้อเสนอ
+                  <Shield className="w-3.5 h-3.5 text-slate-400 no-image no-print" /> ข้อมูลยานพาหนะและข้อเสนอ
                 </div>
                 <div className="grid grid-cols-3 gap-2 items-center">
                   <span className="text-slate-500">รุ่นรถ:</span>
@@ -537,8 +736,24 @@ ${
             </div>
 
             {/* Monthly Payment Hero Box */}
-            <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-xl py-3 px-4 text-center shadow-sm">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-blue-100">
+            <div
+              ref={paymentHeroRef}
+              className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-xl py-3 px-4 text-center shadow-sm relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-blue-100 mb-0.5">
+                <span>Next Capital MotoLease</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadImage('card')}
+                  disabled={isGeneratingImage}
+                  className="no-print no-image inline-flex items-center gap-1 text-[10px] bg-white/20 hover:bg-white/30 text-white px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                  title="บันทึกเฉพาะการ์ดค่างวดนี้เป็นไฟล์ภาพ PNG"
+                >
+                  <Image className="w-3 h-3" />
+                  <span>โหลดเฉพาะการ์ดนี้</span>
+                </button>
+              </div>
+              <div className="text-[11px] text-blue-200">
                 ค่างวดผ่อนชำระต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
               </div>
               <div className="text-2xl sm:text-3xl font-extrabold my-1 tracking-tight">
@@ -546,7 +761,7 @@ ${
                 <span className="text-xs font-normal text-blue-100 ml-1">/ เดือน</span>
               </div>
               <div className="text-[11px] text-blue-200">
-                ระยะเวลาผ่อนชำระ {result.term} งวด ( {(result.term / 12).toFixed(1)} ปี )
+                ระยะเวลาผ่อนชำระ {result.term} งวด ( {(result.term / 12).toFixed(1)} ปี ) • ดอกเบี้ย {result.rateDisplayText}
               </div>
             </div>
 
@@ -595,6 +810,48 @@ ${
           </div>
         </div>
       </div>
+
+      {/* Preview Modal for Mobile Users to Long-Press Save */}
+      {showPreviewModal && previewImageUrl && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Image className="w-4 h-4 text-emerald-600" />
+                <span className="font-bold text-xs sm:text-sm text-slate-800">
+                  ตัวอย่างรูปภาพที่ดาวน์โหลด (คมชัดสูง)
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="p-1 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 text-center bg-slate-100">
+              <img
+                src={previewImageUrl}
+                alt="Quotation Preview"
+                className="max-w-full h-auto mx-auto rounded-lg shadow-md border border-slate-200"
+              />
+              <p className="text-[11px] text-slate-500 mt-2">
+                * บนโทรศัพท์มือถือ สามารถแตะรูปค้างไว้ (Long-press) เพื่อบันทึกลงอัลบั้มรูปได้ทันที
+              </p>
+            </div>
+            <div className="p-3 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Bike,
   HelpCircle,
@@ -19,7 +19,10 @@ import {
   ShieldCheck,
   Receipt,
   Share2,
+  Image,
+  Loader2,
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import {
   PROPOSALS,
   INSURANCE_PLANS,
@@ -167,6 +170,56 @@ ${
       setTimeout(() => setCopyFeedback(false), 2000);
     } catch {
       // ignore
+    }
+  };
+
+  // State & Handler for exporting Result Hero Card as clean PNG image
+  const [isDownloadingHeroCard, setIsDownloadingHeroCard] = useState<boolean>(false);
+  const [heroCardSuccess, setHeroCardSuccess] = useState<boolean>(false);
+  const heroCardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadHeroCard = async () => {
+    if (!heroCardRef.current || isDownloadingHeroCard) return;
+    setIsDownloadingHeroCard(true);
+    setHeroCardSuccess(false);
+
+    try {
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(heroCardRef.current, {
+        scale: 3, // Ultra-sharp 3x retina
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc, clonedElement) => {
+          // Hide interactive buttons on the image export
+          const noImageEls = clonedElement.querySelectorAll('.no-image');
+          noImageEls.forEach((el) => {
+            (el as HTMLElement).style.display = 'none';
+          });
+          clonedElement.style.padding = '24px';
+          clonedElement.style.borderRadius = '20px';
+          clonedElement.style.background = 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)';
+          clonedElement.style.boxShadow = '0 10px 25px rgba(28, 68, 156, 0.1)';
+        },
+      });
+
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      const link = document.createElement('a');
+      link.download = `สรุปค่างวด_${currentCalculation.proposalCode}_${currentCalculation.term}งวด_NextCapital.png`;
+      link.href = imgData;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setHeroCardSuccess(true);
+      setTimeout(() => setHeroCardSuccess(false), 3000);
+    } catch (err) {
+      console.error('Failed to export hero card image:', err);
+    } finally {
+      setIsDownloadingHeroCard(false);
     }
   };
 
@@ -695,7 +748,10 @@ ${
             }`}
           >
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece */}
-            <div className="glass-card-hero rounded-2xl p-4 text-center relative overflow-hidden">
+            <div
+              ref={heroCardRef}
+              className="glass-card-hero rounded-2xl p-4 text-center relative overflow-hidden"
+            >
               {/* Proposal Code Badge & Insurance Badge */}
               <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
                 <span className="inline-block bg-white/80 text-blue-800 border border-blue-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
@@ -796,16 +852,37 @@ ${
                 <button
                   type="button"
                   onClick={() => setShowSchedule(true)}
-                  className="flex items-center gap-1 text-blue-700 hover:text-blue-900 font-semibold cursor-pointer"
+                  className="no-image flex items-center gap-1 text-blue-700 hover:text-blue-900 font-semibold cursor-pointer"
                 >
-                  <Table className="w-3.5 h-3.5" /> ตารางแจกแจงรายงวด
+                  <Table className="w-3.5 h-3.5" /> ตารางรายงวด
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadHeroCard}
+                  disabled={isDownloadingHeroCard}
+                  className="no-image flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-bold cursor-pointer"
+                  title="ดาวน์โหลดเฉพาะการ์ดสรุปค่างวดนี้เป็นรูปภาพ PNG คมชัดสูง"
+                >
+                  {isDownloadingHeroCard ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังบันทึก...
+                    </>
+                  ) : heroCardSuccess ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" /> บันทึกแล้ว!
+                    </>
+                  ) : (
+                    <>
+                      <Image className="w-3.5 h-3.5 text-emerald-600" /> บันทึกรูปการ์ด
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowQuotation(true)}
-                  className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+                  className="no-image flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
                 >
-                  <FileText className="w-3.5 h-3.5" /> ใบเสนอราคาทางการ
+                  <FileText className="w-3.5 h-3.5" /> ใบเสนอราคา
                 </button>
               </div>
             </div>
