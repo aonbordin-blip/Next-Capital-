@@ -389,7 +389,7 @@ ${
                       type="text"
                       value={officerName}
                       onChange={(e) => handleOfficerNameChange(e.target.value)}
-                      placeholder="เช่น บดินทร์"
+                      placeholder="ใส่ชื่อเจ้าหน้าที่"
                       className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
                     />
                   </div>
@@ -401,7 +401,7 @@ ${
                       type="text"
                       value={officerCode}
                       onChange={(e) => handleOfficerCodeChange(e.target.value)}
-                      placeholder="เช่น 6683"
+                      placeholder="ใส่โค้ด"
                       className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
                     />
                   </div>

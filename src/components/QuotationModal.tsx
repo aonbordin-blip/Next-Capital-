@@ -870,7 +870,7 @@ ${
                     <span className="text-slate-500 font-medium text-blue-900">ผู้เสนอราคา:</span>
                     <input
                       type="text"
-                      placeholder="ชื่อและโค้ด เช่น บดินทร์ (6683)"
+                      placeholder="ใส่ชื่อเจ้าหน้าที่ (ใส่โค้ด)"
                       value={officerNameAndCode}
                       onChange={(e) => setOfficerNameAndCode(e.target.value)}
                       className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 font-semibold text-blue-900 leading-normal focus:border-blue-500 focus:outline-none"
