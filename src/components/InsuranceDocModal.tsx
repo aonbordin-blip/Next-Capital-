@@ -1322,25 +1322,44 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
               </div>
 
               {/* Years Selector */}
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-[11px] text-slate-500 font-medium">
-                  ระยะเวลา:
-                </span>
-                <div className="flex-1 grid grid-cols-3 gap-2">
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold px-0.5">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
+                    เลือกระยะเวลาความคุ้มครอง:
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    (ผ่อนรวมในค่างวดได้)
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
                   {([1, 2, 3] as InsuranceYears[]).map((y) => (
                     <button
                       key={y}
                       type="button"
                       onClick={() => handleSelectPlan(activePlan, y)}
-                      className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`py-2 px-1 rounded-xl text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         activeYears === y
                           ? activePlan === 'plan_b'
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'bg-blue-800 text-white shadow-xs'
-                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                            ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-500/25 border border-transparent'
+                            : 'bg-blue-800 text-white shadow-xs ring-2 ring-blue-700/25 border border-transparent'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
-                      {y} ปี ({formatBaht(planDetail.premiums[y])} บ.)
+                      <span className="text-xs font-bold leading-tight">
+                        {y} ปี
+                      </span>
+                      <span
+                        className={`text-[10.5px] leading-tight mt-0.5 whitespace-nowrap font-medium ${
+                          activeYears === y
+                            ? activePlan === 'plan_b'
+                              ? 'text-amber-100'
+                              : 'text-blue-100'
+                            : 'text-slate-500'
+                        }`}
+                      >
+                        {formatBaht(planDetail.premiums[y])} บ.
+                      </span>
                     </button>
                   ))}
                 </div>
