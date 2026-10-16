@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import {
   X,
-  Printer,
   Check,
   FileText,
   Share2,
@@ -10,7 +9,6 @@ import {
   User,
   Download,
   Loader2,
-  AlertCircle,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -32,10 +30,10 @@ export const QuotationModal: React.FC<Props> = ({
   selectedBikeName,
 }) => {
   const [dealerName, setDealerName] = useState<string>(
-    'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน) - Next Capital'
+    'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
   );
   const [customerName, setCustomerName] = useState<string>('คุณลูกค้า');
-  const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('08X-XXX-XXXX');
   const [modelName, setModelName] = useState<string>(selectedBikeName || 'รถจักรยานยนต์');
   const [quotationDate] = useState<string>(
     new Date().toLocaleDateString('th-TH', {
@@ -52,20 +50,51 @@ export const QuotationModal: React.FC<Props> = ({
 
   if (!isOpen) return null;
 
-  // Direct In-Browser PDF Generation (Works 100% inside iframes & mobile!)
+  // Direct In-Browser High-Quality PDF Generation matching the attached layout exactly
   const handleDownloadPdf = async () => {
     if (!quotationRef.current || isGeneratingPdf) return;
     setIsGeneratingPdf(true);
     setPdfSuccessMessage(null);
 
     try {
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
       const element = quotationRef.current;
       const canvas = await html2canvas(element, {
-        scale: 2, // high quality retina resolution
+        scale: 2, // 2x high resolution
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: 800,
+        windowWidth: 1024,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('[data-quotation-root]') as HTMLElement;
+          if (clonedElement) {
+            // Fix width to standard document dimensions for crisp 2-column A4 output
+            clonedElement.style.width = '780px';
+            clonedElement.style.minWidth = '780px';
+            clonedElement.style.maxWidth = '780px';
+            clonedElement.style.padding = '32px';
+            clonedElement.style.backgroundColor = '#ffffff';
+          }
+
+          // Transform inputs into styled elements so user-typed text renders flawlessly without browser input artifacts
+          const inputs = clonedElement ? clonedElement.querySelectorAll('input') : [];
+          inputs.forEach((input) => {
+            const val = input.value || input.placeholder || '';
+            const replacement = clonedDoc.createElement('div');
+            replacement.textContent = val;
+            replacement.className = input.className;
+            replacement.style.display = 'flex';
+            replacement.style.alignItems = 'center';
+            replacement.style.minHeight = '28px';
+            replacement.style.lineHeight = '1.4';
+            if (input.parentNode) {
+              input.parentNode.replaceChild(replacement, input);
+            }
+          });
+        },
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -75,36 +104,30 @@ export const QuotationModal: React.FC<Props> = ({
         format: 'a4',
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Professional 10mm margins
+      const margin = 10;
+      const printWidth = pageWidth - margin * 2; // 190mm
+      const printHeight = (canvas.height * printWidth) / canvas.width;
 
-      const fileName = `ใบเสนอราคา_${modelName.replace(/\s+/g, '_')}_NextCapital.pdf`;
+      // Position centered vertically if compact, or with neat top margin
+      const yPos = printHeight < pageHeight - 25 ? Math.max(10, (pageHeight - printHeight) / 3) : margin;
+
+      pdf.addImage(imgData, 'PNG', margin, yPos, printWidth, printHeight, undefined, 'FAST');
+
+      const cleanModelName = (modelName || 'รถจักรยานยนต์').replace(/\s+/g, '_');
+      const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.pdf`;
       pdf.save(fileName);
 
       setPdfSuccessMessage('ดาวน์โหลดไฟล์ PDF เรียบร้อยแล้ว!');
       setTimeout(() => setPdfSuccessMessage(null), 3500);
     } catch (err) {
       console.error('Failed to generate PDF:', err);
-      // Fallback: try window.print
-      try {
-        window.print();
-      } catch {
-        alert('เกิดข้อผิดพลาดในการสร้าง PDF');
-      }
+      alert('เกิดข้อผิดพลาดในการสร้าง PDF กรุณาลองใหม่อีกครั้ง');
     } finally {
       setIsGeneratingPdf(false);
-    }
-  };
-
-  // Browser print with fallback to direct PDF download
-  const handlePrint = () => {
-    try {
-      // If inside an iframe where print is blocked, attempt print or fallback
-      window.print();
-    } catch {
-      handleDownloadPdf();
     }
   };
 
@@ -159,7 +182,7 @@ ${
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
       <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200">
-        {/* Modal Action Bar (Hidden when printing) */}
+        {/* Modal Action Bar */}
         <div className="no-print flex flex-wrap items-center justify-between px-5 py-3 border-b border-slate-200 bg-slate-50/90 gap-2">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 text-blue-800 rounded-xl">
@@ -170,7 +193,7 @@ ${
                 ใบเสนอราคาเช่าซื้อ (Quotation)
               </h2>
               <p className="text-[11px] text-slate-500">
-                พิมพ์ หรือดาวน์โหลดเป็นไฟล์ PDF ได้ทันที
+                ดาวน์โหลดเป็นไฟล์ PDF หรือแชร์ผ่าน LINE ได้ทันที
               </p>
             </div>
           </div>
@@ -209,14 +232,6 @@ ${
             </button>
 
             <button
-              onClick={handlePrint}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
-              title="สั่งพิมพ์ผ่านหน้าต่างเบราว์เซอร์"
-            >
-              <Printer className="w-3.5 h-3.5 text-slate-600" /> พิมพ์
-            </button>
-
-            <button
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors cursor-pointer ml-1"
             >
@@ -233,43 +248,46 @@ ${
           </div>
         )}
 
-        {/* Printable & Canvas-Capturable Quotation Document */}
-        <div
-          ref={quotationRef}
-          className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-5 text-slate-800 print:p-0 print:overflow-visible bg-white"
-        >
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-5 border-b border-slate-200 gap-4">
-            <div className="flex items-center gap-3">
-              <NextCapitalLogo size={42} />
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <input
-                    type="text"
-                    value={dealerName}
-                    onChange={(e) => setDealerName(e.target.value)}
-                    className="font-bold text-base sm:text-lg text-slate-900 border-b border-transparent hover:border-slate-300 focus:border-blue-700 focus:outline-none transition-colors w-full sm:w-80"
-                    placeholder="ชื่อศูนย์บริการ / ตัวแทนจำหน่าย"
-                  />
+        {/* Scrollable Container with Sheet Presentation */}
+        <div className="flex-1 overflow-y-auto overflow-x-auto p-2 sm:p-5 bg-slate-100/60 flex justify-center">
+          {/* Printable & Canvas-Capturable Quotation Document */}
+          <div
+            ref={quotationRef}
+            data-quotation-root="true"
+            className="w-full max-w-[760px] min-w-[580px] p-6 sm:p-8 space-y-5 text-slate-800 bg-white rounded-2xl shadow-sm border border-slate-200"
+          >
+            {/* Header */}
+            <div className="flex flex-row justify-between items-center pb-5 border-b border-slate-200 gap-4">
+              <div className="flex items-center gap-3">
+                <NextCapitalLogo size={44} />
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <input
+                      type="text"
+                      value={dealerName}
+                      onChange={(e) => setDealerName(e.target.value)}
+                      className="font-bold text-base sm:text-lg text-slate-900 border-b border-transparent hover:border-slate-300 focus:border-blue-700 focus:outline-none transition-colors w-full sm:w-80"
+                      placeholder="ชื่อศูนย์บริการ / ตัวแทนจำหน่าย"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
+                  </p>
                 </div>
-                <p className="text-xs text-slate-500 font-medium">
-                  ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
-                </p>
+              </div>
+              <div className="text-right space-y-1 text-xs text-slate-500 flex-shrink-0">
+                <div className="font-semibold text-slate-700">
+                  เลขที่เอกสาร: QT-{Math.floor(100000 + (result.vehiclePrice % 900000))}
+                </div>
+                <div className="flex items-center justify-end gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span>วันที่: {quotationDate}</span>
+                </div>
               </div>
             </div>
-            <div className="text-left sm:text-right space-y-1 text-xs text-slate-500">
-              <div className="font-semibold text-slate-700">
-                เลขที่เอกสาร: QT-{Math.floor(100000 + (result.vehiclePrice % 900000))}
-              </div>
-              <div className="flex items-center sm:justify-end gap-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-400 no-print" />
-                <span>วันที่: {quotationDate}</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Customer & Vehicle Info Inputs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
+            {/* Customer & Vehicle Info Inputs - Fixed 2 columns matching screenshot */}
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
             <div className="space-y-2">
               <div className="font-semibold text-slate-700 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลลูกค้า
@@ -503,5 +521,6 @@ ${
         </div>
       </div>
     </div>
+  </div>
   );
 };
