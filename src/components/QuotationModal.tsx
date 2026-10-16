@@ -102,7 +102,6 @@ export const QuotationModal: React.FC<Props> = ({
             * {
               box-sizing: border-box !important;
               font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              line-height: 1.4 !important;
               -webkit-font-smoothing: antialiased !important;
             }
             body {
@@ -111,6 +110,12 @@ export const QuotationModal: React.FC<Props> = ({
               padding: 0 !important;
               width: 780px !important;
               font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            }
+            table {
+              border-collapse: collapse !important;
+            }
+            table th, table td {
+              vertical-align: middle !important;
             }
           `;
           clonedDoc.head.appendChild(cleanStyle);
@@ -337,12 +342,13 @@ ${
                     backgroundColor: '#ffffff',
                     border: '1px solid #cbd5e1',
                     borderRadius: '6px',
-                    padding: '4px 10px',
+                    padding: '0 12px',
                     fontWeight: '600',
                     color: '#0f172a',
-                    height: '28px',
+                    height: '32px',
                     display: 'flex',
                     alignItems: 'center',
+                    lineHeight: '1.2',
                     boxSizing: 'border-box',
                   }}
                 >
@@ -356,11 +362,12 @@ ${
                     backgroundColor: '#ffffff',
                     border: '1px solid #cbd5e1',
                     borderRadius: '6px',
-                    padding: '4px 10px',
+                    padding: '0 12px',
                     color: '#0f172a',
-                    height: '28px',
+                    height: '32px',
                     display: 'flex',
                     alignItems: 'center',
+                    lineHeight: '1.2',
                     boxSizing: 'border-box',
                   }}
                 >
@@ -381,12 +388,13 @@ ${
                     backgroundColor: '#ffffff',
                     border: '1px solid #cbd5e1',
                     borderRadius: '6px',
-                    padding: '4px 10px',
+                    padding: '0 12px',
                     fontWeight: 'bold',
                     color: '#1d4ed8',
-                    height: '28px',
+                    height: '32px',
                     display: 'flex',
                     alignItems: 'center',
+                    lineHeight: '1.2',
                     boxSizing: 'border-box',
                   }}
                 >
@@ -400,14 +408,15 @@ ${
                     backgroundColor: '#ffffff',
                     border: '1px solid #cbd5e1',
                     borderRadius: '6px',
-                    padding: '4px 10px',
+                    padding: '0 12px',
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
                     fontSize: '11px',
                     color: '#0f172a',
-                    height: '28px',
+                    height: '32px',
                     display: 'flex',
                     alignItems: 'center',
+                    lineHeight: '1.2',
                     boxSizing: 'border-box',
                   }}
                 >
@@ -426,123 +435,123 @@ ${
               marginBottom: '16px',
             }}
           >
-            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', tableLayout: 'fixed', verticalAlign: 'middle' }}>
               <colgroup>
                 <col style={{ width: '68%' }} />
                 <col style={{ width: '32%' }} />
               </colgroup>
               <thead>
                 <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#1e293b' }}>
-                  <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 'bold' }}>รายการ</th>
-                  <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 'bold' }}>จำนวนเงิน (บาท)</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle', lineHeight: '1.25' }}>รายการ</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 'bold', verticalAlign: 'middle', lineHeight: '1.25' }}>จำนวนเงิน (บาท)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '7px 14px', color: '#334155' }}>
+                  <td style={{ padding: '10px 14px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     1. ราคารถตัวเปล่า (Base Vehicle Price)
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: '600' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '600', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.baseVehiclePrice)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '7px 14px', color: '#334155' }}>
+                  <td style={{ padding: '10px 14px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: '600', color: '#059669' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '600', color: '#059669', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     - {formatBaht(result.downAmount)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <td style={{ padding: '7px 14px', fontWeight: '600', color: '#1e293b' }}>
+                  <td style={{ padding: '10px 14px', fontWeight: '600', color: '#1e293b', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.vehicleFinanceAmount)}
                   </td>
                 </tr>
                 {result.insuranceTotalWithVat > 0 && (
                   <>
                     <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
-                      <td style={{ padding: '6px 14px', paddingLeft: '24px', color: '#1e3a8a' }}>
+                      <td style={{ padding: '8px 14px 8px 26px', color: '#1e3a8a', verticalAlign: 'middle', lineHeight: '1.25' }}>
                         • ค่าเบี้ยประกันภัย PA ({result.insurancePlanName})
                       </td>
-                      <td style={{ padding: '6px 14px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500' }}>
+                      <td style={{ padding: '8px 14px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500', verticalAlign: 'middle', lineHeight: '1.25' }}>
                         +{formatBaht(result.insuranceBasePremium)}
                       </td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
-                      <td style={{ padding: '6px 14px', paddingLeft: '24px', color: '#1e3a8a' }}>
+                      <td style={{ padding: '8px 14px 8px 26px', color: '#1e3a8a', verticalAlign: 'middle', lineHeight: '1.25' }}>
                         • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
                       </td>
-                      <td style={{ padding: '6px 14px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500' }}>
+                      <td style={{ padding: '8px 14px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500', verticalAlign: 'middle', lineHeight: '1.25' }}>
                         +{formatBaht(result.insuranceVat, true)}
                       </td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#eff6ff', fontWeight: 'bold' }}>
-                      <td style={{ padding: '7px 14px', color: '#172554' }}>
+                      <td style={{ padding: '10px 14px', color: '#172554', verticalAlign: 'middle', lineHeight: '1.25' }}>
                         + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
                       </td>
-                      <td style={{ padding: '7px 14px', textAlign: 'right', color: '#1d4ed8', fontWeight: 'bold' }}>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#1d4ed8', fontWeight: 'bold', verticalAlign: 'middle', lineHeight: '1.25' }}>
                         +{formatBaht(result.insuranceTotalWithVat, true)}
                       </td>
                     </tr>
                   </>
                 )}
                 <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#eef2ff' }}>
-                  <td style={{ padding: '8px 14px', fontWeight: 'bold', color: '#312e81' }}>
+                  <td style={{ padding: '10px 14px', fontWeight: 'bold', color: '#312e81', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
                   </td>
-                  <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: '800', color: '#312e81' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '800', color: '#312e81', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.financeAmount, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '7px 14px', color: '#334155' }}>
+                  <td style={{ padding: '10px 14px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     5. อัตราดอกเบี้ย ({result.rateDisplayText})
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: 'bold', color: '#2563eb' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 'bold', color: '#2563eb', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {result.rateDisplayText}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '7px 14px', color: '#334155' }}>
+                  <td style={{ padding: '10px 14px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     6. ดอกเบี้ยรายเดือน (Monthly Interest)
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right', color: '#1e293b' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', color: '#1e293b', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.monthlyInterest, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '7px 14px', color: '#334155' }}>
+                  <td style={{ padding: '10px 14px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.totalInterest, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <td style={{ padding: '7px 14px', fontWeight: '600', color: '#1e293b' }}>
+                  <td style={{ padding: '10px 14px', fontWeight: '600', color: '#1e293b', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
                   </td>
-                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.totalWithVat, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#64748b' }}>
-                  <td style={{ padding: '5px 14px', paddingLeft: '24px' }}>
+                  <td style={{ padding: '8px 14px 8px 26px', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
                   </td>
-                  <td style={{ padding: '5px 14px', textAlign: 'right' }}>
+                  <td style={{ padding: '8px 14px', textAlign: 'right', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.totalBeforeVat, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#64748b' }}>
-                  <td style={{ padding: '5px 14px', paddingLeft: '24px' }}>
+                  <td style={{ padding: '8px 14px 8px 26px', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
                   </td>
-                  <td style={{ padding: '5px 14px', textAlign: 'right' }}>
+                  <td style={{ padding: '8px 14px', textAlign: 'right', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.vatAmount, true)}
                   </td>
                 </tr>
@@ -554,10 +563,10 @@ ${
                     fontWeight: 'bold',
                   }}
                 >
-                  <td style={{ padding: '10px 14px', fontSize: '13px' }}>
+                  <td style={{ padding: '12px 14px', fontSize: '13px', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: '15px', fontWeight: '800' }}>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', fontSize: '15px', fontWeight: '800', verticalAlign: 'middle', lineHeight: '1.25' }}>
                     {formatBaht(result.monthlyInstallment)} /เดือน
                   </td>
                 </tr>
@@ -851,89 +860,89 @@ ${
                 <table className="w-full text-xs min-w-[480px] sm:min-w-0">
                   <thead className="bg-slate-100/90 text-slate-700 font-bold border-b border-slate-200">
                     <tr>
-                      <th className="py-2.5 px-4 text-left">รายการ</th>
-                      <th className="py-2.5 px-4 text-right">จำนวนเงิน (บาท)</th>
+                      <th className="py-3 px-4 text-left align-middle">รายการ</th>
+                      <th className="py-3 px-4 text-right align-middle">จำนวนเงิน (บาท)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     <tr>
-                      <td className="py-2.5 px-4 font-medium text-slate-700">
+                      <td className="py-3 px-4 font-medium text-slate-700 align-middle">
                         1. ราคารถตัวเปล่า (Base Vehicle Price)
                       </td>
-                      <td className="py-2.5 px-4 text-right font-semibold">
+                      <td className="py-3 px-4 text-right font-semibold align-middle">
                         {formatBaht(result.baseVehiclePrice)}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 font-medium text-slate-700">
+                      <td className="py-3 px-4 font-medium text-slate-700 align-middle">
                         2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
                       </td>
-                      <td className="py-2.5 px-4 text-right text-emerald-700 font-semibold">
+                      <td className="py-3 px-4 text-right text-emerald-700 font-semibold align-middle">
                         - {formatBaht(result.downAmount)}
                       </td>
                     </tr>
                     <tr className="bg-slate-50/70 font-semibold">
-                      <td className="py-2.5 px-4 text-slate-800">
+                      <td className="py-3 px-4 text-slate-800 align-middle">
                         3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
                       </td>
-                      <td className="py-2.5 px-4 text-right font-bold text-slate-900">
+                      <td className="py-3 px-4 text-right font-bold text-slate-900 align-middle">
                         {formatBaht(result.vehicleFinanceAmount)}
                       </td>
                     </tr>
                     {result.insuranceTotalWithVat > 0 && (
                       <>
                         <tr className="bg-blue-50/40">
-                          <td className="py-2 px-4 text-blue-900 pl-6">
+                          <td className="py-2.5 px-4 text-blue-900 pl-6 align-middle">
                             • ค่าเบี้ยประกันภัย PA ({result.insurancePlanName})
                           </td>
-                          <td className="py-2 px-4 text-right text-blue-900 font-medium">
+                          <td className="py-2.5 px-4 text-right text-blue-900 font-medium align-middle">
                             +{formatBaht(result.insuranceBasePremium)}
                           </td>
                         </tr>
                         <tr className="bg-blue-50/40">
-                          <td className="py-2 px-4 text-blue-900 pl-6">
+                          <td className="py-2.5 px-4 text-blue-900 pl-6 align-middle">
                             • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
                           </td>
-                          <td className="py-2 px-4 text-right text-blue-900 font-medium">
+                          <td className="py-2.5 px-4 text-right text-blue-900 font-medium align-middle">
                             +{formatBaht(result.insuranceVat, true)}
                           </td>
                         </tr>
                         <tr className="bg-blue-50/80 font-bold border-y border-blue-200/60">
-                          <td className="py-2.5 px-4 text-blue-950">
+                          <td className="py-3 px-4 text-blue-950 align-middle">
                             + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
                           </td>
-                          <td className="py-2.5 px-4 text-right text-blue-900 font-bold">
+                          <td className="py-3 px-4 text-right text-blue-900 font-bold align-middle">
                             +{formatBaht(result.insuranceTotalWithVat, true)}
                           </td>
                         </tr>
                       </>
                     )}
                     <tr className="bg-indigo-50/60 font-bold">
-                      <td className="py-2.5 px-4 text-indigo-950">
+                      <td className="py-3 px-4 text-indigo-950 align-middle">
                         4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
                       </td>
-                      <td className="py-2.5 px-4 text-right text-indigo-900 font-extrabold">
+                      <td className="py-3 px-4 text-right text-indigo-900 font-extrabold align-middle">
                         {formatBaht(result.financeAmount, true)}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 text-slate-700">
+                      <td className="py-3 px-4 text-slate-700 align-middle">
                         5. อัตราดอกเบี้ย ({result.rateDisplayText})
                       </td>
-                      <td className="py-2.5 px-4 text-right text-blue-700 font-bold">
+                      <td className="py-3 px-4 text-right text-blue-700 font-bold align-middle">
                         {result.rateDisplayText}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 text-slate-700">
+                      <td className="py-3 px-4 text-slate-700 align-middle">
                         6. ดอกเบี้ยรายเดือน (Monthly Interest)
                       </td>
-                      <td className="py-2.5 px-4 text-right font-medium text-slate-800">
+                      <td className="py-3 px-4 text-right font-medium text-slate-800 align-middle">
                         {formatBaht(result.monthlyInterest, true)} /เดือน
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 text-slate-700">
+                      <td className="py-3 px-4 text-slate-700 align-middle">
                         7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
                         {result.minInterestApplied && (
                           <span className="text-[10px] text-rose-500 ml-1 font-semibold">
@@ -941,39 +950,39 @@ ${
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-medium">
+                      <td className="py-3 px-4 text-right font-medium align-middle">
                         {formatBaht(result.totalInterest, true)}
                       </td>
                     </tr>
                     <tr className="bg-slate-50/60">
-                      <td className="py-2.5 px-4 font-medium text-slate-700">
+                      <td className="py-3 px-4 font-medium text-slate-700 align-middle">
                         8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
                       </td>
-                      <td className="py-2.5 px-4 text-right font-bold text-slate-900">
+                      <td className="py-3 px-4 text-right font-bold text-slate-900 align-middle">
                         {formatBaht(result.totalWithVat, true)}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2 px-4 text-slate-500 text-[11px] pl-6">
+                      <td className="py-2.5 px-4 text-slate-500 text-[11px] pl-6 align-middle">
                         • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
                       </td>
-                      <td className="py-2 px-4 text-right text-slate-600 text-[11px] font-medium">
+                      <td className="py-2.5 px-4 text-right text-slate-600 text-[11px] font-medium align-middle">
                         {formatBaht(result.totalBeforeVat, true)}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2 px-4 text-slate-500 text-[11px] pl-6">
+                      <td className="py-2.5 px-4 text-slate-500 text-[11px] pl-6 align-middle">
                         • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
                       </td>
-                      <td className="py-2 px-4 text-right text-slate-600 text-[11px] font-medium">
+                      <td className="py-2.5 px-4 text-right text-slate-600 text-[11px] font-medium align-middle">
                         {formatBaht(result.vatAmount, true)}
                       </td>
                     </tr>
                     <tr className="bg-blue-100/70 font-bold border-t-2 border-blue-400">
-                      <td className="py-3 px-4 text-blue-950 text-sm">
+                      <td className="py-3 px-4 text-blue-950 text-sm align-middle">
                         ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
                       </td>
-                      <td className="py-3 px-4 text-right text-blue-950 text-base font-extrabold">
+                      <td className="py-3 px-4 text-right text-blue-950 text-base font-extrabold align-middle">
                         {formatBaht(result.monthlyInstallment)} /เดือน
                       </td>
                     </tr>
