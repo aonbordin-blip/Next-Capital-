@@ -82,26 +82,35 @@ export const QuotationModal: React.FC<Props> = ({
         scrollX: 0,
         scrollY: 0,
         onclone: (clonedDoc, clonedElement) => {
-          // 1. Remove all external stylesheets/styles to avoid any OKLCH/Tailwind parser crashes
-          clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((l) => l.remove());
+          // 1. Remove Tailwind/OKLCH stylesheets that cause html2canvas parser crashes
           clonedDoc.querySelectorAll('style').forEach((st) => {
             if (st.textContent && (st.textContent.includes('oklch') || st.textContent.includes('tailwindcss'))) {
               st.remove();
             }
           });
+          clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+            const href = l.getAttribute('href') || '';
+            if (!href.includes('fonts.googleapis.com')) {
+              l.remove();
+            }
+          });
 
-          // 2. Inject clean self-contained font definitions
+          // 2. Inject clean self-contained font definitions with Prompt font
           const cleanStyle = clonedDoc.createElement('style');
           cleanStyle.textContent = `
+            @import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
             * {
               box-sizing: border-box !important;
               font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+              line-height: 1.4 !important;
+              -webkit-font-smoothing: antialiased !important;
             }
             body {
               background-color: #ffffff !important;
               margin: 0 !important;
               padding: 0 !important;
               width: 780px !important;
+              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             }
           `;
           clonedDoc.head.appendChild(cleanStyle);
@@ -140,15 +149,24 @@ export const QuotationModal: React.FC<Props> = ({
       const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-      // Professional 10mm margins for letterhead look
+      // Precise 10mm margins for formal quotation
       const margin = 10;
-      const printWidth = pageWidth - margin * 2; // 190mm
-      const printHeight = (canvas.height * printWidth) / canvas.width;
+      const maxPrintHeight = pageHeight - margin * 2; // 277mm
+      let printWidth = pageWidth - margin * 2; // 190mm
+      let printHeight = (canvas.height * printWidth) / canvas.width;
 
-      // Position centered vertically if compact, or with neat top margin
-      const yPos = printHeight < pageHeight - 25 ? Math.max(10, (pageHeight - printHeight) / 3) : margin;
+      // If document exceeds single A4 page height, scale proportionally to fit cleanly on 1 page
+      if (printHeight > maxPrintHeight) {
+        const scale = maxPrintHeight / printHeight;
+        printHeight = maxPrintHeight;
+        printWidth = printWidth * scale;
+      }
 
-      pdf.addImage(imgData, 'PNG', margin, yPos, printWidth, printHeight, undefined, 'FAST');
+      // Exact neat top margin: 10mm (never pushed down by dynamic offsets)
+      const xPos = margin + (pageWidth - margin * 2 - printWidth) / 2;
+      const yPos = margin;
+
+      pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight, undefined, 'FAST');
 
       const cleanModelName = (modelName || 'รถจักรยานยนต์').replace(/\s+/g, '_');
       const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.pdf`;
@@ -232,7 +250,7 @@ ${
         ================================================================
         HIGH-RESOLUTION EXPORT TEMPLATE
         Always 780px wide with exact 2-column layout & explicit HEX styles.
-        Never clipped, never blank, perfectly matching the target design.
+        Never clipped, never blank, organized and aligned pixel-perfectly.
         ================================================================
       */}
       <div
@@ -254,7 +272,7 @@ ${
           style={{
             width: '780px',
             backgroundColor: '#ffffff',
-            padding: '32px 36px',
+            padding: '28px 34px',
             boxSizing: 'border-box',
             fontFamily: "'Prompt', -apple-system, BlinkMacSystemFont, sans-serif",
             color: '#1e293b',
@@ -265,54 +283,54 @@ ${
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingBottom: '20px',
-              borderBottom: '1px solid #e2e8f0',
+              alignItems: 'flex-start',
+              paddingBottom: '16px',
+              borderBottom: '2px solid #e2e8f0',
               gap: '16px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <NextCapitalLogo size={46} />
               <div>
-                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '2px' }}>
-                  {dealerName}
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', lineHeight: 1.3, marginBottom: '2px' }}>
+                  {dealerName || 'ศูนย์บริการ / ตัวแทนจำหน่าย'}
                 </div>
-                <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>
+                <div style={{ fontSize: '12px', color: '#475569', fontWeight: '500', lineHeight: 1.3 }}>
                   ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: 'right', fontSize: '12px', color: '#64748b' }}>
-              <div style={{ fontWeight: '600', color: '#334155', marginBottom: '4px' }}>
+            <div style={{ textAlign: 'right', fontSize: '12px', color: '#475569', lineHeight: 1.4, flexShrink: 0 }}>
+              <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '3px' }}>
                 เลขที่เอกสาร: {docNumber}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
-                <span>📅 วันที่: {quotationDate}</span>
+              <div style={{ color: '#64748b' }}>
+                วันที่: {quotationDate}
               </div>
             </div>
           </div>
 
-          {/* Customer & Vehicle Info Cards - Exact 2 columns */}
+          {/* Customer & Vehicle Info Cards - Symmetrical 2 Columns */}
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '16px',
               backgroundColor: '#f8fafc',
-              padding: '16px',
-              borderRadius: '16px',
+              padding: '14px 18px',
+              borderRadius: '12px',
               border: '1px solid #e2e8f0',
               fontSize: '12px',
-              marginTop: '20px',
-              marginBottom: '20px',
+              marginTop: '16px',
+              marginBottom: '16px',
             }}
           >
             {/* Customer Info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontWeight: 'bold', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>👤 ข้อมูลลูกค้า</span>
+              <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px', paddingBottom: '2px' }}>
+                ข้อมูลลูกค้า
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '75px 1fr', gap: '8px', alignItems: 'center' }}>
                 <span style={{ color: '#64748b' }}>ชื่อลูกค้า:</span>
                 <div
                   style={{
@@ -320,17 +338,18 @@ ${
                     border: '1px solid #cbd5e1',
                     borderRadius: '6px',
                     padding: '4px 10px',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     color: '#0f172a',
-                    minHeight: '26px',
+                    height: '28px',
                     display: 'flex',
                     alignItems: 'center',
+                    boxSizing: 'border-box',
                   }}
                 >
                   {customerName || 'คุณลูกค้า'}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '75px 1fr', gap: '8px', alignItems: 'center' }}>
                 <span style={{ color: '#64748b' }}>เบอร์โทรศัพท์:</span>
                 <div
                   style={{
@@ -339,22 +358,23 @@ ${
                     borderRadius: '6px',
                     padding: '4px 10px',
                     color: '#0f172a',
-                    minHeight: '26px',
+                    height: '28px',
                     display: 'flex',
                     alignItems: 'center',
+                    boxSizing: 'border-box',
                   }}
                 >
-                  {customerPhone || '08X-XXX-XXXX'}
+                  {customerPhone || '-'}
                 </div>
               </div>
             </div>
 
             {/* Vehicle & Proposal Info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontWeight: 'bold', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>🛡️ ข้อมูลยานพาหนะและข้อเสนอ</span>
+              <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px', paddingBottom: '2px' }}>
+                ข้อมูลยานพาหนะและเงื่อนไข
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '75px 1fr', gap: '8px', alignItems: 'center' }}>
                 <span style={{ color: '#64748b' }}>รุ่นรถ:</span>
                 <div
                   style={{
@@ -363,20 +383,36 @@ ${
                     borderRadius: '6px',
                     padding: '4px 10px',
                     fontWeight: 'bold',
-                    color: '#1e40af',
-                    minHeight: '26px',
+                    color: '#1d4ed8',
+                    height: '28px',
                     display: 'flex',
                     alignItems: 'center',
+                    boxSizing: 'border-box',
                   }}
                 >
                   {modelName || 'รถจักรยานยนต์'}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '75px 1fr', gap: '8px', alignItems: 'center' }}>
                 <span style={{ color: '#64748b' }}>รหัสข้อเสนอ:</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '12px', color: '#0f172a' }}>
-                  {result.proposalCode}
-                </span>
+                <div
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '4px 10px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    fontSize: '11px',
+                    color: '#0f172a',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {result.proposalCode} ({result.proposalName})
+                </div>
               </div>
             </div>
           </div>
@@ -385,117 +421,129 @@ ${
           <div
             style={{
               border: '1px solid #e2e8f0',
-              borderRadius: '16px',
+              borderRadius: '12px',
               overflow: 'hidden',
-              marginBottom: '20px',
+              marginBottom: '16px',
             }}
           >
-            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '68%' }} />
+                <col style={{ width: '32%' }} />
+              </colgroup>
               <thead>
-                <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#334155' }}>
-                  <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 'bold' }}>รายการ</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 'bold' }}>จำนวนเงิน (บาท)</th>
+                <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#1e293b' }}>
+                  <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 'bold' }}>รายการ</th>
+                  <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 'bold' }}>จำนวนเงิน (บาท)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '9px 16px', color: '#334155' }}>
+                  <td style={{ padding: '7px 14px', color: '#334155' }}>
                     1. ราคารถตัวเปล่า (Base Vehicle Price)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: '600' }}>
+                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: '600' }}>
                     {formatBaht(result.baseVehiclePrice)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '9px 16px', color: '#334155' }}>
+                  <td style={{ padding: '7px 14px', color: '#334155' }}>
                     2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: '600', color: '#059669' }}>
+                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: '600', color: '#059669' }}>
                     - {formatBaht(result.downAmount)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <td style={{ padding: '9px 16px', fontWeight: '600', color: '#1e293b' }}>
+                  <td style={{ padding: '7px 14px', fontWeight: '600', color: '#1e293b' }}>
                     3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a' }}>
+                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a' }}>
                     {formatBaht(result.vehicleFinanceAmount)}
                   </td>
                 </tr>
                 {result.insuranceTotalWithVat > 0 && (
                   <>
                     <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
-                      <td style={{ padding: '7px 16px', paddingLeft: '24px', color: '#1e3a8a' }}>
+                      <td style={{ padding: '6px 14px', paddingLeft: '24px', color: '#1e3a8a' }}>
                         • ค่าเบี้ยประกันภัย PA ({result.insurancePlanName})
                       </td>
-                      <td style={{ padding: '7px 16px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500' }}>
+                      <td style={{ padding: '6px 14px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500' }}>
                         +{formatBaht(result.insuranceBasePremium)}
                       </td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
-                      <td style={{ padding: '7px 16px', paddingLeft: '24px', color: '#1e3a8a' }}>
+                      <td style={{ padding: '6px 14px', paddingLeft: '24px', color: '#1e3a8a' }}>
                         • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
                       </td>
-                      <td style={{ padding: '7px 16px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500' }}>
+                      <td style={{ padding: '6px 14px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500' }}>
                         +{formatBaht(result.insuranceVat, true)}
                       </td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#eff6ff', fontWeight: 'bold' }}>
-                      <td style={{ padding: '9px 16px', color: '#172554' }}>
+                      <td style={{ padding: '7px 14px', color: '#172554' }}>
                         + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
                       </td>
-                      <td style={{ padding: '9px 16px', textAlign: 'right', color: '#1d4ed8', fontWeight: 'bold' }}>
+                      <td style={{ padding: '7px 14px', textAlign: 'right', color: '#1d4ed8', fontWeight: 'bold' }}>
                         +{formatBaht(result.insuranceTotalWithVat, true)}
                       </td>
                     </tr>
                   </>
                 )}
                 <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#eef2ff' }}>
-                  <td style={{ padding: '9px 16px', fontWeight: 'bold', color: '#312e81' }}>
+                  <td style={{ padding: '8px 14px', fontWeight: 'bold', color: '#312e81' }}>
                     4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: '800', color: '#312e81' }}>
+                  <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: '800', color: '#312e81' }}>
                     {formatBaht(result.financeAmount, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '9px 16px', color: '#334155' }}>
+                  <td style={{ padding: '7px 14px', color: '#334155' }}>
                     5. อัตราดอกเบี้ย ({result.rateDisplayText})
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: 'bold', color: '#2563eb' }}>
+                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: 'bold', color: '#2563eb' }}>
                     {result.rateDisplayText}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '9px 16px', color: '#334155' }}>
+                  <td style={{ padding: '7px 14px', color: '#334155' }}>
                     6. ดอกเบี้ยรายเดือน (Monthly Interest)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', color: '#1e293b' }}>
-                    {formatBaht(result.monthlyInterest, true)} /เดือน
+                  <td style={{ padding: '7px 14px', textAlign: 'right', color: '#1e293b' }}>
+                    {formatBaht(result.monthlyInterest, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '9px 16px', color: '#334155' }}>
+                  <td style={{ padding: '7px 14px', color: '#334155' }}>
                     7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right' }}>
+                  <td style={{ padding: '7px 14px', textAlign: 'right' }}>
                     {formatBaht(result.totalInterest, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <td style={{ padding: '9px 16px', fontWeight: '600', color: '#1e293b' }}>
+                  <td style={{ padding: '7px 14px', fontWeight: '600', color: '#1e293b' }}>
                     8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
                   </td>
-                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a' }}>
+                  <td style={{ padding: '7px 14px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a' }}>
                     {formatBaht(result.totalWithVat, true)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#64748b' }}>
-                  <td style={{ padding: '8px 16px' }}>
-                    (จำแนก: ยอดก่อน VAT {formatBaht(result.totalBeforeVat, true)} + VAT 7% {formatBaht(result.vatAmount, true)})
+                  <td style={{ padding: '5px 14px', paddingLeft: '24px' }}>
+                    • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
                   </td>
-                  <td style={{ padding: '8px 16px', textAlign: 'right' }}>
-                    ภาษี VAT 7%: {formatBaht(result.vatAmount, true)}
+                  <td style={{ padding: '5px 14px', textAlign: 'right' }}>
+                    {formatBaht(result.totalBeforeVat, true)}
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#64748b' }}>
+                  <td style={{ padding: '5px 14px', paddingLeft: '24px' }}>
+                    • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
+                  </td>
+                  <td style={{ padding: '5px 14px', textAlign: 'right' }}>
+                    {formatBaht(result.vatAmount, true)}
                   </td>
                 </tr>
                 <tr
@@ -506,11 +554,11 @@ ${
                     fontWeight: 'bold',
                   }}
                 >
-                  <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                    ⭐ ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
+                  <td style={{ padding: '10px 14px', fontSize: '13px' }}>
+                    ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
                   </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '16px', fontWeight: '800' }}>
-                    {formatBaht(result.monthlyInstallment)} /งวด
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: '15px', fontWeight: '800' }}>
+                    {formatBaht(result.monthlyInstallment)} /เดือน
                   </td>
                 </tr>
               </tbody>
@@ -522,23 +570,34 @@ ${
             style={{
               background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)',
               color: '#ffffff',
-              borderRadius: '16px',
-              padding: '18px 24px',
+              borderRadius: '12px',
+              padding: '14px 20px',
               textAlign: 'center',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              marginBottom: '20px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+              marginBottom: '16px',
             }}
           >
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#dbeafe', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#dbeafe', letterSpacing: '0.04em', lineHeight: 1.2 }}>
               ค่างวดผ่อนชำระต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
             </div>
-            <div style={{ fontSize: '32px', fontWeight: '800', margin: '4px 0', letterSpacing: '-0.02em' }}>
-              {formatBaht(result.monthlyInstallment)}
-              <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#bfdbfe', marginLeft: '6px' }}>
-                / เดือน
+            <div
+              style={{
+                fontSize: '28px',
+                fontWeight: '800',
+                margin: '4px 0 4px 0',
+                lineHeight: 1.1,
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <span>{formatBaht(result.monthlyInstallment)}</span>
+              <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#bfdbfe' }}>
+                บาท / เดือน
               </span>
             </div>
-            <div style={{ fontSize: '12px', color: '#bfdbfe' }}>
+            <div style={{ fontSize: '11px', color: '#bfdbfe', lineHeight: 1.2 }}>
               ระยะเวลาผ่อนชำระ {result.term} งวด ( {(result.term / 12).toFixed(1)} ปี )
             </div>
           </div>
@@ -548,30 +607,31 @@ ${
             <div
               style={{
                 border: '1px solid #e2e8f0',
-                borderRadius: '16px',
-                padding: '14px 18px',
+                borderRadius: '12px',
+                padding: '12px 16px',
                 backgroundColor: '#f8fafc',
                 fontSize: '12px',
-                marginBottom: '20px',
+                marginBottom: '16px',
+                lineHeight: 1.4,
               }}
             >
-              <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>
+              <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '6px' }}>
                 สรุปเงินเตรียมพร้อมออกรถ (วันรับรถ)
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '3px' }}>
                 <span>• เงินดาวน์:</span>
-                <span>{formatBaht(result.downAmount)}</span>
+                <span style={{ fontWeight: '500' }}>{formatBaht(result.downAmount)} บาท</span>
               </div>
               {result.registrationFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '3px' }}>
                   <span>• ค่าจดทะเบียน + พ.ร.บ.:</span>
-                  <span>{formatBaht(result.registrationFee)}</span>
+                  <span style={{ fontWeight: '500' }}>{formatBaht(result.registrationFee)} บาท</span>
                 </div>
               )}
               {result.theftInsuranceFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '3px' }}>
                   <span>• ประกันรถหาย:</span>
-                  <span>{formatBaht(result.theftInsuranceFee)}</span>
+                  <span style={{ fontWeight: '500' }}>{formatBaht(result.theftInsuranceFee)} บาท</span>
                 </div>
               )}
               <div
@@ -582,12 +642,12 @@ ${
                   color: '#1d4ed8',
                   paddingTop: '6px',
                   borderTop: '1px solid #e2e8f0',
-                  marginTop: '6px',
-                  fontSize: '13px',
+                  marginTop: '4px',
+                  fontSize: '12px',
                 }}
               >
-                <span>รวมเงินที่ต้องชำระวันออกรถ:</span>
-                <span>{formatBaht(result.totalDriveAwayCost)}</span>
+                <span>รวมเงินที่ต้องชำระวันออกรถสุทธิ:</span>
+                <span>{formatBaht(result.totalDriveAwayCost)} บาท</span>
               </div>
             </div>
           )}
@@ -595,29 +655,33 @@ ${
           {/* Signature Footer - 2 Columns */}
           <div
             style={{
-              paddingTop: '20px',
+              paddingTop: '16px',
               borderTop: '1px solid #e2e8f0',
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '32px',
+              gap: '24px',
               textAlign: 'center',
-              fontSize: '12px',
+              fontSize: '11px',
               color: '#64748b',
-              marginBottom: '16px',
+              marginBottom: '12px',
             }}
           >
             <div>
-              <div style={{ borderBottom: '1px dashed #cbd5e1', width: '75%', margin: '0 auto 16px auto', height: '28px' }} />
-              <div>ลงชื่อ ....................................................<br />( ผู้เสนอราคา / เจ้าหน้าที่ )</div>
+              <div style={{ height: '36px' }} />
+              <div style={{ borderBottom: '1px dotted #94a3b8', width: '200px', margin: '0 auto 6px auto' }} />
+              <div style={{ fontWeight: '600', color: '#1e293b' }}>( {dealerName || 'ผู้เสนอราคา / เจ้าหน้าที่'} )</div>
+              <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>ผู้เสนอราคา / เจ้าหน้าที่</div>
             </div>
             <div>
-              <div style={{ borderBottom: '1px dashed #cbd5e1', width: '75%', margin: '0 auto 16px auto', height: '28px' }} />
-              <div>ลงชื่อ ....................................................<br />( ลูกค้า / ผู้ขอเช่าซื้อ )</div>
+              <div style={{ height: '36px' }} />
+              <div style={{ borderBottom: '1px dotted #94a3b8', width: '200px', margin: '0 auto 6px auto' }} />
+              <div style={{ fontWeight: '600', color: '#1e293b' }}>( {customerName || 'ลูกค้า / ผู้ขอเช่าซื้อ'} )</div>
+              <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>ลูกค้า / ผู้ขอเช่าซื้อ</div>
             </div>
           </div>
 
           {/* Note */}
-          <div style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>
+          <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>
             * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
           </div>
         </div>
@@ -890,19 +954,27 @@ ${
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 text-slate-500 text-[11px]">
-                        (จำแนก: ยอดก่อน VAT {formatBaht(result.totalBeforeVat, true)} + VAT 7% {formatBaht(result.vatAmount, true)})
+                      <td className="py-2 px-4 text-slate-500 text-[11px] pl-6">
+                        • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
                       </td>
-                      <td className="py-2.5 px-4 text-right text-slate-500 text-[11px]">
-                        ภาษี VAT 7%: {formatBaht(result.vatAmount, true)}
+                      <td className="py-2 px-4 text-right text-slate-600 text-[11px] font-medium">
+                        {formatBaht(result.totalBeforeVat, true)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 px-4 text-slate-500 text-[11px] pl-6">
+                        • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
+                      </td>
+                      <td className="py-2 px-4 text-right text-slate-600 text-[11px] font-medium">
+                        {formatBaht(result.vatAmount, true)}
                       </td>
                     </tr>
                     <tr className="bg-blue-100/70 font-bold border-t-2 border-blue-400">
                       <td className="py-3 px-4 text-blue-950 text-sm">
-                        ⭐ ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
+                        ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
                       </td>
                       <td className="py-3 px-4 text-right text-blue-950 text-base font-extrabold">
-                        {formatBaht(result.monthlyInstallment)} /งวด
+                        {formatBaht(result.monthlyInstallment)} /เดือน
                       </td>
                     </tr>
                   </tbody>
