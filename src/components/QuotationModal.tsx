@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { CalculationResult } from '../types';
 import { formatBaht } from '../data/proposals';
 import { NextCapitalLogo } from './NextCapitalLogo';
@@ -56,48 +56,72 @@ export const QuotationModal: React.FC<Props> = ({
     setIsGeneratingPdf(true);
     setPdfSuccessMessage(null);
 
+    let clone: HTMLElement | null = null;
     try {
       if (document.fonts) {
         await document.fonts.ready;
       }
 
       const element = quotationRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2, // 2x high resolution
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1024,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('[data-quotation-root]') as HTMLElement;
-          if (clonedElement) {
-            // Fix width to standard document dimensions for crisp 2-column A4 output
-            clonedElement.style.width = '780px';
-            clonedElement.style.minWidth = '780px';
-            clonedElement.style.maxWidth = '780px';
-            clonedElement.style.padding = '32px';
-            clonedElement.style.backgroundColor = '#ffffff';
-          }
 
-          // Transform inputs into styled elements so user-typed text renders flawlessly without browser input artifacts
-          const inputs = clonedElement ? clonedElement.querySelectorAll('input') : [];
-          inputs.forEach((input) => {
-            const val = input.value || input.placeholder || '';
-            const replacement = clonedDoc.createElement('div');
-            replacement.textContent = val;
-            replacement.className = input.className;
-            replacement.style.display = 'flex';
-            replacement.style.alignItems = 'center';
-            replacement.style.minHeight = '28px';
-            replacement.style.lineHeight = '1.4';
-            if (input.parentNode) {
-              input.parentNode.replaceChild(replacement, input);
-            }
-          });
-        },
+      // Create an offscreen clone with fixed desktop dimensions (780px)
+      // This ensures the exported PDF always has the exact 2-column layout from the attached image
+      clone = element.cloneNode(true) as HTMLElement;
+      clone.style.width = '780px';
+      clone.style.minWidth = '780px';
+      clone.style.maxWidth = '780px';
+      clone.style.position = 'fixed';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.zIndex = '-9999';
+      clone.style.backgroundColor = '#ffffff';
+      clone.style.padding = '32px 36px';
+      clone.style.borderRadius = '0px';
+
+      // Ensure 2-column layout in the cloned element
+      const infoGrid = clone.querySelector('.info-grid');
+      if (infoGrid) {
+        infoGrid.classList.remove('grid-cols-1');
+        infoGrid.classList.add('grid-cols-2');
+      }
+
+      // Transform inputs into styled elements so user-typed text renders flawlessly
+      const origInputs = element.querySelectorAll('input');
+      const cloneInputs = clone.querySelectorAll('input');
+      cloneInputs.forEach((input, i) => {
+        const val = origInputs[i]?.value || input.value || input.placeholder || '';
+        const replacement = document.createElement('div');
+        replacement.textContent = val;
+        replacement.className = input.className;
+        replacement.style.display = 'flex';
+        replacement.style.alignItems = 'center';
+        replacement.style.minHeight = '28px';
+        replacement.style.lineHeight = '1.4';
+        input.parentNode?.replaceChild(replacement, input);
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      document.body.appendChild(clone);
+
+      // Convert to PNG using html-to-image (supports Tailwind v4 and modern color spaces natively)
+      const dataUrl = await toPng(clone, {
+        quality: 0.98,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        skipFonts: true,
+      });
+
+      // Remove offscreen clone immediately
+      document.body.removeChild(clone);
+      clone = null;
+
+      // Measure image dimensions
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -110,22 +134,35 @@ export const QuotationModal: React.FC<Props> = ({
       // Professional 10mm margins
       const margin = 10;
       const printWidth = pageWidth - margin * 2; // 190mm
-      const printHeight = (canvas.height * printWidth) / canvas.width;
+      const printHeight = (img.height * printWidth) / img.width;
 
       // Position centered vertically if compact, or with neat top margin
       const yPos = printHeight < pageHeight - 25 ? Math.max(10, (pageHeight - printHeight) / 3) : margin;
 
-      pdf.addImage(imgData, 'PNG', margin, yPos, printWidth, printHeight, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'PNG', margin, yPos, printWidth, printHeight, undefined, 'FAST');
 
       const cleanModelName = (modelName || 'รถจักรยานยนต์').replace(/\s+/g, '_');
       const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.pdf`;
-      pdf.save(fileName);
+
+      // Universal cross-browser download trigger (works on mobile browsers and Android)
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 
       setPdfSuccessMessage('ดาวน์โหลดไฟล์ PDF เรียบร้อยแล้ว!');
       setTimeout(() => setPdfSuccessMessage(null), 3500);
     } catch (err) {
+      if (clone && clone.parentNode) {
+        document.body.removeChild(clone);
+      }
       console.error('Failed to generate PDF:', err);
-      alert('เกิดข้อผิดพลาดในการสร้าง PDF กรุณาลองใหม่อีกครั้ง');
+      alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -249,33 +286,33 @@ ${
         )}
 
         {/* Scrollable Container with Sheet Presentation */}
-        <div className="flex-1 overflow-y-auto overflow-x-auto p-2 sm:p-5 bg-slate-100/60 flex justify-center">
+        <div className="flex-1 overflow-y-auto overflow-x-auto p-2 sm:p-5 bg-slate-100/60">
           {/* Printable & Canvas-Capturable Quotation Document */}
           <div
             ref={quotationRef}
             data-quotation-root="true"
-            className="w-full max-w-[760px] min-w-[580px] p-6 sm:p-8 space-y-5 text-slate-800 bg-white rounded-2xl shadow-sm border border-slate-200"
+            className="w-full max-w-[760px] mx-auto p-4 sm:p-8 space-y-4 sm:space-y-5 text-slate-800 bg-white rounded-2xl shadow-sm border border-slate-200"
           >
             {/* Header */}
-            <div className="flex flex-row justify-between items-center pb-5 border-b border-slate-200 gap-4">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 sm:pb-5 border-b border-slate-200 gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <NextCapitalLogo size={44} />
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <input
                       type="text"
                       value={dealerName}
                       onChange={(e) => setDealerName(e.target.value)}
-                      className="font-bold text-base sm:text-lg text-slate-900 border-b border-transparent hover:border-slate-300 focus:border-blue-700 focus:outline-none transition-colors w-full sm:w-80"
+                      className="font-bold text-sm sm:text-base text-slate-900 border-b border-transparent hover:border-slate-300 focus:border-blue-700 focus:outline-none transition-colors w-full"
                       placeholder="ชื่อศูนย์บริการ / ตัวแทนจำหน่าย"
                     />
                   </div>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
                     ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
                   </p>
                 </div>
               </div>
-              <div className="text-right space-y-1 text-xs text-slate-500 flex-shrink-0">
+              <div className="text-left sm:text-right space-y-1 text-xs text-slate-500 flex-shrink-0 w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-start">
                 <div className="font-semibold text-slate-700">
                   เลขที่เอกสาร: QT-{Math.floor(100000 + (result.vehiclePrice % 900000))}
                 </div>
@@ -286,8 +323,8 @@ ${
               </div>
             </div>
 
-            {/* Customer & Vehicle Info Inputs - Fixed 2 columns matching screenshot */}
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
+            {/* Customer & Vehicle Info Inputs - Responsive on screen, 2 cols in PDF export */}
+            <div className="info-grid grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200/80 text-xs">
             <div className="space-y-2">
               <div className="font-semibold text-slate-700 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลลูกค้า
@@ -336,8 +373,8 @@ ${
           </div>
 
           {/* Core Table Breakdown */}
-          <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-            <table className="w-full text-xs">
+          <div className="border border-slate-200 rounded-2xl overflow-x-auto shadow-xs">
+            <table className="w-full text-xs min-w-[480px] sm:min-w-0">
               <thead className="bg-slate-100/90 text-slate-700 font-bold border-b border-slate-200">
                 <tr>
                   <th className="py-2.5 px-4 text-left">รายการ</th>
