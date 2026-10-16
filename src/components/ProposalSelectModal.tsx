@@ -12,8 +12,9 @@ interface Props {
 
 const PROPOSAL_KEYS: ProposalKey[] = [
   'small_bike',
-  'fazzio',
   'top_small',
+  'aec',
+  'fazzio',
   'vespa',
   'honda_yamaha',
   'second_hand',
@@ -115,7 +116,7 @@ export const ProposalSelectModal: React.FC<Props> = ({
 
         {/* Footer info */}
         <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400">
-          แสดงแบบแถวเดียวขนาดกะทัดรัด • เลือกได้ 6 ประเภทข้อเสนอ
+          แสดงแบบแถวเดียวขนาดกะทัดรัด • เลือกได้ 7 ประเภทข้อเสนอ
         </div>
       </div>
     </div>

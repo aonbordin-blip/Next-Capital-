@@ -366,8 +366,9 @@ ${
                     aria-hidden="true"
                   >
                     <option value="small_bike">Small Bike (0082/2568)</option>
+                    <option value="top_small">Top Small (0082/2568)</option>
+                    <option value="aec">AEC (0093/2568)</option>
                     <option value="fazzio">FAZZIO (0376/2569)</option>
-                    <option value="top_small">Top Small/AEC (0093/2568)</option>
                     <option value="vespa">VESPA/LAMBRETTA (0351/2569)</option>
                     <option value="honda_yamaha">Honda/Yamaha (0098/2569)</option>
                     <option value="second_hand">รถมือสอง 2ND (0080/2568)</option>

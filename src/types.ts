@@ -2,6 +2,7 @@ export type ProposalKey =
   | 'small_bike'
   | 'fazzio'
   | 'top_small'
+  | 'aec'
   | 'vespa'
   | 'honda_yamaha'
   | 'second_hand';
