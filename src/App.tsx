@@ -250,12 +250,15 @@ ${
         {/* App Header */}
         <header className="px-5 py-3 border-b border-white/50 bg-white/40 backdrop-blur-md flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h1 className="text-lg font-bold gradient-header-text tracking-tight">
                 MotoLease Calc
               </h1>
               <span className="text-[10px] font-bold bg-amber-100/90 text-amber-800 border border-amber-200/70 px-1.5 py-0.2 rounded-full">
                 2569
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full shadow-2xs">
+                ✨ by Bordin 6683
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium">
@@ -819,10 +822,15 @@ ${
           </div>
         </main>
 
-        {/* Bottom Bar Info */}
-        <footer className="px-4 py-2 bg-white/40 border-t border-white/50 backdrop-blur-md text-[10px] text-slate-500 flex items-center justify-between">
+        {/* Bottom Bar Info with Creator Credit */}
+        <footer className="px-4 py-2.5 bg-white/50 border-t border-white/60 backdrop-blur-md text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
           <span className="font-semibold text-slate-600">Next Capital Public Company Limited (NCAP)</span>
-          <span>คำนวณตามมาตรฐานเช่าซื้อ VAT 7%</span>
+          <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/70 px-2.5 py-0.5 rounded-full shadow-2xs">
+            <span className="text-[10px] text-slate-500">พัฒนาโดย</span>
+            <span className="text-[10px] font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
+              by Bordin 6683
+            </span>
+          </div>
         </footer>
       </div>
 

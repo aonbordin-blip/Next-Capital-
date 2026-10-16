@@ -696,7 +696,7 @@ ${
 
           {/* Note */}
           <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>
-            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ • พัฒนาระบบโดย Bordin 6683
           </div>
         </div>
       </div>
@@ -707,35 +707,52 @@ ${
         ================================================================
       */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-        <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200">
+        <div className="relative bg-white rounded-3xl w-full max-w-3xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200">
+          {/* Dedicated Top-Right Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3.5 right-3.5 z-20 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 active:scale-95 rounded-full transition-all cursor-pointer shadow-xs bg-white/80 backdrop-blur-sm"
+            title="ปิดหน้าต่าง (Close)"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
           {/* Modal Action Bar */}
-          <div className="no-print flex flex-wrap items-center justify-between px-5 py-3 border-b border-slate-200 bg-slate-50/90 gap-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 text-blue-800 rounded-xl">
+          <div className="no-print relative px-5 py-3.5 border-b border-slate-200 bg-slate-50/95 flex flex-col sm:flex-row items-center justify-between gap-3 pr-14 sm:pr-16">
+            {/* Left: Document Title + Creator Badge */}
+            <div className="flex items-center gap-2.5 self-start sm:self-center">
+              <div className="p-2 bg-blue-100 text-blue-800 rounded-xl flex-shrink-0 shadow-xs">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-800">
-                  ใบเสนอราคาเช่าซื้อ (Quotation)
-                </h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-800">
+                    ใบเสนอราคาเช่าซื้อ (Quotation)
+                  </h2>
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 bg-indigo-50/90 border border-indigo-200 px-2 py-0.5 rounded-full shadow-2xs">
+                    ✨ by Bordin 6683
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500">
                   ดาวน์โหลดเป็นไฟล์ PDF หรือแชร์ผ่าน LINE ได้ทันที
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Center: Action Buttons (ส่ง LINE & ดาวน์โหลด PDF) */}
+            <div className="flex items-center justify-center gap-2.5 w-full sm:w-auto">
               <button
                 onClick={handleCopyChatText}
-                className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all cursor-pointer"
               >
                 {copied ? (
                   <>
-                    <Check className="w-3.5 h-3.5" /> คัดลอกสำเร็จ!
+                    <Check className="w-4 h-4" /> คัดลอกสำเร็จ!
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-3.5 h-3.5" /> ส่ง LINE
+                    <Share2 className="w-4 h-4" /> ส่ง LINE
                   </>
                 )}
               </button>
@@ -744,24 +761,17 @@ ${
               <button
                 onClick={handleDownloadPdf}
                 disabled={isGeneratingPdf}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-600 hover:opacity-95 text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-700/20 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 active:scale-95 text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-700/25 transition-all cursor-pointer disabled:opacity-50"
               >
                 {isGeneratingPdf ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังสร้าง PDF...
+                    <Loader2 className="w-4 h-4 animate-spin" /> กำลังสร้าง PDF...
                   </>
                 ) : (
                   <>
-                    <Download className="w-3.5 h-3.5" /> ดาวน์โหลด PDF
+                    <Download className="w-4 h-4" /> ดาวน์โหลด PDF
                   </>
                 )}
-              </button>
-
-              <button
-                onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors cursor-pointer ml-1"
-              >
-                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -1058,6 +1068,13 @@ ${
 
               <div className="text-[10px] text-slate-400 text-center">
                 * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+              </div>
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
+                <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>
+                <span>•</span>
+                <span className="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                  by Bordin 6683
+                </span>
               </div>
             </div>
           </div>
