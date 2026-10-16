@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import { CalculationResult } from '../types';
 import { formatBaht } from '../data/proposals';
 import { NextCapitalLogo } from './NextCapitalLogo';
@@ -62,32 +62,75 @@ export const QuotationModal: React.FC<Props> = ({
     setPdfSuccessMessage(null);
 
     try {
+      // Ensure fonts are loaded and DOM has updated
       if (document.fonts) {
         await document.fonts.ready;
       }
+      await new Promise((r) => setTimeout(r, 80));
 
       const element = exportTemplateRef.current;
 
-      // Convert the fixed-width template to high-res PNG
-      const dataUrl = await toPng(element, {
-        quality: 0.98,
-        pixelRatio: 2,
+      const canvas = await html2canvas(element, {
+        scale: 2, // 2x high resolution retina quality
+        useCORS: true,
+        logging: false,
         backgroundColor: '#ffffff',
-        skipFonts: true,
-        cacheBust: true,
+        width: 780,
+        windowWidth: 780,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: (clonedDoc, clonedElement) => {
+          // 1. Remove all external stylesheets/styles to avoid any OKLCH/Tailwind parser crashes
+          clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((l) => l.remove());
+          clonedDoc.querySelectorAll('style').forEach((st) => {
+            if (st.textContent && (st.textContent.includes('oklch') || st.textContent.includes('tailwindcss'))) {
+              st.remove();
+            }
+          });
+
+          // 2. Inject clean self-contained font definitions
+          const cleanStyle = clonedDoc.createElement('style');
+          cleanStyle.textContent = `
+            * {
+              box-sizing: border-box !important;
+              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            }
+            body {
+              background-color: #ffffff !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 780px !important;
+            }
+          `;
+          clonedDoc.head.appendChild(cleanStyle);
+
+          // 3. Clear body and mount ONLY the quotation element to eliminate any overlays or clipping
+          const target = clonedDoc.getElementById('ncap-quotation-export-root') || clonedElement;
+          if (target) {
+            clonedDoc.body.innerHTML = '';
+            clonedDoc.body.appendChild(target);
+
+            target.style.position = 'static';
+            target.style.display = 'block';
+            target.style.visibility = 'visible';
+            target.style.opacity = '1';
+            target.style.zIndex = '1';
+            target.style.left = '0';
+            target.style.top = '0';
+            target.style.margin = '0 auto';
+            target.style.width = '780px';
+            target.style.backgroundColor = '#ffffff';
+          }
+        },
       });
 
-      if (!dataUrl || dataUrl.length < 1000) {
-        throw new Error('ไม่สามารถแปลงเอกสารเป็นรูปภาพได้');
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('ไม่สามารถประมวลผลรูปภาพเอกสารได้');
       }
 
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -100,26 +143,30 @@ export const QuotationModal: React.FC<Props> = ({
       // Professional 10mm margins for letterhead look
       const margin = 10;
       const printWidth = pageWidth - margin * 2; // 190mm
-      const printHeight = (img.height * printWidth) / img.width;
+      const printHeight = (canvas.height * printWidth) / canvas.width;
 
       // Position centered vertically if compact, or with neat top margin
       const yPos = printHeight < pageHeight - 25 ? Math.max(10, (pageHeight - printHeight) / 3) : margin;
 
-      pdf.addImage(dataUrl, 'PNG', margin, yPos, printWidth, printHeight, undefined, 'FAST');
+      pdf.addImage(imgData, 'PNG', margin, yPos, printWidth, printHeight, undefined, 'FAST');
 
       const cleanModelName = (modelName || 'รถจักรยานยนต์').replace(/\s+/g, '_');
       const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.pdf`;
 
-      // Universal cross-browser download trigger (works on mobile browsers and Android)
-      const blob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      // Cross-platform download trigger
+      try {
+        pdf.save(fileName);
+      } catch {
+        const blob = pdf.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      }
 
       setPdfSuccessMessage('ดาวน์โหลดไฟล์ PDF เรียบร้อยแล้ว!');
       setTimeout(() => setPdfSuccessMessage(null), 3500);
@@ -183,9 +230,8 @@ ${
     <>
       {/* 
         ================================================================
-        HIDDEN HIGH-RESOLUTION EXPORT TEMPLATE
+        HIGH-RESOLUTION EXPORT TEMPLATE
         Always 780px wide with exact 2-column layout & explicit HEX styles.
-        Positioned at top: 0, left: 0 behind the modal overlay (z-index -999).
         Never clipped, never blank, perfectly matching the target design.
         ================================================================
       */}
@@ -193,14 +239,17 @@ ${
         style={{
           position: 'fixed',
           top: 0,
-          left: 0,
+          left: isGeneratingPdf ? 0 : -9999,
           width: '780px',
-          zIndex: -999,
+          zIndex: isGeneratingPdf ? 99999 : -1,
+          opacity: isGeneratingPdf ? 1 : 0.001,
           pointerEvents: 'none',
+          backgroundColor: '#ffffff',
           overflow: 'hidden',
         }}
       >
         <div
+          id="ncap-quotation-export-root"
           ref={exportTemplateRef}
           style={{
             width: '780px',

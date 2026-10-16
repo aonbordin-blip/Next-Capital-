@@ -11,8 +11,7 @@ export const NextCapitalLogo: React.FC<NextCapitalLogoProps> = ({
   size = 32,
   showText = false,
 }) => {
-  // Exact vector path of Next Capital's iconic 'N' monogram:
-  // Interlocking 180-degree rotationally symmetric blue & yellow polygons
+  // Blue Upper Shape (Royal Blue)
   const bluePath = `
     M 112 72
     L 416 72
@@ -23,6 +22,20 @@ export const NextCapitalLogo: React.FC<NextCapitalLogoProps> = ({
     L 160 138
     L 102 348
     L 38 348
+    Z
+  `;
+
+  // Yellow Lower Shape (Golden Amber/Yellow) - Exact 180° Rotational Symmetry coordinates
+  const yellowPath = `
+    M 388 428
+    L 84 428
+    L 102 362
+    L 168 362
+    L 214 236
+    L 260 362
+    L 340 362
+    L 398 152
+    L 462 152
     Z
   `;
 
@@ -42,11 +55,10 @@ export const NextCapitalLogo: React.FC<NextCapitalLogoProps> = ({
           fill="#1C449C"
         />
 
-        {/* Yellow Lower Shape (Golden Amber/Yellow) - Exact 180° Rotational Symmetry */}
+        {/* Yellow Lower Shape (Golden Amber/Yellow) */}
         <path
-          d={bluePath}
+          d={yellowPath}
           fill="#F5A81C"
-          transform="rotate(180 250 250)"
         />
       </svg>
 
