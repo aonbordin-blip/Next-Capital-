@@ -47,6 +47,16 @@ export const INSURANCE_PLANS: Record<'plan_a' | 'plan_b', InsurancePlanDetail> =
   },
 };
 
+/**
+ * Removes '(PA ปกติ)' and '(PA PLUS)' from insurance plan names for customer-facing LINE messages
+ */
+export const cleanPlanNameForLine = (planName: string): string => {
+  return planName
+    .replace(/\s*\(PA\s*(?:ปกติ|PLUS)\)\s*/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 export const PROPOSALS: Record<ProposalKey, ProposalDefinition> = {
   small_bike: {
     key: 'small_bike',

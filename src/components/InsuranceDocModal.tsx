@@ -7,12 +7,13 @@ import {
   Check,
   ShieldCheck,
   Sparkles,
+  Share2,
+  Loader2,
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { CalculationResult, InsurancePlan, InsuranceYears } from '../types';
-import { INSURANCE_PLANS, formatBaht } from '../data/proposals';
+import { INSURANCE_PLANS, formatBaht, cleanPlanNameForLine } from '../data/proposals';
 import { NextCapitalLogo } from './NextCapitalLogo';
+import { downloadElementAsImage } from '../utils/exportImage';
 
 interface Props {
   isOpen: boolean;
@@ -60,8 +61,8 @@ export const InsuranceDocModal: React.FC<Props> = ({
   );
 
   const [copied, setCopied] = useState<boolean>(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
-  const [pdfSuccessMessage, setPdfSuccessMessage] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
+  const [imageSuccessMessage, setImageSuccessMessage] = useState<string | null>(null);
 
   // Refs
   const exportTemplateRef = useRef<HTMLDivElement>(null);
@@ -134,150 +135,41 @@ export const InsuranceDocModal: React.FC<Props> = ({
     }
   };
 
-  // High quality PDF generation matching standard A4 dimensions
-  const handleDownloadPdf = async () => {
-    if (!exportTemplateRef.current || isGeneratingPdf) return;
-    setIsGeneratingPdf(true);
-    setPdfSuccessMessage(null);
+  // High quality PNG image generation matching displayed preview 100%
+  const handleDownloadImage = async () => {
+    if (!exportTemplateRef.current || isGeneratingImage) return;
+    setIsGeneratingImage(true);
+    setImageSuccessMessage(null);
 
     try {
-      if (document.fonts) {
-        await document.fonts.ready;
-      }
-      await new Promise((r) => setTimeout(r, 100));
+      const planTag = isPlanB ? 'แผนB' : 'แผนA';
+      const fileName = `แผนความคุ้มครอง_${planTag}_${activeYears}ปี_NextCapital.png`;
+      await downloadElementAsImage(exportTemplateRef.current, fileName, 780);
 
-      const element = exportTemplateRef.current;
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: 780,
-        windowWidth: 780,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDoc, clonedElement) => {
-          // Remove problematic external CSS rules that cause oklch color parsing errors
-          clonedDoc.querySelectorAll('style').forEach((st) => {
-            if (
-              st.textContent &&
-              (st.textContent.includes('oklch') || st.textContent.includes('tailwindcss'))
-            ) {
-              st.remove();
-            }
-          });
-          clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-            const href = l.getAttribute('href') || '';
-            if (!href.includes('fonts.googleapis.com')) {
-              l.remove();
-            }
-          });
-
-          // Inject clean Prompt font stylesheet
-          const cleanStyle = clonedDoc.createElement('style');
-          cleanStyle.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-            * {
-              box-sizing: border-box !important;
-              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              -webkit-font-smoothing: antialiased !important;
-            }
-            body {
-              background-color: #ffffff !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 780px !important;
-              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            }
-            table {
-              border-collapse: collapse !important;
-            }
-            table th, table td {
-              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            }
-          `;
-          clonedDoc.head.appendChild(cleanStyle);
-
-          // Clear body and mount ONLY the insurance export element to eliminate any mobile viewport overlays or clipping
-          const target = clonedDoc.getElementById('ncap-insurance-export-root') || clonedElement;
-          if (target) {
-            clonedDoc.body.innerHTML = '';
-            clonedDoc.body.appendChild(target);
-
-            target.style.position = 'static';
-            target.style.display = 'block';
-            target.style.visibility = 'visible';
-            target.style.opacity = '1';
-            target.style.zIndex = '1';
-            target.style.left = '0';
-            target.style.top = '0';
-            target.style.margin = '0 auto';
-            target.style.width = '780px';
-            target.style.backgroundColor = '#ffffff';
-          }
-        },
-      });
-
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error('ไม่สามารถประมวลผลรูปภาพเอกสารได้');
-      }
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
-      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
-
-      // Standard formal margins (8mm)
-      const margin = 8;
-      const maxPrintHeight = pageHeight - margin * 2; // 281mm
-      let printWidth = pageWidth - margin * 2; // 194mm
-      let printHeight = (canvas.height * printWidth) / canvas.width;
-
-      // If document exceeds single A4 page height, scale proportionally to fit cleanly on 1 page
-      if (printHeight > maxPrintHeight) {
-        const scale = maxPrintHeight / printHeight;
-        printHeight = maxPrintHeight;
-        printWidth = printWidth * scale;
-      }
-
-      const xPos = margin + (pageWidth - margin * 2 - printWidth) / 2;
-      const yPos = margin;
-
-      pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight);
-      pdf.save(
-        `NCAP-CoveragePlan-${planKey.toUpperCase()}-${activeYears}Y-${new Date().toISOString().slice(0, 10)}.pdf`
-      );
-
-      setPdfSuccessMessage('สร้างและดาวน์โหลดเอกสาร PDF แผนความคุ้มครองเรียบร้อยแล้ว');
-      setTimeout(() => setPdfSuccessMessage(null), 4000);
+      setImageSuccessMessage('สร้างและดาวน์โหลดรูปภาพแผนความคุ้มครองเรียบร้อยแล้ว');
+      setTimeout(() => setImageSuccessMessage(null), 4000);
     } catch (err) {
-      console.error('PDF export error:', err);
-      alert('เกิดข้อผิดพลาดในการดาวน์โหลด PDF กรุณาลองใหม่อีกครั้ง');
+      console.error('Image export error:', err);
+      alert('เกิดข้อผิดพลาดในการดาวน์โหลดรูปภาพ กรุณาลองใหม่อีกครั้ง');
     } finally {
-      setIsGeneratingPdf(false);
+      setIsGeneratingImage(false);
     }
   };
 
   // Quick summary copy for LINE / chat
   const handleCopySummary = async () => {
+    const cleanPlanName = cleanPlanNameForLine(planDetail.name);
+
     const text = `📋 ตารางแผนความคุ้มครองประกันภัยอุบัติเหตุกลุ่ม (Group PA)
 🏢 บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน) ร่วมกับ LOCKTON
 ━━━━━━━━━━━━━━━━━━━━
-🛡️ แผนความคุ้มครอง: ${planDetail.name}
+🛡️ แผนความคุ้มครอง: ${cleanPlanName}
 ⏱️ ระยะเวลาคุ้มครอง: ${activeYears} ปี
 💰 รวมเบี้ยประกันภัย: ${formatBaht(premiumAmount)} บาท (รวม VAT 7%: ${formatBaht(premiumTotalWithVat, true)} บาท)
 💳 รวมในยอดจัดไฟแนนซ์: เพิ่มเพียงประมาณ +${formatBaht(monthlyImpact)} บาท/งวด
 🏍️ ยานพาหนะ: ${selectedBikeName || 'รถจักรยานยนต์'}
 
-⭐ สรุปผลประโยชน์ความคุ้มครอง (${planDetail.name}):
+⭐ สรุปผลประโยชน์ความคุ้มครอง (${cleanPlanName}):
 1. กรณีอุบัติเหตุทั่วไป (อบ.1): ${formatBaht(planDetail.generalAccident)} บาท
 2. กรณีขับขี่หรือโดยสารรถจักรยานยนต์: ${formatBaht(planDetail.motorcycleAccident)} บาท
 3. กรณีถูกฆาตกรรมหรือทำร้ายร่างกาย: ${formatBaht(planDetail.assaultMurder)} บาท
@@ -1179,12 +1071,12 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
         style={{
           position: 'fixed',
           top: 0,
-          left: '-10000px',
+          left: 0,
           width: '780px',
           zIndex: -9999,
+          opacity: 0,
           pointerEvents: 'none',
           backgroundColor: '#ffffff',
-          overflow: 'hidden',
         }}
       >
         <div id="ncap-insurance-export-root" ref={exportTemplateRef}>
@@ -1222,7 +1114,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                   </span>
                 </div>
                 <p className="text-xs text-slate-500">
-                  แสดงเฉพาะแผนที่เลือกเสนอขาย ({planDetail.name} • คุ้มครอง {activeYears} ปี)
+                  แสดงเฉพาะแผนที่เลือกเสนอขาย ({cleanPlanNameForLine(planDetail.name)} • คุ้มครอง {activeYears} ปี)
                 </p>
               </div>
             </div>
@@ -1231,18 +1123,18 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
               <button
                 type="button"
                 onClick={handleCopySummary}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50/60 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
               >
                 {copied ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>คัดลอกแล้ว</span>
+                    <span>คัดลอกสำเร็จ!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>คัดลอกสรุป</span>
+                    <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>ส่ง LINE</span>
                   </>
                 )}
               </button>
@@ -1259,12 +1151,21 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
 
               <button
                 type="button"
-                onClick={handleDownloadPdf}
-                disabled={isGeneratingPdf}
+                onClick={handleDownloadImage}
+                disabled={isGeneratingImage}
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-blue-700/20 transition-all cursor-pointer disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>{isGeneratingPdf ? 'กำลังสร้าง PDF...' : 'ดาวน์โหลด PDF'}</span>
+                {isGeneratingImage ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>กำลังดาวน์โหลด...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>ดาวน์โหลด</span>
+                  </>
+                )}
               </button>
 
               <button
@@ -1277,14 +1178,14 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
             </div>
           </div>
 
-          {pdfSuccessMessage && (
+          {imageSuccessMessage && (
             <div className="px-5 py-2 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between animate-fade-in">
               <span className="flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-emerald-600" />
-                {pdfSuccessMessage}
+                {imageSuccessMessage}
               </span>
               <button
-                onClick={() => setPdfSuccessMessage(null)}
+                onClick={() => setImageSuccessMessage(null)}
                 className="text-emerald-600 hover:underline text-[10px]"
               >
                 ปิด
@@ -1471,7 +1372,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           {/* Modal Footer */}
           <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="text-slate-500 text-[11px]">
-              แสดงเฉพาะแผน <strong className="text-slate-800">{planDetail.name}</strong> • ระยะเวลา{' '}
+              แสดงเฉพาะแผน <strong className="text-slate-800">{cleanPlanNameForLine(planDetail.name)}</strong> • ระยะเวลา{' '}
               <strong className="text-slate-800">{activeYears} ปี</strong> • เบี้ยสุทธิ{' '}
               <strong className="text-blue-800">{formatBaht(premiumAmount)} บาท</strong>
             </div>
@@ -1486,12 +1387,21 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
               </button>
               <button
                 type="button"
-                onClick={handleDownloadPdf}
-                disabled={isGeneratingPdf}
+                onClick={handleDownloadImage}
+                disabled={isGeneratingImage}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>{isGeneratingPdf ? 'กำลังดาวน์โหลด...' : 'ดาวน์โหลด PDF แผนนี้'}</span>
+                {isGeneratingImage ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>กำลังดาวน์โหลด...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>ดาวน์โหลด</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

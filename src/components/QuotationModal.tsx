@@ -10,11 +10,11 @@ import {
   Download,
   Loader2,
 } from 'lucide-react';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { CalculationResult } from '../types';
-import { formatBaht } from '../data/proposals';
+import { formatBaht, cleanPlanNameForLine } from '../data/proposals';
 import { NextCapitalLogo } from './NextCapitalLogo';
+import { downloadElementAsImage } from '../utils/exportImage';
 
 interface Props {
   isOpen: boolean;
@@ -54,8 +54,8 @@ export const QuotationModal: React.FC<Props> = ({
     })
   );
   const [copied, setCopied] = useState<boolean>(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
-  const [pdfSuccessMessage, setPdfSuccessMessage] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
+  const [imageSuccessMessage, setImageSuccessMessage] = useState<string | null>(null);
 
   // Screen interactive ref
   const quotationRef = useRef<HTMLDivElement>(null);
@@ -66,153 +66,30 @@ export const QuotationModal: React.FC<Props> = ({
 
   const docNumber = `QT-${Math.floor(100000 + (result.vehiclePrice % 900000))}`;
 
-  // Direct In-Browser High-Quality PDF Generation matching the attached layout exactly
-  const handleDownloadPdf = async () => {
-    if (!exportTemplateRef.current || isGeneratingPdf) return;
-    setIsGeneratingPdf(true);
-    setPdfSuccessMessage(null);
+  // Direct In-Browser High-Quality Image (PNG) Generation matching the displayed preview 100%
+  const handleDownloadImage = async () => {
+    if (!exportTemplateRef.current || isGeneratingImage) return;
+    setIsGeneratingImage(true);
+    setImageSuccessMessage(null);
 
     try {
-      // Ensure fonts are loaded and DOM has updated
-      if (document.fonts) {
-        await document.fonts.ready;
-      }
-      await new Promise((r) => setTimeout(r, 80));
-
-      const element = exportTemplateRef.current;
-
-      const canvas = await html2canvas(element, {
-        scale: 2, // 2x high resolution retina quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: 780,
-        windowWidth: 780,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDoc, clonedElement) => {
-          // 1. Remove Tailwind/OKLCH stylesheets that cause html2canvas parser crashes
-          clonedDoc.querySelectorAll('style').forEach((st) => {
-            if (st.textContent && (st.textContent.includes('oklch') || st.textContent.includes('tailwindcss'))) {
-              st.remove();
-            }
-          });
-          clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-            const href = l.getAttribute('href') || '';
-            if (!href.includes('fonts.googleapis.com')) {
-              l.remove();
-            }
-          });
-
-          // 2. Inject clean self-contained font definitions with Prompt font
-          const cleanStyle = clonedDoc.createElement('style');
-          cleanStyle.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-            * {
-              box-sizing: border-box !important;
-              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              -webkit-font-smoothing: antialiased !important;
-            }
-            body {
-              background-color: #ffffff !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 780px !important;
-              font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            }
-            table {
-              border-collapse: collapse !important;
-            }
-            table th, table td {
-              vertical-align: middle !important;
-            }
-          `;
-          clonedDoc.head.appendChild(cleanStyle);
-
-          // 3. Clear body and mount ONLY the quotation element to eliminate any overlays or clipping
-          const target = clonedDoc.getElementById('ncap-quotation-export-root') || clonedElement;
-          if (target) {
-            clonedDoc.body.innerHTML = '';
-            clonedDoc.body.appendChild(target);
-
-            target.style.position = 'static';
-            target.style.display = 'block';
-            target.style.visibility = 'visible';
-            target.style.opacity = '1';
-            target.style.zIndex = '1';
-            target.style.left = '0';
-            target.style.top = '0';
-            target.style.margin = '0 auto';
-            target.style.width = '780px';
-            target.style.backgroundColor = '#ffffff';
-          }
-        },
-      });
-
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error('ไม่สามารถประมวลผลรูปภาพเอกสารได้');
-      }
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
-      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
-
-      // Precise 10mm margins for formal quotation
-      const margin = 10;
-      const maxPrintHeight = pageHeight - margin * 2; // 277mm
-      let printWidth = pageWidth - margin * 2; // 190mm
-      let printHeight = (canvas.height * printWidth) / canvas.width;
-
-      // If document exceeds single A4 page height, scale proportionally to fit cleanly on 1 page
-      if (printHeight > maxPrintHeight) {
-        const scale = maxPrintHeight / printHeight;
-        printHeight = maxPrintHeight;
-        printWidth = printWidth * scale;
-      }
-
-      // Exact neat top margin: 10mm (never pushed down by dynamic offsets)
-      const xPos = margin + (pageWidth - margin * 2 - printWidth) / 2;
-      const yPos = margin;
-
-      pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight, undefined, 'FAST');
-
       const cleanModelName = (modelName || 'รถจักรยานยนต์').replace(/\s+/g, '_');
-      const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.pdf`;
+      const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.png`;
+      await downloadElementAsImage(exportTemplateRef.current, fileName, 780);
 
-      // Cross-platform download trigger
-      try {
-        pdf.save(fileName);
-      } catch {
-        const blob = pdf.output('blob');
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-      }
-
-      setPdfSuccessMessage('ดาวน์โหลดไฟล์ PDF เรียบร้อยแล้ว!');
-      setTimeout(() => setPdfSuccessMessage(null), 3500);
+      setImageSuccessMessage('ดาวน์โหลดรูปภาพใบเสนอราคาเรียบร้อยแล้ว!');
+      setTimeout(() => setImageSuccessMessage(null), 3500);
     } catch (err) {
-      console.error('Failed to generate PDF:', err);
-      alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + (err instanceof Error ? err.message : String(err)));
+      console.error('Failed to generate image:', err);
+      alert('เกิดข้อผิดพลาดในการสร้างรูปภาพ: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
-      setIsGeneratingPdf(false);
+      setIsGeneratingImage(false);
     }
   };
 
   const handleCopyChatText = async () => {
+    const cleanInsuranceName = cleanPlanNameForLine(result.insurancePlanName);
+
     const text = `📋 ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
 ━━━━━━━━━━━━━━━━━━━━
 🏢 ผู้เสนอ: ${dealerName}
@@ -226,7 +103,7 @@ export const QuotationModal: React.FC<Props> = ({
 🛵 ยอดจัดเฉพาะตัวรถ: ${formatBaht(result.vehicleFinanceAmount)}
 ${
   result.insuranceTotalWithVat > 0
-    ? `🛡️ ประกันภัย: ${result.insurancePlanName}
+    ? `🛡️ ประกันภัย: ${cleanInsuranceName}
    • ค่าเบี้ยประกัน: ${formatBaht(result.insuranceBasePremium)}
    • ภาษี VAT 7%: ${formatBaht(result.insuranceVat, true)}
    • ค่าเบี้ยรวมภาษี 7%: ${formatBaht(result.insuranceTotalWithVat, true)}\n`
@@ -276,12 +153,12 @@ ${
         style={{
           position: 'fixed',
           top: 0,
-          left: '-10000px',
+          left: 0,
           width: '780px',
           zIndex: -9999,
+          opacity: 0,
           pointerEvents: 'none',
           backgroundColor: '#ffffff',
-          overflow: 'hidden',
         }}
       >
         <div
@@ -747,12 +624,12 @@ ${
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  ดาวน์โหลดเป็นไฟล์ PDF หรือแชร์ผ่าน LINE ได้ทันที
+                  ดาวน์โหลดเป็นรูปภาพ หรือส่งทาง LINE ได้ทันที
                 </p>
               </div>
             </div>
 
-            {/* Center: Action Buttons (ส่ง LINE & ดาวน์โหลด PDF) */}
+            {/* Center: Action Buttons (ส่ง LINE & ดาวน์โหลด) */}
             <div className="flex items-center justify-center gap-2.5 w-full sm:w-auto">
               <button
                 onClick={handleCopyChatText}
@@ -769,38 +646,38 @@ ${
                 )}
               </button>
 
-              {/* Direct Instant PDF Download Button */}
+              {/* Direct Instant Image Download Button */}
               <button
-                onClick={handleDownloadPdf}
-                disabled={isGeneratingPdf}
+                onClick={handleDownloadImage}
+                disabled={isGeneratingImage}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 active:scale-95 text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-700/25 transition-all cursor-pointer disabled:opacity-50"
               >
-                {isGeneratingPdf ? (
+                {isGeneratingImage ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> กำลังสร้าง PDF...
+                    <Loader2 className="w-4 h-4 animate-spin" /> กำลังดาวน์โหลด...
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4" /> ดาวน์โหลด PDF
+                    <Download className="w-4 h-4" /> ดาวน์โหลด
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Progress Banner while generating PDF */}
-          {isGeneratingPdf && (
+          {/* Progress Banner while generating Image */}
+          {isGeneratingImage && (
             <div className="no-print bg-blue-50 border-b border-blue-200 text-blue-800 text-xs px-5 py-2.5 flex items-center justify-center gap-2 animate-pulse">
               <Loader2 className="w-4 h-4 text-blue-600 animate-spin flex-shrink-0" />
-              <span className="font-semibold">กำลังประมวลผลและสร้างไฟล์ PDF คุณภาพสูง... กรุณารอสักครู่</span>
+              <span className="font-semibold">กำลังประมวลผลและสร้างรูปภาพคุณภาพสูง... กรุณารอสักครู่</span>
             </div>
           )}
 
-          {/* Success Alert Banner if PDF generated */}
-          {pdfSuccessMessage && (
+          {/* Success Alert Banner if Image generated */}
+          {imageSuccessMessage && (
             <div className="no-print bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-5 py-2 flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span className="font-semibold">{pdfSuccessMessage}</span>
+              <span className="font-semibold">{imageSuccessMessage}</span>
             </div>
           )}
 

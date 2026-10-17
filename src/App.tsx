@@ -28,6 +28,7 @@ import {
   calculateLease,
   getTermComparisons,
   formatBaht,
+  cleanPlanNameForLine,
 } from './data/proposals';
 import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears } from './types';
 import { ProposalInfoModal } from './components/ProposalInfoModal';
@@ -195,7 +196,7 @@ export default function App() {
 ยอดจัดเฉพาะตัวรถ: ${formatBaht(currentCalculation.vehicleFinanceAmount)}
 ${
   currentCalculation.insuranceTotalWithVat > 0
-    ? `🛡️ ประกันภัย: ${currentCalculation.insurancePlanName}
+    ? `🛡️ ประกันภัย: ${cleanPlanNameForLine(currentCalculation.insurancePlanName)}
    • ค่าเบี้ยประกัน: ${formatBaht(currentCalculation.insuranceBasePremium)}
    • ภาษี VAT 7%: ${formatBaht(currentCalculation.insuranceVat, true)}
    • เบี้ยรวมภาษี 7%: ${formatBaht(currentCalculation.insuranceTotalWithVat, true)}\n`
@@ -788,11 +789,11 @@ ${
                       <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
                         แผนความคุ้มครอง
                         <span className="text-[10px] bg-white/20 text-blue-100 px-1.5 py-0.2 rounded font-semibold">
-                          PDF
+                          รูปภาพ
                         </span>
                       </div>
                       <div className="text-[10.5px] text-blue-100/80 font-normal leading-tight mt-0.5">
-                        {currentCalculation.insurancePlanName} ({insuranceYears} ปี)
+                        {cleanPlanNameForLine(currentCalculation.insurancePlanName)} ({insuranceYears} ปี)
                       </div>
                     </div>
                   </div>
@@ -804,7 +805,7 @@ ${
                   type="button"
                   onClick={() => setShowQuotation(true)}
                   className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:via-slate-700 hover:to-indigo-900 active:scale-[0.98] text-white py-2.5 px-3.5 rounded-xl font-bold shadow-md shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-slate-700/50"
-                  title="พิมพ์ใบเสนอราคาเช่าซื้อ (Quotation)"
+                  title="ดูและดาวน์โหลดใบเสนอราคาเช่าซื้อ (Quotation)"
                 >
                   <div className="flex items-center gap-2.5 text-left">
                     <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -814,7 +815,7 @@ ${
                       <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
                         ใบเสนอราคา
                         <span className="text-[10px] bg-amber-400/25 text-amber-200 px-1.5 py-0.2 rounded font-semibold">
-                          พิมพ์
+                          รูปภาพ
                         </span>
                       </div>
                       <div className="text-[10.5px] text-slate-300 font-normal leading-tight mt-0.5">

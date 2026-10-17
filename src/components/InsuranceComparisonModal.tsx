@@ -299,7 +299,7 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
                 className="px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>พิมพ์/ดาวน์โหลดแผนความคุ้มครอง (PDF)</span>
+                <span>ดู/ดาวน์โหลดแผนความคุ้มครอง</span>
               </button>
             )}
             <button
