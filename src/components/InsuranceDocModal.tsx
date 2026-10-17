@@ -9,6 +9,7 @@ import {
   Sparkles,
   Share2,
   Loader2,
+  Award,
 } from 'lucide-react';
 import { CalculationResult, InsurancePlan, InsuranceYears } from '../types';
 import { INSURANCE_PLANS, formatBaht, cleanPlanNameForLine } from '../data/proposals';
@@ -23,6 +24,8 @@ interface Props {
   selectedYears: InsuranceYears;
   selectedBikeName?: string;
   officerInfo?: string;
+  officerLicense?: string;
+  customerInfo?: string;
   onUpdatePlan?: (plan: InsurancePlan, years: InsuranceYears) => void;
 }
 
@@ -34,6 +37,8 @@ export const InsuranceDocModal: React.FC<Props> = ({
   selectedYears: initialYears,
   selectedBikeName,
   officerInfo = 'บดินทร์ (6683)',
+  officerLicense = '',
+  customerInfo,
   onUpdatePlan,
 }) => {
   // If user opened with 'none', default to 'plan_b' (the recommended plan)
@@ -41,6 +46,19 @@ export const InsuranceDocModal: React.FC<Props> = ({
     initialPlan === 'none' ? 'plan_b' : initialPlan
   );
   const [activeYears, setActiveYears] = useState<InsuranceYears>(initialYears || 3);
+
+  // Officer info & Non-life broker license state (editable within modal and auto-synced)
+  const [currentOfficerInfo, setCurrentOfficerInfo] = useState<string>(
+    officerInfo || 'บดินทร์ (6683)'
+  );
+  const [currentOfficerLicense, setCurrentOfficerLicense] = useState<string>(() => {
+    if (officerLicense) return officerLicense;
+    try {
+      return localStorage.getItem('ncap_officer_license') ?? '';
+    } catch {
+      return '';
+    }
+  });
 
   // Sync state if props change when opening
   useEffect(() => {
@@ -51,6 +69,38 @@ export const InsuranceDocModal: React.FC<Props> = ({
       setActiveYears(initialYears);
     }
   }, [initialPlan, initialYears, isOpen]);
+
+  useEffect(() => {
+    if (officerInfo) {
+      setCurrentOfficerInfo(officerInfo);
+    }
+  }, [officerInfo]);
+
+  useEffect(() => {
+    if (officerLicense !== undefined && officerLicense !== '') {
+      setCurrentOfficerLicense(officerLicense);
+    } else {
+      try {
+        const saved = localStorage.getItem('ncap_officer_license');
+        if (saved) setCurrentOfficerLicense(saved);
+      } catch {
+        // ignore
+      }
+    }
+  }, [officerLicense, isOpen]);
+
+  const handleOfficerLicenseChange = (val: string) => {
+    setCurrentOfficerLicense(val);
+    try {
+      localStorage.setItem('ncap_officer_license', val);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleOfficerInfoChange = (val: string) => {
+    setCurrentOfficerInfo(val);
+  };
 
   const [documentDate] = useState<string>(
     new Date().toLocaleDateString('th-TH', {
@@ -163,7 +213,8 @@ export const InsuranceDocModal: React.FC<Props> = ({
     const text = `📋 ตารางแผนความคุ้มครองประกันภัยอุบัติเหตุกลุ่ม (Group PA)
 🏢 บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน) ร่วมกับ LOCKTON
 ━━━━━━━━━━━━━━━━━━━━
-🛡️ แผนความคุ้มครอง: ${cleanPlanName}
+👨‍💼 ผู้เสนอขาย: ${currentOfficerInfo}${currentOfficerLicense ? `\n📜 เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย: ${currentOfficerLicense}` : ''}
+${customerInfo ? `👤 ลูกค้า: ${customerInfo}\n` : ''}🛡️ แผนความคุ้มครอง: ${cleanPlanName}
 ⏱️ ระยะเวลาคุ้มครอง: ${activeYears} ปี
 💰 รวมเบี้ยประกันภัย: ${formatBaht(premiumAmount)} บาท (รวม VAT 7%: ${formatBaht(premiumTotalWithVat, true)} บาท)
 💳 รวมในยอดจัดไฟแนนซ์: เพิ่มเพียงประมาณ +${formatBaht(monthlyImpact)} บาท/งวด
@@ -177,7 +228,7 @@ export const InsuranceDocModal: React.FC<Props> = ({
 5. ค่าปลงศพ (เจ็บป่วย/บาดเจ็บ): ${formatBaht(planDetail.funeralExpense)} บาท
 ${isPlanB ? `6. ชดเชยรายได้ระหว่างรักษาตัวใน รพ. (IPD): 500 บาท/วัน (สูงสุด 30 วัน/ปี)\n` : ''}━━━━━━━━━━━━━━━━━━━━
 📌 คุ้มครองตลอด 24 ชม. ทั่วโลก • สถานพยาบาลคู่สัญญากว่า 400 แห่งทั่วประเทศ
-ผู้เสนอขาย: ${officerInfo}`;
+ผู้เสนอขาย: ${currentOfficerInfo}${currentOfficerLicense ? ` (ใบอนุญาตนายหน้า: ${currentOfficerLicense})` : ''}`;
 
     try {
       await navigator.clipboard.writeText(text);
@@ -271,6 +322,16 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           <div style={{ color: '#1e40af', fontWeight: '600', whiteSpace: 'nowrap' }}>
             ผู้เสนอขาย: {officerInfo}
           </div>
+          {officerLicense && (
+            <div style={{ color: '#4338ca', fontSize: '10px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+              เลขที่ใบอนุญาตนายหน้า: {officerLicense}
+            </div>
+          )}
+          {customerInfo && (
+            <div style={{ color: '#047857', fontWeight: '600', whiteSpace: 'nowrap' }}>
+              ลูกค้า: {customerInfo}
+            </div>
+          )}
           {selectedBikeName && (
             <div style={{ color: '#64748b', fontSize: '10.5px', whiteSpace: 'nowrap' }}>
               ยานพาหนะ: {selectedBikeName}
@@ -1022,6 +1083,11 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           <div style={{ fontSize: '9.5px', color: '#64748b', marginTop: '1px', whiteSpace: 'nowrap' }}>
             ผู้เสนอขาย / เจ้าหน้าที่ บมจ. เน็กซ์ แคปปิตอล
           </div>
+          {officerLicense && (
+            <div style={{ fontSize: '9px', color: '#4338ca', marginTop: '1px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+              เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย: {officerLicense}
+            </div>
+          )}
         </div>
         <div>
           <div style={{ height: '28px' }} />

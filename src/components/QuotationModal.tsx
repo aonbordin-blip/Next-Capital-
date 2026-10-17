@@ -13,6 +13,7 @@ import {
 import html2canvas from 'html2canvas';
 import { CalculationResult } from '../types';
 import { formatBaht, cleanPlanNameForLine } from '../data/proposals';
+import { MOTORCYCLE_MODELS } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
 
@@ -21,7 +22,10 @@ interface Props {
   onClose: () => void;
   result: CalculationResult;
   selectedBikeName?: string;
+  modelCode?: string;
   officerInfo?: string;
+  initialCustomerName?: string;
+  initialCustomerPhone?: string;
 }
 
 export const QuotationModal: React.FC<Props> = ({
@@ -29,22 +33,75 @@ export const QuotationModal: React.FC<Props> = ({
   onClose,
   result,
   selectedBikeName,
+  modelCode = '',
   officerInfo = 'บดินทร์ (6683)',
+  initialCustomerName = 'คุณลูกค้า',
+  initialCustomerPhone = '',
 }) => {
   const [dealerName, setDealerName] = useState<string>(
     'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
   );
   const [officerNameAndCode, setOfficerNameAndCode] = useState<string>(officerInfo);
-  const [customerName, setCustomerName] = useState<string>('คุณลูกค้า');
-  const [customerPhone, setCustomerPhone] = useState<string>('08X-XXX-XXXX');
-  const [modelName, setModelName] = useState<string>(selectedBikeName || 'รถจักรยานยนต์');
+  // Find model name matching model code if available
+  const getModelNameByCode = (code: string): string | null => {
+    if (!code || !code.trim()) return null;
+    const clean = code.trim().toUpperCase();
+    const found = MOTORCYCLE_MODELS.find((m) => m.code.toUpperCase() === clean);
+    return found ? found.name : null;
+  };
 
-  // Keep officer name and code in sync with prop updates
+  const initialModelName =
+    selectedBikeName && selectedBikeName !== 'รถจักรยานยนต์'
+      ? selectedBikeName
+      : getModelNameByCode(modelCode) || selectedBikeName || 'รถจักรยานยนต์';
+
+  const [customerName, setCustomerName] = useState<string>(initialCustomerName || 'คุณลูกค้า');
+  const [customerPhone, setCustomerPhone] = useState<string>(initialCustomerPhone || '');
+  const [modelName, setModelName] = useState<string>(initialModelName);
+  const [modelCodeState, setModelCodeState] = useState<string>(modelCode ? modelCode.toUpperCase() : '');
+
+  // Keep officer, customer name and phone in sync with prop updates
   React.useEffect(() => {
     if (officerInfo) {
       setOfficerNameAndCode(officerInfo);
     }
   }, [officerInfo]);
+
+  // Keep modelCode and auto-fill modelName by code in sync with prop updates
+  React.useEffect(() => {
+    if (modelCode !== undefined) {
+      const upper = modelCode.toUpperCase();
+      setModelCodeState(upper);
+      const matchedName = getModelNameByCode(upper);
+      if (matchedName) {
+        setModelName(matchedName);
+      }
+    }
+  }, [modelCode]);
+
+  // Keep modelName in sync when selectedBikeName changes
+  React.useEffect(() => {
+    if (selectedBikeName && selectedBikeName !== 'รถจักรยานยนต์') {
+      setModelName(selectedBikeName);
+    } else if (modelCode) {
+      const matchedName = getModelNameByCode(modelCode);
+      if (matchedName) {
+        setModelName(matchedName);
+      }
+    }
+  }, [selectedBikeName, modelCode]);
+
+  React.useEffect(() => {
+    if (initialCustomerName) {
+      setCustomerName(initialCustomerName);
+    }
+  }, [initialCustomerName]);
+
+  React.useEffect(() => {
+    if (initialCustomerPhone !== undefined) {
+      setCustomerPhone(initialCustomerPhone);
+    }
+  }, [initialCustomerPhone]);
 
   const [quotationDate] = useState<string>(
     new Date().toLocaleDateString('th-TH', {
@@ -97,7 +154,7 @@ export const QuotationModal: React.FC<Props> = ({
 👤 ลูกค้า: ${customerName} ${customerPhone ? `(${customerPhone})` : ''}
 📅 วันที่: ${quotationDate}
 ━━━━━━━━━━━━━━━━━━━━
-🏍️ รุ่นรถ: ${modelName}
+🏍️ รุ่นรถ: ${modelName}${modelCodeState ? `\n🔢 รหัสรุ่น: ${modelCodeState}` : ''}
 🏷️ ราคารถตัวเปล่า: ${formatBaht(result.baseVehiclePrice)}
 💰 เงินดาวน์: ${formatBaht(result.downAmount)} (${result.downPercent.toFixed(1)}%)
 🛵 ยอดจัดเฉพาะตัวรถ: ${formatBaht(result.vehicleFinanceAmount)}
@@ -223,7 +280,7 @@ ${
             {/* Customer Info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
               <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px', paddingBottom: '2px' }}>
-                ข้อมูลลูกค้า
+                ข้อมูลลูกค้า & ผู้เสนอราคา
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
                 <span style={{ color: '#64748b', lineHeight: '1.4' }}>ชื่อลูกค้า:</span>
@@ -264,6 +321,26 @@ ${
                   {customerPhone || '-'}
                 </div>
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
+                <span style={{ color: '#64748b', lineHeight: '1.4' }}>ผู้เสนอราคา:</span>
+                <div
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '0 12px',
+                    fontWeight: '600',
+                    color: '#1e40af',
+                    height: '34px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    lineHeight: '1.4',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {officerNameAndCode || 'บดินทร์ (6683)'}
+                </div>
+              </div>
             </div>
 
             {/* Vehicle & Proposal Info */}
@@ -289,6 +366,29 @@ ${
                   }}
                 >
                   {modelName || 'รถจักรยานยนต์'}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
+                <span style={{ color: '#64748b', lineHeight: '1.4' }}>รหัสรุ่น:</span>
+                <div
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '0 12px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    fontSize: '11px',
+                    color: '#1e40af',
+                    textTransform: 'uppercase',
+                    height: '34px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    lineHeight: '1.4',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {modelCodeState ? modelCodeState.toUpperCase() : '-'}
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
@@ -766,6 +866,23 @@ ${
                       value={modelName}
                       onChange={(e) => setModelName(e.target.value)}
                       className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-semibold text-blue-900 leading-normal"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <span className="text-slate-500 font-medium text-blue-900">รหัสรุ่น:</span>
+                    <input
+                      type="text"
+                      placeholder="เช่น WW160AV TH, ACF125CBT TH"
+                      value={modelCodeState}
+                      onChange={(e) => {
+                        const upper = e.target.value.toUpperCase();
+                        setModelCodeState(upper);
+                        const matched = getModelNameByCode(upper);
+                        if (matched) {
+                          setModelName(matched);
+                        }
+                      }}
+                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 font-mono text-xs font-bold text-blue-950 uppercase tracking-wide leading-normal focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-2 items-center">

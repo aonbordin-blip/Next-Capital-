@@ -21,6 +21,9 @@ import {
   Download,
   Printer,
   UserCheck,
+  User,
+  Phone,
+  Award,
 } from 'lucide-react';
 import {
   PROPOSALS,
@@ -41,6 +44,8 @@ import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
+import { BikeModelCodeInput } from './components/BikeModelCodeInput';
+import { MotorcycleModel, MOTORCYCLE_MODELS } from './data/motorcycleModels';
 
 export default function App() {
   // Form states
@@ -60,10 +65,11 @@ export default function App() {
   const [registrationFee, setRegistrationFee] = useState<number>(1500); // พรบ.+ทะเบียน
   const [theftInsuranceFee, setTheftInsuranceFee] = useState<number>(2500); // ประกันรถหาย
 
-  // Selected preset metadata
+  // Selected preset metadata & Model Code (รหัสรุ่นรถ)
   const [selectedBike, setSelectedBike] = useState<BikePreset | null>(null);
+  const [bikeModelCode, setBikeModelCode] = useState<string>('');
 
-  // Officer / Representative Information (ชื่อและโค้ดเจ้าหน้าที่)
+  // Officer / Representative Information (ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย)
   const [officerName, setOfficerName] = useState<string>(() => {
     try {
       return localStorage.getItem('ncap_officer_name') ?? 'บดินทร์';
@@ -76,6 +82,13 @@ export default function App() {
       return localStorage.getItem('ncap_officer_code') ?? '6683';
     } catch {
       return '6683';
+    }
+  });
+  const [officerLicense, setOfficerLicense] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_officer_license') ?? '';
+    } catch {
+      return '';
     }
   });
 
@@ -97,10 +110,59 @@ export default function App() {
     }
   };
 
+  const handleOfficerLicenseChange = (val: string) => {
+    setOfficerLicense(val);
+    try {
+      localStorage.setItem('ncap_officer_license', val);
+    } catch {
+      // ignore
+    }
+  };
+
   const officerDisplay =
     officerName && officerCode
       ? `${officerName} (${officerCode})`
       : officerName || (officerCode ? `โค้ด ${officerCode}` : 'ผู้เสนอราคา / เจ้าหน้าที่');
+
+  // Customer Information (ชื่อและเบอร์โทรศัพท์ลูกค้า)
+  const [customerName, setCustomerName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_name') ?? 'คุณลูกค้า';
+    } catch {
+      return 'คุณลูกค้า';
+    }
+  });
+  const [customerPhone, setCustomerPhone] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_phone') ?? '';
+    } catch {
+      return '';
+    }
+  });
+
+  const handleCustomerNameChange = (val: string) => {
+    setCustomerName(val);
+    try {
+      localStorage.setItem('ncap_customer_name', val);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleCustomerPhoneChange = (val: string) => {
+    setCustomerPhone(val);
+    try {
+      localStorage.setItem('ncap_customer_phone', val);
+    } catch {
+      // ignore
+    }
+  };
+
+  const customerDisplay = customerName
+    ? customerPhone
+      ? `${customerName} (${customerPhone})`
+      : customerName
+    : customerPhone ? `โทร. ${customerPhone}` : 'คุณลูกค้า';
 
   // Modals
   const [showProposalSelector, setShowProposalSelector] = useState<boolean>(false);
@@ -150,6 +212,39 @@ export default function App() {
     }
   };
 
+  // When selecting a model from the model code autocomplete
+  const handleSelectMotorcycleModel = (model: MotorcycleModel) => {
+    const upperCode = model.code.toUpperCase();
+    setBikeModelCode(upperCode);
+    setSelectedBike({
+      id: model.id,
+      name: model.name,
+      brand: 'Honda',
+      price: vehiclePrice,
+      proposalKey: proposalKey,
+      defaultDownPercent: downMode === 'percent' ? downValue : 15,
+    });
+  };
+
+  // When typing model code manually
+  const handleBikeModelCodeChange = (code: string) => {
+    const upperCode = code.toUpperCase();
+    setBikeModelCode(upperCode);
+    const matched = MOTORCYCLE_MODELS.find(
+      (m) => m.code.toUpperCase() === upperCode.trim().toUpperCase()
+    );
+    if (matched) {
+      setSelectedBike({
+        id: matched.id,
+        name: matched.name,
+        brand: 'Honda',
+        price: vehiclePrice,
+        proposalKey: proposalKey,
+        defaultDownPercent: downMode === 'percent' ? downValue : 15,
+      });
+    }
+  };
+
   // Quick down payment pill clicks
   const handleQuickDownPercent = (pct: number) => {
     setDownMode('percent');
@@ -190,7 +285,8 @@ export default function App() {
     const summary = `🛵 Next Capital MotoLease เสนอราคาค่างวด
 บริษัท: บมจ. เน็กซ์ แคปปิตอล (NCAP)
 👨‍💼 ผู้เสนอราคา: ${officerDisplay}
-ข้อเสนอ: ${currentCalculation.proposalName} (${currentCalculation.proposalCode})
+👤 ลูกค้า: ${customerDisplay}
+${selectedBike || bikeModelCode ? `🏍️ รุ่นรถ: ${selectedBike ? selectedBike.name : ''}${bikeModelCode ? ` (รหัสรุ่น: ${bikeModelCode})` : ''}\n` : ''}ข้อเสนอ: ${currentCalculation.proposalName} (${currentCalculation.proposalCode})
 ราคารถตัวเปล่า: ${formatBaht(currentCalculation.baseVehiclePrice)}
 เงินดาวน์: ${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)
 ยอดจัดเฉพาะตัวรถ: ${formatBaht(currentCalculation.vehicleFinanceAmount)}
@@ -338,17 +434,25 @@ ${
         </div>
 
         {/* Selected Bike Banner if active */}
-        {selectedBike && (
+        {(selectedBike || bikeModelCode) && (
           <div className="px-5 py-2 bg-gradient-to-r from-blue-50/80 via-white/60 to-amber-50/60 border-b border-white/60 flex items-center justify-between text-xs backdrop-blur-md">
             <div className="flex items-center gap-1.5 truncate">
               <Sparkles className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
               <span className="text-slate-500 font-medium">รุ่นที่เลือก:</span>
               <span className="font-bold text-blue-950 truncate">
-                {selectedBike.name}
+                {selectedBike?.name || 'รถจักรยานยนต์'}
               </span>
+              {bikeModelCode && (
+                <span className="font-mono text-[10px] font-bold text-blue-700 bg-white/90 px-1.5 py-0.5 rounded border border-blue-200 ml-1">
+                  {bikeModelCode}
+                </span>
+              )}
             </div>
             <button
-              onClick={() => setSelectedBike(null)}
+              onClick={() => {
+                setSelectedBike(null);
+                setBikeModelCode('');
+              }}
               className="text-[11px] text-slate-400 hover:text-rose-600 ml-2 font-medium cursor-pointer"
             >
               ล้าง
@@ -370,7 +474,7 @@ ${
           >
             {/* Input Form Card - Frosted Glass */}
             <div className="glass-card-primary rounded-2xl p-4 space-y-3 relative overflow-hidden">
-              {/* Officer Name & Code Card (ช่องใส่ชื่อและโค้ดของเจ้าหน้าที่) */}
+              {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
               <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -378,7 +482,7 @@ ${
                     <span>ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา</span>
                   </label>
                   <span className="text-[9.5px] font-bold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
-                    ลงชื่อในใบเสนอราคา
+                    ลงชื่อในใบเสนอราคา & เอกสาร
                   </span>
                 </div>
                 <div className="grid grid-cols-12 gap-2">
@@ -406,11 +510,79 @@ ${
                       className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
                     />
                   </div>
+                  <div className="col-span-12">
+                    <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1 font-semibold text-blue-950">
+                        <Award className="w-3 h-3 text-amber-600" />
+                        เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        (สำหรับตารางความคุ้มครอง Group PA)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={officerLicense}
+                      onChange={(e) => handleOfficerLicenseChange(e.target.value)}
+                      placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1">
+                  <span className="text-slate-400">แสดงในเอกสาร:</span>
+                  <div className="font-semibold text-blue-950 truncate text-right">
+                    <span>ใบเสนอราคา: ( {officerDisplay} )</span>
+                    {officerLicense && (
+                      <span className="text-indigo-700 ml-1.5 font-normal text-[9.5px]">
+                        • ใบอนุญาต (ตาราง PA): <span className="font-mono font-semibold">{officerLicense}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+                    <span>ข้อมูลลูกค้า</span>
+                  </label>
+                  <span className="text-[9.5px] font-bold text-emerald-800 bg-white/90 px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                    แสดงในใบเสนอราคา & LINE
+                  </span>
+                </div>
+                <div className="grid grid-cols-12 gap-2">
+                  <div className="col-span-7 sm:col-span-7">
+                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                      ชื่อลูกค้า
+                    </label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => handleCustomerNameChange(e.target.value)}
+                      placeholder="ใส่ชื่อลูกค้า (เช่น คุณสมชาย)"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                    />
+                  </div>
+                  <div className="col-span-5 sm:col-span-5">
+                    <label className="block text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
+                      <Phone className="w-2.5 h-2.5 text-slate-400" /> เบอร์โทรศัพท์
+                    </label>
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={(e) => handleCustomerPhoneChange(e.target.value)}
+                      placeholder="08X-XXX-XXXX"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold font-mono outline-none"
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-                  <span className="text-slate-400">แสดงในใบเสนอราคา:</span>
-                  <span className="font-semibold text-blue-950 truncate">
-                    ( {officerDisplay} )
+                  <span className="text-slate-400">แสดงในเอกสาร:</span>
+                  <span className="font-semibold text-emerald-950 truncate">
+                    {customerDisplay}
                   </span>
                 </div>
               </div>
@@ -471,6 +643,14 @@ ${
                   </span>
                 </div>
               </div>
+
+              {/* Bike Model Code Input (รหัสรุ่นรถ - ค้นหาและเลือกรหัสรุ่นจากตาราง) */}
+              <BikeModelCodeInput
+                value={bikeModelCode}
+                onChange={handleBikeModelCodeChange}
+                onSelectModel={handleSelectMotorcycleModel}
+                selectedModelName={selectedBike?.name}
+              />
 
               {/* Price and Base Price Display */}
               <div>
@@ -1000,8 +1180,18 @@ ${
         isOpen={showQuotation}
         onClose={() => setShowQuotation(false)}
         result={currentCalculation}
-        selectedBikeName={selectedBike?.name}
+        selectedBikeName={
+          selectedBike?.name ||
+          (bikeModelCode
+            ? MOTORCYCLE_MODELS.find(
+                (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+              )?.name
+            : undefined)
+        }
+        modelCode={bikeModelCode}
         officerInfo={officerDisplay}
+        initialCustomerName={customerName}
+        initialCustomerPhone={customerPhone}
       />
 
       <AmortizationModal
@@ -1028,8 +1218,18 @@ ${
         result={currentCalculation}
         selectedPlan={insurancePlan === 'none' ? 'plan_b' : insurancePlan}
         selectedYears={insuranceYears}
-        selectedBikeName={selectedBike?.name}
+        selectedBikeName={
+          selectedBike
+            ? bikeModelCode
+              ? `${selectedBike.name} (${bikeModelCode})`
+              : selectedBike.name
+            : bikeModelCode
+            ? `รหัส ${bikeModelCode}`
+            : undefined
+        }
         officerInfo={officerDisplay}
+        officerLicense={officerLicense}
+        customerInfo={customerDisplay}
         onUpdatePlan={(plan, years) => {
           setInsurancePlan(plan);
           setInsuranceYears(years);
