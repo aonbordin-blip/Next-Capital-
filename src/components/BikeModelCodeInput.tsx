@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Tag, X, Check, ChevronDown, Sparkles } from 'lucide-react';
-import { MOTORCYCLE_MODELS, MotorcycleModel, searchMotorcycleModels } from '../data/motorcycleModels';
+import { MOTORCYCLE_MODELS, MotorcycleModel, searchMotorcycleModels, findModelByCode } from '../data/motorcycleModels';
 
 interface Props {
   value: string;
@@ -63,8 +63,8 @@ export const BikeModelCodeInput: React.FC<Props> = ({
     inputRef.current?.focus();
   };
 
-  // Find matching model if exists
-  const matchedModel = MOTORCYCLE_MODELS.find(
+  // Find matching model if exists using findModelByCode or exact match
+  const matchedModel = findModelByCode(value) || MOTORCYCLE_MODELS.find(
     (m) => m.code.toUpperCase() === value.trim().toUpperCase()
   );
 
@@ -75,7 +75,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
           <Tag className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
           <span>รหัสรุ่นรถ (MODEL CODE)</span>
           <span className="text-[9.5px] font-normal text-slate-400">
-            (ค้นหาและแสดงในใบเสนอราคา)
+            (ค้นหาและแสดงในใบเสนอราคา HONDA / YAMAHA)
           </span>
         </label>
         {value && (
@@ -100,7 +100,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
           value={query}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
-          placeholder="พิมพ์รหัสหรือชื่อรุ่น เช่น AFS110, ACF125, WW160, PCX, GIORNO"
+          placeholder="พิมพ์รหัสหรือชื่อรุ่น เช่น FAZZIO, PG-1, NMAX, WR155, GIORNO, PCX"
           className="w-full glass-input-field rounded-xl pl-8 pr-8 py-2 text-xs text-blue-950 font-bold font-mono uppercase tracking-wide outline-none hover:border-blue-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-500/20 transition-all placeholder:font-sans placeholder:font-normal placeholder:normal-case placeholder:text-slate-400"
         />
 
@@ -129,7 +129,16 @@ export const BikeModelCodeInput: React.FC<Props> = ({
       {/* Matched Model Neat Status Card (ไม่มีราคาต้นทุน/แนนซ์ จัดระเบียบสวยงาม) */}
       {matchedModel && (
         <div className="mt-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white rounded-xl border border-blue-200/80 flex items-center justify-between text-xs shadow-2xs">
-          <div className="flex items-center gap-2 truncate">
+          <div className="flex items-center gap-1.5 truncate">
+            {matchedModel.brand && (
+              <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
+                matchedModel.brand === 'YAMAHA' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-red-600 text-white'
+              }`}>
+                {matchedModel.brand}
+              </span>
+            )}
             <span className="font-mono text-[11px] font-bold text-blue-700 bg-white px-2 py-0.5 rounded border border-blue-200/90 tracking-wide uppercase shadow-2xs">
               {matchedModel.code}
             </span>
@@ -168,8 +177,19 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                       isSelected ? 'bg-blue-50/90 border-l-4 border-l-blue-600 pl-2.5' : ''
                     }`}
                   >
-                    {/* Left: Model Code in Monospace */}
-                    <div className="flex items-center gap-2 min-w-0">
+                    {/* Left: Model Code in Monospace & Brand */}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {m.brand && (
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                          isSelected
+                            ? 'bg-blue-900 text-white'
+                            : m.brand === 'YAMAHA'
+                            ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}>
+                          {m.brand}
+                        </span>
+                      )}
                       <span className={`font-mono text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-md ${
                         isSelected
                           ? 'bg-blue-700 text-white'

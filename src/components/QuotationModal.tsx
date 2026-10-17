@@ -13,7 +13,7 @@ import {
 import html2canvas from 'html2canvas';
 import { CalculationResult } from '../types';
 import { formatBaht, cleanPlanNameForLine } from '../data/proposals';
-import { MOTORCYCLE_MODELS } from '../data/motorcycleModels';
+import { MOTORCYCLE_MODELS, findModelByCode } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
 
@@ -45,8 +45,7 @@ export const QuotationModal: React.FC<Props> = ({
   // Find model name matching model code if available
   const getModelNameByCode = (code: string): string | null => {
     if (!code || !code.trim()) return null;
-    const clean = code.trim().toUpperCase();
-    const found = MOTORCYCLE_MODELS.find((m) => m.code.toUpperCase() === clean);
+    const found = findModelByCode(code);
     return found ? found.name : null;
   };
 
@@ -685,8 +684,11 @@ ${
           </div>
 
           {/* Note */}
-          <div style={{ fontSize: '10px', color: '#475569', textAlign: 'center', lineHeight: 1.4, marginTop: '2px', fontWeight: '500' }}>
-            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+          <div style={{ fontSize: '10.5px', color: '#1e3a8a', textAlign: 'center', lineHeight: 1.4, marginTop: '4px', fontWeight: 'bold' }}>
+            * ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+          </div>
+          <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', lineHeight: 1.3, marginTop: '2px' }}>
+            (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
           </div>
           <div style={{ fontSize: '9px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3, marginTop: '3px' }}>
             ระบบคำนวณค่างวดและออกใบเสนอราคา • พัฒนาระบบโดย Bordin 6683
@@ -1100,8 +1102,11 @@ ${
                 </div>
               </div>
 
-              <div className="text-[10.5px] text-slate-500 text-center font-medium">
-                * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+              <div className="text-[11px] text-blue-900 text-center font-bold">
+                * ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+              </div>
+              <div className="text-[9.5px] text-slate-500 text-center font-normal">
+                (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
               </div>
               <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
                 <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>

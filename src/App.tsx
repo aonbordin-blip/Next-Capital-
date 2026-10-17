@@ -45,7 +45,7 @@ import { InsuranceComparisonModal } from './components/InsuranceComparisonModal'
 import { InsuranceDocModal } from './components/InsuranceDocModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { BikeModelCodeInput } from './components/BikeModelCodeInput';
-import { MotorcycleModel, MOTORCYCLE_MODELS } from './data/motorcycleModels';
+import { MotorcycleModel, MOTORCYCLE_MODELS, findModelByCode } from './data/motorcycleModels';
 
 export default function App() {
   // Form states
@@ -202,6 +202,16 @@ export default function App() {
     setVehiclePrice(bike.price);
     handleProposalChange(bike.proposalKey);
 
+    // Auto-match bike model code if available in MOTORCYCLE_MODELS
+    const cleanBikeName = bike.name.toLowerCase().replace(/[\s\-_/]+/g, '');
+    const matched = MOTORCYCLE_MODELS.find((m) => {
+      const cleanMName = m.name.toLowerCase().replace(/[\s\-_/]+/g, '');
+      return cleanBikeName.includes(cleanMName) || cleanMName.includes(cleanBikeName);
+    });
+    if (matched) {
+      setBikeModelCode(matched.code.toUpperCase());
+    }
+
     if (bike.proposalKey === 'honda_yamaha') {
       setDownMode('percent');
       setDownValue(bike.defaultDownPercent || 15);
@@ -212,6 +222,14 @@ export default function App() {
     }
   };
 
+  // Helper to map brand string safely to BikePreset brand union
+  const toPresetBrand = (b?: string): 'Honda' | 'Yamaha' | 'Vespa' | 'Lambretta' | 'Other' => {
+    if (b?.toUpperCase() === 'YAMAHA') return 'Yamaha';
+    if (b?.toUpperCase() === 'VESPA') return 'Vespa';
+    if (b?.toUpperCase() === 'LAMBRETTA') return 'Lambretta';
+    return 'Honda';
+  };
+
   // When selecting a model from the model code autocomplete
   const handleSelectMotorcycleModel = (model: MotorcycleModel) => {
     const upperCode = model.code.toUpperCase();
@@ -219,7 +237,7 @@ export default function App() {
     setSelectedBike({
       id: model.id,
       name: model.name,
-      brand: 'Honda',
+      brand: toPresetBrand(model.brand),
       price: vehiclePrice,
       proposalKey: proposalKey,
       defaultDownPercent: downMode === 'percent' ? downValue : 15,
@@ -230,14 +248,14 @@ export default function App() {
   const handleBikeModelCodeChange = (code: string) => {
     const upperCode = code.toUpperCase();
     setBikeModelCode(upperCode);
-    const matched = MOTORCYCLE_MODELS.find(
+    const matched = findModelByCode(upperCode) || MOTORCYCLE_MODELS.find(
       (m) => m.code.toUpperCase() === upperCode.trim().toUpperCase()
     );
     if (matched) {
       setSelectedBike({
         id: matched.id,
         name: matched.name,
-        brand: 'Honda',
+        brand: toPresetBrand(matched.brand),
         price: vehiclePrice,
         proposalKey: proposalKey,
         defaultDownPercent: downMode === 'percent' ? downValue : 15,
