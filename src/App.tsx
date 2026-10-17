@@ -302,7 +302,8 @@ ${
 💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
 ⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
-รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}`;
+รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}
+* ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital`;
 
     try {
       await navigator.clipboard.writeText(summary);

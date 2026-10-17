@@ -184,7 +184,8 @@ ${
     ? `• เงินพร้อมออกรถสุทธิ: ${formatBaht(result.totalDriveAwayCost)}`
     : ''
 }
-📌 หมายเหตุ: ${result.remarkText}`;
+📌 หมายเหตุ: ${result.remarkText}
+* ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital`;
 
     try {
       await navigator.clipboard.writeText(text);
@@ -684,8 +685,11 @@ ${
           </div>
 
           {/* Note */}
-          <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>
-            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ • พัฒนาระบบโดย Bordin 6683
+          <div style={{ fontSize: '10px', color: '#475569', textAlign: 'center', lineHeight: 1.4, marginTop: '2px', fontWeight: '500' }}>
+            * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+          </div>
+          <div style={{ fontSize: '9px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3, marginTop: '3px' }}>
+            ระบบคำนวณค่างวดและออกใบเสนอราคา • พัฒนาระบบโดย Bordin 6683
           </div>
         </div>
       </div>
@@ -1096,8 +1100,8 @@ ${
                 </div>
               </div>
 
-              <div className="text-[10px] text-slate-400 text-center">
-                * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+              <div className="text-[10.5px] text-slate-500 text-center font-medium">
+                * เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
               </div>
               <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
                 <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>
