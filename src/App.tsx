@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Bike,
   HelpCircle,
@@ -28,7 +28,11 @@ import {
   Lock,
   AlertTriangle,
   Share2,
+  Plus,
+  Minus,
 } from 'lucide-react';
+import { AnimatedNumber } from './components/AnimatedNumber';
+import { triggerHaptic } from './utils/haptics';
 import {
   PROPOSALS,
   INSURANCE_PLANS,
@@ -184,6 +188,7 @@ export default function App() {
 
   // When proposal changes, adjust valid terms and default down mode
   const handleProposalChange = (newKey: ProposalKey) => {
+    triggerHaptic('medium');
     setProposalKey(newKey);
     const newProposal = PROPOSALS[newKey];
 
@@ -204,6 +209,7 @@ export default function App() {
 
   // When selecting a preset motorcycle
   const handleSelectBike = (bike: BikePreset) => {
+    triggerHaptic('light');
     setSelectedBike(bike);
     setVehiclePrice(bike.price);
     handleProposalChange(bike.proposalKey);
@@ -269,15 +275,23 @@ export default function App() {
     }
   };
 
-  // Quick down payment pill clicks
+  // Quick down payment pill clicks with haptic feedback
   const handleQuickDownPercent = (pct: number) => {
+    triggerHaptic('selection');
     setDownMode('percent');
     setDownValue(pct);
   };
 
   const handleQuickDownAmount = (amt: number) => {
+    triggerHaptic('selection');
     setDownMode('amount');
     setDownValue(amt);
+  };
+
+  // Quick vehicle price adjustment helper (+/- step)
+  const handleAdjustPrice = (delta: number) => {
+    triggerHaptic('selection');
+    setVehiclePrice((prev) => Math.max(0, (prev || 0) + delta));
   };
 
   // Perform hire purchase calculation (including insurance premium in vehicle price)
@@ -292,6 +306,19 @@ export default function App() {
     insurancePlan,
     insuranceYears
   );
+
+  // Subtle hero card pulse/flash effect when calculations change
+  const [isHeroPulsing, setIsHeroPulsing] = useState<boolean>(false);
+  useEffect(() => {
+    setIsHeroPulsing(true);
+    const timer = setTimeout(() => setIsHeroPulsing(false), 450);
+    return () => clearTimeout(timer);
+  }, [
+    currentCalculation.monthlyInstallment,
+    currentCalculation.financeAmount,
+    insurancePlan,
+    term,
+  ]);
 
   // Term comparisons
   const comparisons = getTermComparisons(
@@ -331,8 +358,9 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
     try {
       await navigator.clipboard.writeText(summary);
+      triggerHaptic('success');
       setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 2000);
+      setTimeout(() => setCopyFeedback(false), 2400);
     } catch {
       // ignore
     }
@@ -698,6 +726,25 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                   className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
                   placeholder="เช่น 65000"
                 />
+                {/* Interactive quick price adjustment steppers */}
+                <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-0.5 text-[10px]">
+                  <span className="text-slate-400 font-medium mr-0.5 shrink-0">ปรับราคาเร็ว:</span>
+                  {[
+                    { label: '-5,000', delta: -5000 },
+                    { label: '-1,000', delta: -1000 },
+                    { label: '+1,000', delta: 1000 },
+                    { label: '+5,000', delta: 5000 },
+                  ].map((step) => (
+                    <button
+                      key={step.label}
+                      type="button"
+                      onClick={() => handleAdjustPrice(step.delta)}
+                      className="px-2 py-0.5 rounded-lg font-bold text-slate-600 hover:text-blue-700 bg-white/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
+                    >
+                      {step.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
@@ -887,6 +934,34 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     ))}
                   </div>
                 )}
+
+                {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
+                <div className="pt-2 space-y-1">
+                  <div className="h-2 w-full bg-slate-200/90 rounded-full overflow-hidden flex p-0.5 border border-slate-300/60 shadow-inner">
+                    <div
+                      style={{
+                        width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
+                      }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 shadow-2xs"
+                    />
+                    <div
+                      style={{
+                        width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
+                      }}
+                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
+                    <span className="flex items-center gap-1 text-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      ดาวน์ {currentCalculation.downPercent.toFixed(1)}% (฿{formatBaht(currentCalculation.downAmount)})
+                    </span>
+                    <span className="flex items-center gap-1 text-blue-900">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+                      จัด {(100 - currentCalculation.downPercent).toFixed(1)}% (฿{formatBaht(currentCalculation.baseFinanceAmount)})
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Term Selection */}
