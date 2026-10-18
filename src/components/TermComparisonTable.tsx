@@ -83,9 +83,6 @@ export const TermComparisonTable: React.FC<Props> = ({
                         <div className="w-3.5 h-3.5 rounded-full border border-slate-300/80 flex-shrink-0" />
                       )}
                       <span>{item.term} งวด</span>
-                      <span className="text-[10px] text-slate-400 font-normal">
-                        ({(item.term / 12).toFixed(item.term % 12 === 0 ? 0 : 1)} ปี)
-                      </span>
                       {item.isCappedByEir && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold flex items-center gap-0.5">
                           🔒 EIR 23%
