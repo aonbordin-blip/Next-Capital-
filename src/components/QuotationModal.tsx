@@ -703,7 +703,7 @@ ${
             (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
           </div>
           <div style={{ fontSize: '9px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3, marginTop: '3px' }}>
-            ระบบคำนวณค่างวดและออกใบเสนอราคา • พัฒนาระบบโดย Bordin 6683
+            ระบบคำนวณค่างวดและออกใบเสนอราคา • บมจ. เน็กซ์ แคปปิตอล (NCAP)
           </div>
         </div>
       </div>
@@ -727,7 +727,7 @@ ${
 
           {/* Modal Action Bar */}
           <div className="no-print relative px-5 py-3.5 border-b border-slate-200 bg-slate-50/95 flex flex-col sm:flex-row items-center justify-between gap-3 pr-14 sm:pr-16">
-            {/* Left: Document Title + Creator Badge */}
+            {/* Left: Document Title */}
             <div className="flex items-center gap-2.5 self-start sm:self-center">
               <div className="p-2 bg-blue-100 text-blue-800 rounded-xl flex-shrink-0 shadow-xs">
                 <FileText className="w-5 h-5" />
@@ -737,9 +737,6 @@ ${
                   <h2 className="text-sm sm:text-base font-bold text-slate-800">
                     ใบเสนอราคาเช่าซื้อ (Quotation)
                   </h2>
-                  <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 bg-indigo-50/90 border border-indigo-200 px-2 py-0.5 rounded-full shadow-2xs">
-                    ✨ by Bordin 6683
-                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
                   ดาวน์โหลดเป็นรูปภาพ หรือส่งทาง LINE ได้ทันที
@@ -1150,7 +1147,7 @@ ${
                 <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>
                 <span>•</span>
                 <span className="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                  by Bordin 6683
+                  Next Capital (NCAP)
                 </span>
               </div>
             </div>
