@@ -562,14 +562,9 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     />
                   </div>
                   <div className="col-span-12">
-                    <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center justify-between">
-                      <span className="flex items-center gap-1 font-semibold text-blue-950">
-                        <Award className="w-3.5 h-3.5 text-amber-600" />
-                        เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
-                      </span>
-                      <span className="text-[9.5px] text-slate-400 font-normal">
-                        (สำหรับตารางความคุ้มครอง Group PA)
-                      </span>
+                    <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center gap-1 font-semibold text-blue-950">
+                      <Award className="w-3.5 h-3.5 text-amber-600" />
+                      เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
                     </label>
                     <input
                       type="text"
