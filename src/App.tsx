@@ -179,16 +179,7 @@ export default function App() {
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
 
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
-  const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>(() => {
-    try {
-      if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-        return 'dashboard';
-      }
-    } catch {
-      // ignore
-    }
-    return 'mobile';
-  });
+  const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
 
   // When proposal changes, adjust valid terms and default down mode
@@ -351,13 +342,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div
-      className={`min-h-screen relative bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col items-center p-0 sm:p-4 select-none ${
-        viewMode === 'dashboard'
-          ? 'overflow-x-hidden overflow-y-auto justify-start py-3 sm:py-6'
-          : 'overflow-hidden justify-center'
-      }`}
-    >
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col justify-center items-center p-0 sm:p-4 select-none">
       {/* Dynamic Ambient Background Glowing Blobs for Glassmorphism Depth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Next Capital Royal Blue Orb */}
@@ -376,9 +361,9 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         />
       </div>
 
-      {/* Top Floating View Mode Switcher */}
-      <div className="no-print flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 bg-white/70 backdrop-blur-xl px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/80 shadow-[0_4px_20px_-4px_rgba(28,68,156,0.1)] text-xs z-10">
-        <span className="text-slate-500 font-medium text-[11px] sm:text-xs">มุมมอง:</span>
+      {/* Top Floating View Mode Switcher on Desktop */}
+      <div className="no-print hidden sm:flex items-center gap-2 mb-3 bg-white/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/80 shadow-[0_4px_20px_-4px_rgba(28,68,156,0.1)] text-xs z-10">
+        <span className="text-slate-500 font-medium">มุมมอง:</span>
         <button
           onClick={() => setViewMode('mobile')}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
@@ -406,7 +391,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         className={`w-full transition-all duration-300 z-10 ${
           viewMode === 'mobile'
             ? 'max-w-[440px] h-screen sm:h-[900px] sm:max-h-[940px] sm:rounded-[36px]'
-            : 'w-[96%] max-w-[1440px] 2xl:max-w-[1600px] h-auto min-h-[750px] sm:rounded-[32px] my-2 sm:my-4'
+            : 'max-w-5xl h-auto min-h-[750px] sm:rounded-[32px] my-4'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
@@ -502,20 +487,20 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-3.5 ${
-            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-7 space-y-0 items-start' : ''
+          className={`flex-1 overflow-y-auto px-5 py-4 space-y-3.5 ${
+            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-5 space-y-0' : ''
           }`}
         >
           {/* Left Column / Input Controls */}
           <div
             className={`space-y-3.5 ${
-              viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-6 space-y-4' : ''
+              viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-5' : ''
             }`}
           >
             {/* Input Form Card - Frosted Glass */}
-            <div className="glass-card-primary rounded-2xl p-4 sm:p-5 lg:p-6 space-y-3.5 relative overflow-hidden">
+            <div className="glass-card-primary rounded-2xl p-4 space-y-3 relative overflow-hidden">
               {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2.5">
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
@@ -583,7 +568,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2.5">
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
@@ -716,7 +701,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/50 border border-blue-200/60 space-y-2.5">
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/50 border border-blue-200/60 space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-blue-700" />
@@ -1150,11 +1135,11 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
           {/* Right Column / Results & Analysis */}
           <div
             className={`space-y-3.5 ${
-              viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-6 space-y-4' : ''
+              viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-7' : ''
             }`}
           >
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece */}
-            <div className="glass-card-hero rounded-2xl p-4 sm:p-6 lg:p-7 text-center relative overflow-hidden">
+            <div className="glass-card-hero rounded-2xl p-4 text-center relative overflow-hidden">
               {/* Proposal Code Badge & Insurance Badge */}
               <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
                 <span className="inline-block bg-white/80 text-blue-800 border border-blue-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
@@ -1198,7 +1183,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </p>
 
               {/* Summary Grid - Translucent Glass Chips */}
-              <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-2.5 mt-3 pt-3 border-t border-slate-200/60 text-left text-[11px]">
+              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-200/60 text-left text-[11px]">
                 <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์รวม:</div>
                   <span className="font-bold text-slate-900 text-xs">
