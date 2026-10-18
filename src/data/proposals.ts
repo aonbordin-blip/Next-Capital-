@@ -574,6 +574,7 @@ export function calculateLease(
     downAmount,
     downPercent,
     vehicleFinanceAmount,
+    baseFinanceAmount: vehicleFinanceAmount,
     insurancePlan,
     insurancePlanName,
     insuranceYears,

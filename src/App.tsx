@@ -954,11 +954,11 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                   <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
                     <span className="flex items-center gap-1 text-emerald-800">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                      ดาวน์ {currentCalculation.downPercent.toFixed(1)}% (฿{formatBaht(currentCalculation.downAmount)})
+                      ดาวน์ {currentCalculation.downPercent.toFixed(1)}% ({formatBaht(currentCalculation.downAmount)})
                     </span>
                     <span className="flex items-center gap-1 text-blue-900">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-                      จัด {(100 - currentCalculation.downPercent).toFixed(1)}% (฿{formatBaht(currentCalculation.baseFinanceAmount)})
+                      จัด {(100 - currentCalculation.downPercent).toFixed(1)}% ({formatBaht(currentCalculation.vehicleFinanceAmount)})
                     </span>
                   </div>
                 </div>

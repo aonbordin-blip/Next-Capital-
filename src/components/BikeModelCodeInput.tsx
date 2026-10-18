@@ -74,9 +74,6 @@ export const BikeModelCodeInput: React.FC<Props> = ({
         <label className="text-[11px] text-slate-700 font-bold flex items-center gap-1.5">
           <Tag className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
           <span>รหัสรุ่นรถ (MODEL CODE)</span>
-          <span className="text-[9.5px] font-normal text-slate-400">
-            (ค้นหาและแสดงในใบเสนอราคา HONDA / YAMAHA)
-          </span>
         </label>
         {value && (
           <button

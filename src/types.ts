@@ -60,6 +60,7 @@ export interface CalculationResult {
   downAmount: number; // เงินดาวน์
   downPercent: number; // เงินดาวน์ %
   vehicleFinanceAmount: number; // ยอดจัดเฉพาะตัวรถ (ราคารถ - เงินดาวน์) เช่น 71,500
+  baseFinanceAmount: number; // ยอดจัดเฉพาะตัวรถ (alias ของ vehicleFinanceAmount)
   insurancePlan: InsurancePlan;
   insurancePlanName: string;
   insuranceYears: InsuranceYears;
