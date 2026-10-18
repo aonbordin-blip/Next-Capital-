@@ -446,20 +446,18 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         </div>
 
         {/* App Header */}
-        <header className="px-3.5 sm:px-5 py-2.5 sm:py-3 border-b border-white/50 bg-white/40 backdrop-blur-md flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="text-lg font-bold gradient-header-text tracking-tight">
-                MotoLease Calc
-              </h1>
-              <span className="text-[10px] font-bold bg-amber-100/90 text-amber-800 border border-amber-200/70 px-1.5 py-0.2 rounded-full">
-                2569
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium">
-              ระบบคำนวณค่างวด
-            </p>
+        <header className="px-3.5 sm:px-5 py-2.5 sm:py-3 border-b border-white/50 bg-white/40 backdrop-blur-md flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-lg font-bold gradient-header-text tracking-tight">
+              MotoLease Calc
+            </h1>
+            <span className="text-[10px] font-bold bg-amber-100/90 text-amber-800 border border-amber-200/70 px-1.5 py-0.2 rounded-full">
+              2569
+            </span>
           </div>
+          <span className="text-[11px] sm:text-xs text-slate-500 font-medium whitespace-nowrap">
+            ระบบคำนวณค่างวดรถจักรยานยนต์
+          </span>
         </header>
 
         {/* In-App PWA Install Banner */}
@@ -561,17 +559,6 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
                       className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
                     />
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1">
-                  <span className="text-slate-400">แสดงในเอกสาร:</span>
-                  <div className="font-semibold text-blue-950 truncate text-right">
-                    <span>ใบเสนอราคา: ( {officerDisplay} )</span>
-                    {officerLicense && (
-                      <span className="text-indigo-700 ml-1.5 font-normal text-[9.5px]">
-                        • ใบอนุญาต (ตาราง PA): <span className="font-mono font-semibold">{officerLicense}</span>
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
