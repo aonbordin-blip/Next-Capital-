@@ -457,26 +457,8 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium">
-              ระบบคำนวณค่างวดตามใบเสนอราคา (Proposal)
+              ระบบคำนวณค่างวด
             </p>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setShowBikePresets(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm shadow-blue-800/20 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
-              title="เลือกรุ่นรถยอดนิยม"
-            >
-              <Bike className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">เลือกรุ่นรถ</span>
-            </button>
-            <button
-              onClick={() => setShowProposalInfo(true)}
-              className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-white/70 rounded-xl transition-colors cursor-pointer"
-              title="ดูรายละเอียดเกณฑ์ Proposal"
-            >
-              <HelpCircle className="w-4 h-4" />
-            </button>
           </div>
         </header>
 
@@ -1432,9 +1414,11 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
         {/* Bottom Bar Info */}
         <footer className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-white/50 border-t border-white/60 backdrop-blur-md text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
-          <span className="font-semibold text-slate-600">Next Capital Public Company Limited (NCAP)</span>
-          <span className="text-[10px] text-slate-400 font-medium">
+          <span className="font-semibold text-slate-600">
             ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium">
+            พัฒนาระบบโดย Bordin 6683
           </span>
         </footer>
       </div>
