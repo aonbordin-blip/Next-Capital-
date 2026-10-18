@@ -10,8 +10,6 @@ import {
   Share2,
   Loader2,
   Award,
-  User,
-  Phone,
 } from 'lucide-react';
 import { CalculationResult, InsurancePlan, InsuranceYears } from '../types';
 import { INSURANCE_PLANS, formatBaht, cleanPlanNameForLine } from '../data/proposals';
@@ -1002,6 +1000,11 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                   borderRadius: '8px',
                   padding: '6px 8px',
                   textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  boxSizing: 'border-box',
                 }}
               >
                 {isSelected && (
@@ -1435,69 +1438,6 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                       </span>
                     </button>
                   ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Customer & Officer Info Edit Box */}
-            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                <span className="flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-emerald-700" />
-                  ข้อมูลลูกค้า & ผู้เสนอขาย (แสดงในเอกสาร):
-                </span>
-                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  อัปเดตลงเอกสารทันที
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-medium mb-1">
-                    ชื่อลูกค้า
-                  </label>
-                  <input
-                    type="text"
-                    value={currentCustomerName}
-                    onChange={(e) => handleCustomerNameChange(e.target.value)}
-                    placeholder="ใส่ชื่อลูกค้า (เช่น คุณสมชาย)"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
-                    <Phone className="w-2.5 h-2.5 text-slate-400" /> เบอร์โทรศัพท์ลูกค้า
-                  </label>
-                  <input
-                    type="tel"
-                    value={currentCustomerPhone}
-                    onChange={(e) => handleCustomerPhoneChange(e.target.value)}
-                    placeholder="08X-XXX-XXXX"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold font-mono outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-medium mb-1">
-                    ชื่อผู้เสนอขาย / เจ้าหน้าที่
-                  </label>
-                  <input
-                    type="text"
-                    value={currentOfficerInfo}
-                    onChange={(e) => handleOfficerInfoChange(e.target.value)}
-                    placeholder="ใส่ชื่อเจ้าหน้าที่ (ใส่โค้ด)"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
-                    <Award className="w-2.5 h-2.5 text-amber-600" /> เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
-                  </label>
-                  <input
-                    type="text"
-                    value={currentOfficerLicense}
-                    onChange={(e) => handleOfficerLicenseChange(e.target.value)}
-                    placeholder="เช่น 620400xxxx"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-indigo-950 font-bold font-mono outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                  />
                 </div>
               </div>
             </div>
