@@ -2,6 +2,7 @@ import React from 'react';
 import { Layers, CheckCircle2, ChevronRight } from 'lucide-react';
 import { TermComparisonItem } from '../types';
 import { formatBaht } from '../data/proposals';
+import { triggerHaptic } from '../utils/haptics';
 
 interface Props {
   comparisons: TermComparisonItem[];
@@ -68,7 +69,10 @@ export const TermComparisonTable: React.FC<Props> = ({
               return (
                 <tr
                   key={item.term}
-                  onClick={() => onSelectTerm(item.term)}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    onSelectTerm(item.term);
+                  }}
                   className={`cursor-pointer transition-all duration-150 ${
                     isSelected
                       ? 'bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-blue-50/60 text-blue-950 font-semibold shadow-xs'
