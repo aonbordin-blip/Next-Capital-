@@ -703,7 +703,7 @@ ${
             (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
           </div>
           <div style={{ fontSize: '9px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3, marginTop: '3px' }}>
-            ระบบคำนวณค่างวดและออกใบเสนอราคา • พัฒนาระบบโดย Bordin 6683
+            ระบบคำนวณค่างวดและออกใบเสนอราคา Next Capital
           </div>
         </div>
       </div>
@@ -737,9 +737,6 @@ ${
                   <h2 className="text-sm sm:text-base font-bold text-slate-800">
                     ใบเสนอราคาเช่าซื้อ (Quotation)
                   </h2>
-                  <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 bg-indigo-50/90 border border-indigo-200 px-2 py-0.5 rounded-full shadow-2xs">
-                    ✨ by Bordin 6683
-                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
                   ดาวน์โหลดเป็นรูปภาพ หรือส่งทาง LINE ได้ทันที
@@ -1142,11 +1139,7 @@ ${
                 (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
               </div>
               <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
-                <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>
-                <span>•</span>
-                <span className="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                  by Bordin 6683
-                </span>
+                <span>ระบบคำนวณค่างวดและออกใบเสนอราคา Next Capital</span>
               </div>
             </div>
           </div>

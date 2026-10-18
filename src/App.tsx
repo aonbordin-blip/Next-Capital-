@@ -30,6 +30,7 @@ import {
   Share2,
   Plus,
   Minus,
+  Banknote,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -453,9 +454,6 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               <span className="text-[10px] font-bold bg-amber-100/90 text-amber-800 border border-amber-200/70 px-1.5 py-0.2 rounded-full">
                 2569
               </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full shadow-2xs">
-                ✨ by Bordin 6683
-              </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium">
               ระบบคำนวณค่างวดตามใบเสนอราคา (Proposal)
@@ -582,17 +580,6 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     />
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1">
-                  <span className="text-slate-400">แสดงในเอกสาร:</span>
-                  <div className="font-semibold text-blue-950 truncate text-right">
-                    <span>ใบเสนอราคา: ( {officerDisplay} )</span>
-                    {officerLicense && (
-                      <span className="text-indigo-700 ml-1.5 font-normal text-[9.5px]">
-                        • ใบอนุญาต (ตาราง PA): <span className="font-mono font-semibold">{officerLicense}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
@@ -632,118 +619,126 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-                  <span className="text-slate-400">แสดงในเอกสาร:</span>
-                  <span className="font-semibold text-emerald-950 truncate">
-                    {customerDisplay}
-                  </span>
-                </div>
               </div>
 
-              {/* Proposal Select */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-[11px] text-slate-600 font-semibold flex items-center gap-1">
-                    เลือกประเภทข้อเสนอ (Proposal) *
+              {/* Vehicle & Proposal Information Card (กล่องข้อมูลรถและเงื่อนไขข้อเสนอ จัดเป็นกล่องเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-2xs space-y-3 transition-all hover:border-blue-300">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11.5px] text-slate-800 font-bold flex items-center gap-1.5">
+                    <Bike className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+                    <span>ข้อมูลรถและเงื่อนไขข้อเสนอ</span>
                   </label>
-                  <button
-                    onClick={() => setShowProposalInfo(true)}
-                    className="text-[10px] text-blue-700 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
-                  >
-                    <Info className="w-3 h-3" /> ดูเงื่อนไข
-                  </button>
-                </div>
-                <div className="relative">
-                  <button
-                    type="button"
-                    id="proposal-select-trigger"
-                    onClick={() => setShowProposalSelector(true)}
-                    className="w-full glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-semibold outline-none flex items-center justify-between cursor-pointer hover:border-blue-400 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 pr-2">
-                      <span className="truncate text-xs font-bold text-slate-900">
-                        {currentProposal.name}
-                      </span>
-                      <span className="font-mono text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 whitespace-nowrap flex-shrink-0">
-                        ({currentProposal.code})
-                      </span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  </button>
-
-                  {/* Hidden accessibility select synced with state */}
-                  <select
-                    id="proposal-select"
-                    value={proposalKey}
-                    onChange={(e) => handleProposalChange(e.target.value as ProposalKey)}
-                    className="sr-only"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                  >
-                    <option value="small_bike">Small Bike (0082/2568)</option>
-                    <option value="top_small">Top Small (0082/2568)</option>
-                    <option value="aec">AEC (0093/2568)</option>
-                    <option value="fazzio">FAZZIO (0376/2569)</option>
-                    <option value="vespa">VESPA/LAMBRETTA (0351/2569)</option>
-                    <option value="honda_yamaha">Honda/Yamaha (0098/2569)</option>
-                    <option value="second_hand">รถมือสอง 2ND (0080/2568)</option>
-                  </select>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>{currentProposal.category}</span>
-                  <span className="font-mono text-blue-700 font-bold">
-                    {currentProposal.code}
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/95 px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                    รุ่นรถ • Proposal • ราคา
                   </span>
                 </div>
-              </div>
 
-              {/* Bike Model Code Input (รหัสรุ่นรถ - ค้นหาและเลือกรหัสรุ่นจากตาราง) */}
-              <BikeModelCodeInput
-                value={bikeModelCode}
-                onChange={handleBikeModelCodeChange}
-                onSelectModel={handleSelectMotorcycleModel}
-                selectedModelName={selectedBike?.name}
-              />
-
-              {/* Price and Base Price Display */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-[11px] text-slate-600 font-semibold">
-                    ราคารถตัวเปล่า (บาท) *
-                  </label>
-                  {currentCalculation.insuranceTotalWithVat > 0 && (
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                      + ประกันรวม VAT: {formatBaht(currentCalculation.insuranceTotalWithVat, true)}
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  step="500"
-                  value={vehiclePrice || ''}
-                  onChange={(e) => setVehiclePrice(Number(e.target.value))}
-                  className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
-                  placeholder="เช่น 65000"
-                />
-                {/* Interactive quick price adjustment steppers */}
-                <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-0.5 text-[10px]">
-                  <span className="text-slate-400 font-medium mr-0.5 shrink-0">ปรับราคาเร็ว:</span>
-                  {[
-                    { label: '-5,000', delta: -5000 },
-                    { label: '-1,000', delta: -1000 },
-                    { label: '+1,000', delta: 1000 },
-                    { label: '+5,000', delta: 5000 },
-                  ].map((step) => (
+                {/* Proposal Select */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[11px] text-slate-600 font-semibold flex items-center gap-1">
+                      เลือกประเภทข้อเสนอ (Proposal) *
+                    </label>
                     <button
-                      key={step.label}
                       type="button"
-                      onClick={() => handleAdjustPrice(step.delta)}
-                      className="px-2 py-0.5 rounded-lg font-bold text-slate-600 hover:text-blue-700 bg-white/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
+                      onClick={() => setShowProposalInfo(true)}
+                      className="text-[10px] text-blue-700 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
                     >
-                      {step.label}
+                      <Info className="w-3 h-3" /> ดูเงื่อนไข
                     </button>
-                  ))}
+                  </div>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      id="proposal-select-trigger"
+                      onClick={() => setShowProposalSelector(true)}
+                      className="w-full glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-semibold outline-none flex items-center justify-between cursor-pointer hover:border-blue-400 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <span className="truncate text-xs font-bold text-slate-900">
+                          {currentProposal.name}
+                        </span>
+                        <span className="font-mono text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 whitespace-nowrap flex-shrink-0">
+                          ({currentProposal.code})
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    </button>
+
+                    {/* Hidden accessibility select synced with state */}
+                    <select
+                      id="proposal-select"
+                      value={proposalKey}
+                      onChange={(e) => handleProposalChange(e.target.value as ProposalKey)}
+                      className="sr-only"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                    >
+                      <option value="small_bike">Small Bike (0082/2568)</option>
+                      <option value="top_small">Top Small (0082/2568)</option>
+                      <option value="aec">AEC (0093/2568)</option>
+                      <option value="fazzio">FAZZIO (0376/2569)</option>
+                      <option value="vespa">VESPA/LAMBRETTA (0351/2569)</option>
+                      <option value="honda_yamaha">Honda/Yamaha (0098/2569)</option>
+                      <option value="second_hand">รถมือสอง 2ND (0080/2568)</option>
+                    </select>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+                    <span>{currentProposal.category}</span>
+                    <span className="font-mono text-blue-700 font-bold">
+                      {currentProposal.code}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bike Model Code Input (รหัสรุ่นรถ - ค้นหาและเลือกรหัสรุ่นจากตาราง) */}
+                <BikeModelCodeInput
+                  value={bikeModelCode}
+                  onChange={handleBikeModelCodeChange}
+                  onSelectModel={handleSelectMotorcycleModel}
+                  selectedModelName={selectedBike?.name}
+                />
+
+                {/* Price and Base Price Display */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[11px] text-slate-600 font-semibold">
+                      ราคารถตัวเปล่า (บาท) *
+                    </label>
+                    {currentCalculation.insuranceTotalWithVat > 0 && (
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                        + ประกันรวม VAT: {formatBaht(currentCalculation.insuranceTotalWithVat, true)}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    value={vehiclePrice || ''}
+                    onChange={(e) => setVehiclePrice(Number(e.target.value))}
+                    className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
+                    placeholder="เช่น 65000"
+                  />
+                  {/* Interactive quick price adjustment steppers */}
+                  <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-0.5 text-[10px]">
+                    <span className="text-slate-400 font-medium mr-0.5 shrink-0">ปรับราคาเร็ว:</span>
+                    {[
+                      { label: '-5,000', delta: -5000 },
+                      { label: '-1,000', delta: -1000 },
+                      { label: '+1,000', delta: 1000 },
+                      { label: '+5,000', delta: 5000 },
+                    ].map((step) => (
+                      <button
+                        key={step.label}
+                        type="button"
+                        onClick={() => handleAdjustPrice(step.delta)}
+                        className="px-2 py-0.5 rounded-lg font-bold text-slate-600 hover:text-blue-700 bg-white/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
+                      >
+                        {step.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -851,319 +846,324 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 )}
               </div>
 
-              {/* Down Payment Section */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-[11px] text-slate-600 font-semibold">
-                    เงินดาวน์ {downMode === 'percent' ? '(%)' : '(บาท)'} *
+              {/* Financing Terms Card (กล่องเงื่อนไขการเงิน เงินดาวน์และระยะเวลาผ่อน จัดเป็นกล่องเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-2xs space-y-3 transition-all hover:border-blue-300">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11.5px] text-slate-800 font-bold flex items-center gap-1.5">
+                    <Banknote className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+                    <span>เงื่อนไขเงินดาวน์และระยะเวลาผ่อน</span>
                   </label>
-                  {/* Toggle Mode */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const effectivePrice = currentCalculation.baseVehiclePrice;
-                      if (downMode === 'amount') {
-                        const pct =
-                          effectivePrice > 0 ? (downValue / effectivePrice) * 100 : 15;
-                        setDownMode('percent');
-                        setDownValue(Math.round(pct));
-                      } else {
-                        const amt = (effectivePrice * downValue) / 100;
-                        setDownMode('amount');
-                        setDownValue(Math.round(amt));
-                      }
-                    }}
-                    className="text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50/80 px-1.5 py-0.5 rounded border border-blue-200/50 transition-colors cursor-pointer"
-                    title="สลับโหมดใส่เป็นบาท หรือ %"
-                  >
-                    สลับเป็น {downMode === 'amount' ? '%' : 'บาท'}
-                  </button>
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  max={downMode === 'percent' ? 100 : currentCalculation.baseVehiclePrice}
-                  step={downMode === 'percent' ? 1 : 1000}
-                  value={downValue || ''}
-                  onChange={(e) => setDownValue(Number(e.target.value))}
-                  className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
-                />
-              </div>
-
-              {/* Quick Down Payment Chips */}
-              <div className="pt-0.5">
-                <div className="text-[10px] text-slate-400 mb-1 flex justify-between font-medium">
-                  <span>เลือกเงินดาวน์ด่วน:</span>
-                  <span className="font-semibold text-slate-700">
-                    คิดเป็น {currentCalculation.downPercent.toFixed(1)}% (
-                    {formatBaht(currentCalculation.downAmount)})
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/95 px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                    เงินดาวน์ • งวดผ่อน • ดอกเบี้ย
                   </span>
                 </div>
-                {downMode === 'amount' ? (
-                  <div className="flex gap-1 overflow-x-auto pb-1 text-[10px]">
-                    {[0, 5000, 10000, 15000, 20000, 25000, 35000].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => handleQuickDownAmount(amt)}
-                        className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                          downValue === amt
-                            ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-xs'
-                            : 'glass-pill text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        {amt === 0 ? 'ฟรีดาวน์' : `฿${amt.toLocaleString()}`}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex gap-1 overflow-x-auto pb-1 text-[10px]">
-                    {[0, 10, 15, 20, 25, 30, 40].map((pct) => (
-                      <button
-                        key={pct}
-                        type="button"
-                        onClick={() => handleQuickDownPercent(pct)}
-                        className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                          downValue === pct
-                            ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-xs'
-                            : 'glass-pill text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        {pct}%
-                      </button>
-                    ))}
-                  </div>
-                )}
 
-                {/* Interactive Down Payment Range Slider */}
-                <div className="pt-2 pb-0.5 px-0.5">
+                {/* Down Payment Section */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[11px] text-slate-600 font-semibold">
+                      เงินดาวน์ {downMode === 'percent' ? '(%)' : '(บาท)'} *
+                    </label>
+                    {/* Toggle Mode */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const effectivePrice = currentCalculation.baseVehiclePrice;
+                        if (downMode === 'amount') {
+                          const pct =
+                            effectivePrice > 0 ? (downValue / effectivePrice) * 100 : 15;
+                          setDownMode('percent');
+                          setDownValue(Math.round(pct));
+                        } else {
+                          const amt = (effectivePrice * downValue) / 100;
+                          setDownMode('amount');
+                          setDownValue(Math.round(amt));
+                        }
+                      }}
+                      className="text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50/80 px-1.5 py-0.5 rounded border border-blue-200/50 transition-colors cursor-pointer"
+                      title="สลับโหมดใส่เป็นบาท หรือ %"
+                    >
+                      สลับเป็น {downMode === 'amount' ? '%' : 'บาท'}
+                    </button>
+                  </div>
                   <input
-                    type="range"
+                    type="number"
                     min="0"
-                    max={downMode === 'amount' ? Math.max(vehiclePrice, 10000) : 50}
-                    step={downMode === 'amount' ? 1000 : 1}
-                    value={downValue}
-                    onChange={(e) => {
-                      triggerHaptic('selection');
-                      setDownValue(Number(e.target.value));
-                    }}
-                    className="w-full accent-blue-600 hover:accent-blue-700 cursor-pointer h-1.5 bg-slate-200/90 rounded-lg transition-all"
+                    max={downMode === 'percent' ? 100 : currentCalculation.baseVehiclePrice}
+                    step={downMode === 'percent' ? 1 : 1000}
+                    value={downValue || ''}
+                    onChange={(e) => setDownValue(Number(e.target.value))}
+                    className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
                   />
                 </div>
 
-                {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
-                <div className="pt-2 space-y-1">
-                  <div className="h-2 w-full bg-slate-200/90 rounded-full overflow-hidden flex p-0.5 border border-slate-300/60 shadow-inner">
-                    <div
-                      style={{
-                        width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
-                      }}
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 shadow-2xs"
-                    />
-                    <div
-                      style={{
-                        width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
-                      }}
-                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300"
-                    />
-                  </div>
-                  <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
-                    <span className="flex items-center gap-1 text-emerald-800">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                      ดาวน์ {currentCalculation.downPercent.toFixed(1)}% (฿{formatBaht(currentCalculation.downAmount)})
-                    </span>
-                    <span className="flex items-center gap-1 text-blue-900">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-                      จัด {(100 - currentCalculation.downPercent).toFixed(1)}% (฿{formatBaht(currentCalculation.vehicleFinanceAmount)})
+                {/* Quick Down Payment Chips */}
+                <div className="pt-0.5">
+                  <div className="text-[10px] text-slate-400 mb-1 flex justify-between font-medium">
+                    <span>เลือกเงินดาวน์ด่วน:</span>
+                    <span className="font-semibold text-slate-700">
+                      คิดเป็น {currentCalculation.downPercent.toFixed(1)}% (
+                      {formatBaht(currentCalculation.downAmount)})
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Term Selection */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] text-slate-600 font-semibold">
-                    ระยะเวลาผ่อน (งวด) *
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowEirInfo(true)}
-                    className="text-[10px] text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    <Scale className="w-3 h-3 text-amber-500" />
-                    เกณฑ์ดอกเบี้ย EIR 23%
-                  </button>
-                </div>
-                <div className="relative">
-                  <select
-                    id="term-select"
-                    value={term}
-                    onChange={(e) => setTerm(Number(e.target.value))}
-                    className="w-full appearance-none glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none pr-7 cursor-pointer"
-                  >
-                    {currentProposal.validTerms.map((t) => (
-                      <option key={t} value={t}>
-                        {t} งวด ({(t / 12).toFixed(t % 12 === 0 ? 0 : 1)} ปี)
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Interest Rate Comparison: ช่องตาม Proposal (ซ้าย) vs ช่องอัตราสูงสุด (ขวา) */}
-              <div className="space-y-1.5 pt-0.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-[11px] text-slate-700 font-bold">
-                    หลักเกณฑ์อัตราดอกเบี้ยที่ใช้
-                  </label>
-                  <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                    {currentCalculation.isCappedByEir ? (
-                      <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                        <Lock className="w-2.5 h-2.5" /> ล็อกตามเกณฑ์ EIR 23%
-                      </span>
-                    ) : (
-                      <span className="text-blue-700 font-medium">
-                        ✓ ไม่เกินเพดาน สคบ.
-                      </span>
-                    )}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {/* ช่องตาม Proposal (ซ้าย) */}
-                  <div
-                    className={`rounded-xl p-2.5 border transition-all ${
-                      currentCalculation.isCappedByEir
-                        ? 'bg-amber-50/70 border-amber-300/80 shadow-xs'
-                        : 'bg-slate-50/80 border-slate-200/80'
-                    }`}
-                  >
-                    <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
-                      อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
-                      <span className="text-amber-600 font-bold">ตาม Proposal</span>
+                  {downMode === 'amount' ? (
+                    <div className="flex gap-1 overflow-x-auto pb-1 text-[10px]">
+                      {[0, 5000, 10000, 15000, 20000, 25000, 35000].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => handleQuickDownAmount(amt)}
+                          className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                            downValue === amt
+                              ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-xs'
+                              : 'glass-pill text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          {amt === 0 ? 'ฟรีดาวน์' : `฿${amt.toLocaleString()}`}
+                        </button>
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-base font-black text-slate-800">
-                        {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}
-                        <span className="text-[11px] font-normal text-slate-500 ml-1">% / เดือน</span>
-                      </div>
-                      {currentCalculation.isCappedByEir && (
-                        <span className="text-amber-800 text-[9.5px] bg-amber-200/80 px-1.5 py-0.5 rounded font-bold">
-                          เกินเพดาน
+                  ) : (
+                    <div className="flex gap-1 overflow-x-auto pb-1 text-[10px]">
+                      {[0, 10, 15, 20, 25, 30, 40].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => handleQuickDownPercent(pct)}
+                          className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                            downValue === pct
+                              ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-xs'
+                              : 'glass-pill text-slate-600 hover:text-slate-900'
+                          }`}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Interactive Down Payment Range Slider */}
+                  <div className="pt-2 pb-0.5 px-0.5">
+                    <input
+                      type="range"
+                      min="0"
+                      max={downMode === 'amount' ? Math.max(vehiclePrice, 10000) : 50}
+                      step={downMode === 'amount' ? 1000 : 1}
+                      value={downValue}
+                      onChange={(e) => {
+                        triggerHaptic('selection');
+                        setDownValue(Number(e.target.value));
+                      }}
+                      className="w-full accent-blue-600 hover:accent-blue-700 cursor-pointer h-1.5 bg-slate-200/90 rounded-lg transition-all"
+                    />
+                  </div>
+
+                  {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
+                  <div className="pt-2 space-y-1">
+                    <div className="h-2 w-full bg-slate-200/90 rounded-full overflow-hidden flex p-0.5 border border-slate-300/60 shadow-inner">
+                      <div
+                        style={{
+                          width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
+                        }}
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 shadow-2xs"
+                      />
+                      <div
+                        style={{
+                          width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
+                        }}
+                        className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
+                      <span className="flex items-center gap-1 text-emerald-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                        ดาวน์ {currentCalculation.downPercent.toFixed(1)}% (฿{formatBaht(currentCalculation.downAmount)})
+                      </span>
+                      <span className="flex items-center gap-1 text-blue-900">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+                        จัด {(100 - currentCalculation.downPercent).toFixed(1)}% (฿{formatBaht(currentCalculation.vehicleFinanceAmount)})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Term Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] text-slate-600 font-semibold">
+                      ระยะเวลาผ่อน (งวด) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowEirInfo(true)}
+                      className="text-[10px] text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Scale className="w-3 h-3 text-amber-500" />
+                      เกณฑ์ดอกเบี้ย EIR 23%
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <select
+                      id="term-select"
+                      value={term}
+                      onChange={(e) => setTerm(Number(e.target.value))}
+                      className="w-full appearance-none glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none pr-7 cursor-pointer"
+                    >
+                      {currentProposal.validTerms.map((t) => (
+                        <option key={t} value={t}>
+                          {t} งวด ({(t / 12).toFixed(t % 12 === 0 ? 0 : 1)} ปี)
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Interest Rate Comparison: ช่องตาม Proposal (ซ้าย) vs ช่องอัตราสูงสุด (ขวา) */}
+                <div className="space-y-1.5 pt-0.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] text-slate-700 font-bold">
+                      หลักเกณฑ์อัตราดอกเบี้ยที่ใช้
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                      {currentCalculation.isCappedByEir ? (
+                        <span className="text-emerald-700 font-bold flex items-center gap-0.5">
+                          <Lock className="w-2.5 h-2.5" /> ล็อกตามเกณฑ์ EIR 23%
+                        </span>
+                      ) : (
+                        <span className="text-blue-700 font-medium">
+                          ✓ ไม่เกินเพดาน สคบ.
                         </span>
                       )}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
-                      ขออัตรา {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% ตาม Proposal
-                    </div>
+                    </span>
                   </div>
 
-                  {/* ช่องอัตราสูงสุด (ขวา) */}
-                  <div
-                    className={`rounded-xl p-2.5 border transition-all ${
-                      currentCalculation.isCappedByEir
-                        ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
-                        : 'bg-blue-50/80 border-blue-300'
-                    }`}
-                  >
-                    <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
-                      อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
-                      <span className="text-amber-600 font-bold">{currentCalculation.eirMaxMessage}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-base font-black text-emerald-700 flex items-center gap-1">
-                        <Lock className="w-3.5 h-3.5 text-emerald-600 inline" />
-                        {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}
-                        <span className="text-[11px] font-normal text-emerald-800 ml-1">% / เดือน</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* ช่องตาม Proposal (ซ้าย) */}
+                    <div
+                      className={`rounded-xl p-2.5 border transition-all ${
+                        currentCalculation.isCappedByEir
+                          ? 'bg-amber-50/70 border-amber-300/80 shadow-xs'
+                          : 'bg-slate-50/80 border-slate-200/80'
+                      }`}
+                    >
+                      <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
+                        อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
+                        <span className="text-amber-600 font-bold">ตาม Proposal</span>
                       </div>
-                      <span className="text-[9.5px] bg-emerald-200 text-emerald-900 font-bold px-1.5 py-0.5 rounded">
-                        บังคับใช้จริง
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <div className="text-base font-black text-slate-800">
+                          {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}
+                          <span className="text-[11px] font-normal text-slate-500 ml-1">% / เดือน</span>
+                        </div>
+                        {currentCalculation.isCappedByEir && (
+                          <span className="text-amber-800 text-[9.5px] bg-amber-200/80 px-1.5 py-0.5 rounded font-bold">
+                            เกินเพดาน
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        ขออัตรา {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% ตาม Proposal
+                      </div>
                     </div>
-                    <div className="text-[10px] text-emerald-800 font-medium mt-0.5">
-                      อัตราสูงสุดที่ไม่เกินเพดาน EIR 23%
+
+                    {/* ช่องอัตราสูงสุด (ขวา) */}
+                    <div
+                      className={`rounded-xl p-2.5 border transition-all ${
+                        currentCalculation.isCappedByEir
+                          ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
+                          : 'bg-blue-50/80 border-blue-300'
+                      }`}
+                    >
+                      <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
+                        อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
+                        <span className="text-amber-600 font-bold">{currentCalculation.eirMaxMessage}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-base font-black text-emerald-700 flex items-center gap-1">
+                          <Lock className="w-3.5 h-3.5 text-emerald-600 inline" />
+                          {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}
+                          <span className="text-[11px] font-normal text-emerald-800 ml-1">% / เดือน</span>
+                        </div>
+                        <span className="text-[9.5px] bg-emerald-200 text-emerald-900 font-bold px-1.5 py-0.5 rounded">
+                          บังคับใช้จริง
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-emerald-800 font-medium mt-0.5">
+                        อัตราสูงสุดที่ไม่เกินเพดาน EIR 23%
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Explanation Callout when Capped */}
-                {currentCalculation.isCappedByEir && (
-                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 text-[11px] text-amber-950 space-y-1 shadow-xs animate-fade-in">
-                    <div className="flex items-start gap-1.5 font-bold text-amber-900">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span>ทำไมถึงต้องใช้ {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}% :</span>
-                    </div>
-                    <p className="text-[10.5px] text-amber-900/90 leading-relaxed pl-5">
-                      เนื่องจากตามเงื่อนไขของเคสนี้ (ราคารถ {formatBaht(currentCalculation.baseVehiclePrice)}, เงินดาวน์ {formatBaht(currentCalculation.downAmount)} และระยะเวลาผ่อน {term} งวด) หากใช้ดอกเบี้ย {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% จะทำให้อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR) สูงเกินเพดานกฎหมายกำหนด (ไม่เกิน 23% ต่อปี) ระบบจึงทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย คือ <strong className="text-emerald-800 underline font-bold">{(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}%</strong> แทน เพื่อให้ชุดข้อมูลชุดนี้ผ่านเกณฑ์การอนุมัติครับ
-                    </p>
-                    <div className="pl-5 pt-0.5 flex items-center justify-between">
-                      <span className="text-[10px] text-amber-800 font-medium">
-                        EIR สัญญานี้: {currentCalculation.eirAnnualPercent.toFixed(2)}% ต่อปี (ผ่านเกณฑ์)
-                      </span>
+                  {/* Clean indicator when capped by EIR */}
+                  {currentCalculation.isCappedByEir && (
+                    <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 text-[11px] text-amber-950 flex items-center justify-between shadow-2xs">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                        <Lock className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <span>ล็อกอัตราสูงสุดตามเกณฑ์ สคบ. (EIR ไม่เกิน 23% ต่อปี)</span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => setShowEirInfo(true)}
-                        className="text-[10px] text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
+                        className="text-[10.5px] text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer shrink-0 ml-2"
                       >
-                        อ่านเกณฑ์ควบคุมทั้งหมด →
+                        ดูเกณฑ์ →
                       </button>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              {/* Delivery Day Extra Costs Accordion */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIncludeDeliveryFees(!includeDeliveryFees)}
-                  className="w-full flex items-center justify-between py-1.5 px-2.5 glass-pill rounded-xl text-[11px] font-medium text-slate-600 transition-colors cursor-pointer"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Receipt className="w-3.5 h-3.5 text-blue-700" />
-                    ค่าใช้จ่ายวันออกรถ (พ.ร.บ. / ทะเบียน / ประกันรถหาย)
-                  </span>
-                  <span className="text-[10px] text-blue-700 font-bold">
-                    {includeDeliveryFees ? 'ซ่อน' : '+ เพิ่ม'}
-                  </span>
-                </button>
+                {/* Delivery Day Extra Costs Accordion */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIncludeDeliveryFees(!includeDeliveryFees)}
+                    className="w-full flex items-center justify-between py-1.5 px-2.5 glass-pill rounded-xl text-[11px] font-medium text-slate-600 transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Receipt className="w-3.5 h-3.5 text-blue-700" />
+                      ค่าใช้จ่ายวันออกรถ (พ.ร.บ. / ทะเบียน / ประกันรถหาย)
+                    </span>
+                    <span className="text-[10px] text-blue-700 font-bold">
+                      {includeDeliveryFees ? 'ซ่อน' : '+ เพิ่ม'}
+                    </span>
+                  </button>
 
-                {includeDeliveryFees && (
-                  <div className="mt-2 p-2.5 bg-white/60 backdrop-blur-md rounded-xl border border-white/80 text-xs space-y-2 shadow-xs">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[10px] text-slate-500 font-medium">
-                          ค่าจดทะเบียน + พ.ร.บ.
-                        </label>
-                        <input
-                          type="number"
-                          value={registrationFee}
-                          onChange={(e) => setRegistrationFee(Number(e.target.value))}
-                          className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold"
-                        />
+                  {includeDeliveryFees && (
+                    <div className="mt-2 p-2.5 bg-white/60 backdrop-blur-md rounded-xl border border-white/80 text-xs space-y-2 shadow-xs">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] text-slate-500 font-medium">
+                            ค่าจดทะเบียน + พ.ร.บ.
+                          </label>
+                          <input
+                            type="number"
+                            value={registrationFee}
+                            onChange={(e) => setRegistrationFee(Number(e.target.value))}
+                            className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-500 font-medium">
+                            ประกันรถหาย (1-2 ปี)
+                          </label>
+                          <input
+                            type="number"
+                            value={theftInsuranceFee}
+                            onChange={(e) => setTheftInsuranceFee(Number(e.target.value))}
+                            className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-[10px] text-slate-500 font-medium">
-                          ประกันรถหาย (1-2 ปี)
-                        </label>
-                        <input
-                          type="number"
-                          value={theftInsuranceFee}
-                          onChange={(e) => setTheftInsuranceFee(Number(e.target.value))}
-                          className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold"
-                        />
+                      <div className="text-[10px] text-slate-500 flex justify-between pt-1 border-t border-slate-200/50">
+                        <span>รวมค่าใช้จ่ายส่วนเพิ่ม:</span>
+                        <span className="font-bold text-slate-800">
+                          {formatBaht(registrationFee + theftInsuranceFee)}
+                        </span>
                       </div>
                     </div>
-                    <div className="text-[10px] text-slate-500 flex justify-between pt-1 border-t border-slate-200/50">
-                      <span>รวมค่าใช้จ่ายส่วนเพิ่ม:</span>
-                      <span className="font-bold text-slate-800">
-                        {formatBaht(registrationFee + theftInsuranceFee)}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons: 2 beautiful, modern primary action buttons */}
@@ -1389,15 +1389,10 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
           </div>
         </main>
 
-        {/* Bottom Bar Info with Creator Credit */}
+        {/* Bottom Bar Info */}
         <footer className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-white/50 border-t border-white/60 backdrop-blur-md text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
           <span className="font-semibold text-slate-600">Next Capital Public Company Limited (NCAP)</span>
-          <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/70 px-2.5 py-0.5 rounded-full shadow-2xs">
-            <span className="text-[10px] text-slate-500">พัฒนาโดย</span>
-            <span className="text-[10px] font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
-              by Bordin 6683
-            </span>
-          </div>
+          <span className="text-[10px] text-slate-400">ระบบคำนวณค่างวดและออกใบเสนอราคาเช่าซื้อ</span>
         </footer>
       </div>
 
