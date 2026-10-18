@@ -27,6 +27,7 @@ import {
   Scale,
   Lock,
   AlertTriangle,
+  Share2,
 } from 'lucide-react';
 import {
   PROPOSALS,
@@ -1253,13 +1254,29 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 >
                   <Table className="w-3.5 h-3.5" /> ตารางแจกแจงรายงวด
                 </button>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleQuickCopy}
+                    className="flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer bg-emerald-50/80 hover:bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200/90 transition-all shadow-2xs"
+                    title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
+                  >
+                    {copyFeedback ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" /> คัดลอกสำเร็จ!
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3.5 h-3.5 text-emerald-600" /> ส่ง LINE
+                      </>
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setShowQuotation(true)}
-                    className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+                    className="flex items-center gap-1 text-slate-700 hover:text-blue-900 font-medium cursor-pointer hover:bg-white/80 px-2 py-1 rounded-lg transition-colors"
                   >
-                    <FileText className="w-3.5 h-3.5" /> ใบเสนอราคาทางการ
+                    <FileText className="w-3.5 h-3.5 text-blue-700" /> ใบเสนอราคาทางการ
                   </button>
                 </div>
               </div>

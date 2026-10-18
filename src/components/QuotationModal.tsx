@@ -469,7 +469,7 @@ ${
                   <>
                     <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
                       <td style={{ padding: '9px 16px 11px 28px', color: '#1e3a8a', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        • ค่าเบี้ยประกันภัย PA ({result.insurancePlanName})
+                        • ค่าเบี้ยประกันภัย PA ({cleanPlanNameForLine(result.insurancePlanName)})
                       </td>
                       <td style={{ padding: '9px 16px 11px 16px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500', verticalAlign: 'middle', lineHeight: '1.4' }}>
                         +{formatBaht(result.insuranceBasePremium)}
@@ -569,9 +569,6 @@ ${
                 >
                   <td style={{ padding: '13px 16px 15px 16px', fontSize: '13px', verticalAlign: 'middle', lineHeight: '1.4' }}>
                     <div>ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)</div>
-                    <div style={{ fontSize: '9px', color: '#1e40af', fontWeight: '500', marginTop: '2px' }}>
-                      * ปัดเศษลงท้ายด้วย 0 หรือ 5 ตามระบบ Next Capital
-                    </div>
                   </td>
                   <td style={{ padding: '13px 16px 15px 16px', textAlign: 'right', fontSize: '15px', fontWeight: '800', verticalAlign: 'middle', lineHeight: '1.4' }}>
                     {formatBaht(result.monthlyInstallment)} /เดือน
@@ -957,7 +954,7 @@ ${
                       <>
                         <tr className="bg-blue-50/40">
                           <td className="pt-2.5 pb-3 px-4 text-blue-900 pl-6 align-middle leading-normal">
-                            • ค่าเบี้ยประกันภัย PA ({result.insurancePlanName})
+                            • ค่าเบี้ยประกันภัย PA ({cleanPlanNameForLine(result.insurancePlanName)})
                           </td>
                           <td className="pt-2.5 pb-3 px-4 text-right text-blue-900 font-medium align-middle leading-normal">
                             +{formatBaht(result.insuranceBasePremium)}
@@ -1057,9 +1054,6 @@ ${
                     <tr className="bg-blue-100/70 font-bold border-t-2 border-blue-400">
                       <td className="pt-3.5 pb-4 px-4 text-blue-950 text-sm align-middle leading-normal">
                         <div>ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)</div>
-                        <div className="text-[10px] text-blue-800 font-medium mt-0.5">
-                          * ปัดเศษลงท้ายด้วย 0 หรือ 5 ตามระบบ Next Capital
-                        </div>
                       </td>
                       <td className="pt-3.5 pb-4 px-4 text-right text-blue-950 text-base font-extrabold align-middle leading-normal">
                         {formatBaht(result.monthlyInstallment)} /เดือน
