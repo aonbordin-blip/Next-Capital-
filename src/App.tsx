@@ -41,6 +41,7 @@ import {
   getTermComparisons,
   formatBaht,
   cleanPlanNameForLine,
+  formatTermYearMonth,
 } from './data/proposals';
 import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears } from './types';
 import { ProposalInfoModal } from './components/ProposalInfoModal';
@@ -350,7 +351,7 @@ ${
    • เบี้ยรวมภาษี 7%: ${formatBaht(currentCalculation.insuranceTotalWithVat, true)}\n`
     : ''
 }💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(currentCalculation.financeAmount, true)}
-⏱️ ผ่อน: ${currentCalculation.term} งวด | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
+⏱️ ผ่อน: ${currentCalculation.term} งวด (${formatTermYearMonth(currentCalculation.term)}) | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
 ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${currentCalculation.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
 ⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
@@ -578,17 +579,6 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
                       className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
                     />
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1">
-                  <span className="text-slate-400">แสดงในเอกสาร:</span>
-                  <div className="font-semibold text-blue-950 truncate text-right">
-                    <span>ใบเสนอราคา: ( {officerDisplay} )</span>
-                    {officerLicense && (
-                      <span className="text-indigo-700 ml-1.5 font-normal text-[9.5px]">
-                        • ใบอนุญาต (ตาราง PA): <span className="font-mono font-semibold">{officerLicense}</span>
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1049,7 +1039,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     >
                       {currentProposal.validTerms.map((t) => (
                         <option key={t} value={t}>
-                          {t} งวด ({(t / 12).toFixed(t % 12 === 0 ? 0 : 1)} ปี)
+                          {t} งวด ({formatTermYearMonth(t)})
                         </option>
                       ))}
                     </select>

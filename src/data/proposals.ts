@@ -664,3 +664,16 @@ export function formatNumber(amount: number, decimals = 0): string {
     maximumFractionDigits: decimals,
   });
 }
+
+/**
+ * จัดรูปแบบระยะเวลาผ่อน (งวด) ให้แสดงเป็น ปี และ เดือน
+ * เช่น 12 -> 1 ปี, 18 -> 1 ปี 6 เดือน, 36 -> 3 ปี, 42 -> 3 ปี 6 เดือน, 48 -> 4 ปี
+ */
+export function formatTermYearMonth(termInMonths: number): string {
+  if (!termInMonths || isNaN(termInMonths) || termInMonths <= 0) return '0 เดือน';
+  const years = Math.floor(termInMonths / 12);
+  const months = termInMonths % 12;
+  if (years === 0) return `${months} เดือน`;
+  if (months === 0) return `${years} ปี`;
+  return `${years} ปี ${months} เดือน`;
+}

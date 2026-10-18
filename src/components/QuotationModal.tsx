@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { CalculationResult } from '../types';
-import { formatBaht, cleanPlanNameForLine } from '../data/proposals';
+import { formatBaht, cleanPlanNameForLine, formatTermYearMonth } from '../data/proposals';
 import { MOTORCYCLE_MODELS, findModelByCode } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
@@ -168,7 +168,7 @@ ${
     : ''
 }💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(result.financeAmount, true)}
 📊 ข้อเสนอ: ${result.proposalName} (${result.proposalCode})
-⏱️ ระยะเวลาผ่อน: ${result.term} งวด (${(result.term / 12).toFixed(1)} ปี)
+⏱️ ระยะเวลาผ่อน: ${result.term} งวด (${formatTermYearMonth(result.term)})
 📈 อัตราดอกเบี้ย: ${result.rateDisplayText}
 ${result.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${result.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(result.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(result.totalInterest, true)}
