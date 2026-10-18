@@ -418,8 +418,8 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
       <div
         className={`w-full transition-all duration-300 z-10 ${
           viewMode === 'mobile'
-            ? 'max-w-full sm:max-w-[560px] md:max-w-[620px] h-screen sm:h-[920px] sm:max-h-[96vh] sm:rounded-[28px]'
-            : 'max-w-6xl xl:max-w-7xl h-auto min-h-[750px] sm:rounded-[28px] my-1 sm:my-3'
+            ? 'max-w-full sm:max-w-[620px] md:max-w-[680px] h-screen sm:h-[920px] sm:max-h-[96vh] sm:rounded-[28px]'
+            : 'w-full max-w-[98%] xl:max-w-[96%] 2xl:max-w-[1560px] h-auto min-h-[750px] sm:rounded-[28px] my-1 sm:my-3'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
@@ -515,30 +515,30 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 overflow-y-auto px-2 sm:px-4 md:px-5 py-3 sm:py-4 space-y-3 sm:space-y-3.5 ${
-            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 space-y-0' : ''
+          className={`flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 lg:px-9 py-3.5 sm:py-5 space-y-4 ${
+            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 space-y-0' : ''
           }`}
         >
           {/* Left Column / Input Controls */}
           <div
-            className={`space-y-3 sm:space-y-3.5 ${
+            className={`space-y-4 ${
               viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-5' : ''
             }`}
           >
-            {/* Input Form Card - Frosted Glass */}
-            <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
+            {/* Input Form Card - Frosted Glass with Interactive Hover Micro-lift */}
+            <div className="glass-card-primary rounded-2xl p-3.5 sm:p-5 lg:p-6 space-y-4 relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
               {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-2xs space-y-2.5 transition-all hover:border-blue-300">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
+                  <label className="text-[11.5px] text-slate-800 font-bold flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
                     <span>ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/95 px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
                     ลงชื่อในใบเสนอราคา & เอกสาร
                   </span>
                 </div>
-                <div className="grid grid-cols-12 gap-2">
+                <div className="grid grid-cols-12 gap-2.5">
                   <div className="col-span-7 sm:col-span-8">
                     <label className="block text-[10px] text-slate-500 font-medium mb-1">
                       ชื่อเจ้าหน้าที่
@@ -548,7 +548,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       value={officerName}
                       onChange={(e) => handleOfficerNameChange(e.target.value)}
                       placeholder="ใส่ชื่อเจ้าหน้าที่"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                      className="w-full glass-input-field rounded-xl px-3 py-2 text-xs sm:text-[13px] text-slate-900 font-bold outline-none"
                     />
                   </div>
                   <div className="col-span-5 sm:col-span-4">
@@ -560,16 +560,16 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       value={officerCode}
                       onChange={(e) => handleOfficerCodeChange(e.target.value)}
                       placeholder="ใส่โค้ด"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
+                      className="w-full glass-input-field rounded-xl px-3 py-2 text-xs sm:text-[13px] text-blue-900 font-bold font-mono outline-none"
                     />
                   </div>
                   <div className="col-span-12">
                     <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center justify-between">
                       <span className="flex items-center gap-1 font-semibold text-blue-950">
-                        <Award className="w-3 h-3 text-amber-600" />
+                        <Award className="w-3.5 h-3.5 text-amber-600" />
                         เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
                       </span>
-                      <span className="text-[9px] text-slate-400 font-normal">
+                      <span className="text-[9.5px] text-slate-400 font-normal">
                         (สำหรับตารางความคุ้มครอง Group PA)
                       </span>
                     </label>
@@ -578,7 +578,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       value={officerLicense}
                       onChange={(e) => handleOfficerLicenseChange(e.target.value)}
                       placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
+                      className="w-full glass-input-field rounded-xl px-3 py-2 text-xs sm:text-[13px] text-blue-950 font-semibold font-mono outline-none"
                     />
                   </div>
                 </div>
@@ -596,17 +596,17 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-2xs space-y-2.5 transition-all hover:border-emerald-300">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
+                  <label className="text-[11.5px] text-slate-800 font-bold flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
                     <span>ข้อมูลลูกค้า</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-emerald-800 bg-white/90 px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-emerald-800 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
                     แสดงในใบเสนอราคา & LINE
                   </span>
                 </div>
-                <div className="grid grid-cols-12 gap-2">
+                <div className="grid grid-cols-12 gap-2.5">
                   <div className="col-span-7 sm:col-span-7">
                     <label className="block text-[10px] text-slate-500 font-medium mb-1">
                       ชื่อลูกค้า
@@ -616,7 +616,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       value={customerName}
                       onChange={(e) => handleCustomerNameChange(e.target.value)}
                       placeholder="ใส่ชื่อลูกค้า (เช่น คุณสมชาย)"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                      className="w-full glass-input-field rounded-xl px-3 py-2 text-xs sm:text-[13px] text-slate-900 font-bold outline-none"
                     />
                   </div>
                   <div className="col-span-5 sm:col-span-5">
@@ -628,7 +628,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       value={customerPhone}
                       onChange={(e) => handleCustomerPhoneChange(e.target.value)}
                       placeholder="08X-XXX-XXXX"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold font-mono outline-none"
+                      className="w-full glass-input-field rounded-xl px-3 py-2 text-xs sm:text-[13px] text-slate-900 font-bold font-mono outline-none"
                     />
                   </div>
                 </div>
@@ -935,6 +935,22 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                   </div>
                 )}
 
+                {/* Interactive Down Payment Range Slider */}
+                <div className="pt-2 pb-0.5 px-0.5">
+                  <input
+                    type="range"
+                    min="0"
+                    max={downMode === 'amount' ? Math.max(vehiclePrice, 10000) : 50}
+                    step={downMode === 'amount' ? 1000 : 1}
+                    value={downValue}
+                    onChange={(e) => {
+                      triggerHaptic('selection');
+                      setDownValue(Number(e.target.value));
+                    }}
+                    className="w-full accent-blue-600 hover:accent-blue-700 cursor-pointer h-1.5 bg-slate-200/90 rounded-lg transition-all"
+                  />
+                </div>
+
                 {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
                 <div className="pt-2 space-y-1">
                   <div className="h-2 w-full bg-slate-200/90 rounded-full overflow-hidden flex p-0.5 border border-slate-300/60 shadow-inner">
@@ -958,7 +974,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     </span>
                     <span className="flex items-center gap-1 text-blue-900">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-                      จัด {(100 - currentCalculation.downPercent).toFixed(1)}% (฿{formatBaht(currentCalculation.baseFinanceAmount)})
+                      จัด {(100 - currentCalculation.downPercent).toFixed(1)}% (฿{formatBaht(currentCalculation.vehicleFinanceAmount)})
                     </span>
                   </div>
                 </div>
@@ -1213,38 +1229,44 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-7' : ''
             }`}
           >
-            {/* Result Hero Card - Frosted Glassmorphism Masterpiece */}
-            <div className="glass-card-hero rounded-2xl p-3 sm:p-4 text-center relative overflow-hidden">
+            {/* Result Hero Card - Frosted Glassmorphism Masterpiece with Shimmer Effect */}
+            <div
+              className={`glass-card-hero rounded-2xl p-4 sm:p-6 lg:p-7 text-center relative overflow-hidden transition-all duration-300 shadow-md hover:shadow-lg ${
+                isHeroPulsing ? 'animate-card-flash ring-2 ring-blue-500/40 shadow-xl' : ''
+              }`}
+            >
+              {/* Luxury Specular Shimmer Light Sweep */}
+              <div className="shimmer-light" />
+
               {/* Proposal Code Badge & Insurance Badge */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
-                <span className="inline-block bg-white/80 text-blue-800 border border-blue-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5 relative z-10">
+                <span className="inline-block bg-white/90 text-blue-800 border border-blue-200/80 px-3 py-0.5 rounded-full text-[10.5px] font-bold tracking-wide shadow-2xs">
                   {currentCalculation.proposalCode}
                 </span>
                 {currentCalculation.insurancePremium > 0 && (
-                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/80 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
-                    <ShieldCheck className="w-3 h-3 text-amber-600" />
+                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/90 px-3 py-0.5 rounded-full text-[10.5px] font-bold tracking-wide shadow-2xs">
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
                     {currentCalculation.insurancePlanName}
                   </span>
                 )}
-                {currentCalculation.minInterestApplied && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-rose-700 bg-rose-50/90 border border-rose-200 px-2 py-0.5 rounded-full font-semibold">
-                    <ShieldAlert className="w-3 h-3" /> ดอกเบี้ยขั้นต่ำ
-                  </span>
-                )}
               </div>
 
-              <p className="text-[11px] text-slate-500 font-semibold tracking-wide">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-semibold tracking-wide relative z-10">
                 ค่างวดต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
               </p>
 
-              {/* Monthly Installment Highlight with Gradient Accent */}
-              <div className="text-3xl sm:text-4xl font-extrabold text-[#1C449C] my-1 tracking-tight drop-shadow-xs">
-                {formatBaht(currentCalculation.monthlyInstallment)}
-                <span className="text-xs font-normal text-slate-500 ml-1">/เดือน</span>
+              {/* Monthly Installment Highlight with Gradient Accent & Smooth Animated Counter */}
+              <div className="text-3.5xl sm:text-5xl font-extrabold text-[#1C449C] my-1.5 tracking-tight drop-shadow-xs flex items-center justify-center relative z-10">
+                <AnimatedNumber
+                  value={currentCalculation.monthlyInstallment}
+                  formatFn={(val) => formatBaht(val)}
+                  className="font-extrabold tracking-tight"
+                />
+                <span className="text-xs sm:text-sm font-normal text-slate-500 ml-1.5">/เดือน</span>
               </div>
 
               {/* Installment Rounding Badge (ลงท้าย 0 หรือ 5) */}
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-[10px] text-blue-900 font-semibold mb-1 shadow-2xs">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-[10.5px] text-blue-900 font-semibold mb-1 shadow-2xs">
                 <span>ปัดเศษลงท้าย 0 หรือ 5 (ระบบ Next Capital)</span>
                 {currentCalculation.rawMonthlyInstallment !== currentCalculation.monthlyInstallment && (
                   <span className="text-slate-400 font-normal">
@@ -1253,51 +1275,51 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 )}
               </div>
 
-              <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto truncate">
+              <p className="text-[10.5px] text-slate-500 font-medium max-w-sm mx-auto truncate">
                 {currentCalculation.remarkText}
               </p>
 
               {/* Summary Grid - Translucent Glass Chips */}
-              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-200/60 text-left text-[11px]">
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mt-4 pt-4 border-t border-slate-200/60 text-left text-[11px] sm:text-xs">
+                <div className="bg-white/80 backdrop-blur-md p-3 sm:p-3.5 rounded-xl border border-white/90 shadow-2xs hover:shadow-xs transition-shadow">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์รวม:</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm">
                     {formatBaht(currentCalculation.financeAmount, true)}
                   </span>
                   {currentCalculation.insuranceTotalWithVat > 0 ? (
-                    <div className="text-[9px] text-blue-700 font-semibold truncate">
+                    <div className="text-[9.5px] text-blue-700 font-semibold truncate mt-0.5">
                       (รถ {formatBaht(currentCalculation.vehicleFinanceAmount)} + PA+VAT {formatBaht(currentCalculation.insuranceTotalWithVat, true)})
                     </div>
                   ) : (
-                    <div className="text-[9px] text-slate-500">
+                    <div className="text-[9.5px] text-slate-500 mt-0.5">
                       (ยอดจัดตัวรถ)
                     </div>
                   )}
                 </div>
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+                <div className="bg-white/80 backdrop-blur-md p-3 sm:p-3.5 rounded-xl border border-white/90 shadow-2xs hover:shadow-xs transition-shadow">
                   <div className="text-[10px] text-slate-400 font-medium">ดอกเบี้ยรายเดือน:</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm">
                     {formatBaht(currentCalculation.monthlyInterest, true)} /งวด
                   </span>
-                  <div className="text-[9px] text-slate-500">
+                  <div className="text-[9.5px] text-slate-500 mt-0.5">
                     รวมทั้งสัญญา: {formatBaht(currentCalculation.totalInterest, true)}
                   </div>
                 </div>
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+                <div className="bg-white/80 backdrop-blur-md p-3 sm:p-3.5 rounded-xl border border-white/90 shadow-2xs hover:shadow-xs transition-shadow">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดรวมทั้งสัญญา:</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm">
                     {formatBaht(currentCalculation.totalWithVat, true)}
                   </span>
-                  <div className="text-[9px] text-slate-500">
+                  <div className="text-[9.5px] text-slate-500 mt-0.5">
                     (ยอดจัด + ดอกเบี้ยรวม)
                   </div>
                 </div>
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+                <div className="bg-white/80 backdrop-blur-md p-3 sm:p-3.5 rounded-xl border border-white/90 shadow-2xs hover:shadow-xs transition-shadow">
                   <div className="text-[10px] text-slate-400 font-medium">ภาษีมูลค่าเพิ่มในสัญญา (7%):</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm">
                     {formatBaht(currentCalculation.vatAmount, true)}
                   </span>
-                  <div className="text-[9px] text-slate-500">
+                  <div className="text-[9.5px] text-slate-500 mt-0.5">
                     ยอดก่อน VAT: {formatBaht(currentCalculation.totalBeforeVat, true)}
                   </div>
                 </div>

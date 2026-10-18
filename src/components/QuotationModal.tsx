@@ -1033,11 +1033,6 @@ ${
                     <tr>
                       <td className="pt-3 pb-3.5 px-4 text-slate-700 align-middle leading-normal">
                         7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
-                        {result.minInterestApplied && (
-                          <span className="text-[10px] text-rose-500 ml-1 font-semibold">
-                            (เกณฑ์ขั้นต่ำ 7,000 บ.)
-                          </span>
-                        )}
                       </td>
                       <td className="pt-3 pb-3.5 px-4 text-right font-medium align-middle leading-normal">
                         {formatBaht(result.totalInterest, true)}
