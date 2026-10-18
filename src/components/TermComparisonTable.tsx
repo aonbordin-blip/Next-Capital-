@@ -22,17 +22,17 @@ export const TermComparisonTable: React.FC<Props> = ({
   }
 
   return (
-    <div className="glass-card-primary rounded-2xl p-3.5 sm:p-5 lg:p-6 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+    <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden">
       {/* Subtle top specular sheen */}
-      <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
-      <div className="flex items-center justify-between mb-3.5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-xl bg-blue-100/90 text-blue-700 flex items-center justify-center shadow-2xs">
-            <Layers className="w-4 h-4" />
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-blue-100/80 text-blue-700 flex items-center justify-center">
+            <Layers className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
+            <h3 className="text-xs font-bold text-slate-800 tracking-tight">
               ตารางเปรียบเทียบระยะเวลางวดผ่อน
             </h3>
           </div>
@@ -42,7 +42,7 @@ export const TermComparisonTable: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenEirInfo}
-              className="text-[10px] sm:text-[11px] text-blue-700 hover:text-blue-900 font-bold px-2.5 py-1 rounded-full bg-blue-50/90 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer shadow-2xs"
+              className="text-[10px] text-blue-700 hover:text-blue-900 font-bold px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
             >
               ⚖️ เกณฑ์ EIR 23%
             </button>
@@ -53,14 +53,14 @@ export const TermComparisonTable: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto -mx-1 sm:mx-0">
-        <table className="w-full text-left text-xs sm:text-[13px]">
+      <div className="overflow-x-auto -mx-1">
+        <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-slate-200/80 text-slate-400 text-[10px] sm:text-[11px] uppercase font-bold tracking-wider">
-              <th className="pb-3 pl-3">งวดผ่อน</th>
-              <th className="pb-3 text-right">ค่างวด/เดือน (รวม VAT)</th>
-              <th className="pb-3 text-right hidden sm:table-cell">ดอกเบี้ยรวม</th>
-              <th className="pb-3 text-right pr-3">ยอดรวมทั้งสิ้น</th>
+            <tr className="border-b border-slate-200/60 text-slate-400 text-[10px] uppercase font-semibold">
+              <th className="pb-2.5 pl-2.5">งวดผ่อน</th>
+              <th className="pb-2.5 text-right">ค่างวด/เดือน (รวม VAT)</th>
+              <th className="pb-2.5 text-right hidden sm:table-cell">ดอกเบี้ยรวม</th>
+              <th className="pb-2.5 text-right pr-2.5">ยอดรวมทั้งสิ้น</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/80">
