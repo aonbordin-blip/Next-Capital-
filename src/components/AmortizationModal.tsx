@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Table, HelpCircle } from 'lucide-react';
 import { CalculationResult } from '../types';
-import { formatBaht } from '../data/proposals';
+import { formatBaht, formatTermYearMonth } from '../data/proposals';
 
 interface Props {
   isOpen: boolean;
@@ -117,7 +117,8 @@ export const AmortizationModal: React.FC<Props> = ({
         {/* Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs">
           <div className="text-slate-500">
-            รวม {term} งวด: <span className="font-bold text-slate-800">{formatBaht(result.totalWithVat)}</span>
+            รวม {term} งวด ({formatTermYearMonth(term)}):{' '}
+            <span className="font-bold text-slate-800">{formatBaht(result.totalWithVat)}</span>
           </div>
           <button
             onClick={onClose}

@@ -41,6 +41,7 @@ import {
   getTermComparisons,
   formatBaht,
   cleanPlanNameForLine,
+  formatTermYearMonth,
 } from './data/proposals';
 import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears } from './types';
 import { ProposalInfoModal } from './components/ProposalInfoModal';
@@ -350,7 +351,7 @@ ${
    • เบี้ยรวมภาษี 7%: ${formatBaht(currentCalculation.insuranceTotalWithVat, true)}\n`
     : ''
 }💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(currentCalculation.financeAmount, true)}
-⏱️ ผ่อน: ${currentCalculation.term} งวด | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
+⏱️ ผ่อน: ${currentCalculation.term} งวด (${formatTermYearMonth(currentCalculation.term)}) | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
 ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${currentCalculation.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
 ⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
@@ -1049,7 +1050,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     >
                       {currentProposal.validTerms.map((t) => (
                         <option key={t} value={t}>
-                          {t} งวด ({(t / 12).toFixed(t % 12 === 0 ? 0 : 1)} ปี)
+                          {t} งวด ({formatTermYearMonth(t)})
                         </option>
                       ))}
                     </select>

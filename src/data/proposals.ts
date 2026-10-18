@@ -664,3 +664,29 @@ export function formatNumber(amount: number, decimals = 0): string {
     maximumFractionDigits: decimals,
   });
 }
+
+/**
+ * แปลงจำนวนงวดผ่อนชำระ (หรือจำนวนปีที่มีทศนิยม) ให้เป็นรูปแบบ "X ปี Y เดือน" หรือ "X ปี"
+ * เช่น 42 งวด (หรือ 3.5 ปี) -> "3 ปี 6 เดือน"
+ * เช่น 36 งวด (หรือ 3 ปี) -> "3 ปี"
+ * เช่น 18 งวด (หรือ 1.5 ปี) -> "1 ปี 6 เดือน"
+ * เช่น 30 งวด (หรือ 2.5 ปี) -> "2 ปี 6 เดือน"
+ * เช่น 54 งวด (หรือ 4.5 ปี) -> "4 ปี 6 เดือน"
+ */
+export function formatTermYearMonth(term: number): string {
+  if (!term || isNaN(term) || term <= 0) return '';
+  // กรณีส่งมาเป็นจำนวนปีที่มีทศนิยม เช่น 3.5 ปี
+  const totalMonths =
+    term <= 10 && !Number.isInteger(term) ? Math.round(term * 12) : Math.round(term);
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  if (years > 0 && months > 0) {
+    return `${years} ปี ${months} เดือน`;
+  }
+  if (years > 0) {
+    return `${years} ปี`;
+  }
+  return `${months} เดือน`;
+}
+

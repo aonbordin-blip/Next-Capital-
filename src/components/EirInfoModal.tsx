@@ -2,7 +2,7 @@ import React from 'react';
 import { X, ShieldCheck, AlertTriangle, Scale, Lock, Info, CheckCircle2 } from 'lucide-react';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { CalculationResult } from '../types';
-import { formatBaht } from '../data/proposals';
+import { formatBaht, formatTermYearMonth } from '../data/proposals';
 
 interface Props {
   isOpen: boolean;
@@ -201,7 +201,7 @@ export const EirInfoModal: React.FC<Props> = ({ isOpen, onClose, calculation }) 
                             {isRowCurrent && (
                               <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
                             )}
-                            {row.term} งวด ({(row.term / 12).toFixed(row.term % 12 === 0 ? 0 : 1)} ปี)
+                            {row.term} งวด ({formatTermYearMonth(row.term)})
                           </span>
                         </td>
                         <td className="py-2.5 px-3 text-right text-blue-700 font-bold">
