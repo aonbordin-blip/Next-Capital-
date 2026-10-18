@@ -7,12 +7,14 @@ interface Props {
   comparisons: TermComparisonItem[];
   selectedTerm: number;
   onSelectTerm: (term: number) => void;
+  onOpenEirInfo?: () => void;
 }
 
 export const TermComparisonTable: React.FC<Props> = ({
   comparisons,
   selectedTerm,
   onSelectTerm,
+  onOpenEirInfo,
 }) => {
   if (comparisons.length <= 1) {
     return null;
@@ -28,13 +30,26 @@ export const TermComparisonTable: React.FC<Props> = ({
           <div className="w-6 h-6 rounded-lg bg-blue-100/80 text-blue-700 flex items-center justify-center">
             <Layers className="w-3.5 h-3.5" />
           </div>
-          <h3 className="text-xs font-bold text-slate-800 tracking-tight">
-            ตารางเปรียบเทียบระยะเวลางวดผ่อน
-          </h3>
+          <div>
+            <h3 className="text-xs font-bold text-slate-800 tracking-tight">
+              ตารางเปรียบเทียบระยะเวลางวดผ่อน
+            </h3>
+          </div>
         </div>
-        <span className="text-[10px] text-slate-400 font-medium">
-          คลิกแถวเพื่อเลือกงวดผ่อน
-        </span>
+        <div className="flex items-center gap-2">
+          {onOpenEirInfo && (
+            <button
+              type="button"
+              onClick={onOpenEirInfo}
+              className="text-[10px] text-blue-700 hover:text-blue-900 font-bold px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+            >
+              ⚖️ เกณฑ์ EIR 23%
+            </button>
+          )}
+          <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+            คลิกแถวเพื่อเลือก
+          </span>
+        </div>
       </div>
 
       <div className="overflow-x-auto -mx-1">
@@ -71,6 +86,11 @@ export const TermComparisonTable: React.FC<Props> = ({
                       <span className="text-[10px] text-slate-400 font-normal">
                         ({(item.term / 12).toFixed(item.term % 12 === 0 ? 0 : 1)} ปี)
                       </span>
+                      {item.isCappedByEir && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold flex items-center gap-0.5">
+                          🔒 EIR 23%
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="pt-3 pb-3.5 text-right font-bold text-blue-700 align-middle leading-normal">

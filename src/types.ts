@@ -70,16 +70,26 @@ export interface CalculationResult {
   financeAmount: number; // ยอดจัดไฟแนนซ์รวม (ยอดจัดตัวรถ + เบี้ยประกันรวมภาษี) เช่น 75,766.09
   term: number; // ระยะเวลาผ่อน เช่น 36
   rateDisplayText: string;
-  monthlyRate: number; // อัตราดอกเบี้ยต่อเดือน เช่น 0.0109 (1.09%)
+  monthlyRate: number; // อัตราดอกเบี้ยต่อเดือนที่นำไปใช้คำนวณจริง เช่น 0.01089 (1.089%)
   annualRate: number;
   isAnnualRate: boolean;
+  // EIR (Effective Interest Rate) Compliance Fields
+  proposalMonthlyRate: number; // อัตราดอกเบี้ยตาม Proposal ที่ขอมา เช่น 0.01090 (1.090%)
+  maxAllowedMonthlyRate: number; // อัตราดอกเบี้ยสูงสุดที่ไม่เกินเพดาน EIR 23% เช่น 0.01089 (1.089%)
+  effectiveMonthlyRate: number; // อัตราดอกเบี้ยที่ใช้จริง (ผ่านการควบคุมเพดาน EIR) เช่น 0.01089
+  isCappedByEir: boolean; // มีการล็อกและบังคับใช้อัตราสูงสุดหรือไม่ (true เมื่อ proposalMonthlyRate > maxAllowedMonthlyRate)
+  eirMaxMessage: string; // ข้อความกำกับ เช่น "สูงสุด 1.089 เป็นอัตราดอกเบี้ยไม่เกิน EIR 23%"
+  eirAnnualPercent: number; // อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR %) เช่น 22.92%
+  eirReason: string; // คำอธิบายเกณฑ์และเหตุผลการล็อกอัตราดอกเบี้ย
   monthlyInterest: number; // ดอกเบี้ยต่อเดือน เช่น 825.850381
   totalInterest: number; // ดอกเบี้ยรวมทั้งสัญญา เช่น 29,730.613716
   minInterestApplied: boolean;
   totalBeforeVat: number; // มูลค่ารวมก่อนภาษีมูลค่าเพิ่ม (ถอด VAT 7%)
   vatAmount: number; // ภาษีมูลค่าเพิ่ม 7% รวม
   totalWithVat: number; // ยอดรวมทั้งสัญญา (ยอดจัด + ดอกเบี้ยรวม) เช่น 105,496.703716
-  monthlyInstallment: number; // ค่างวดต่อเดือน เช่น 2,930
+  rawMonthlyInstallment: number; // ค่างวดก่อนปัดเศษ เช่น 2,410.71
+  monthlyInstallment: number; // ค่างวดต่อเดือนตามเกณฑ์ Next Capital ปัดเศษลงท้าย 0 หรือ 5 เช่น 2,415 หรือ 2,420
+  roundingRuleNote: string; // คำอธิบายเกณฑ์ปัดเศษค่างวด
   remarkText: string;
   // Day of delivery costs
   registrationFee: number;
@@ -94,4 +104,9 @@ export interface TermComparisonItem {
   totalWithVat: number;
   rateDisplayText: string;
   isCurrent: boolean;
+  proposalMonthlyRate?: number;
+  maxAllowedMonthlyRate?: number;
+  effectiveMonthlyRate?: number;
+  isCappedByEir?: boolean;
+  eirAnnualPercent?: number;
 }

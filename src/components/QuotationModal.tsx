@@ -168,7 +168,7 @@ ${
 📊 ข้อเสนอ: ${result.proposalName} (${result.proposalCode})
 ⏱️ ระยะเวลาผ่อน: ${result.term} งวด (${(result.term / 12).toFixed(1)} ปี)
 📈 อัตราดอกเบี้ย: ${result.rateDisplayText}
-💵 ดอกเบี้ยต่อเดือน: ${formatBaht(result.monthlyInterest, true)} /เดือน
+${result.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${result.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(result.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(result.totalInterest, true)}
 
 ✨ ค่างวดต่อเดือน: ${formatBaht(result.monthlyInstallment)} /เดือน
@@ -503,10 +503,20 @@ ${
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '11px 16px 13px 16px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    5. อัตราดอกเบี้ย ({result.rateDisplayText})
+                    <div>5. อัตราดอกเบี้ย ({result.rateDisplayText})</div>
+                    {result.isCappedByEir && (
+                      <div style={{ fontSize: '9.5px', color: '#047857', fontWeight: 'bold', marginTop: '2px' }}>
+                        * ล็อกใช้อัตราสูงสุดตามเกณฑ์เพดาน สคบ. (EIR ไม่เกิน 23% ต่อปี)
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: 'bold', color: '#2563eb', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {result.rateDisplayText}
+                    <div>{result.rateDisplayText}</div>
+                    {result.isCappedByEir && (
+                      <div style={{ fontSize: '9px', color: '#059669', fontWeight: 'bold', marginTop: '2px' }}>
+                        {result.eirMaxMessage}
+                      </div>
+                    )}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
@@ -558,7 +568,10 @@ ${
                   }}
                 >
                   <td style={{ padding: '13px 16px 15px 16px', fontSize: '13px', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
+                    <div>ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)</div>
+                    <div style={{ fontSize: '9px', color: '#1e40af', fontWeight: '500', marginTop: '2px' }}>
+                      * ปัดเศษลงท้ายด้วย 0 หรือ 5 ตามระบบ Next Capital
+                    </div>
                   </td>
                   <td style={{ padding: '13px 16px 15px 16px', textAlign: 'right', fontSize: '15px', fontWeight: '800', verticalAlign: 'middle', lineHeight: '1.4' }}>
                     {formatBaht(result.monthlyInstallment)} /เดือน
@@ -978,7 +991,19 @@ ${
                     </tr>
                     <tr>
                       <td className="pt-3 pb-3.5 px-4 text-slate-700 align-middle leading-normal">
-                        5. อัตราดอกเบี้ย ({result.rateDisplayText})
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>5. อัตราดอกเบี้ย ({result.rateDisplayText})</span>
+                          {result.isCappedByEir && (
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-0.5">
+                              🔒 EIR 23%
+                            </span>
+                          )}
+                        </div>
+                        {result.isCappedByEir && (
+                          <div className="text-[10.5px] text-emerald-700 font-medium mt-0.5">
+                            {result.eirMaxMessage}
+                          </div>
+                        )}
                       </td>
                       <td className="pt-3 pb-3.5 px-4 text-right text-blue-700 font-bold align-middle leading-normal">
                         {result.rateDisplayText}
@@ -1031,7 +1056,10 @@ ${
                     </tr>
                     <tr className="bg-blue-100/70 font-bold border-t-2 border-blue-400">
                       <td className="pt-3.5 pb-4 px-4 text-blue-950 text-sm align-middle leading-normal">
-                        ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
+                        <div>ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)</div>
+                        <div className="text-[10px] text-blue-800 font-medium mt-0.5">
+                          * ปัดเศษลงท้ายด้วย 0 หรือ 5 ตามระบบ Next Capital
+                        </div>
                       </td>
                       <td className="pt-3.5 pb-4 px-4 text-right text-blue-950 text-base font-extrabold align-middle leading-normal">
                         {formatBaht(result.monthlyInstallment)} /เดือน

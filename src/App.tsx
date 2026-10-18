@@ -24,6 +24,9 @@ import {
   User,
   Phone,
   Award,
+  Scale,
+  Lock,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   PROPOSALS,
@@ -43,6 +46,7 @@ import { TermComparisonTable } from './components/TermComparisonTable';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
+import { EirInfoModal } from './components/EirInfoModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { BikeModelCodeInput } from './components/BikeModelCodeInput';
 import { MotorcycleModel, MOTORCYCLE_MODELS, findModelByCode } from './data/motorcycleModels';
@@ -171,6 +175,7 @@ export default function App() {
   const [showQuotation, setShowQuotation] = useState<boolean>(false);
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
+  const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
 
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
@@ -317,7 +322,7 @@ ${
     : ''
 }💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(currentCalculation.financeAmount, true)}
 ⏱️ ผ่อน: ${currentCalculation.term} งวด | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
-💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
+${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${currentCalculation.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
 ⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
 รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}
@@ -883,40 +888,138 @@ ${
                 )}
               </div>
 
-              {/* Term and Rate Display */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+              {/* Term Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] text-slate-600 font-semibold">
                     ระยะเวลาผ่อน (งวด) *
                   </label>
-                  <div className="relative">
-                    <select
-                      id="term-select"
-                      value={term}
-                      onChange={(e) => setTerm(Number(e.target.value))}
-                      className="w-full appearance-none glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none pr-7 cursor-pointer"
-                    >
-                      {currentProposal.validTerms.map((t) => (
-                        <option key={t} value={t}>
-                          {t} งวด ({(t / 12).toFixed(t % 12 === 0 ? 0 : 1)} ปี)
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowEirInfo(true)}
+                    className="text-[10px] text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Scale className="w-3 h-3 text-amber-500" />
+                    เกณฑ์ดอกเบี้ย EIR 23%
+                  </button>
+                </div>
+                <div className="relative">
+                  <select
+                    id="term-select"
+                    value={term}
+                    onChange={(e) => setTerm(Number(e.target.value))}
+                    className="w-full appearance-none glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none pr-7 cursor-pointer"
+                  >
+                    {currentProposal.validTerms.map((t) => (
+                      <option key={t} value={t}>
+                        {t} งวด ({(t / 12).toFixed(t % 12 === 0 ? 0 : 1)} ปี)
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Interest Rate Comparison: ช่องตาม Proposal (ซ้าย) vs ช่องอัตราสูงสุด (ขวา) */}
+              <div className="space-y-1.5 pt-0.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] text-slate-700 font-bold">
+                    หลักเกณฑ์อัตราดอกเบี้ยที่ใช้
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                    {currentCalculation.isCappedByEir ? (
+                      <span className="text-emerald-700 font-bold flex items-center gap-0.5">
+                        <Lock className="w-2.5 h-2.5" /> ล็อกตามเกณฑ์ EIR 23%
+                      </span>
+                    ) : (
+                      <span className="text-blue-700 font-medium">
+                        ✓ ไม่เกินเพดาน สคบ.
+                      </span>
+                    )}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* ช่องตาม Proposal (ซ้าย) */}
+                  <div
+                    className={`rounded-xl p-2.5 border transition-all ${
+                      currentCalculation.isCappedByEir
+                        ? 'bg-amber-50/70 border-amber-300/80 shadow-xs'
+                        : 'bg-slate-50/80 border-slate-200/80'
+                    }`}
+                  >
+                    <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
+                      อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
+                      <span className="text-amber-600 font-bold">ตาม Proposal</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-base font-black text-slate-800">
+                        {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}
+                        <span className="text-[11px] font-normal text-slate-500 ml-1">% / เดือน</span>
+                      </div>
+                      {currentCalculation.isCappedByEir && (
+                        <span className="text-amber-800 text-[9.5px] bg-amber-200/80 px-1.5 py-0.5 rounded font-bold">
+                          เกินเพดาน
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      ขออัตรา {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% ตาม Proposal
+                    </div>
+                  </div>
+
+                  {/* ช่องอัตราสูงสุด (ขวา) */}
+                  <div
+                    className={`rounded-xl p-2.5 border transition-all ${
+                      currentCalculation.isCappedByEir
+                        ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'bg-blue-50/80 border-blue-300'
+                    }`}
+                  >
+                    <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
+                      อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
+                      <span className="text-amber-600 font-bold">{currentCalculation.eirMaxMessage}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-base font-black text-emerald-700 flex items-center gap-1">
+                        <Lock className="w-3.5 h-3.5 text-emerald-600 inline" />
+                        {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}
+                        <span className="text-[11px] font-normal text-emerald-800 ml-1">% / เดือน</span>
+                      </div>
+                      <span className="text-[9.5px] bg-emerald-200 text-emerald-900 font-bold px-1.5 py-0.5 rounded">
+                        บังคับใช้จริง
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-emerald-800 font-medium mt-0.5">
+                      อัตราสูงสุดที่ไม่เกินเพดาน EIR 23%
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] text-slate-600 font-semibold mb-1">
-                    อัตราดอกเบี้ยที่ใช้
-                  </label>
-                  <input
-                    type="text"
-                    value={currentCalculation.rateDisplayText}
-                    readOnly
-                    className="w-full bg-blue-50/70 border border-blue-200/70 rounded-xl px-2.5 py-2 text-[11px] text-blue-900 font-bold outline-none cursor-default truncate shadow-inner-sm"
-                  />
-                </div>
+                {/* Explanation Callout when Capped */}
+                {currentCalculation.isCappedByEir && (
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 text-[11px] text-amber-950 space-y-1 shadow-xs animate-fade-in">
+                    <div className="flex items-start gap-1.5 font-bold text-amber-900">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span>ทำไมถึงต้องใช้ {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}% :</span>
+                    </div>
+                    <p className="text-[10.5px] text-amber-900/90 leading-relaxed pl-5">
+                      เนื่องจากตามเงื่อนไขของเคสนี้ (ราคารถ {formatBaht(currentCalculation.baseVehiclePrice)}, เงินดาวน์ {formatBaht(currentCalculation.downAmount)} และระยะเวลาผ่อน {term} งวด) หากใช้ดอกเบี้ย {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% จะทำให้อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR) สูงเกินเพดานกฎหมายกำหนด (ไม่เกิน 23% ต่อปี) ระบบจึงทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย คือ <strong className="text-emerald-800 underline font-bold">{(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}%</strong> แทน เพื่อให้ชุดข้อมูลชุดนี้ผ่านเกณฑ์การอนุมัติครับ
+                    </p>
+                    <div className="pl-5 pt-0.5 flex items-center justify-between">
+                      <span className="text-[10px] text-amber-800 font-medium">
+                        EIR สัญญานี้: {currentCalculation.eirAnnualPercent.toFixed(2)}% ต่อปี (ผ่านเกณฑ์)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowEirInfo(true)}
+                        className="text-[10px] text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
+                      >
+                        อ่านเกณฑ์ควบคุมทั้งหมด →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Delivery Day Extra Costs Accordion */}
@@ -1064,6 +1167,16 @@ ${
                 <span className="text-xs font-normal text-slate-500 ml-1">/เดือน</span>
               </div>
 
+              {/* Installment Rounding Badge (ลงท้าย 0 หรือ 5) */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-[10px] text-blue-900 font-semibold mb-1 shadow-2xs">
+                <span>ปัดเศษลงท้าย 0 หรือ 5 (ระบบ Next Capital)</span>
+                {currentCalculation.rawMonthlyInstallment !== currentCalculation.monthlyInstallment && (
+                  <span className="text-slate-400 font-normal">
+                    (เดิม {currentCalculation.rawMonthlyInstallment.toFixed(2)} บ.)
+                  </span>
+                )}
+              </div>
+
               <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto truncate">
                 {currentCalculation.remarkText}
               </p>
@@ -1157,6 +1270,7 @@ ${
               comparisons={comparisons}
               selectedTerm={term}
               onSelectTerm={(newTerm) => setTerm(newTerm)}
+              onOpenEirInfo={() => setShowEirInfo(true)}
             />
           </div>
         </main>
@@ -1253,6 +1367,12 @@ ${
           setInsurancePlan(plan);
           setInsuranceYears(years);
         }}
+      />
+
+      <EirInfoModal
+        isOpen={showEirInfo}
+        onClose={() => setShowEirInfo(false)}
+        calculation={currentCalculation}
       />
     </div>
   );

@@ -333,6 +333,57 @@ export const BIKE_PRESETS: BikePreset[] = [
   },
 ];
 
+/**
+ * คำนวณอัตราดอกเบี้ย Flat Rate ต่อเดือนสูงสุดที่ไม่เกินเพดาน EIR (Effective Interest Rate) 23% ต่อปี
+ * ตามเกณฑ์ควบคุมสัญญาเช่าซื้อรถจักรยานยนต์ของ สคบ. และระบบอนุมัติของ Next Capital
+ * โดยสำหรับ 36 งวด ระบบ Next Capital กำหนดใช้อัตราสูงสุด 1.089% (ไม่เกินเพดาน EIR 23%)
+ */
+export function getMaxAllowedMonthlyFlatRate(term: number): number {
+  if (term <= 0) return 0.011;
+  if (term === 36) return 0.01089; // 1.089% ตรงตามระบบจริง Next Capital
+  const targetEirAnnual = 0.2292; // 22.92% ปลอดภัยใต้เพดาน 23.00%
+  const rMonth = targetEirAnnual / 12;
+  const annuity = (1 - Math.pow(1 + rMonth, -term)) / rMonth;
+  const rawFlat = 1 / annuity - 1 / term;
+  // ปัดทศนิยม 3 ตำแหน่ง เช่น 0.01088998... -> 0.01089 (1.089%)
+  return Math.floor(rawFlat * 100000 + 0.5) / 100000;
+}
+
+/**
+ * คำนวณอัตราดอกเบี้ยที่แท้จริงต่อปี (Nominal EIR % ต่อปี) จากเงินต้น ค่างวด และจำนวนงวด
+ */
+export function calculateLoanNominalEIR(pv: number, pmt: number, term: number): number {
+  if (pv <= 0 || pmt <= 0 || term <= 0) return 0;
+  let r = 0.02; // Initial guess per month (~24% per year)
+  for (let i = 0; i < 40; i++) {
+    const powTerm = Math.pow(1 + r, -term);
+    const f = (pmt * (1 - powTerm)) / r - pv;
+    const df =
+      pmt *
+      ((term * Math.pow(1 + r, -term - 1)) / r - (1 - powTerm) / (r * r));
+    if (Math.abs(df) < 1e-12) break;
+    const newR = r - f / df;
+    if (Math.abs(newR - r) < 1e-7) {
+      r = newR;
+      break;
+    }
+    r = newR;
+  }
+  return Math.max(0, r * 12 * 100);
+}
+
+/**
+ * ปัดเศษค่างวดตามเกณฑ์ระบบของบริษัท Next Capital:
+ * ค่างวดเช่าซื้อจะปัดขึ้นลงท้ายด้วย 0 หรือ 5
+ * - หากเศษหลักหน่วย 1 ถึง 5 จะปัดเป็น 5 (เช่น 2,411 -> 2,415)
+ * - หากเศษหลักหน่วยมากกว่า 5 จะปัดขึ้นเป็นหลักสิบ (เช่น 2,416 -> 2,420)
+ * สูตรทางคณิตศาสตร์คือ Math.ceil(raw / 5) * 5
+ */
+export function roundNextCapitalInstallment(rawInstallment: number): number {
+  if (rawInstallment <= 0) return 0;
+  return Math.ceil(rawInstallment / 5) * 5;
+}
+
 export function calculateLease(
   proposalKey: ProposalKey,
   price: number,
@@ -388,30 +439,30 @@ export function calculateLease(
     validTerm = proposal.validTerms[0];
   }
 
-  let monthlyRate = 0;
+  let proposalMonthlyRate = 0;
   let annualRate = 0;
   let isAnnualRate = false;
   let rateDisplayText = '';
   let remarkText = proposal.conditionNote || 'คำนวณตามเงื่อนไข Proposal';
 
   if (proposalKey === 'small_bike') {
-    if (validTerm === 12) monthlyRate = 0.0106;
-    else if (validTerm === 18) monthlyRate = 0.0107;
-    else if (validTerm === 24) monthlyRate = 0.0107;
-    else if (validTerm === 30) monthlyRate = 0.0108;
-    else if (validTerm === 36) monthlyRate = 0.0109;
-    else monthlyRate = 0.011; // 42
-    rateDisplayText = `${(monthlyRate * 100).toFixed(2)}% ต่อเดือน (Flat Rate)`;
+    if (validTerm === 12) proposalMonthlyRate = 0.0106;
+    else if (validTerm === 18) proposalMonthlyRate = 0.0107;
+    else if (validTerm === 24) proposalMonthlyRate = 0.0107;
+    else if (validTerm === 30) proposalMonthlyRate = 0.0108;
+    else if (validTerm === 36) proposalMonthlyRate = 0.0109; // ขออัตรา 1.090%
+    else proposalMonthlyRate = 0.011; // 42
+    rateDisplayText = `${(proposalMonthlyRate * 100).toFixed(2)}% ต่อเดือน (Flat Rate)`;
   } else if (proposalKey === 'fazzio') {
-    monthlyRate = 0.011;
+    proposalMonthlyRate = 0.011;
     validTerm = 48;
     rateDisplayText = '1.10% ต่อเดือน (48 งวด)';
     remarkText = 'เงื่อนไขเฉพาะเกรด Normal เท่านั้น (48 งวด)';
   } else if (proposalKey === 'top_small' || proposalKey === 'aec') {
-    if (validTerm <= 36) monthlyRate = 0.0106;
-    else if (validTerm === 42) monthlyRate = 0.011;
-    else monthlyRate = 0.0111; // 48
-    rateDisplayText = `${(monthlyRate * 100).toFixed(2)}% ต่อเดือน (Flat Rate)`;
+    if (validTerm <= 36) proposalMonthlyRate = 0.0106;
+    else if (validTerm === 42) proposalMonthlyRate = 0.011;
+    else proposalMonthlyRate = 0.0111; // 48
+    rateDisplayText = `${(proposalMonthlyRate * 100).toFixed(2)}% ต่อเดือน (Flat Rate)`;
   } else if (proposalKey === 'vespa') {
     isAnnualRate = true;
     if (downAmount >= 35000) annualRate = 0.0675;
@@ -420,8 +471,8 @@ export function calculateLease(
     else if (downAmount >= 15000) annualRate = 0.075;
     else annualRate = 0.09;
 
-    monthlyRate = annualRate / 12;
-    rateDisplayText = `${(annualRate * 100).toFixed(2)}% ต่อปี (${(monthlyRate * 100).toFixed(3)}%/เดือน)`;
+    proposalMonthlyRate = annualRate / 12;
+    rateDisplayText = `${(annualRate * 100).toFixed(2)}% ต่อปี (${(proposalMonthlyRate * 100).toFixed(3)}%/เดือน)`;
     remarkText = `ขั้นบันไดเงินดาวน์: ${(annualRate * 100).toFixed(2)}% ต่อปี`;
   } else if (proposalKey === 'honda_yamaha') {
     isAnnualRate = true;
@@ -432,20 +483,43 @@ export function calculateLease(
     } else {
       annualRate = 0.07;
     }
-    monthlyRate = annualRate / 12;
+    proposalMonthlyRate = annualRate / 12;
     rateDisplayText = `${(annualRate * 100).toFixed(2)}% ต่อปี (ดาวน์ ${downPercent.toFixed(0)}%)`;
     remarkText = `ดาวน์ ${downPercent.toFixed(1)}% | ดอกเบี้ย ${(annualRate * 100).toFixed(2)}% ต่อปี`;
   } else if (proposalKey === 'second_hand') {
-    if (validTerm === 24 || validTerm === 30) monthlyRate = 0.0106;
-    else if (validTerm === 36) monthlyRate = 0.0108;
-    else monthlyRate = 0.0109; // 42
-    rateDisplayText = `${(monthlyRate * 100).toFixed(2)}% ต่อเดือน`;
+    if (validTerm === 24 || validTerm === 30) proposalMonthlyRate = 0.0106;
+    else if (validTerm === 36) proposalMonthlyRate = 0.0108;
+    else proposalMonthlyRate = 0.0109; // 42
+    rateDisplayText = `${(proposalMonthlyRate * 100).toFixed(2)}% ต่อเดือน`;
     remarkText = 'มีเกณฑ์ดอกเบี้ยรวมขั้นต่ำ 7,000 บาท';
   }
 
+  // ============================================================
+  // EIR (Effective Interest Rate) Control Logic (เพดานไม่เกิน 23% ต่อปี)
+  // ============================================================
+  const maxAllowedMonthlyRate = isAnnualRate
+    ? 0.23 / 12
+    : getMaxAllowedMonthlyFlatRate(validTerm);
+
+  // ตรวจสอบว่าอัตราที่ขอมาตาม Proposal เกินเพดาน EIR 23% หรือไม่
+  // หากเกิน: ระบบทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย
+  const isCappedByEir = !isAnnualRate && proposalMonthlyRate > maxAllowedMonthlyRate;
+  const effectiveMonthlyRate = isCappedByEir ? maxAllowedMonthlyRate : proposalMonthlyRate;
+  const monthlyRate = effectiveMonthlyRate;
+
+  // ข้อความกำกับอัตราสูงสุด
+  const maxRateDisplayStr = (maxAllowedMonthlyRate * 100).toFixed(3);
+  const eirMaxMessage = `สูงสุด ${maxRateDisplayStr} เป็นอัตราดอกเบี้ยไม่เกิน EIR 23%`;
+
+  let eirReason = '';
+  if (isCappedByEir) {
+    rateDisplayText = `${(effectiveMonthlyRate * 100).toFixed(3)}% ต่อเดือน (สูงสุดตามเกณฑ์ EIR 23%)`;
+    eirReason = `เนื่องจากตามเงื่อนไขของเคสนี้ (ราคารถ ${formatBaht(safeBasePrice)}, เงินดาวน์ ${formatBaht(downAmount)} และระยะเวลาผ่อน ${validTerm} งวด) หากใช้ดอกเบี้ย ${(proposalMonthlyRate * 100).toFixed(3)}% จะทำให้อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR) สูงเกินเพดานกฎหมายกำหนด (ไม่เกิน 23% ต่อปี) ระบบจึงทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย คือ ${(effectiveMonthlyRate * 100).toFixed(3)}% แทน เพื่อให้ชุดข้อมูลชุดนี้ผ่านเกณฑ์การอนุมัติครับ`;
+  } else {
+    eirReason = `อัตราดอกเบี้ย ${(effectiveMonthlyRate * 100).toFixed(3)}% ต่อเดือน อยู่ในเกณฑ์ควบคุมสัญญาเช่าซื้อ ไม่เกินเพดาน EIR 23% ต่อปี`;
+  }
+
   // Calculate Interest:
-  // คำนวณดอกเบี้ยรายเดือน = ยอดจัด * ดอกเบี้ยรายเดือน (เช่น 75,766.09 * 1.09% = 825.850381)
-  // ดอกเบี้ยรวมทั้งสัญญา = ดอกเบี้ยรายเดือน * จำนวนงวด (เช่น 825.850381 * 36 = 29,730.613716)
   let monthlyInterest = 0;
   let totalInterest = 0;
 
@@ -453,7 +527,7 @@ export function calculateLease(
     monthlyInterest = financeAmount * (annualRate / 12);
     totalInterest = financeAmount * annualRate * (validTerm / 12);
   } else {
-    monthlyInterest = financeAmount * monthlyRate;
+    monthlyInterest = financeAmount * effectiveMonthlyRate;
     totalInterest = monthlyInterest * validTerm;
   }
 
@@ -465,11 +539,24 @@ export function calculateLease(
     remarkText = 'ปรับใช้ดอกเบี้ยขั้นต่ำตามเกณฑ์ 7,000 บาท';
   }
 
-  // ยอดรวมทั้งสัญญา = ยอดจัดไฟแนนซ์ + ดอกเบี้ยรวมทั้งสัญญา (เช่น 75,766.09 + 29,730.613716 = 105,496.703716)
-  const totalWithVat = financeAmount + totalInterest;
 
-  // ค่างวดต่อเดือน = ยอดรวมทั้งสัญญา / จำนวนงวด (เช่น 105,496.703716 / 36 = 2,930.46 -> ปัดเป็น 2,930 บาท)
-  const monthlyInstallment = validTerm > 0 ? Math.round(totalWithVat / validTerm) : 0;
+  // คำนวณยอดรวมสัญญาดิบและค่างวดดิบก่อนปัดเศษ
+  const rawContractTotal = financeAmount + totalInterest;
+  const rawMonthlyInstallment =
+    validTerm > 0 ? Number((rawContractTotal / validTerm).toFixed(2)) : 0;
+
+  // ค่างวดต่อเดือนตามเกณฑ์ระบบ Next Capital (ปัดเศษลงท้าย 0 หรือ 5: เศษ 1-5 ปัดเป็น 5 เช่น 2,411 -> 2,415, เศษ > 5 ปัดขึ้นหลักสิบ เช่น 2,416 -> 2,420)
+  const monthlyInstallment = roundNextCapitalInstallment(rawMonthlyInstallment);
+  const roundingRuleNote =
+    'ปัดเศษค่างวดลงท้ายด้วย 0 หรือ 5 ตามระบบ Next Capital (เศษ ≤ 5 ปัดเป็น 5, เศษ > 5 ปัดขึ้นหลักสิบ)';
+
+  // ยอดรวมทั้งสัญญาตามค่างวดจริง
+  const totalWithVat = monthlyInstallment * validTerm;
+
+  // คำนวณ EIR แท้จริงที่เกิดขึ้นจริง
+  const eirAnnualPercent = Number(
+    calculateLoanNominalEIR(financeAmount, monthlyInstallment, validTerm).toFixed(2)
+  );
 
   // การจำแนก VAT 7% ตามหลักเกณฑ์ภาษีเช่าซื้อ
   const vatAmount = Number(((totalWithVat * 7) / 107).toFixed(2));
@@ -498,13 +585,22 @@ export function calculateLease(
     monthlyRate,
     annualRate,
     isAnnualRate,
+    proposalMonthlyRate,
+    maxAllowedMonthlyRate,
+    effectiveMonthlyRate,
+    isCappedByEir,
+    eirMaxMessage,
+    eirAnnualPercent,
+    eirReason,
     monthlyInterest,
     totalInterest,
     minInterestApplied,
     totalBeforeVat,
     vatAmount,
     totalWithVat,
+    rawMonthlyInstallment,
     monthlyInstallment,
+    roundingRuleNote,
     remarkText,
     registrationFee,
     theftInsuranceFee,
@@ -541,6 +637,11 @@ export function getTermComparisons(
       totalWithVat: res.totalWithVat,
       rateDisplayText: res.rateDisplayText,
       isCurrent: t === currentTerm,
+      proposalMonthlyRate: res.proposalMonthlyRate,
+      maxAllowedMonthlyRate: res.maxAllowedMonthlyRate,
+      effectiveMonthlyRate: res.effectiveMonthlyRate,
+      isCappedByEir: res.isCappedByEir,
+      eirAnnualPercent: res.eirAnnualPercent,
     };
   });
 }
