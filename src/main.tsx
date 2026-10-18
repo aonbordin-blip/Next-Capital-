@@ -23,28 +23,15 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// Ensure any old or broken service worker is completely removed and caches cleaned
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  try {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (const reg of registrations) {
-        reg.unregister().catch(() => {});
+// Ensure broken dev service worker is removed if present
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const reg of registrations) {
+      if (reg.active && reg.active.scriptURL.includes('dev-sw')) {
+        reg.unregister();
       }
-    }).catch(() => {});
-  } catch {
-    // ignore
-  }
-  if ('caches' in window) {
-    try {
-      caches.keys().then((names) => {
-        for (const name of names) {
-          caches.delete(name).catch(() => {});
-        }
-      }).catch(() => {});
-    } catch {
-      // ignore
     }
-  }
+  }).catch(() => {});
 }
 
 createRoot(document.getElementById('root')!).render(
