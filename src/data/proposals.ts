@@ -19,7 +19,7 @@ export const INSURANCE_PLANS: Record<'plan_a' | 'plan_b', InsurancePlanDetail> =
     premiums: {
       1: 670,
       2: 1340,
-      3: 2010,
+      3: 1950,
     },
     generalAccident: 80000,
     motorcycleAccident: 50000,

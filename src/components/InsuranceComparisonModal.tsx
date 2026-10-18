@@ -259,18 +259,18 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                 <div className="text-[10px] text-slate-500 mb-1">ความคุ้มครอง 1 ปี</div>
-                <div className="text-xs font-semibold text-blue-700">แผน A: 670 บาท</div>
-                <div className="text-xs font-bold text-amber-700">แผน B: 1,329 บาท</div>
+                <div className="text-xs font-semibold text-blue-700">แผน A: {formatBaht(INSURANCE_PLANS.plan_a.premiums[1])} บาท</div>
+                <div className="text-xs font-bold text-amber-700">แผน B: {formatBaht(INSURANCE_PLANS.plan_b.premiums[1])} บาท</div>
               </div>
               <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                 <div className="text-[10px] text-slate-500 mb-1">ความคุ้มครอง 2 ปี</div>
-                <div className="text-xs font-semibold text-blue-700">แผน A: 1,340 บาท</div>
-                <div className="text-xs font-bold text-amber-700">แผน B: 2,658 บาท</div>
+                <div className="text-xs font-semibold text-blue-700">แผน A: {formatBaht(INSURANCE_PLANS.plan_a.premiums[2])} บาท</div>
+                <div className="text-xs font-bold text-amber-700">แผน B: {formatBaht(INSURANCE_PLANS.plan_b.premiums[2])} บาท</div>
               </div>
               <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                 <div className="text-[10px] text-slate-500 mb-1">ความคุ้มครอง 3 ปี</div>
-                <div className="text-xs font-semibold text-blue-700">แผน A: 2,010 บาท</div>
-                <div className="text-xs font-bold text-amber-700">แผน B: 3,987 บาท</div>
+                <div className="text-xs font-semibold text-blue-700">แผน A: {formatBaht(INSURANCE_PLANS.plan_a.premiums[3])} บาท</div>
+                <div className="text-xs font-bold text-amber-700">แผน B: {formatBaht(INSURANCE_PLANS.plan_b.premiums[3])} บาท</div>
               </div>
             </div>
           </div>
