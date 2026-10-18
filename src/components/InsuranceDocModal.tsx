@@ -10,6 +10,8 @@ import {
   Share2,
   Loader2,
   Award,
+  User,
+  Phone,
 } from 'lucide-react';
 import { CalculationResult, InsurancePlan, InsuranceYears } from '../types';
 import { INSURANCE_PLANS, formatBaht, cleanPlanNameForLine } from '../data/proposals';
@@ -26,7 +28,10 @@ interface Props {
   officerInfo?: string;
   officerLicense?: string;
   customerInfo?: string;
+  customerName?: string;
+  customerPhone?: string;
   onUpdatePlan?: (plan: InsurancePlan, years: InsuranceYears) => void;
+  onUpdateCustomer?: (name: string, phone: string) => void;
 }
 
 export const InsuranceDocModal: React.FC<Props> = ({
@@ -39,7 +44,10 @@ export const InsuranceDocModal: React.FC<Props> = ({
   officerInfo = 'บดินทร์ (6683)',
   officerLicense = '',
   customerInfo,
+  customerName,
+  customerPhone,
   onUpdatePlan,
+  onUpdateCustomer,
 }) => {
   // If user opened with 'none', default to 'plan_b' (the recommended plan)
   const [activePlan, setActivePlan] = useState<InsurancePlan>(
@@ -100,6 +108,67 @@ export const InsuranceDocModal: React.FC<Props> = ({
 
   const handleOfficerInfoChange = (val: string) => {
     setCurrentOfficerInfo(val);
+  };
+
+  // Customer info states (editable and synced with localStorage / props)
+  const [currentCustomerName, setCurrentCustomerName] = useState<string>(() => {
+    if (customerName) return customerName;
+    if (customerInfo) return customerInfo;
+    try {
+      return localStorage.getItem('ncap_customer_name') ?? 'คุณลูกค้า';
+    } catch {
+      return 'คุณลูกค้า';
+    }
+  });
+
+  const [currentCustomerPhone, setCurrentCustomerPhone] = useState<string>(() => {
+    if (customerPhone) return customerPhone;
+    try {
+      return localStorage.getItem('ncap_customer_phone') ?? '';
+    } catch {
+      return '';
+    }
+  });
+
+  // Sync customer state from props or localStorage when modal opens
+  useEffect(() => {
+    if (customerName) {
+      setCurrentCustomerName(customerName);
+    } else if (customerInfo) {
+      setCurrentCustomerName(customerInfo);
+    } else {
+      try {
+        const saved = localStorage.getItem('ncap_customer_name');
+        if (saved) setCurrentCustomerName(saved);
+      } catch {}
+    }
+  }, [customerName, customerInfo, isOpen]);
+
+  useEffect(() => {
+    if (customerPhone !== undefined && customerPhone !== '') {
+      setCurrentCustomerPhone(customerPhone);
+    } else {
+      try {
+        const saved = localStorage.getItem('ncap_customer_phone');
+        if (saved) setCurrentCustomerPhone(saved);
+      } catch {}
+    }
+  }, [customerPhone, isOpen]);
+
+  const handleCustomerNameChange = (val: string) => {
+    setCurrentCustomerName(val);
+    try {
+      localStorage.setItem('ncap_customer_name', val);
+    } catch {}
+    onUpdateCustomer?.(val, currentCustomerPhone);
+  };
+
+  const handleCustomerPhoneChange = (val: string) => {
+    setCurrentCustomerPhone(val);
+    try {
+      localStorage.setItem('ncap_customer_phone', val);
+    } catch {}
+    onUpdateCustomer?.(currentCustomerName, val);
   };
 
   const [documentDate] = useState<string>(
@@ -209,12 +278,18 @@ export const InsuranceDocModal: React.FC<Props> = ({
   // Quick summary copy for LINE / chat
   const handleCopySummary = async () => {
     const cleanPlanName = cleanPlanNameForLine(planDetail.name);
+    const customerDisplay = currentCustomerName
+      ? currentCustomerPhone
+        ? `${currentCustomerName} (${currentCustomerPhone})`
+        : currentCustomerName
+      : 'คุณลูกค้า';
 
     const text = `📋 ตารางแผนความคุ้มครองประกันภัยอุบัติเหตุกลุ่ม (Group PA)
 🏢 บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน) ร่วมกับ LOCKTON
 ━━━━━━━━━━━━━━━━━━━━
 👨‍💼 ผู้เสนอขาย: ${currentOfficerInfo}${currentOfficerLicense ? `\n📜 เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย: ${currentOfficerLicense}` : ''}
-${customerInfo ? `👤 ลูกค้า: ${customerInfo}\n` : ''}🛡️ แผนความคุ้มครอง: ${cleanPlanName}
+👤 ลูกค้า: ${customerDisplay}
+🛡️ แผนความคุ้มครอง: ${cleanPlanName}
 ⏱️ ระยะเวลาคุ้มครอง: ${activeYears} ปี
 💰 รวมเบี้ยประกันภัย: ${formatBaht(premiumAmount)} บาท (รวม VAT 7%: ${formatBaht(premiumTotalWithVat, true)} บาท)
 💳 รวมในยอดจัดไฟแนนซ์: เพิ่มเพียงประมาณ +${formatBaht(monthlyImpact)} บาท/งวด
@@ -320,18 +395,16 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
             วันที่: {documentDate}
           </div>
           <div style={{ color: '#1e40af', fontWeight: '600', whiteSpace: 'nowrap' }}>
-            ผู้เสนอขาย: {officerInfo}
+            ผู้เสนอขาย: {currentOfficerInfo}
           </div>
-          {officerLicense && (
+          {currentOfficerLicense && (
             <div style={{ color: '#4338ca', fontSize: '10px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-              เลขที่ใบอนุญาตนายหน้า: {officerLicense}
+              เลขที่ใบอนุญาตนายหน้า: {currentOfficerLicense}
             </div>
           )}
-          {customerInfo && (
-            <div style={{ color: '#047857', fontWeight: '600', whiteSpace: 'nowrap' }}>
-              ลูกค้า: {customerInfo}
-            </div>
-          )}
+          <div style={{ color: '#047857', fontWeight: '700', whiteSpace: 'nowrap' }}>
+            ลูกค้า: {currentCustomerName || 'คุณลูกค้า'}{currentCustomerPhone ? ` (${currentCustomerPhone})` : ''}
+          </div>
           {selectedBikeName && (
             <div style={{ color: '#64748b', fontSize: '10.5px', whiteSpace: 'nowrap' }}>
               ยานพาหนะ: {selectedBikeName}
@@ -1078,14 +1151,14 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
             }}
           />
           <div style={{ fontWeight: '700', color: '#0f172a', whiteSpace: 'nowrap' }}>
-            ( {officerInfo || 'ผู้เสนอขาย / เจ้าหน้าที่'} )
+            ( {currentOfficerInfo || 'ผู้เสนอขาย / เจ้าหน้าที่'} )
           </div>
           <div style={{ fontSize: '9.5px', color: '#64748b', marginTop: '1px', whiteSpace: 'nowrap' }}>
             ผู้เสนอขาย / เจ้าหน้าที่ บมจ. เน็กซ์ แคปปิตอล
           </div>
-          {officerLicense && (
+          {currentOfficerLicense && (
             <div style={{ fontSize: '9px', color: '#4338ca', marginTop: '1px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-              เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย: {officerLicense}
+              เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย: {currentOfficerLicense}
             </div>
           )}
         </div>
@@ -1099,7 +1172,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
             }}
           />
           <div style={{ fontWeight: '700', color: '#0f172a', whiteSpace: 'nowrap' }}>
-            ( ............................................................ )
+            ( {currentCustomerName || 'ผู้เอาประกันภัย / ลูกค้าผู้ขอเช่าซื้อ'} )
           </div>
           <div style={{ fontSize: '9.5px', color: '#64748b', marginTop: '1px', whiteSpace: 'nowrap' }}>
             ผู้เอาประกันภัย / ลูกค้าผู้ขอเช่าซื้อ
@@ -1362,6 +1435,69 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                       </span>
                     </button>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Customer & Officer Info Edit Box */}
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                <span className="flex items-center gap-1.5">
+                  <User className="w-4 h-4 text-emerald-700" />
+                  ข้อมูลลูกค้า & ผู้เสนอขาย (แสดงในเอกสาร):
+                </span>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  อัปเดตลงเอกสารทันที
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                    ชื่อลูกค้า
+                  </label>
+                  <input
+                    type="text"
+                    value={currentCustomerName}
+                    onChange={(e) => handleCustomerNameChange(e.target.value)}
+                    placeholder="ใส่ชื่อลูกค้า (เช่น คุณสมชาย)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
+                    <Phone className="w-2.5 h-2.5 text-slate-400" /> เบอร์โทรศัพท์ลูกค้า
+                  </label>
+                  <input
+                    type="tel"
+                    value={currentCustomerPhone}
+                    onChange={(e) => handleCustomerPhoneChange(e.target.value)}
+                    placeholder="08X-XXX-XXXX"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold font-mono outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                    ชื่อผู้เสนอขาย / เจ้าหน้าที่
+                  </label>
+                  <input
+                    type="text"
+                    value={currentOfficerInfo}
+                    onChange={(e) => handleOfficerInfoChange(e.target.value)}
+                    placeholder="ใส่ชื่อเจ้าหน้าที่ (ใส่โค้ด)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
+                    <Award className="w-2.5 h-2.5 text-amber-600" /> เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
+                  </label>
+                  <input
+                    type="text"
+                    value={currentOfficerLicense}
+                    onChange={(e) => handleOfficerLicenseChange(e.target.value)}
+                    placeholder="เช่น 620400xxxx"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-indigo-950 font-bold font-mono outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                  />
                 </div>
               </div>
             </div>

@@ -26,6 +26,7 @@ interface Props {
   officerInfo?: string;
   initialCustomerName?: string;
   initialCustomerPhone?: string;
+  onUpdateCustomer?: (name: string, phone: string) => void;
 }
 
 export const QuotationModal: React.FC<Props> = ({
@@ -37,6 +38,7 @@ export const QuotationModal: React.FC<Props> = ({
   officerInfo = 'บดินทร์ (6683)',
   initialCustomerName = 'คุณลูกค้า',
   initialCustomerPhone = '',
+  onUpdateCustomer,
 }) => {
   const [dealerName, setDealerName] = useState<string>(
     'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
@@ -845,7 +847,14 @@ ${
                     <input
                       type="text"
                       value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomerName(val);
+                        try {
+                          localStorage.setItem('ncap_customer_name', val);
+                        } catch {}
+                        onUpdateCustomer?.(val, customerPhone);
+                      }}
                       className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-medium leading-normal"
                     />
                   </div>
@@ -855,7 +864,14 @@ ${
                       type="text"
                       placeholder="08X-XXX-XXXX"
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomerPhone(val);
+                        try {
+                          localStorage.setItem('ncap_customer_phone', val);
+                        } catch {}
+                        onUpdateCustomer?.(customerName, val);
+                      }}
                       className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 leading-normal"
                     />
                   </div>
