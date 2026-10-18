@@ -342,7 +342,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col justify-center items-center p-0 sm:p-4 select-none">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col justify-start sm:justify-center items-center p-0 sm:p-2 md:p-4 select-none">
       {/* Dynamic Ambient Background Glowing Blobs for Glassmorphism Depth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Next Capital Royal Blue Orb */}
@@ -390,15 +390,15 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
       <div
         className={`w-full transition-all duration-300 z-10 ${
           viewMode === 'mobile'
-            ? 'max-w-[440px] h-screen sm:h-[900px] sm:max-h-[940px] sm:rounded-[36px]'
-            : 'max-w-5xl h-auto min-h-[750px] sm:rounded-[32px] my-4'
+            ? 'max-w-full sm:max-w-[560px] md:max-w-[620px] h-screen sm:h-[920px] sm:max-h-[96vh] sm:rounded-[28px]'
+            : 'max-w-6xl xl:max-w-7xl h-auto min-h-[750px] sm:rounded-[28px] my-1 sm:my-3'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
 
         {/* Company Header - Next Capital */}
-        <div className="flex justify-between items-center px-5 py-2.5 border-b border-white/60 bg-gradient-to-r from-white/70 via-blue-50/50 to-amber-50/40 backdrop-blur-xl">
+        <div className="flex justify-between items-center px-3.5 sm:px-5 py-2 sm:py-2.5 border-b border-white/60 bg-gradient-to-r from-white/70 via-blue-50/50 to-amber-50/40 backdrop-blur-xl">
           <div className="flex items-center gap-2.5">
             <NextCapitalLogo size={28} />
             <div className="flex flex-col">
@@ -416,7 +416,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         </div>
 
         {/* App Header */}
-        <header className="px-5 py-3 border-b border-white/50 bg-white/40 backdrop-blur-md flex items-center justify-between">
+        <header className="px-3.5 sm:px-5 py-2.5 sm:py-3 border-b border-white/50 bg-white/40 backdrop-blur-md flex items-center justify-between">
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <h1 className="text-lg font-bold gradient-header-text tracking-tight">
@@ -460,7 +460,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
         {/* Selected Bike Banner if active */}
         {(selectedBike || bikeModelCode) && (
-          <div className="px-5 py-2 bg-gradient-to-r from-blue-50/80 via-white/60 to-amber-50/60 border-b border-white/60 flex items-center justify-between text-xs backdrop-blur-md">
+          <div className="px-3.5 sm:px-5 py-2 bg-gradient-to-r from-blue-50/80 via-white/60 to-amber-50/60 border-b border-white/60 flex items-center justify-between text-xs backdrop-blur-md">
             <div className="flex items-center gap-1.5 truncate">
               <Sparkles className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
               <span className="text-slate-500 font-medium">รุ่นที่เลือก:</span>
@@ -487,20 +487,20 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 overflow-y-auto px-5 py-4 space-y-3.5 ${
-            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-5 space-y-0' : ''
+          className={`flex-1 overflow-y-auto px-2 sm:px-4 md:px-5 py-3 sm:py-4 space-y-3 sm:space-y-3.5 ${
+            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 space-y-0' : ''
           }`}
         >
           {/* Left Column / Input Controls */}
           <div
-            className={`space-y-3.5 ${
+            className={`space-y-3 sm:space-y-3.5 ${
               viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-5' : ''
             }`}
           >
             {/* Input Form Card - Frosted Glass */}
-            <div className="glass-card-primary rounded-2xl p-4 space-y-3 relative overflow-hidden">
+            <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
               {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
@@ -568,7 +568,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
-              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
@@ -1139,7 +1139,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
             }`}
           >
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece */}
-            <div className="glass-card-hero rounded-2xl p-4 text-center relative overflow-hidden">
+            <div className="glass-card-hero rounded-2xl p-3 sm:p-4 text-center relative overflow-hidden">
               {/* Proposal Code Badge & Insurance Badge */}
               <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
                 <span className="inline-block bg-white/80 text-blue-800 border border-blue-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
@@ -1293,7 +1293,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         </main>
 
         {/* Bottom Bar Info with Creator Credit */}
-        <footer className="px-4 py-2.5 bg-white/50 border-t border-white/60 backdrop-blur-md text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
+        <footer className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-white/50 border-t border-white/60 backdrop-blur-md text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
           <span className="font-semibold text-slate-600">Next Capital Public Company Limited (NCAP)</span>
           <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/70 px-2.5 py-0.5 rounded-full shadow-2xs">
             <span className="text-[10px] text-slate-500">พัฒนาโดย</span>

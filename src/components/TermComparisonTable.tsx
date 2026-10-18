@@ -21,7 +21,7 @@ export const TermComparisonTable: React.FC<Props> = ({
   }
 
   return (
-    <div className="glass-card-primary rounded-2xl p-4 sm:p-5 lg:p-6 shadow-sm relative overflow-hidden">
+    <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden">
       {/* Subtle top specular sheen */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
