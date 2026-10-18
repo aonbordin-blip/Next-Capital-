@@ -181,13 +181,13 @@ export default function App() {
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>(() => {
     try {
-      if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
         return 'dashboard';
       }
     } catch {
       // ignore
     }
-    return 'dashboard';
+    return 'mobile';
   });
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
 
@@ -351,7 +351,13 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col justify-center items-center p-0 sm:p-4 select-none">
+    <div
+      className={`min-h-screen relative bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col items-center p-0 sm:p-4 select-none ${
+        viewMode === 'dashboard'
+          ? 'overflow-x-hidden overflow-y-auto justify-start py-3 sm:py-6'
+          : 'overflow-hidden justify-center'
+      }`}
+    >
       {/* Dynamic Ambient Background Glowing Blobs for Glassmorphism Depth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Next Capital Royal Blue Orb */}
@@ -370,9 +376,9 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         />
       </div>
 
-      {/* Top Floating View Mode Switcher on Desktop */}
-      <div className="no-print hidden sm:flex items-center gap-2 mb-3 bg-white/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/80 shadow-[0_4px_20px_-4px_rgba(28,68,156,0.1)] text-xs z-10">
-        <span className="text-slate-500 font-medium">มุมมอง:</span>
+      {/* Top Floating View Mode Switcher */}
+      <div className="no-print flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 bg-white/70 backdrop-blur-xl px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/80 shadow-[0_4px_20px_-4px_rgba(28,68,156,0.1)] text-xs z-10">
+        <span className="text-slate-500 font-medium text-[11px] sm:text-xs">มุมมอง:</span>
         <button
           onClick={() => setViewMode('mobile')}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
