@@ -2,7 +2,7 @@ import React from 'react';
 import { X, ShieldCheck, AlertTriangle, Scale, Lock, Info, CheckCircle2 } from 'lucide-react';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { CalculationResult } from '../types';
-import { formatBaht, formatTermYearMonth } from '../data/proposals';
+import { formatBaht } from '../data/proposals';
 
 interface Props {
   isOpen: boolean;
@@ -177,11 +177,11 @@ export const EirInfoModal: React.FC<Props> = ({ isOpen, onClose, calculation }) 
             <div className="overflow-x-auto rounded-2xl border border-slate-200/80 shadow-xs">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200/80 text-slate-500 text-[10.5px] font-semibold">
-                    <th className="py-2.5 px-3">ระยะเวลาผ่อน</th>
-                    <th className="py-2.5 px-3 text-right">อัตรา Flat Rate สูงสุด</th>
-                    <th className="py-2.5 px-3 text-right">EIR ที่แท้จริงต่อปี</th>
-                    <th className="py-2.5 px-3 text-left">หมายเหตุเกณฑ์พิจารณา</th>
+                  <tr className="bg-slate-50 border-b border-slate-200/80 text-slate-500 text-[10.5px] sm:text-xs font-semibold">
+                    <th className="py-2.5 px-2.5 sm:px-3 whitespace-nowrap">ระยะเวลาผ่อน</th>
+                    <th className="py-2.5 px-2.5 sm:px-3 text-right whitespace-nowrap">อัตรา Flat Rate สูงสุด</th>
+                    <th className="py-2.5 px-2.5 sm:px-3 text-right whitespace-nowrap">EIR ที่แท้จริงต่อปี</th>
+                    <th className="py-2.5 px-2.5 sm:px-3 text-left whitespace-nowrap">หมายเหตุเกณฑ์พิจารณา</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -196,22 +196,22 @@ export const EirInfoModal: React.FC<Props> = ({ isOpen, onClose, calculation }) 
                             : 'hover:bg-slate-50/60 text-slate-700'
                         }`}
                       >
-                        <td className="py-2.5 px-3">
-                          <span className="inline-flex items-center gap-1.5">
+                        <td className="py-2.5 px-2.5 sm:px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 font-medium">
                             {isRowCurrent && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-700 flex-shrink-0" />
                             )}
-                            {row.term} งวด ({formatTermYearMonth(row.term)})
+                            {row.term} งวด
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right text-blue-700 font-bold">
+                        <td className="py-2.5 px-2.5 sm:px-3 text-right text-blue-700 font-bold whitespace-nowrap">
                           {row.maxFlat}
                         </td>
-                        <td className="py-2.5 px-3 text-right text-emerald-700 font-semibold">
+                        <td className="py-2.5 px-2.5 sm:px-3 text-right text-emerald-700 font-semibold whitespace-nowrap">
                           ≤ {row.eirAnnual}
                         </td>
-                        <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                          {row.note} {isRowCurrent && '👈 (งวดที่เลือกอยู่)'}
+                        <td className="py-2.5 px-2.5 sm:px-3 text-[11px] text-slate-500 whitespace-nowrap">
+                          {row.note} {isRowCurrent && <span className="text-blue-700 font-semibold">👈 (งวดที่เลือกอยู่)</span>}
                         </td>
                       </tr>
                     );
