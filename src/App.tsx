@@ -440,8 +440,8 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </span>
             </div>
           </div>
-          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100/80 text-blue-900 border border-blue-200/70 font-mono tracking-wider shadow-xs">
-            NCAP
+          <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-100/80 text-blue-900 border border-blue-200/70 shadow-xs whitespace-nowrap">
+            พัฒนาระบบโดย Bordin 6683
           </span>
         </div>
 
