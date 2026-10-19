@@ -372,33 +372,35 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-100 via-indigo-50/40 to-amber-50/50 text-slate-800 flex flex-col justify-start sm:justify-center items-center p-0 sm:p-2 md:p-4 select-none">
-      {/* Dynamic Ambient Background Glowing Blobs for Glassmorphism Depth */}
+    <div className="min-h-screen relative overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-start sm:justify-center items-center p-0 sm:p-2 md:p-4 select-none">
+      {/* Dynamic Ambient Background Glowing Blobs for Soft Neo-Glassmorphism Depth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Next Capital Royal Blue Orb */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-500/20 blur-[100px] animate-blob-1" />
-        {/* Golden Amber Accent Orb */}
-        <div className="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-amber-400/25 blur-[90px] animate-blob-2" />
-        {/* Indigo Ambient Orb */}
-        <div className="absolute -bottom-28 left-1/4 w-96 h-96 rounded-full bg-indigo-500/20 blur-[110px] animate-blob-3" />
+        {/* Soft Cyan Ambient Glow */}
+        <div className="absolute -top-24 -left-20 w-96 h-96 rounded-full bg-cyan-400/35 blur-[100px] animate-blob-1" />
+        {/* Pastel Teal Accent Glow */}
+        <div className="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-teal-300/40 blur-[90px] animate-blob-2" />
+        {/* Sky Blue Ambient Glow */}
+        <div className="absolute -bottom-28 left-1/4 w-96 h-96 rounded-full bg-sky-400/35 blur-[110px] animate-blob-3" />
+        {/* Violet / Indigo Refraction Accent Glow */}
+        <div className="absolute top-2/3 -left-10 w-72 h-72 rounded-full bg-indigo-300/25 blur-[95px] animate-blob-2" />
         {/* Subtle geometric dot grid pattern */}
         <div
-          className="absolute inset-0 opacity-[0.035]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `radial-gradient(#1c449c 1px, transparent 1px)`,
+            backgroundImage: `radial-gradient(#0284c7 1px, transparent 1px)`,
             backgroundSize: '24px 24px',
           }}
         />
       </div>
 
       {/* Top Floating View Mode Switcher on Desktop */}
-      <div className="no-print hidden sm:flex items-center gap-2 mb-3 bg-white/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/80 shadow-[0_4px_20px_-4px_rgba(28,68,156,0.1)] text-xs z-10">
+      <div className="no-print hidden sm:flex items-center gap-2 mb-3 bg-white/70 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm shadow-sky-900/10 text-xs z-10">
         <span className="text-slate-500 font-medium">มุมมอง:</span>
         <button
           onClick={() => setViewMode('mobile')}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
             viewMode === 'mobile'
-              ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-sm shadow-blue-700/20'
+              ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
@@ -408,7 +410,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
           onClick={() => setViewMode('dashboard')}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
             viewMode === 'dashboard'
-              ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-sm shadow-blue-700/20'
+              ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
@@ -416,66 +418,113 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
         </button>
       </div>
 
-      {/* Main Container - Frosted Glass Frame */}
+      {/* Main Container - Soft Neo-Morphic Glass Frame matching Reference UI */}
       <div
         className={`w-full transition-all duration-300 z-10 ${
           viewMode === 'mobile'
-            ? 'max-w-full sm:max-w-[560px] md:max-w-[620px] h-screen sm:h-[920px] sm:max-h-[96vh] sm:rounded-[28px]'
-            : 'max-w-6xl xl:max-w-7xl h-auto min-h-[750px] sm:rounded-[28px] my-1 sm:my-3'
+            ? 'max-w-full sm:max-w-[560px] md:max-w-[580px] h-screen sm:h-[920px] sm:max-h-[96vh] sm:rounded-[36px]'
+            : 'max-w-6xl xl:max-w-7xl h-auto min-h-[750px] sm:rounded-[36px] my-1 sm:my-3'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
-        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-20" />
 
-        {/* Company Header - Next Capital */}
-        <div className="flex justify-between items-center px-3.5 sm:px-5 py-2 sm:py-2.5 border-b border-white/60 bg-gradient-to-r from-white/70 via-blue-50/50 to-amber-50/40 backdrop-blur-xl">
-          <div className="flex items-center gap-2.5">
-            <NextCapitalLogo size={28} />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-xs tracking-tight text-slate-900 uppercase">
-                Next Capital
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium -mt-0.5">
-                บมจ. เน็กซ์ แคปปิตอล
-              </span>
-            </div>
+        {/* Organic Fluid Wave Header (Matching Reference Mobile App Style) */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-3 pb-6 px-4 sm:px-5 shadow-sm">
+          {/* Overlapping Organic Wave SVGs */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <svg
+              className="absolute -bottom-3 left-0 w-full h-20 text-white/20"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+              fill="currentColor"
+            >
+              <path d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,138.7C672,149,768,203,864,208C960,213,1056,171,1152,144C1248,117,1344,107,1392,101.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+            </svg>
+            <svg
+              className="absolute -bottom-1 left-0 w-full h-16 text-white/40"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+              fill="currentColor"
+            >
+              <path d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,122.7C672,128,768,192,864,202.7C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+            </svg>
           </div>
-          <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-100/80 text-blue-900 border border-blue-200/70 shadow-xs whitespace-nowrap">
-            พัฒนาระบบโดย Bordin 6683
-          </span>
-        </div>
 
-        {/* App Header */}
-        <header className="px-3.5 sm:px-5 py-2.5 sm:py-3 border-b border-white/50 bg-white/40 backdrop-blur-md flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-lg font-bold gradient-header-text tracking-tight">
-              MotoLease Calc
-            </h1>
-            <span className="text-[10px] font-bold bg-amber-100/90 text-amber-800 border border-amber-200/70 px-1.5 py-0.2 rounded-full">
-              2569
+          {/* Top Brand Bar */}
+          <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-white/20 backdrop-blur-md rounded-xl border border-white/30 shadow-2xs">
+                <NextCapitalLogo size={24} />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-extrabold text-xs tracking-tight text-white uppercase drop-shadow-xs">
+                  Next Capital
+                </span>
+                <span className="text-[9.5px] text-white/80 font-medium -mt-0.5">
+                  บมจ. เน็กซ์ แคปปิตอล
+                </span>
+              </div>
+            </div>
+
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap">
+              พัฒนาระบบโดย Bordin 6683
             </span>
           </div>
-          <span className="text-[11px] sm:text-xs text-slate-500 font-medium whitespace-nowrap">
-            ระบบคำนวณค่างวดรถจักรยานยนต์
-          </span>
-        </header>
+
+          {/* Header Title Row */}
+          <div className="relative z-10 flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-black text-white tracking-tight drop-shadow-xs">
+                MotoLease Calc
+              </h1>
+              <span className="text-[10px] font-bold bg-white/25 backdrop-blur-md text-white border border-white/30 px-2 py-0.5 rounded-full">
+                2569
+              </span>
+            </div>
+            <span className="text-[11px] text-white/90 font-medium">
+              ระบบคำนวณค่างวดรถจักรยานยนต์
+            </span>
+          </div>
+
+          {/* Pill Search / Model Code Bar matching Reference UI */}
+          <div className="relative z-10 mt-2.5">
+            <button
+              type="button"
+              onClick={() => setShowBikePresets(true)}
+              className="w-full bg-white/95 hover:bg-white text-slate-700 backdrop-blur-xl rounded-full py-2 px-3.5 shadow-sm shadow-sky-950/10 border border-white flex items-center justify-between text-xs transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <div className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                  <Bike className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-slate-600 font-medium truncate">
+                  {selectedBike ? `รุ่น: ${selectedBike.name}` : bikeModelCode ? `รหัสรุ่น: ${bikeModelCode}` : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full shrink-0 group-hover:bg-sky-100 transition-colors">
+                เลือกรุ่นรถ
+              </span>
+            </button>
+          </div>
+        </div>
 
         {/* In-App PWA Install Banner */}
-        <div className="pt-2">
+        <div className="pt-2 px-2 sm:px-4">
           <InstallAppBanner />
         </div>
 
         {/* Selected Bike Banner if active */}
         {(selectedBike || bikeModelCode) && (
-          <div className="px-3.5 sm:px-5 py-2 bg-gradient-to-r from-blue-50/80 via-white/60 to-amber-50/60 border-b border-white/60 flex items-center justify-between text-xs backdrop-blur-md">
+          <div className="mx-2 sm:mx-4 mt-1.5 px-3.5 py-2 bg-gradient-to-r from-sky-50 via-white to-cyan-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs shadow-2xs">
             <div className="flex items-center gap-1.5 truncate">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
               <span className="text-slate-500 font-medium">รุ่นที่เลือก:</span>
-              <span className="font-bold text-blue-950 truncate">
+              <span className="font-bold text-sky-950 truncate">
                 {selectedBike?.name || 'รถจักรยานยนต์'}
               </span>
               {bikeModelCode && (
-                <span className="font-mono text-[10px] font-bold text-blue-700 bg-white/90 px-1.5 py-0.5 rounded border border-blue-200 ml-1">
+                <span className="font-mono text-[10px] font-bold text-sky-800 bg-white px-2 py-0.5 rounded-full border border-sky-200 ml-1">
                   {bikeModelCode}
                 </span>
               )}
@@ -507,13 +556,14 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
             {/* Input Form Card - Frosted Glass */}
             <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
               {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
                     <span>ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-blue-200/80 shadow-2xs">
                     ลงชื่อในใบเสนอราคา & เอกสาร
                   </span>
                 </div>
@@ -564,13 +614,14 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white/80 border border-emerald-200/80 shadow-xs space-y-2">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
                     <span>ข้อมูลลูกค้า</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-emerald-800 bg-white/90 px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-emerald-800 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-emerald-200/80 shadow-2xs">
                     แสดงในใบเสนอราคา & LINE
                   </span>
                 </div>
@@ -609,13 +660,14 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* Vehicle & Proposal Information Card (กล่องข้อมูลรถเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2.5">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <Bike className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
                     <span>ข้อมูลรถและเงื่อนไขข้อเสนอ</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-blue-200/80 shadow-2xs">
                     รุ่นรถ & ราคารถตัวเปล่า
                   </span>
                 </div>
@@ -730,7 +782,8 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
-              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/50 border border-blue-200/60 space-y-2">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-blue-700" />
@@ -757,7 +810,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     className={`py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
                       insurancePlan === 'none'
                         ? 'bg-slate-700 text-white shadow-xs'
-                        : 'glass-pill text-slate-600 hover:bg-white'
+                        : 'glass-pill text-slate-600 hover:bg-white/80'
                     }`}
                   >
                     ไม่รับประกัน
@@ -768,7 +821,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     className={`py-1.5 px-2 rounded-lg font-bold transition-all cursor-pointer ${
                       insurancePlan === 'plan_a'
                         ? 'bg-blue-700 text-white shadow-xs ring-2 ring-blue-700/20'
-                        : 'glass-pill text-blue-900 hover:bg-white'
+                        : 'glass-pill text-blue-900 hover:bg-white/80'
                     }`}
                   >
                     แผน A (PA)
@@ -779,7 +832,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     className={`py-1.5 px-2 rounded-lg font-bold transition-all cursor-pointer relative ${
                       insurancePlan === 'plan_b'
                         ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs ring-2 ring-amber-500/20'
-                        : 'glass-pill text-amber-900 hover:bg-white'
+                        : 'glass-pill text-amber-900 hover:bg-white/80'
                     }`}
                   >
                     แผน B (PA+)
@@ -805,7 +858,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                           className={`py-1.5 px-2 rounded-lg font-bold transition-all cursor-pointer ${
                             insuranceYears === y
                               ? 'bg-blue-900 text-white shadow-xs'
-                              : 'bg-white/80 border border-slate-200 text-slate-700 hover:bg-white'
+                              : 'glass-pill text-slate-700 hover:bg-white/80'
                           }`}
                         >
                           <div>{y} ปี</div>
@@ -816,14 +869,14 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       ))}
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-white/80 border border-blue-200 text-[11px] text-blue-950 space-y-1">
+                    <div className="p-2.5 rounded-xl glass-mini-card text-[11px] text-blue-950 space-y-1">
                       <div className="flex justify-between items-center font-bold">
                         <span>{currentCalculation.insurancePlanName}:</span>
                         <span className="text-blue-700 font-extrabold">
                           +{formatBaht(currentCalculation.insuranceTotalWithVat, true)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                      <div className="flex justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/50">
                         <span>เบี้ยสุทธิ {formatBaht(currentCalculation.insuranceBasePremium)} + VAT 7% ({formatBaht(currentCalculation.insuranceVat, true)})</span>
                         <span className="text-blue-800 font-medium">รวมในยอดจัดไฟแนนซ์</span>
                       </div>
@@ -834,13 +887,14 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               </div>
 
               {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ จัดเป็นกล่องเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white/80 border border-blue-200/80 shadow-xs space-y-2.5">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <Banknote className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
                     <span>ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-blue-200/80 shadow-2xs">
                     ยอดจัด & ระยะเวลาผ่อน
                   </span>
                 </div>
@@ -867,7 +921,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                           setDownValue(Math.round(amt));
                         }
                       }}
-                      className="text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50/80 px-1.5 py-0.5 rounded border border-blue-200/50 transition-colors cursor-pointer"
+                      className="text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-white/80 backdrop-blur-md px-2 py-0.5 rounded-lg border border-blue-200/60 transition-colors cursor-pointer shadow-2xs"
                       title="สลับโหมดใส่เป็นบาท หรือ %"
                     >
                       สลับเป็น {downMode === 'amount' ? '%' : 'บาท'}
@@ -935,7 +989,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 </div>
 
                 {/* ราคายอดจัด (คำนวณและแสดงผลชัดเจนทันทีหลังใส่เงินดาวน์) */}
-                <div className="p-2.5 rounded-xl bg-white/90 border border-blue-200/90 shadow-2xs space-y-1.5">
+                <div className="p-2.5 rounded-xl glass-mini-card space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10.5px] font-bold text-slate-700 flex items-center gap-1.5">
                       <Banknote className="w-3.5 h-3.5 text-blue-700" />
@@ -945,7 +999,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       {formatBaht(currentCalculation.vehicleFinanceAmount)}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 text-[10px]">
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/50 text-[10px]">
                     <div>
                       <span className="text-slate-400 block">ยอดจัดเฉพาะตัวรถ:</span>
                       <span className="font-bold text-slate-800">
@@ -969,7 +1023,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
                 {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
                 <div className="pt-0.5 space-y-1">
-                  <div className="h-2 w-full bg-slate-200/90 rounded-full overflow-hidden flex p-0.5 border border-slate-300/60 shadow-inner">
+                  <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden flex p-0.5 border border-slate-300/50 shadow-inner">
                     <div
                       style={{
                         width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
@@ -1049,10 +1103,10 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {/* ช่องตาม Proposal (ซ้าย) */}
                     <div
-                      className={`rounded-xl p-2.5 border transition-all ${
+                      className={`rounded-xl p-2.5 transition-all ${
                         currentCalculation.isCappedByEir
-                          ? 'bg-amber-50/70 border-amber-300/80 shadow-xs'
-                          : 'bg-slate-50/80 border-slate-200/80'
+                          ? 'glass-panel-amber'
+                          : 'glass-mini-card'
                       }`}
                     >
                       <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
@@ -1077,10 +1131,10 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
                     {/* ช่องอัตราสูงสุด (ขวา) */}
                     <div
-                      className={`rounded-xl p-2.5 border transition-all ${
+                      className={`rounded-xl p-2.5 transition-all ${
                         currentCalculation.isCappedByEir
-                          ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
-                          : 'bg-blue-50/80 border-blue-300'
+                          ? 'glass-panel-emerald ring-2 ring-emerald-500/25'
+                          : 'glass-panel-blue'
                       }`}
                     >
                       <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
@@ -1105,7 +1159,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
                   {/* Explanation Callout when Capped */}
                   {currentCalculation.isCappedByEir && (
-                    <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 text-[11px] text-amber-950 space-y-1 shadow-xs animate-fade-in">
+                    <div className="p-2.5 rounded-xl glass-panel-amber text-[11px] text-amber-950 space-y-1 shadow-xs animate-fade-in">
                       <div className="flex items-start gap-1.5 font-bold text-amber-900">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
                         <span>ทำไมถึงต้องใช้ {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}% :</span>
@@ -1146,7 +1200,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                   </button>
 
                   {includeDeliveryFees && (
-                    <div className="mt-2 p-2.5 bg-white/60 backdrop-blur-md rounded-xl border border-white/80 text-xs space-y-2 shadow-xs">
+                    <div className="mt-2 p-2.5 glass-mini-card text-xs space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[10px] text-slate-500 font-medium">
@@ -1188,43 +1242,43 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 <button
                   type="button"
                   onClick={() => setShowInsuranceDoc(true)}
-                  className="group relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:from-blue-600 hover:via-indigo-500 hover:to-blue-700 active:scale-[0.98] text-white py-2.5 px-3.5 rounded-xl font-bold shadow-md shadow-blue-800/20 transition-all flex items-center justify-between cursor-pointer border border-blue-500/30"
+                  className="group relative overflow-hidden btn-fluid-primary py-3 px-4 rounded-2xl font-bold transition-all flex items-center justify-between cursor-pointer border border-white/30"
                   title="ดาวน์โหลดแผนความคุ้มครองประกันภัย (Group PA)"
                 >
                   <div className="flex items-center gap-2.5 text-left">
-                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <ShieldCheck className="w-4.5 h-4.5 text-white" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
                         แผนความคุ้มครอง
-                        <span className="text-[10px] bg-white/20 text-blue-100 px-1.5 py-0.2 rounded font-semibold">
+                        <span className="text-[10px] bg-white/25 text-white px-2 py-0.2 rounded-full font-semibold">
                           รูปภาพ
                         </span>
                       </div>
-                      <div className="text-[10.5px] text-blue-100/80 font-normal leading-tight mt-0.5">
+                      <div className="text-[10.5px] text-white/90 font-normal leading-tight mt-0.5">
                         {cleanPlanNameForLine(currentCalculation.insurancePlanName)} ({insuranceYears} ปี)
                       </div>
                     </div>
                   </div>
-                  <Download className="w-3.5 h-3.5 text-blue-200 group-hover:translate-y-0.5 transition-transform shrink-0" />
+                  <Download className="w-4 h-4 text-white group-hover:translate-y-0.5 transition-transform shrink-0" />
                 </button>
 
                 {/* 2. Quotation Button */}
                 <button
                   type="button"
                   onClick={() => setShowQuotation(true)}
-                  className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:via-slate-700 hover:to-indigo-900 active:scale-[0.98] text-white py-2.5 px-3.5 rounded-xl font-bold shadow-md shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-slate-700/50"
+                  className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-white/10"
                   title="ดูและดาวน์โหลดใบเสนอราคาเช่าซื้อ (Quotation)"
                 >
                   <div className="flex items-center gap-2.5 text-left">
-                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                      <FileText className="w-4.5 h-4.5 text-amber-300" />
+                    <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <FileText className="w-4.5 h-4.5 text-cyan-300" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
                         ใบเสนอราคา
-                        <span className="text-[10px] bg-amber-400/25 text-amber-200 px-1.5 py-0.2 rounded font-semibold">
+                        <span className="text-[10px] bg-cyan-400/25 text-cyan-200 px-2 py-0.2 rounded-full font-semibold">
                           รูปภาพ
                         </span>
                       </div>
@@ -1233,7 +1287,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                       </div>
                     </div>
                   </div>
-                  <Printer className="w-3.5 h-3.5 text-slate-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <Printer className="w-4 h-4 text-slate-300 group-hover:scale-110 transition-transform shrink-0" />
                 </button>
               </div>
             </div>
@@ -1245,38 +1299,41 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-7' : ''
             }`}
           >
-            {/* Result Hero Card - Frosted Glassmorphism Masterpiece */}
-            <div className="glass-card-hero rounded-2xl p-3 sm:p-4 text-center relative overflow-hidden">
+            {/* Result Hero Card - Frosted Glassmorphism Masterpiece matching Reference UI */}
+            <div className="glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden">
+              {/* Subtle top specular sheen */}
+              <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95 pointer-events-none" />
+
               {/* Proposal Code Badge & Insurance Badge */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
-                <span className="inline-block bg-white/80 text-blue-800 border border-blue-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1.5">
+                <span className="inline-block bg-white/85 backdrop-blur-md text-sky-800 border border-sky-200/80 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
                   {currentCalculation.proposalCode}
                 </span>
                 {currentCalculation.insurancePremium > 0 && (
-                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/80 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-xs">
+                  <span className="inline-flex items-center gap-1 bg-amber-50/85 backdrop-blur-md text-amber-800 border border-amber-200 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
                     <ShieldCheck className="w-3 h-3 text-amber-600" />
                     {currentCalculation.insurancePlanName}
                   </span>
                 )}
                 {currentCalculation.minInterestApplied && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-rose-700 bg-rose-50/90 border border-rose-200 px-2 py-0.5 rounded-full font-semibold">
+                  <span className="inline-flex items-center gap-0.5 text-[10px] text-rose-700 bg-rose-50/85 backdrop-blur-md border border-rose-200 px-2.5 py-0.5 rounded-full font-semibold">
                     <ShieldAlert className="w-3 h-3" /> ดอกเบี้ยขั้นต่ำ
                   </span>
                 )}
               </div>
 
-              <p className="text-[11px] text-slate-500 font-semibold tracking-wide">
+              <p className="text-[11px] text-slate-500 font-medium tracking-wide">
                 ค่างวดต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
               </p>
 
-              {/* Monthly Installment Highlight with Gradient Accent */}
-              <div className="text-3xl sm:text-4xl font-extrabold text-[#1C449C] my-1 tracking-tight drop-shadow-xs">
+              {/* Monthly Installment Highlight with Cyan-Blue Accent */}
+              <div className="text-3xl sm:text-4xl font-black text-[#0284c7] my-1.5 tracking-tight drop-shadow-xs">
                 {formatBaht(currentCalculation.monthlyInstallment)}
-                <span className="text-xs font-normal text-slate-500 ml-1">/เดือน</span>
+                <span className="text-xs font-normal text-slate-500 ml-1.5">/เดือน</span>
               </div>
 
-              {/* Installment Rounding Badge (ลงท้าย 0 หรือ 5) */}
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-[10px] text-blue-900 font-semibold mb-1 shadow-2xs">
+              {/* Installment Rounding Badge */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/70 backdrop-blur-md border border-cyan-200/80 text-[10px] text-cyan-900 font-semibold mb-1 shadow-2xs">
                 <span>ปัดเศษลงท้าย 0 หรือ 5 (ระบบ Next Capital)</span>
                 {currentCalculation.rawMonthlyInstallment !== currentCalculation.monthlyInstallment && (
                   <span className="text-slate-400 font-normal">
@@ -1289,15 +1346,15 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 {currentCalculation.remarkText}
               </p>
 
-              {/* Summary Grid - Translucent Glass Chips */}
-              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-200/60 text-left text-[11px]">
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+              {/* Summary Grid - Translucent Glass Mini Cards */}
+              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-sky-100/80 text-left text-[11px]">
+                <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์รวม:</div>
                   <span className="font-bold text-slate-900 text-xs">
                     {formatBaht(currentCalculation.financeAmount, true)}
                   </span>
                   {currentCalculation.insuranceTotalWithVat > 0 ? (
-                    <div className="text-[9px] text-blue-700 font-semibold truncate">
+                    <div className="text-[9px] text-sky-700 font-semibold truncate">
                       (รถ {formatBaht(currentCalculation.vehicleFinanceAmount)} + PA+VAT {formatBaht(currentCalculation.insuranceTotalWithVat, true)})
                     </div>
                   ) : (
@@ -1306,7 +1363,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     </div>
                   )}
                 </div>
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+                <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ดอกเบี้ยรายเดือน:</div>
                   <span className="font-bold text-slate-900 text-xs">
                     {formatBaht(currentCalculation.monthlyInterest, true)} /งวด
@@ -1315,7 +1372,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     รวมทั้งสัญญา: {formatBaht(currentCalculation.totalInterest, true)}
                   </div>
                 </div>
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+                <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดรวมทั้งสัญญา:</div>
                   <span className="font-bold text-slate-900 text-xs">
                     {formatBaht(currentCalculation.totalWithVat, true)}
@@ -1324,7 +1381,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                     (ยอดจัด + ดอกเบี้ยรวม)
                   </div>
                 </div>
-                <div className="bg-white/70 backdrop-blur-md p-2 rounded-xl border border-white/80 shadow-xs">
+                <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ภาษีมูลค่าเพิ่มในสัญญา (7%):</div>
                   <span className="font-bold text-slate-900 text-xs">
                     {formatBaht(currentCalculation.vatAmount, true)}
@@ -1337,7 +1394,7 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
               {/* Drive Away Summary if extra fees enabled */}
               {includeDeliveryFees && (
-                <div className="mt-2.5 p-2.5 bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-amber-100/70 border border-amber-200/80 rounded-xl text-left flex justify-between items-center text-xs backdrop-blur-md shadow-xs">
+                <div className="mt-2.5 p-2.5 glass-panel-amber rounded-2xl text-left flex justify-between items-center text-xs shadow-2xs">
                   <div>
                     <span className="font-bold text-amber-950 text-[11px] block">
                       เงินพร้อมออกรถ (วันรับรถ):
@@ -1353,37 +1410,37 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
               )}
 
               {/* Footer Actions on Result Card */}
-              <div className="mt-3 pt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+              <div className="mt-3.5 pt-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
                 <button
                   type="button"
                   onClick={() => setShowSchedule(true)}
-                  className="flex items-center gap-1 text-blue-700 hover:text-blue-900 font-semibold cursor-pointer"
+                  className="flex items-center gap-1 text-sky-700 hover:text-sky-900 font-semibold cursor-pointer"
                 >
-                  <Table className="w-3.5 h-3.5" /> ตารางแจกแจงรายงวด
+                  <Table className="w-3.5 h-3.5 text-sky-600" /> ตารางแจกแจงรายงวด
                 </button>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleQuickCopy}
-                    className="flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer bg-emerald-50/80 hover:bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200/90 transition-all shadow-2xs"
+                    className="flex items-center gap-1 text-white font-semibold cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 px-3.5 py-1.5 rounded-full transition-all shadow-sm shadow-emerald-500/20 active:scale-95"
                     title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
                   >
                     {copyFeedback ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" /> คัดลอกสำเร็จ!
+                        <Check className="w-3.5 h-3.5" /> คัดลอกสำเร็จ!
                       </>
                     ) : (
                       <>
-                        <Share2 className="w-3.5 h-3.5 text-emerald-600" /> ส่ง LINE
+                        <Share2 className="w-3.5 h-3.5" /> ส่ง LINE
                       </>
                     )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowQuotation(true)}
-                    className="flex items-center gap-1 text-slate-700 hover:text-blue-900 font-medium cursor-pointer hover:bg-white/80 px-2 py-1 rounded-lg transition-colors"
+                    className="flex items-center gap-1 text-sky-800 hover:text-sky-950 font-medium cursor-pointer bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-full transition-colors"
                   >
-                    <FileText className="w-3.5 h-3.5 text-blue-700" /> ใบเสนอราคาทางการ
+                    <FileText className="w-3.5 h-3.5 text-sky-600" /> ใบเสนอราคาทางการ
                   </button>
                 </div>
               </div>
@@ -1399,12 +1456,15 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
           </div>
         </main>
 
-        {/* Bottom Bar Info */}
-        <footer className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-white/50 border-t border-white/60 backdrop-blur-md text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
-          <span className="font-semibold text-slate-600">
-            ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
-          </span>
-          <span className="text-[10px] text-slate-400 font-medium">
+        {/* Bottom Bar Info matching Reference Dock */}
+        <footer className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/90 border-t border-sky-100 backdrop-blur-xl text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2 shadow-inner">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+            <span className="font-semibold text-slate-700 text-[11px]">
+              ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
+            </span>
+          </div>
+          <span className="text-[10px] text-sky-800 font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200">
             พัฒนาระบบโดย Bordin 6683
           </span>
         </footer>

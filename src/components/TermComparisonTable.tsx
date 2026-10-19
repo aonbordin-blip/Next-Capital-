@@ -22,13 +22,13 @@ export const TermComparisonTable: React.FC<Props> = ({
   }
 
   return (
-    <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden">
+    <div className="glass-card-primary rounded-[24px] p-3 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden">
       {/* Subtle top specular sheen */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-blue-100/80 text-blue-700 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs">
             <Layers className="w-3.5 h-3.5" />
           </div>
           <div>
@@ -42,7 +42,7 @@ export const TermComparisonTable: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenEirInfo}
-              className="text-[10px] text-blue-700 hover:text-blue-900 font-bold px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+              className="text-[10px] text-cyan-800 hover:text-cyan-900 font-bold px-2.5 py-0.5 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors cursor-pointer shadow-2xs"
             >
               ⚖️ เกณฑ์ EIR 23%
             </button>
@@ -75,26 +75,26 @@ export const TermComparisonTable: React.FC<Props> = ({
                   }}
                   className={`cursor-pointer transition-all duration-150 ${
                     isSelected
-                      ? 'bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-blue-50/60 text-blue-950 font-semibold shadow-xs'
-                      : 'hover:bg-white/70 text-slate-700'
+                      ? 'bg-gradient-to-r from-cyan-50/85 via-sky-50/75 to-blue-50/60 text-sky-950 font-semibold shadow-xs backdrop-blur-sm'
+                      : 'hover:bg-white/60 text-slate-700'
                   }`}
                 >
                   <td className="pt-3 pb-3.5 pl-2.5 align-middle leading-normal">
                     <div className="flex items-center gap-1.5">
                       {isSelected ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
                       ) : (
                         <div className="w-3.5 h-3.5 rounded-full border border-slate-300/80 flex-shrink-0" />
                       )}
                       <span>{item.term} งวด</span>
                       {item.isCappedByEir && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold flex items-center gap-0.5">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-0.5">
                           🔒 EIR 23%
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="pt-3 pb-3.5 text-right font-bold text-blue-700 align-middle leading-normal">
+                  <td className="pt-3 pb-3.5 text-right font-bold text-cyan-700 align-middle leading-normal">
                     {formatBaht(item.monthlyInstallment)}
                   </td>
                   <td className="pt-3 pb-3.5 text-right text-slate-500 font-normal hidden sm:table-cell align-middle leading-normal">
