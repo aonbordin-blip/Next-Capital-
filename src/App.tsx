@@ -453,8 +453,8 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
 
           {/* Top Brand Bar */}
           <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5">
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-white/20 backdrop-blur-md rounded-xl border border-white/30 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-white shadow-xs border border-white/80 flex items-center justify-center shrink-0">
                 <NextCapitalLogo size={24} />
               </div>
               <div className="flex flex-col">

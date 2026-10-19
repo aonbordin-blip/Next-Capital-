@@ -255,7 +255,22 @@ ${
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <NextCapitalLogo size={46} />
+          <div
+            style={{
+              width: '54px',
+              height: '54px',
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              flexShrink: 0,
+            }}
+          >
+            <NextCapitalLogo size={42} />
+          </div>
           <div>
             <div
               style={{

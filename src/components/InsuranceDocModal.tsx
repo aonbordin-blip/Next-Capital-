@@ -338,7 +338,22 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <NextCapitalLogo size={50} />
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              flexShrink: 0,
+            }}
+          >
+            <NextCapitalLogo size={44} />
+          </div>
           <div>
             <div
               style={{

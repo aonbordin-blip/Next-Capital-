@@ -225,7 +225,9 @@ export const EirInfoModal: React.FC<Props> = ({ isOpen, onClose, calculation }) 
         {/* Footer */}
         <div className="px-6 py-3.5 border-t border-slate-200/80 bg-slate-50/70 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <NextCapitalLogo size={24} />
+            <div className="w-8 h-8 rounded-lg bg-white shadow-2xs border border-slate-200/80 flex items-center justify-center shrink-0">
+              <NextCapitalLogo size={20} />
+            </div>
             <span className="text-[11px] text-slate-500 font-medium">
               Next Capital Public Company Limited
             </span>
