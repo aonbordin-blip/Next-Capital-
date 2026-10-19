@@ -22,7 +22,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#cae8fe] text-slate-800 antialiased selection:bg-cyan-500 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Graceful Pre-mount Shell (Eliminates Blank White Screen) -->
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Prompt', sans-serif; padding: 1rem;">
+        <div style="background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(255, 255, 255, 0.9); border-radius: 28px; padding: 2rem 2.5rem; text-align: center; box-shadow: 0 20px 50px -10px rgba(2, 132, 199, 0.2); max-width: 360px; width: 100%;">
+          <div style="width: 52px; height: 52px; margin: 0 auto 1rem; border-radius: 16px; background: linear-gradient(135deg, #0284c7, #06b6d4); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px -4px rgba(6, 182, 212, 0.4);">
+            <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
+              <path d="M22 75L22 25L42 25L68 62L68 25L82 25L82 75L62 75L36 38L36 75L22 75Z" fill="#ffffff" />
+            </svg>
+          </div>
+          <div style="font-weight: 800; font-size: 16px; color: #0f172a; letter-spacing: -0.02em;">Next Capital MotoLease</div>
+          <div style="font-size: 12px; color: #0284c7; font-weight: 600; margin-top: 4px;">กำลังโหลดระบบคำนวณค่างวด...</div>
+          <div style="width: 120px; height: 4px; background: #e0f2fe; border-radius: 9999px; margin: 1.25rem auto 0; overflow: hidden; position: relative;">
+            <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #0284c7, #06b6d4); border-radius: 9999px; animation: ncap-loading 1.2s infinite ease-in-out;"></div>
+          </div>
+        </div>
+        <style>
+          @keyframes ncap-loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(250%); }
+          }
+        </style>
+      </div>
+    </div>
+    <script>
+      // Global error listener to prevent silent white screen if an asset fails to load
+      window.addEventListener('error', function(event) {
+        var root = document.getElementById('root');
+        if (root && (!root.innerHTML || root.innerHTML.indexOf('กำลังโหลดระบบ') !== -1)) {
+          console.error('Critical app load error:', event.error || event.message);
+          // If service worker is blocking, force unregister
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              regs.forEach(function(r) { r.unregister(); });
+            });
+          }
+        }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
