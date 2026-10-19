@@ -1154,32 +1154,45 @@ ${
       <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
         <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 relative my-auto">
           {/* Header Bar matching Image 1 */}
-          <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 sm:p-2.5 bg-gradient-to-br from-blue-700 to-indigo-800 text-white rounded-2xl shadow-md shadow-blue-500/20 flex-shrink-0">
-                <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-blue-700 to-indigo-800 text-white rounded-2xl shadow-md shadow-blue-500/20 flex-shrink-0">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                    ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
+                  </h2>
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                    แสดงตัวอย่างใบเสนอราคา (รุ่น <span className="font-semibold text-slate-700">{modelName || 'รถจักรยานยนต์'}</span>)
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                  ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
-                </h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  แสดงตัวอย่างใบเสนอราคา (รุ่น <span className="font-semibold text-slate-700">{modelName || 'รถจักรยานยนต์'}</span>)
-                </p>
-              </div>
+
+              {/* ปุ่มปิดหน้าต่าง (X) มุมขวาบน */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+                title="ปิดหน้าต่าง"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* ฟังก์ชั่นส่ง LINE และดาวน์โหลด จัดตำแหน่งกึ่งกลาง */}
+            <div className="flex items-center justify-center gap-2.5 sm:gap-3 mt-3 pt-2.5 border-t border-slate-200/70">
               <button
                 type="button"
                 onClick={handleCopyChatText}
-                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
               >
                 {copied ? (
                   <>
                     <Check className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">คัดลอกสำเร็จ!</span>
-                    <span className="sm:hidden">คัดลอก</span>
+                    <span>คัดลอกสำเร็จ!</span>
                   </>
                 ) : (
                   <>
@@ -1193,12 +1206,12 @@ ${
                 type="button"
                 onClick={handleDownloadImage}
                 disabled={isGeneratingImage}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+                className="flex items-center justify-center gap-1.5 px-4.5 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
               >
                 {isGeneratingImage ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span className="hidden sm:inline">กำลังดาวน์โหลด...</span>
+                    <span>กำลังดาวน์โหลด...</span>
                   </>
                 ) : (
                   <>
@@ -1206,16 +1219,6 @@ ${
                     <span>ดาวน์โหลด</span>
                   </>
                 )}
-              </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer"
-                title="ปิดหน้าต่าง"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -1368,18 +1371,19 @@ ${
           </div>
 
           {/* Modal Sticky Footer matching Image 1 */}
-          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="text-slate-500 text-[11px]">
+          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col items-center justify-center gap-2.5 text-xs">
+            <div className="text-slate-500 text-[11px] text-center">
               รุ่นรถ: <strong className="text-slate-800">{modelName || 'รถจักรยานยนต์'}</strong> • ยอดจัดรวม:{' '}
               <strong className="text-slate-800">{formatBaht(result.financeAmount)} บาท</strong> • ค่างวด:{' '}
               <strong className="text-blue-800">{formatBaht(result.monthlyInstallment)} /เดือน</strong> ({result.term} งวด)
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* ปุ่มด้านล่างจัดวางตำแหน่งกึ่งกลาง */}
+            <div className="flex items-center justify-center gap-2.5 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer transition-colors"
+                className="px-5 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer transition-colors text-center"
               >
                 ปิดหน้าต่าง
               </button>
@@ -1387,7 +1391,7 @@ ${
                 type="button"
                 onClick={handleDownloadImage}
                 disabled={isGeneratingImage}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 transition-all active:scale-95"
+                className="flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 transition-all active:scale-95"
               >
                 {isGeneratingImage ? (
                   <>

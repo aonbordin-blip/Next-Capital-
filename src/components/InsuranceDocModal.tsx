@@ -1235,47 +1235,61 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
         <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200">
           {/* Header Action Bar */}
-          <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/70">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-600 text-white flex items-center justify-center shadow-md shadow-blue-700/20">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900">
-                    เอกสารแผนความคุ้มครอง {planDetail.name}
-                  </h2>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      isPlanB
-                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                        : 'bg-blue-100 text-blue-800 border border-blue-300'
-                    }`}
-                  >
-                    LOCKTON
-                  </span>
+          <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/70">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-600 text-white flex items-center justify-center shadow-md shadow-blue-700/20 flex-shrink-0">
+                  <ShieldCheck className="w-6 h-6" />
                 </div>
-                <p className="text-xs text-slate-500">
-                  แสดงเฉพาะแผนที่เลือกเสนอขาย ({cleanPlanNameForLine(planDetail.name)} • คุ้มครอง {activeYears} ปี)
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                      เอกสารแผนความคุ้มครอง {planDetail.name}
+                    </h2>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        isPlanB
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : 'bg-blue-100 text-blue-800 border border-blue-300'
+                      }`}
+                    >
+                      LOCKTON
+                    </span>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                    แสดงเฉพาะแผนที่เลือกเสนอขาย ({cleanPlanNameForLine(planDetail.name)} • คุ้มครอง {activeYears} ปี)
+                  </p>
+                </div>
               </div>
+
+              {/* ปุ่มปิดหน้าต่าง (X) มุมขวาบน */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+                title="ปิดหน้าต่าง"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-2 mt-2 sm:mt-0">
+            {/* ฟังก์ชั่นส่ง LINE, พิมพ์ และดาวน์โหลด จัดตำแหน่งกึ่งกลาง */}
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mt-3 pt-2.5 border-t border-slate-200/70 flex-wrap">
               <button
                 type="button"
                 onClick={handleCopySummary}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50/60 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                 title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
               >
                 {copied ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5" />
                     <span>คัดลอกสำเร็จ!</span>
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <Share2 className="w-3.5 h-3.5" />
                     <span>ส่ง LINE</span>
                   </>
                 )}
@@ -1284,7 +1298,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="hidden sm:flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer active:scale-95"
                 title="พิมพ์เอกสาร"
               >
                 <Printer className="w-3.5 h-3.5 text-slate-500" />
@@ -1295,7 +1309,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                 type="button"
                 onClick={handleDownloadImage}
                 disabled={isGeneratingImage}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-blue-700/20 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-4.5 py-1.5 sm:px-5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-blue-700/20 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
               >
                 {isGeneratingImage ? (
                   <>
@@ -1308,14 +1322,6 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                     <span>ดาวน์โหลด</span>
                   </>
                 )}
-              </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -1512,18 +1518,19 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           </div>
 
           {/* Modal Footer */}
-          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="text-slate-500 text-[11px]">
+          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col items-center justify-center gap-2.5 text-xs">
+            <div className="text-slate-500 text-[11px] text-center">
               แสดงเฉพาะแผน <strong className="text-slate-800">{cleanPlanNameForLine(planDetail.name)}</strong> • ระยะเวลา{' '}
               <strong className="text-slate-800">{activeYears} ปี</strong> • เบี้ยสุทธิ{' '}
               <strong className="text-blue-800">{formatBaht(premiumAmount)} บาท</strong>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* ปุ่มด้านล่างจัดวางตำแหน่งกึ่งกลาง */}
+            <div className="flex items-center justify-center gap-2.5 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer"
+                className="px-5 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer transition-colors text-center"
               >
                 ปิดหน้าต่าง
               </button>
@@ -1531,7 +1538,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                 type="button"
                 onClick={handleDownloadImage}
                 disabled={isGeneratingImage}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 transition-all active:scale-95"
               >
                 {isGeneratingImage ? (
                   <>
