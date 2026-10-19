@@ -1,19 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   X,
   Check,
   FileText,
   Share2,
-  Shield,
   Calendar,
   User,
   Download,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { CalculationResult } from '../types';
 import { formatBaht, cleanPlanNameForLine, formatTermYearMonth } from '../data/proposals';
-import { MOTORCYCLE_MODELS, findModelByCode } from '../data/motorcycleModels';
+import { findModelByCode } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
 
@@ -44,6 +43,7 @@ export const QuotationModal: React.FC<Props> = ({
     'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
   );
   const [officerNameAndCode, setOfficerNameAndCode] = useState<string>(officerInfo);
+
   // Find model name matching model code if available
   const getModelNameByCode = (code: string): string | null => {
     if (!code || !code.trim()) return null;
@@ -62,14 +62,13 @@ export const QuotationModal: React.FC<Props> = ({
   const [modelCodeState, setModelCodeState] = useState<string>(modelCode ? modelCode.toUpperCase() : '');
 
   // Keep officer, customer name and phone in sync with prop updates
-  React.useEffect(() => {
+  useEffect(() => {
     if (officerInfo) {
       setOfficerNameAndCode(officerInfo);
     }
   }, [officerInfo]);
 
-  // Keep modelCode and auto-fill modelName by code in sync with prop updates
-  React.useEffect(() => {
+  useEffect(() => {
     if (modelCode !== undefined) {
       const upper = modelCode.toUpperCase();
       setModelCodeState(upper);
@@ -80,8 +79,7 @@ export const QuotationModal: React.FC<Props> = ({
     }
   }, [modelCode]);
 
-  // Keep modelName in sync when selectedBikeName changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedBikeName && selectedBikeName !== 'รถจักรยานยนต์') {
       setModelName(selectedBikeName);
     } else if (modelCode) {
@@ -92,13 +90,13 @@ export const QuotationModal: React.FC<Props> = ({
     }
   }, [selectedBikeName, modelCode]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialCustomerName) {
       setCustomerName(initialCustomerName);
     }
   }, [initialCustomerName]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialCustomerPhone !== undefined) {
       setCustomerPhone(initialCustomerPhone);
     }
@@ -115,10 +113,45 @@ export const QuotationModal: React.FC<Props> = ({
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
   const [imageSuccessMessage, setImageSuccessMessage] = useState<string | null>(null);
 
-  // Screen interactive ref
-  const quotationRef = useRef<HTMLDivElement>(null);
-  // Dedicated fixed-dimension export template ref
+  // Scaling & Responsive Viewport Refs
   const exportTemplateRef = useRef<HTMLDivElement>(null);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const previewDocRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState<number>(1);
+  const [previewHeight, setPreviewHeight] = useState<number>(1200);
+  const [zoomMode, setZoomMode] = useState<'fit' | '100'>('fit');
+
+  // Auto-scale preview to fit screen perfectly on mobile devices (matching InsuranceDocModal)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const measureAndScale = () => {
+      if (previewDocRef.current) {
+        const h = previewDocRef.current.scrollHeight;
+        if (h > 0) setPreviewHeight(h);
+      }
+      if (previewContainerRef.current) {
+        const containerWidth = previewContainerRef.current.clientWidth - 16;
+        if (containerWidth > 0 && containerWidth < 780) {
+          const s = Math.max(0.3, containerWidth / 780);
+          setPreviewScale(s);
+        } else {
+          setPreviewScale(1);
+        }
+      }
+    };
+
+    measureAndScale();
+    const t1 = setTimeout(measureAndScale, 60);
+    const t2 = setTimeout(measureAndScale, 250);
+
+    window.addEventListener('resize', measureAndScale);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', measureAndScale);
+    };
+  }, [isOpen, customerName, customerPhone, officerNameAndCode, dealerName, modelName, result]);
 
   if (!isOpen) return null;
 
@@ -148,15 +181,13 @@ export const QuotationModal: React.FC<Props> = ({
   const handleCopyChatText = async () => {
     const cleanInsuranceName = cleanPlanNameForLine(result.insurancePlanName);
 
-    const text = `📋 ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
+    const summary = `📄 ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
+🏢 ${dealerName}
 ━━━━━━━━━━━━━━━━━━━━
-🏢 ผู้เสนอ: ${dealerName}
-👨‍💼 ผู้เสนอราคา/เจ้าหน้าที่: ${officerNameAndCode || 'บดินทร์ (6683)'}
-👤 ลูกค้า: ${customerName} ${customerPhone ? `(${customerPhone})` : ''}
-📅 วันที่: ${quotationDate}
-━━━━━━━━━━━━━━━━━━━━
-🏍️ รุ่นรถ: ${modelName}${modelCodeState ? `\n🔢 รหัสรุ่น: ${modelCodeState}` : ''}
-🏷️ ราคารถตัวเปล่า: ${formatBaht(result.baseVehiclePrice)}
+👨‍💼 ผู้เสนอราคา: ${officerNameAndCode}
+👤 ลูกค้า: ${customerName}${customerPhone ? ` (${customerPhone})` : ''}
+🛵 รุ่นรถ: ${modelName}
+${modelCodeState ? `🏷️ รหัสรุ่น: ${modelCodeState}\n` : ''}💰 ราคารถ: ${formatBaht(result.vehiclePrice)}
 💰 เงินดาวน์: ${formatBaht(result.downAmount)} (${result.downPercent.toFixed(1)}%)
 🛵 ยอดจัดเฉพาะตัวรถ: ${formatBaht(result.vehicleFinanceAmount)}
 ${
@@ -185,971 +216,1191 @@ ${
     ? `• เงินพร้อมออกรถสุทธิ: ${formatBaht(result.totalDriveAwayCost)}`
     : ''
 }
-📌 หมายเหตุ: ${result.remarkText}
-* ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital`;
+
+* ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+(เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นเพื่อประกอบการตัดสินใจ)`;
 
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(summary);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      setTimeout(() => setCopied(false), 2400);
     } catch {
       // fallback
     }
   };
 
-  return (
-    <>
-      {/* 
-        ================================================================
-        HIGH-RESOLUTION EXPORT TEMPLATE
-        Rendered permanently offscreen (left: -10000px, zIndex: -9999).
-        Cloned into a virtual iframe by html2canvas for PDF creation.
-        NEVER displayed over or interfering with the user's view!
-        ================================================================
-      */}
+  const cleanInsuranceName = cleanPlanNameForLine(result.insurancePlanName);
+
+  // Render the exact, beautifully balanced quotation document matching Image 2
+  const renderQuotationDocument = (isExport = false) => (
+    <div
+      style={{
+        width: '780px',
+        backgroundColor: '#ffffff',
+        padding: '28px 34px',
+        boxSizing: 'border-box',
+        fontFamily: "'Prompt', -apple-system, BlinkMacSystemFont, sans-serif",
+        color: '#1e293b',
+      }}
+    >
+      {/* Header */}
       <div
-        aria-hidden="true"
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '780px',
-          zIndex: -9999,
-          opacity: 0,
-          pointerEvents: 'none',
-          backgroundColor: '#ffffff',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingBottom: '16px',
+          borderBottom: '2px solid #e2e8f0',
+          gap: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <NextCapitalLogo size={46} />
+          <div>
+            <div
+              style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#0f172a',
+                lineHeight: '1.35',
+                marginBottom: '2px',
+              }}
+            >
+              {dealerName || 'ศูนย์บริการ / ตัวแทนจำหน่าย'}
+            </div>
+            <div
+              style={{
+                fontSize: '12px',
+                color: '#475569',
+                fontWeight: '500',
+                lineHeight: '1.35',
+              }}
+            >
+              ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            textAlign: 'right',
+            fontSize: '12px',
+            color: '#475569',
+            lineHeight: '1.4',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '3px' }}>
+            เลขที่เอกสาร: {docNumber}
+          </div>
+          <div style={{ color: '#64748b' }}>
+            วันที่: {quotationDate}
+          </div>
+        </div>
+      </div>
+
+      {/* Customer & Vehicle Info Cards - Symmetrical 2 Columns */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '16px',
+          backgroundColor: '#f8fafc',
+          padding: '16px 18px',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          fontSize: '12px',
+          marginTop: '16px',
+          marginBottom: '16px',
+        }}
+      >
+        {/* Customer Info */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+          <div
+            style={{
+              fontWeight: 'bold',
+              color: '#1e293b',
+              fontSize: '12px',
+              paddingBottom: '2px',
+            }}
+          >
+            ข้อมูลลูกค้า & ผู้เสนอราคา
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#64748b', lineHeight: '1.4' }}>ชื่อลูกค้า:</span>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '0 12px',
+                fontWeight: '600',
+                color: '#0f172a',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+              }}
+            >
+              {customerName || 'คุณลูกค้า'}
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#64748b', lineHeight: '1.4' }}>เบอร์โทรศัพท์:</span>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '0 12px',
+                color: '#0f172a',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+              }}
+            >
+              {customerPhone || '-'}
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#64748b', lineHeight: '1.4' }}>ผู้เสนอราคา:</span>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '0 12px',
+                fontWeight: '600',
+                color: '#1e40af',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+              }}
+            >
+              {officerNameAndCode || 'บดินทร์ (6683)'}
+            </div>
+          </div>
+        </div>
+
+        {/* Vehicle & Proposal Info */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+          <div
+            style={{
+              fontWeight: 'bold',
+              color: '#1e293b',
+              fontSize: '12px',
+              paddingBottom: '2px',
+            }}
+          >
+            ข้อมูลยานพาหนะและเงื่อนไข
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#64748b', lineHeight: '1.4' }}>รุ่นรถ:</span>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '0 12px',
+                fontWeight: 'bold',
+                color: '#1d4ed8',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+              }}
+            >
+              {modelName || 'รถจักรยานยนต์'}
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#64748b', lineHeight: '1.4' }}>รหัสรุ่น:</span>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '0 12px',
+                color: '#0f172a',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                fontFamily: 'monospace',
+                fontWeight: '600',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+              }}
+            >
+              {modelCodeState || '-'}
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#64748b', lineHeight: '1.4' }}>รหัสข้อเสนอ:</span>
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '0 12px',
+                color: '#0f172a',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                fontFamily: 'monospace',
+                fontWeight: '600',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+              }}
+            >
+              {result.proposalCode || '-'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Breakdown Table - Exact Alignment & Structure matching Image 2 */}
+      <table
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: '12px',
+          marginBottom: '16px',
+        }}
+      >
+        <thead>
+          <tr
+            style={{
+              backgroundColor: '#f8fafc',
+              borderTop: '1px solid #e2e8f0',
+              borderBottom: '1px solid #e2e8f0',
+            }}
+          >
+            <th
+              style={{
+                padding: '9px 16px',
+                textAlign: 'left',
+                fontWeight: 'bold',
+                color: '#1e293b',
+              }}
+            >
+              รายการ
+            </th>
+            <th
+              style={{
+                padding: '9px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#1e293b',
+                width: '190px',
+              }}
+            >
+              จำนวนเงิน (บาท)
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* 1. Base Vehicle Price */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                color: '#334155',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              1. ราคารถตัวเปล่า (Base Vehicle Price)
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#0f172a',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.vehiclePrice)}
+            </td>
+          </tr>
+
+          {/* 2. Down Payment */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                color: '#334155',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                color: '#047857',
+                fontWeight: 'bold',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              - {formatBaht(result.downAmount)}
+            </td>
+          </tr>
+
+          {/* 3. Vehicle Finance Amount */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                fontWeight: '600',
+                color: '#1e293b',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#0f172a',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.vehicleFinanceAmount)}
+            </td>
+          </tr>
+
+          {/* Insurance Breakdown if included */}
+          {result.insuranceTotalWithVat > 0 && (
+            <>
+              <tr style={{ borderBottom: '1px solid #f8fafc', backgroundColor: '#fcfdfd' }}>
+                <td
+                  style={{
+                    padding: '8px 16px 8px 32px',
+                    color: '#1d4ed8',
+                    fontSize: '11.5px',
+                    verticalAlign: 'middle',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  • ค่าเบี้ยประกันภัย PA ({cleanInsuranceName})
+                </td>
+                <td
+                  style={{
+                    padding: '8px 16px',
+                    textAlign: 'right',
+                    color: '#1d4ed8',
+                    fontSize: '11.5px',
+                    verticalAlign: 'middle',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  +{formatBaht(result.insuranceBasePremium)}
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #f8fafc', backgroundColor: '#fcfdfd' }}>
+                <td
+                  style={{
+                    padding: '8px 16px 8px 32px',
+                    color: '#1d4ed8',
+                    fontSize: '11.5px',
+                    verticalAlign: 'middle',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
+                </td>
+                <td
+                  style={{
+                    padding: '8px 16px',
+                    textAlign: 'right',
+                    color: '#1d4ed8',
+                    fontSize: '11.5px',
+                    verticalAlign: 'middle',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  +{formatBaht(result.insuranceVat, true)}
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
+                <td
+                  style={{
+                    padding: '9px 16px 10px 24px',
+                    color: '#1d4ed8',
+                    fontWeight: '600',
+                    fontSize: '11.5px',
+                    verticalAlign: 'middle',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
+                </td>
+                <td
+                  style={{
+                    padding: '9px 16px 10px 16px',
+                    textAlign: 'right',
+                    color: '#1d4ed8',
+                    fontWeight: 'bold',
+                    fontSize: '11.5px',
+                    verticalAlign: 'middle',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  +{formatBaht(result.insuranceTotalWithVat, true)}
+                </td>
+              </tr>
+            </>
+          )}
+
+          {/* 4. Total Finance Amount */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#eff6ff' }}>
+            <td
+              style={{
+                padding: '12px 16px 14px 16px',
+                fontWeight: 'bold',
+                color: '#1e40af',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
+            </td>
+            <td
+              style={{
+                padding: '12px 16px 14px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#1e40af',
+                fontSize: '13px',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.financeAmount, true)}
+            </td>
+          </tr>
+
+          {/* 5. Interest Rate */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                color: '#334155',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              5. อัตราดอกเบี้ย ({result.rateDisplayText})
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#1d4ed8',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {result.rateDisplayText}
+            </td>
+          </tr>
+
+          {/* 6. Monthly Interest */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                color: '#334155',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              6. ดอกเบี้ยรายเดือน (Monthly Interest)
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.monthlyInterest, true)}
+            </td>
+          </tr>
+
+          {/* 7. Total Interest */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                color: '#334155',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.totalInterest, true)}
+            </td>
+          </tr>
+
+          {/* 8. Total Contract Amount */}
+          <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                fontWeight: '600',
+                color: '#1e293b',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
+            </td>
+            <td
+              style={{
+                padding: '11px 16px 13px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#0f172a',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.totalWithVat, true)}
+            </td>
+          </tr>
+
+          {/* Sub-rows: before VAT & VAT */}
+          <tr style={{ borderBottom: '1px solid #f8fafc' }}>
+            <td
+              style={{
+                padding: '8px 16px 8px 32px',
+                color: '#64748b',
+                fontSize: '11.5px',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
+            </td>
+            <td
+              style={{
+                padding: '8px 16px',
+                textAlign: 'right',
+                color: '#64748b',
+                fontSize: '11.5px',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.totalBeforeVat, true)}
+            </td>
+          </tr>
+          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <td
+              style={{
+                padding: '8px 16px 10px 32px',
+                color: '#64748b',
+                fontSize: '11.5px',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
+            </td>
+            <td
+              style={{
+                padding: '8px 16px 10px 16px',
+                textAlign: 'right',
+                color: '#64748b',
+                fontSize: '11.5px',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.vatAmount, true)}
+            </td>
+          </tr>
+
+          {/* Special Installment Row */}
+          <tr style={{ backgroundColor: '#eff6ff', borderTop: '2px solid #bfdbfe' }}>
+            <td
+              style={{
+                padding: '12px 16px 14px 16px',
+                fontWeight: 'bold',
+                color: '#1e40af',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)
+            </td>
+            <td
+              style={{
+                padding: '12px 16px 14px 16px',
+                textAlign: 'right',
+                fontWeight: 'bold',
+                color: '#1d4ed8',
+                fontSize: '14px',
+                verticalAlign: 'middle',
+                lineHeight: '1.4',
+              }}
+            >
+              {formatBaht(result.monthlyInstallment)} /เดือน
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Prominent Monthly Installment Box - Matches Image 2 perfectly */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)',
+          color: '#ffffff',
+          borderRadius: '14px',
+          padding: '18px 24px',
+          textAlign: 'center',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          marginBottom: '16px',
         }}
       >
         <div
-          id="ncap-quotation-export-root"
-          ref={exportTemplateRef}
           style={{
-            width: '780px',
-            backgroundColor: '#ffffff',
-            padding: '28px 34px',
-            boxSizing: 'border-box',
-            fontFamily: "'Prompt', -apple-system, BlinkMacSystemFont, sans-serif",
-            color: '#1e293b',
+            fontSize: '13px',
+            fontWeight: '600',
+            color: '#e0e7ff',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: '4px',
           }}
         >
-          {/* Header */}
+          ค่างวดผ่อนชำระต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
+        </div>
+        <div
+          style={{
+            fontSize: '34px',
+            fontWeight: '800',
+            letterSpacing: '-0.5px',
+            margin: '4px 0',
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+        >
+          <span>{formatBaht(result.monthlyInstallment)}</span>
+          <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#bfdbfe' }}>
+            บาท / เดือน
+          </span>
+        </div>
+        <div style={{ fontSize: '11px', color: '#bfdbfe', lineHeight: 1.2 }}>
+          ระยะเวลาผ่อนชำระ: {result.term} งวด ( {formatTermYearMonth(result.term)} )
+        </div>
+      </div>
+
+      {/* Delivery day expenses if applicable */}
+      {(result.registrationFee > 0 || result.theftInsuranceFee > 0) && (
+        <div
+          style={{
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            backgroundColor: '#f8fafc',
+            fontSize: '12px',
+            marginBottom: '16px',
+            lineHeight: 1.4,
+          }}
+        >
+          <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '6px' }}>
+            สรุปเงินเตรียมพร้อมออกรถ (วันรับรถ)
+          </div>
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingBottom: '16px',
-              borderBottom: '2px solid #e2e8f0',
-              gap: '16px',
+              color: '#475569',
+              marginBottom: '3px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <NextCapitalLogo size={46} />
-              <div>
-                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', lineHeight: '1.35', marginBottom: '2px' }}>
-                  {dealerName || 'ศูนย์บริการ / ตัวแทนจำหน่าย'}
-                </div>
-                <div style={{ fontSize: '12px', color: '#475569', fontWeight: '500', lineHeight: '1.35' }}>
-                  ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
-                </div>
-              </div>
-            </div>
-            <div style={{ textAlign: 'right', fontSize: '12px', color: '#475569', lineHeight: '1.4', flexShrink: 0 }}>
-              <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '3px' }}>
-                เลขที่เอกสาร: {docNumber}
-              </div>
-              <div style={{ color: '#64748b' }}>
-                วันที่: {quotationDate}
-              </div>
-            </div>
+            <span>• เงินดาวน์:</span>
+            <span style={{ fontWeight: '500' }}>{formatBaht(result.downAmount)} บาท</span>
           </div>
-
-          {/* Customer & Vehicle Info Cards - Symmetrical 2 Columns */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16px',
-              backgroundColor: '#f8fafc',
-              padding: '16px 18px',
-              borderRadius: '12px',
-              border: '1px solid #e2e8f0',
-              fontSize: '12px',
-              marginTop: '16px',
-              marginBottom: '16px',
-            }}
-          >
-            {/* Customer Info */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-              <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px', paddingBottom: '2px' }}>
-                ข้อมูลลูกค้า & ผู้เสนอราคา
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', lineHeight: '1.4' }}>ชื่อลูกค้า:</span>
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '0 12px',
-                    fontWeight: '600',
-                    color: '#0f172a',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    lineHeight: '1.4',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {customerName || 'คุณลูกค้า'}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', lineHeight: '1.4' }}>เบอร์โทรศัพท์:</span>
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '0 12px',
-                    color: '#0f172a',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    lineHeight: '1.4',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {customerPhone || '-'}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', lineHeight: '1.4' }}>ผู้เสนอราคา:</span>
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '0 12px',
-                    fontWeight: '600',
-                    color: '#1e40af',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    lineHeight: '1.4',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {officerNameAndCode || 'บดินทร์ (6683)'}
-                </div>
-              </div>
-            </div>
-
-            {/* Vehicle & Proposal Info */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-              <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px', paddingBottom: '2px' }}>
-                ข้อมูลยานพาหนะและเงื่อนไข
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', lineHeight: '1.4' }}>รุ่นรถ:</span>
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '0 12px',
-                    fontWeight: 'bold',
-                    color: '#1d4ed8',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    lineHeight: '1.4',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {modelName || 'รถจักรยานยนต์'}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', lineHeight: '1.4' }}>รหัสรุ่น:</span>
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '0 12px',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    fontSize: '11px',
-                    color: '#1e40af',
-                    textTransform: 'uppercase',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    lineHeight: '1.4',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {modelCodeState ? modelCodeState.toUpperCase() : '-'}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '8px', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', lineHeight: '1.4' }}>รหัสข้อเสนอ:</span>
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '0 12px',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    fontSize: '11px',
-                    color: '#0f172a',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    lineHeight: '1.4',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {result.proposalCode}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Core Table Breakdown - Vertically Centered Rows with Balanced Thai Typography */}
-          <div
-            style={{
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              marginBottom: '16px',
-            }}
-          >
-            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-              <colgroup>
-                <col style={{ width: '68%' }} />
-                <col style={{ width: '32%' }} />
-              </colgroup>
-              <thead>
-                <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#1e293b' }}>
-                  <th style={{ padding: '11px 16px 13px 16px', textAlign: 'left', fontWeight: 'bold', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    รายการ
-                  </th>
-                  <th style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: 'bold', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    จำนวนเงิน (บาท)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    1. ราคารถตัวเปล่า (Base Vehicle Price)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: '600', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.baseVehiclePrice)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: '600', color: '#059669', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    - {formatBaht(result.downAmount)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', fontWeight: '600', color: '#1e293b', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.vehicleFinanceAmount)}
-                  </td>
-                </tr>
-                {result.insuranceTotalWithVat > 0 && (
-                  <>
-                    <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
-                      <td style={{ padding: '9px 16px 11px 28px', color: '#1e3a8a', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        • ค่าเบี้ยประกันภัย PA ({cleanPlanNameForLine(result.insurancePlanName)})
-                      </td>
-                      <td style={{ padding: '9px 16px 11px 16px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        +{formatBaht(result.insuranceBasePremium)}
-                      </td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f0fdf4' }}>
-                      <td style={{ padding: '9px 16px 11px 28px', color: '#1e3a8a', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
-                      </td>
-                      <td style={{ padding: '9px 16px 11px 16px', textAlign: 'right', color: '#1e3a8a', fontWeight: '500', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        +{formatBaht(result.insuranceVat, true)}
-                      </td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#eff6ff', fontWeight: 'bold' }}>
-                      <td style={{ padding: '11px 16px 13px 16px', color: '#172554', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
-                      </td>
-                      <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', color: '#1d4ed8', fontWeight: 'bold', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                        +{formatBaht(result.insuranceTotalWithVat, true)}
-                      </td>
-                    </tr>
-                  </>
-                )}
-                <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#eef2ff' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', fontWeight: 'bold', color: '#312e81', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: '800', color: '#312e81', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.financeAmount, true)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    <div>5. อัตราดอกเบี้ย ({result.rateDisplayText})</div>
-                    {result.isCappedByEir && (
-                      <div style={{ fontSize: '9.5px', color: '#047857', fontWeight: 'bold', marginTop: '2px' }}>
-                        * ล็อกใช้อัตราสูงสุดตามเกณฑ์เพดาน สคบ. (EIR ไม่เกิน 23% ต่อปี)
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: 'bold', color: '#2563eb', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    <div>{result.rateDisplayText}</div>
-                    {result.isCappedByEir && (
-                      <div style={{ fontSize: '9px', color: '#059669', fontWeight: 'bold', marginTop: '2px' }}>
-                        {result.eirMaxMessage}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    6. ดอกเบี้ยรายเดือน (Monthly Interest)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', color: '#1e293b', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.monthlyInterest, true)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', color: '#334155', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.totalInterest, true)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <td style={{ padding: '11px 16px 13px 16px', fontWeight: '600', color: '#1e293b', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
-                  </td>
-                  <td style={{ padding: '11px 16px 13px 16px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.totalWithVat, true)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#64748b' }}>
-                  <td style={{ padding: '9px 16px 11px 28px', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
-                  </td>
-                  <td style={{ padding: '9px 16px 11px 16px', textAlign: 'right', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.totalBeforeVat, true)}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#64748b' }}>
-                  <td style={{ padding: '9px 16px 11px 28px', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
-                  </td>
-                  <td style={{ padding: '9px 16px 11px 16px', textAlign: 'right', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.vatAmount, true)}
-                  </td>
-                </tr>
-                <tr
-                  style={{
-                    backgroundColor: '#dbeafe',
-                    borderTop: '2px solid #60a5fa',
-                    color: '#172554',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  <td style={{ padding: '13px 16px 15px 16px', fontSize: '13px', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    <div>ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)</div>
-                  </td>
-                  <td style={{ padding: '13px 16px 15px 16px', textAlign: 'right', fontSize: '15px', fontWeight: '800', verticalAlign: 'middle', lineHeight: '1.4' }}>
-                    {formatBaht(result.monthlyInstallment)} /เดือน
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Monthly Payment Hero Box */}
-          <div
-            style={{
-              background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)',
-              color: '#ffffff',
-              borderRadius: '12px',
-              padding: '14px 20px',
-              textAlign: 'center',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#dbeafe', letterSpacing: '0.04em', lineHeight: 1.2 }}>
-              ค่างวดผ่อนชำระต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
-            </div>
+          {result.registrationFee > 0 && (
             <div
               style={{
-                fontSize: '28px',
-                fontWeight: '800',
-                margin: '4px 0 4px 0',
-                lineHeight: 1.1,
                 display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'center',
-                gap: '6px',
+                justifyContent: 'space-between',
+                color: '#475569',
+                marginBottom: '3px',
               }}
             >
-              <span>{formatBaht(result.monthlyInstallment)}</span>
-              <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#bfdbfe' }}>
-                บาท / เดือน
-              </span>
-            </div>
-            <div style={{ fontSize: '11px', color: '#bfdbfe', lineHeight: 1.2 }}>
-              ระยะเวลาผ่อนชำระ {result.term} งวด ( {formatTermYearMonth(result.term)} )
-            </div>
-          </div>
-
-          {/* Delivery day expenses if applicable */}
-          {(result.registrationFee > 0 || result.theftInsuranceFee > 0) && (
-            <div
-              style={{
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                backgroundColor: '#f8fafc',
-                fontSize: '12px',
-                marginBottom: '16px',
-                lineHeight: 1.4,
-              }}
-            >
-              <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '6px' }}>
-                สรุปเงินเตรียมพร้อมออกรถ (วันรับรถ)
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '3px' }}>
-                <span>• เงินดาวน์:</span>
-                <span style={{ fontWeight: '500' }}>{formatBaht(result.downAmount)} บาท</span>
-              </div>
-              {result.registrationFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '3px' }}>
-                  <span>• ค่าจดทะเบียน + พ.ร.บ.:</span>
-                  <span style={{ fontWeight: '500' }}>{formatBaht(result.registrationFee)} บาท</span>
-                </div>
-              )}
-              {result.theftInsuranceFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: '3px' }}>
-                  <span>• ประกันรถหาย:</span>
-                  <span style={{ fontWeight: '500' }}>{formatBaht(result.theftInsuranceFee)} บาท</span>
-                </div>
-              )}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontWeight: 'bold',
-                  color: '#1d4ed8',
-                  paddingTop: '6px',
-                  borderTop: '1px solid #e2e8f0',
-                  marginTop: '4px',
-                  fontSize: '12px',
-                }}
-              >
-                <span>รวมเงินที่ต้องชำระวันออกรถสุทธิ:</span>
-                <span>{formatBaht(result.totalDriveAwayCost)} บาท</span>
-              </div>
+              <span>• ค่าจดทะเบียน + พ.ร.บ.:</span>
+              <span style={{ fontWeight: '500' }}>{formatBaht(result.registrationFee)} บาท</span>
             </div>
           )}
-
-          {/* Signature Footer - 2 Columns */}
+          {result.theftInsuranceFee > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                color: '#475569',
+                marginBottom: '3px',
+              }}
+            >
+              <span>• ประกันรถหาย:</span>
+              <span style={{ fontWeight: '500' }}>{formatBaht(result.theftInsuranceFee)} บาท</span>
+            </div>
+          )}
           <div
             style={{
-              paddingTop: '16px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontWeight: 'bold',
+              color: '#1d4ed8',
+              paddingTop: '6px',
               borderTop: '1px solid #e2e8f0',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '24px',
-              textAlign: 'center',
-              fontSize: '11px',
-              color: '#64748b',
-              marginBottom: '12px',
+              marginTop: '4px',
+              fontSize: '12px',
             }}
           >
-            <div>
-              <div style={{ height: '36px' }} />
-              <div style={{ borderBottom: '1px dotted #94a3b8', width: '200px', margin: '0 auto 6px auto' }} />
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>( {officerNameAndCode || 'ผู้เสนอราคา / เจ้าหน้าที่'} )</div>
-              <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>ผู้เสนอราคา / เจ้าหน้าที่</div>
-            </div>
-            <div>
-              <div style={{ height: '36px' }} />
-              <div style={{ borderBottom: '1px dotted #94a3b8', width: '200px', margin: '0 auto 6px auto' }} />
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>( {customerName || 'ลูกค้า / ผู้ขอเช่าซื้อ'} )</div>
-              <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>ลูกค้า / ผู้ขอเช่าซื้อ</div>
-            </div>
+            <span>รวมเงินที่ต้องชำระวันออกรถสุทธิ:</span>
+            <span>{formatBaht(result.totalDriveAwayCost)} บาท</span>
           </div>
+        </div>
+      )}
 
-          {/* Note */}
-          <div style={{ fontSize: '10.5px', color: '#1e3a8a', textAlign: 'center', lineHeight: 1.4, marginTop: '4px', fontWeight: 'bold' }}>
-            * ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+      {/* Signature Footer - 2 Symmetrical Columns */}
+      <div
+        style={{
+          paddingTop: '16px',
+          borderTop: '1px solid #e2e8f0',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '24px',
+          textAlign: 'center',
+          fontSize: '11px',
+          color: '#64748b',
+          marginBottom: '12px',
+        }}
+      >
+        <div>
+          <div style={{ height: '36px' }} />
+          <div
+            style={{
+              borderBottom: '1px dotted #94a3b8',
+              width: '200px',
+              margin: '0 auto 6px auto',
+            }}
+          />
+          <div style={{ fontWeight: '600', color: '#1e293b' }}>
+            ( {officerNameAndCode || 'บดินทร์ วงศ์หาโคตร (6683)'} )
           </div>
-          <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', lineHeight: 1.3, marginTop: '2px' }}>
-            (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
+          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+            ผู้เสนอราคา / เจ้าหน้าที่
           </div>
-          <div style={{ fontSize: '9px', color: '#94a3b8', textAlign: 'center', lineHeight: 1.3, marginTop: '3px' }}>
-            ระบบคำนวณค่างวดและออกใบเสนอราคา • บมจ. เน็กซ์ แคปปิตอล (NCAP)
+        </div>
+        <div>
+          <div style={{ height: '36px' }} />
+          <div
+            style={{
+              borderBottom: '1px dotted #94a3b8',
+              width: '200px',
+              margin: '0 auto 6px auto',
+            }}
+          />
+          <div style={{ fontWeight: '600', color: '#1e293b' }}>
+            ( {customerName || 'ลูกค้า / ผู้ขอเช่าซื้อ'} )
           </div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+            ลูกค้า / ผู้ขอเช่าซื้อ
+          </div>
+        </div>
+      </div>
+
+      {/* Disclaimers matching Image 2 */}
+      <div
+        style={{
+          fontSize: '10.5px',
+          color: '#1e3a8a',
+          textAlign: 'center',
+          lineHeight: 1.4,
+          marginTop: '4px',
+          fontWeight: 'bold',
+        }}
+      >
+        * ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
+      </div>
+      <div
+        style={{
+          fontSize: '9px',
+          color: '#64748b',
+          textAlign: 'center',
+          lineHeight: 1.3,
+          marginTop: '2px',
+        }}
+      >
+        (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
+      </div>
+      <div
+        style={{
+          fontSize: '9px',
+          color: '#94a3b8',
+          textAlign: 'center',
+          lineHeight: 1.3,
+          marginTop: '3px',
+        }}
+      >
+        ระบบคำนวณค่างวดและออกใบเสนอราคา • บมจ. เน็กซ์ แคปปิตอล (NCAP)
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* 
+        ================================================================
+        OFFSCREEN DEDICATED EXPORT ROOT FOR HTML2CANVAS (100% Matching Image 2)
+        ================================================================
+      */}
+      <div
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: '-9999px',
+          width: '780px',
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: -9999,
+          backgroundColor: '#ffffff',
+        }}
+      >
+        <div id="ncap-quotation-export-root" ref={exportTemplateRef}>
+          {renderQuotationDocument(true)}
         </div>
       </div>
 
       {/* 
         ================================================================
-        INTERACTIVE MODAL FOR SCREEN VIEW
+        SCREEN MODAL VIEW - Matching Image 1 (InsuranceDocModal layout)
         ================================================================
       */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-        <div className="relative bg-white rounded-3xl w-full max-w-3xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200">
-          {/* Dedicated Top-Right Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-3.5 right-3.5 z-20 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 active:scale-95 rounded-full transition-all cursor-pointer shadow-xs bg-white/80 backdrop-blur-sm"
-            title="ปิดหน้าต่าง (Close)"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {/* Modal Action Bar */}
-          <div className="no-print relative px-5 py-3.5 border-b border-slate-200 bg-slate-50/95 flex flex-col sm:flex-row items-center justify-between gap-3 pr-14 sm:pr-16">
-            {/* Left: Document Title */}
-            <div className="flex items-center gap-2.5 self-start sm:self-center">
-              <div className="p-2 bg-blue-100 text-blue-800 rounded-xl flex-shrink-0 shadow-xs">
-                <FileText className="w-5 h-5" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+        <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 relative my-auto">
+          {/* Header Bar matching Image 1 */}
+          <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 bg-gradient-to-br from-blue-700 to-indigo-800 text-white rounded-2xl shadow-md shadow-blue-500/20 flex-shrink-0">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-sm sm:text-base font-bold text-slate-800">
-                    ใบเสนอราคาเช่าซื้อ (Quotation)
-                  </h2>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  ดาวน์โหลดเป็นรูปภาพ หรือส่งทาง LINE ได้ทันที
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                  ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  แสดงตัวอย่างใบเสนอราคา (รุ่น <span className="font-semibold text-slate-700">{modelName || 'รถจักรยานยนต์'}</span>)
                 </p>
               </div>
             </div>
 
-            {/* Center: Action Buttons (ส่ง LINE & ดาวน์โหลด) */}
-            <div className="flex items-center justify-center gap-2.5 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={handleCopyChatText}
-                className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4" /> คัดลอกสำเร็จ!
+                    <Check className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">คัดลอกสำเร็จ!</span>
+                    <span className="sm:hidden">คัดลอก</span>
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-4 h-4" /> ส่ง LINE
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>ส่ง LINE</span>
                   </>
                 )}
               </button>
 
-              {/* Direct Instant Image Download Button */}
               <button
+                type="button"
                 onClick={handleDownloadImage}
                 disabled={isGeneratingImage}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 active:scale-95 text-white rounded-xl text-xs font-bold shadow-sm shadow-blue-700/25 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
               >
                 {isGeneratingImage ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> กำลังดาวน์โหลด...
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span className="hidden sm:inline">กำลังดาวน์โหลด...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4" /> ดาวน์โหลด
+                    <Download className="w-3.5 h-3.5" />
+                    <span>ดาวน์โหลด</span>
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer"
+                title="ปิดหน้าต่าง"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Progress Banner while generating Image */}
+          {/* Progress / Success Notifications */}
           {isGeneratingImage && (
-            <div className="no-print bg-blue-50 border-b border-blue-200 text-blue-800 text-xs px-5 py-2.5 flex items-center justify-center gap-2 animate-pulse">
-              <Loader2 className="w-4 h-4 text-blue-600 animate-spin flex-shrink-0" />
-              <span className="font-semibold">กำลังประมวลผลและสร้างรูปภาพคุณภาพสูง... กรุณารอสักครู่</span>
+            <div className="bg-blue-50 border-b border-blue-200 text-blue-800 text-xs px-5 py-2 flex items-center justify-center gap-2 animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+              <span className="font-semibold">กำลังสร้างรูปภาพใบเสนอราคาคุณภาพสูง... กรุณารอสักครู่</span>
             </div>
           )}
 
-          {/* Success Alert Banner if Image generated */}
           {imageSuccessMessage && (
-            <div className="no-print bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-5 py-2 flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-5 py-2 flex items-center justify-center gap-2">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
               <span className="font-semibold">{imageSuccessMessage}</span>
             </div>
           )}
 
-          {/* Scrollable Container with Sheet Presentation */}
-          <div className="flex-1 overflow-y-auto overflow-x-auto p-2 sm:p-5 bg-slate-100/60">
-            {/* Interactive Screen Quotation Document */}
-            <div
-              ref={quotationRef}
-              className="w-full max-w-[760px] mx-auto p-4 sm:p-8 space-y-4 sm:space-y-5 text-slate-800 bg-white rounded-2xl shadow-sm border border-slate-200"
-            >
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 sm:pb-5 border-b border-slate-200 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <NextCapitalLogo size={44} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <input
-                        type="text"
-                        value={dealerName}
-                        onChange={(e) => setDealerName(e.target.value)}
-                        className="font-bold text-sm sm:text-base text-slate-900 border-b border-transparent hover:border-slate-300 focus:border-blue-700 focus:outline-none transition-colors w-full"
-                        placeholder="ชื่อศูนย์บริการ / ตัวแทนจำหน่าย"
-                      />
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
-                      ใบเสนอราคาเช่าซื้อรถจักรยานยนต์ (Hire Purchase Quotation)
-                    </p>
-                  </div>
-                </div>
-                <div className="text-left sm:text-right space-y-1 text-xs text-slate-500 flex-shrink-0 w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-start">
-                  <div className="font-semibold text-slate-700">
-                    เลขที่เอกสาร: {docNumber}
-                  </div>
-                  <div className="flex items-center justify-end gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <span>วันที่: {quotationDate}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer, Officer & Vehicle Info Inputs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 text-xs">
-                <div className="space-y-2">
-                  <div className="font-semibold text-slate-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลลูกค้า & ผู้เสนอราคา
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500">ชื่อลูกค้า:</span>
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCustomerName(val);
-                        try {
-                          localStorage.setItem('ncap_customer_name', val);
-                        } catch {}
-                        onUpdateCustomer?.(val, customerPhone);
-                      }}
-                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-medium leading-normal"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500">เบอร์โทรศัพท์:</span>
-                    <input
-                      type="text"
-                      placeholder="08X-XXX-XXXX"
-                      value={customerPhone}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCustomerPhone(val);
-                        try {
-                          localStorage.setItem('ncap_customer_phone', val);
-                        } catch {}
-                        onUpdateCustomer?.(customerName, val);
-                      }}
-                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 leading-normal"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500 font-medium text-blue-900">ผู้เสนอราคา:</span>
-                    <input
-                      type="text"
-                      placeholder="ใส่ชื่อเจ้าหน้าที่ (ใส่โค้ด)"
-                      value={officerNameAndCode}
-                      onChange={(e) => setOfficerNameAndCode(e.target.value)}
-                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 font-semibold text-blue-900 leading-normal focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="font-semibold text-slate-700 flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-slate-400" /> ข้อมูลยานพาหนะและข้อเสนอ
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500">รุ่นรถ:</span>
-                    <input
-                      type="text"
-                      value={modelName}
-                      onChange={(e) => setModelName(e.target.value)}
-                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-semibold text-blue-900 leading-normal"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500 font-medium text-blue-900">รหัสรุ่น:</span>
-                    <input
-                      type="text"
-                      placeholder="เช่น WW160AV TH, ACF125CBT TH"
-                      value={modelCodeState}
-                      onChange={(e) => {
-                        const upper = e.target.value.toUpperCase();
-                        setModelCodeState(upper);
-                        const matched = getModelNameByCode(upper);
-                        if (matched) {
-                          setModelName(matched);
-                        }
-                      }}
-                      className="col-span-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 font-mono text-xs font-bold text-blue-950 uppercase tracking-wide leading-normal focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500">รหัสข้อเสนอ:</span>
-                    <span className="col-span-2 font-mono text-[11px] text-slate-800 font-bold">
-                      {result.proposalCode}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 items-center">
-                    <span className="text-slate-500">ลงชื่อในใบ:</span>
-                    <span className="col-span-2 text-[11px] text-blue-950 font-bold truncate">
-                      ( {officerNameAndCode || 'ผู้เสนอราคา / เจ้าหน้าที่'} )
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Core Table Breakdown - Vertically Centered */}
-              <div className="border border-slate-200 rounded-2xl overflow-x-auto shadow-xs">
-                <table className="w-full text-xs min-w-[480px] sm:min-w-0">
-                  <thead className="bg-slate-100/90 text-slate-700 font-bold border-b border-slate-200">
-                    <tr>
-                      <th className="pt-3 pb-3.5 px-4 text-left align-middle leading-normal">รายการ</th>
-                      <th className="pt-3 pb-3.5 px-4 text-right align-middle leading-normal">จำนวนเงิน (บาท)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    <tr>
-                      <td className="pt-3 pb-3.5 px-4 font-medium text-slate-700 align-middle leading-normal">
-                        1. ราคารถตัวเปล่า (Base Vehicle Price)
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right font-semibold align-middle leading-normal">
-                        {formatBaht(result.baseVehiclePrice)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pt-3 pb-3.5 px-4 font-medium text-slate-700 align-middle leading-normal">
-                        2. เงินดาวน์ (Down Payment) ({result.downPercent.toFixed(1)}%)
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right text-emerald-700 font-semibold align-middle leading-normal">
-                        - {formatBaht(result.downAmount)}
-                      </td>
-                    </tr>
-                    <tr className="bg-slate-50/70 font-semibold">
-                      <td className="pt-3 pb-3.5 px-4 text-slate-800 align-middle leading-normal">
-                        3. ยอดจัดเฉพาะตัวรถ (Vehicle Finance Amount)
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right font-bold text-slate-900 align-middle leading-normal">
-                        {formatBaht(result.vehicleFinanceAmount)}
-                      </td>
-                    </tr>
-                    {result.insuranceTotalWithVat > 0 && (
-                      <>
-                        <tr className="bg-blue-50/40">
-                          <td className="pt-2.5 pb-3 px-4 text-blue-900 pl-6 align-middle leading-normal">
-                            • ค่าเบี้ยประกันภัย PA ({cleanPlanNameForLine(result.insurancePlanName)})
-                          </td>
-                          <td className="pt-2.5 pb-3 px-4 text-right text-blue-900 font-medium align-middle leading-normal">
-                            +{formatBaht(result.insuranceBasePremium)}
-                          </td>
-                        </tr>
-                        <tr className="bg-blue-50/40">
-                          <td className="pt-2.5 pb-3 px-4 text-blue-900 pl-6 align-middle leading-normal">
-                            • ภาษีมูลค่าเพิ่ม 7% ของค่าเบี้ยประกัน
-                          </td>
-                          <td className="pt-2.5 pb-3 px-4 text-right text-blue-900 font-medium align-middle leading-normal">
-                            +{formatBaht(result.insuranceVat, true)}
-                          </td>
-                        </tr>
-                        <tr className="bg-blue-50/80 font-bold border-y border-blue-200/60">
-                          <td className="pt-3 pb-3.5 px-4 text-blue-950 align-middle leading-normal">
-                            + ค่าเบี้ยประกันรวมภาษี 7% (Insurance with VAT)
-                          </td>
-                          <td className="pt-3 pb-3.5 px-4 text-right text-blue-900 font-bold align-middle leading-normal">
-                            +{formatBaht(result.insuranceTotalWithVat, true)}
-                          </td>
-                        </tr>
-                      </>
-                    )}
-                    <tr className="bg-indigo-50/60 font-bold">
-                      <td className="pt-3 pb-3.5 px-4 text-indigo-950 align-middle leading-normal">
-                        4. ยอดจัดไฟแนนซ์รวม (Total Finance Amount)
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right text-indigo-900 font-extrabold align-middle leading-normal">
-                        {formatBaht(result.financeAmount, true)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pt-3 pb-3.5 px-4 text-slate-700 align-middle leading-normal">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span>5. อัตราดอกเบี้ย ({result.rateDisplayText})</span>
-                          {result.isCappedByEir && (
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-0.5">
-                              🔒 EIR 23%
-                            </span>
-                          )}
-                        </div>
-                        {result.isCappedByEir && (
-                          <div className="text-[10.5px] text-emerald-700 font-medium mt-0.5">
-                            {result.eirMaxMessage}
-                          </div>
-                        )}
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right text-blue-700 font-bold align-middle leading-normal">
-                        {result.rateDisplayText}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pt-3 pb-3.5 px-4 text-slate-700 align-middle leading-normal">
-                        6. ดอกเบี้ยรายเดือน (Monthly Interest)
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right font-medium text-slate-800 align-middle leading-normal">
-                        {formatBaht(result.monthlyInterest, true)} /เดือน
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pt-3 pb-3.5 px-4 text-slate-700 align-middle leading-normal">
-                        7. ดอกเบี้ยรวมทั้งสัญญา ({result.term} งวด)
-                        {result.minInterestApplied && (
-                          <span className="text-[10px] text-rose-500 ml-1 font-semibold">
-                            (เกณฑ์ขั้นต่ำ 7,000 บ.)
-                          </span>
-                        )}
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right font-medium align-middle leading-normal">
-                        {formatBaht(result.totalInterest, true)}
-                      </td>
-                    </tr>
-                    <tr className="bg-slate-50/60">
-                      <td className="pt-3 pb-3.5 px-4 font-medium text-slate-700 align-middle leading-normal">
-                        8. ยอดรวมทั้งสัญญารวมดอกเบี้ย (Total Contract Amount)
-                      </td>
-                      <td className="pt-3 pb-3.5 px-4 text-right font-bold text-slate-900 align-middle leading-normal">
-                        {formatBaht(result.totalWithVat, true)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pt-2.5 pb-3 px-4 text-slate-500 text-[11px] pl-6 align-middle leading-normal">
-                        • ยอดรวมก่อนภาษีมูลค่าเพิ่ม (Total before VAT)
-                      </td>
-                      <td className="pt-2.5 pb-3 px-4 text-right text-slate-600 text-[11px] font-medium align-middle leading-normal">
-                        {formatBaht(result.totalBeforeVat, true)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pt-2.5 pb-3 px-4 text-slate-500 text-[11px] pl-6 align-middle leading-normal">
-                        • ภาษีมูลค่าเพิ่ม 7% (VAT 7%)
-                      </td>
-                      <td className="pt-2.5 pb-3 px-4 text-right text-slate-600 text-[11px] font-medium align-middle leading-normal">
-                        {formatBaht(result.vatAmount, true)}
-                      </td>
-                    </tr>
-                    <tr className="bg-blue-100/70 font-bold border-t-2 border-blue-400">
-                      <td className="pt-3.5 pb-4 px-4 text-blue-950 text-sm align-middle leading-normal">
-                        <div>ค่างวดผ่อนชำระต่อเดือน (รวม VAT 7%)</div>
-                      </td>
-                      <td className="pt-3.5 pb-4 px-4 text-right text-blue-950 text-base font-extrabold align-middle leading-normal">
-                        {formatBaht(result.monthlyInstallment)} /เดือน
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Monthly Payment Hero Box */}
-              <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-2xl p-5 text-center shadow-md">
-                <div className="text-xs font-semibold uppercase tracking-wider text-blue-100">
-                  ค่างวดผ่อนชำระต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
-                </div>
-                <div className="text-3xl sm:text-4xl font-extrabold my-1.5 tracking-tight">
-                  {formatBaht(result.monthlyInstallment)}
-                  <span className="text-sm font-normal text-blue-100 ml-1">/ เดือน</span>
-                </div>
-                <div className="text-xs text-blue-200">
-                  ระยะเวลาผ่อนชำระ {result.term} งวด ( {formatTermYearMonth(result.term)} )
-                </div>
-              </div>
-
-              {/* Delivery day expenses if applicable */}
-              {(result.registrationFee > 0 || result.theftInsuranceFee > 0) && (
-                <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 text-xs space-y-2">
-                  <div className="font-bold text-slate-800">สรุปเงินเตรียมพร้อมออกรถ (วันรับรถ)</div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>• เงินดาวน์:</span>
-                    <span>{formatBaht(result.downAmount)}</span>
-                  </div>
-                  {result.registrationFee > 0 && (
-                    <div className="flex justify-between text-slate-600">
-                      <span>• ค่าจดทะเบียน + พ.ร.บ.:</span>
-                      <span>{formatBaht(result.registrationFee)}</span>
-                    </div>
-                  )}
-                  {result.theftInsuranceFee > 0 && (
-                    <div className="flex justify-between text-slate-600">
-                      <span>• ประกันรถหาย:</span>
-                      <span>{formatBaht(result.theftInsuranceFee)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold text-blue-800 pt-1 border-t border-slate-200 text-sm">
-                    <span>รวมเงินที่ต้องชำระวันออกรถ:</span>
-                    <span>{formatBaht(result.totalDriveAwayCost)}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Signature & Note Footer */}
-              <div className="pt-5 border-t border-slate-200 grid grid-cols-2 gap-8 text-center text-xs text-slate-500">
-                <div className="space-y-5">
-                  <div className="h-8 border-b border-dashed border-slate-300 w-3/4 mx-auto" />
-                  <div className="leading-relaxed">
-                    ลงชื่อ ....................................................<br />
-                    <span className="font-semibold text-slate-800">( {officerNameAndCode || 'ผู้เสนอราคา / เจ้าหน้าที่'} )</span><br />
-                    <span className="text-[10px] text-slate-400">ผู้เสนอราคา / เจ้าหน้าที่</span>
-                  </div>
-                </div>
-                <div className="space-y-5">
-                  <div className="h-8 border-b border-dashed border-slate-300 w-3/4 mx-auto" />
-                  <div className="leading-relaxed">
-                    ลงชื่อ ....................................................<br />
-                    <span className="font-semibold text-slate-800">( {customerName || 'ลูกค้า / ผู้ขอเช่าซื้อ'} )</span><br />
-                    <span className="text-[10px] text-slate-400">ลูกค้า / ผู้ขอเช่าซื้อ</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-[11px] text-blue-900 text-center font-bold">
-                * ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital
-              </div>
-              <div className="text-[9.5px] text-slate-500 text-center font-normal">
-                (เอกสารนี้เป็นเพียงการจำลองคำนวณค่างวดเบื้องต้นตามเงื่อนไข Proposal เพื่อประกอบการตัดสินใจ)
-              </div>
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
-                <span>ระบบคำนวณค่างวดและออกใบเสนอราคา</span>
-                <span>•</span>
-                <span className="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                  Next Capital (NCAP)
+          {/* Modal Scrollable Body */}
+          <div className="p-3 sm:p-5 overflow-y-auto flex-1 space-y-3.5 bg-slate-50/60">
+            {/* Quick Edit Bar - Allows adjusting Customer & Officer information before downloading */}
+            <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span className="flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-blue-700" /> ข้อมูลที่แสดงในใบเสนอราคา:
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal">
+                  (สามารถแก้ไขเพื่ออัปเดตบนเอกสารได้ทันที)
                 </span>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">ชื่อลูกค้า</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomerName(val);
+                      try {
+                        localStorage.setItem('ncap_customer_name', val);
+                      } catch {}
+                      onUpdateCustomer?.(val, customerPhone);
+                    }}
+                    placeholder="ชื่อลูกค้า"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">เบอร์โทรศัพท์ลูกค้า</label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomerPhone(val);
+                      try {
+                        localStorage.setItem('ncap_customer_phone', val);
+                      } catch {}
+                      onUpdateCustomer?.(customerName, val);
+                    }}
+                    placeholder="เบอร์โทรศัพท์"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">ผู้เสนอราคา / เจ้าหน้าที่</label>
+                  <input
+                    type="text"
+                    value={officerNameAndCode}
+                    onChange={(e) => setOfficerNameAndCode(e.target.value)}
+                    placeholder="ชื่อและโค้ดเจ้าหน้าที่"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-blue-900 font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Document Preview Area matching Image 1 */}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-1.5 px-1">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  ตัวอย่างเอกสาร (ใบเสนอราคาเช่าซื้อ):
+                </span>
+
+                {/* Responsive View Mode Switcher matching Image 1 */}
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center bg-slate-200/90 p-0.5 rounded-lg border border-slate-300">
+                    <button
+                      type="button"
+                      onClick={() => setZoomMode('fit')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        zoomMode === 'fit'
+                          ? 'bg-white text-blue-700 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      พอดีหน้าจอ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomMode('100')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        zoomMode === '100'
+                          ? 'bg-white text-blue-700 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ขนาดจริง (100%)
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-400 hidden sm:inline">1 หน้า A4</span>
+                </div>
+              </div>
+
+              {/* Dynamic Scaling Container matching Image 1 */}
+              <div
+                ref={previewContainerRef}
+                className={`bg-slate-200/80 p-1.5 sm:p-4 rounded-2xl flex justify-center shadow-inner ${
+                  zoomMode === '100' ? 'overflow-x-auto' : 'overflow-hidden'
+                }`}
+              >
+                <div
+                  style={{
+                    width: zoomMode === '100' ? '780px' : `${Math.round(780 * previewScale)}px`,
+                    height:
+                      zoomMode === '100'
+                        ? 'auto'
+                        : `${Math.round(previewHeight * previewScale)}px`,
+                    position: 'relative',
+                    transition: 'width 0.15s ease, height 0.15s ease',
+                  }}
+                  className="bg-white rounded-xl shadow-lg border border-slate-300 overflow-hidden shrink-0"
+                >
+                  <div
+                    ref={previewDocRef}
+                    style={{
+                      width: '780px',
+                      transform: zoomMode === '100' ? 'none' : `scale(${previewScale})`,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    {renderQuotationDocument(false)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Sticky Footer matching Image 1 */}
+          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="text-slate-500 text-[11px]">
+              รุ่นรถ: <strong className="text-slate-800">{modelName || 'รถจักรยานยนต์'}</strong> • ยอดจัดรวม:{' '}
+              <strong className="text-slate-800">{formatBaht(result.financeAmount)} บาท</strong> • ค่างวด:{' '}
+              <strong className="text-blue-800">{formatBaht(result.monthlyInstallment)} /เดือน</strong> ({result.term} งวด)
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer transition-colors"
+              >
+                ปิดหน้าต่าง
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadImage}
+                disabled={isGeneratingImage}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 hover:opacity-95 text-white font-bold shadow-md shadow-blue-700/20 cursor-pointer disabled:opacity-50 transition-all active:scale-95"
+              >
+                {isGeneratingImage ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>กำลังดาวน์โหลด...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>ดาวน์โหลด</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
