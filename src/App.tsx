@@ -1409,40 +1409,49 @@ ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบ�
                 </div>
               )}
 
-              {/* Footer Actions on Result Card */}
-              <div className="mt-3.5 pt-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+              {/* Footer Actions on Result Card - จัดเรียงกึ่งกลางพอดี */}
+              <div className="mt-3.5 pt-3 border-t border-sky-100/90 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+                {/* 1. ปุ่ม ตารางค่างวด */}
                 <button
                   type="button"
                   onClick={() => setShowSchedule(true)}
-                  className="flex items-center gap-1 text-sky-700 hover:text-sky-900 font-semibold cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-sky-50 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                  title="ดูตารางค่างวดแจกแจงเงินต้นและดอกเบี้ย"
                 >
-                  <Table className="w-3.5 h-3.5 text-sky-600" /> ตารางแจกแจงรายงวด
+                  <Table className="w-3.5 h-3.5 text-sky-600" />
+                  <span>ตารางค่างวด</span>
                 </button>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleQuickCopy}
-                    className="flex items-center gap-1 text-white font-semibold cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 px-3.5 py-1.5 rounded-full transition-all shadow-sm shadow-emerald-500/20 active:scale-95"
-                    title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
-                  >
-                    {copyFeedback ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" /> คัดลอกสำเร็จ!
-                      </>
-                    ) : (
-                      <>
-                        <Share2 className="w-3.5 h-3.5" /> ส่ง LINE
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowQuotation(true)}
-                    className="flex items-center gap-1 text-sky-800 hover:text-sky-950 font-medium cursor-pointer bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-full transition-colors"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-sky-600" /> ใบเสนอราคาทางการ
-                  </button>
-                </div>
+
+                {/* 2. ปุ่ม ส่ง Line */}
+                <button
+                  type="button"
+                  onClick={handleQuickCopy}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-xs shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer"
+                  title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
+                >
+                  {copyFeedback ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-white" />
+                      <span>คัดลอกสำเร็จ!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5 text-white" />
+                      <span>ส่ง Line</span>
+                    </>
+                  )}
+                </button>
+
+                {/* 3. ปุ่ม ใบเสนอราคา */}
+                <button
+                  type="button"
+                  onClick={() => setShowQuotation(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50/80 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                  title="ดูและดาวน์โหลดใบเสนอราคาทางการ"
+                >
+                  <FileText className="w-3.5 h-3.5 text-sky-600" />
+                  <span>ใบเสนอราคา</span>
+                </button>
               </div>
             </div>
 
