@@ -750,12 +750,6 @@ ${
                       <option value="second_hand">รถมือสอง 2ND (0080/2568)</option>
                     </select>
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
-                    <span>{currentProposal.category}</span>
-                    <span className="font-mono text-blue-700 font-bold">
-                      {currentProposal.code}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Bike Model Code Input (รหัสรุ่นรถ - ค้นหาและเลือกรหัสรุ่นจากตาราง) */}
