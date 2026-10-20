@@ -71,17 +71,23 @@ export const TermComparisonTable: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Table section: 3 clean columns: งวดผ่อน | ค่างวด/เดือน | ยอดรวมทั้งสิ้น */}
+      {/* Table section: 4 explicit columns as requested */}
+      {/* งวดผ่อน | ค่างวดไม่รวม PA | ค่างวด/เดือน | ยอดรวมทั้งสิ้น */}
       <div className="overflow-x-auto -mx-1 scrollbar-thin">
-        <table className="w-full text-left text-xs min-w-[280px]">
+        <table className="w-full text-left text-xs min-w-[340px]">
           <thead>
             <tr className="border-b border-slate-200/80 text-slate-500 text-[10px] sm:text-xs font-bold bg-slate-50/50">
               {/* Column 1: งวดผ่อน */}
-              <th className="py-2.5 pl-2.5 pr-2 text-left font-bold text-slate-700 whitespace-nowrap">
+              <th className="py-2.5 pl-2.5 pr-1.5 text-left font-bold text-slate-700 whitespace-nowrap">
                 งวดผ่อน
               </th>
 
-              {/* Column 2: ค่างวด/เดือน */}
+              {/* Column 2: ค่างวดไม่รวม PA */}
+              <th className="py-2.5 px-2 text-right font-bold text-slate-700 whitespace-nowrap">
+                ค่างวดไม่รวม PA
+              </th>
+
+              {/* Column 3: ค่างวด/เดือน */}
               <th className="py-2.5 px-2 text-right font-bold text-cyan-900 whitespace-nowrap">
                 <div>ค่างวด/เดือน</div>
                 {hasAnyInsurance && (
@@ -91,8 +97,8 @@ export const TermComparisonTable: React.FC<Props> = ({
                 )}
               </th>
 
-              {/* Column 3: ยอดรวมทั้งสิ้น */}
-              <th className="py-2.5 pl-2 pr-2.5 text-right font-bold text-slate-700 whitespace-nowrap">
+              {/* Column 4: ยอดรวมทั้งสิ้น */}
+              <th className="py-2.5 pl-1.5 pr-2.5 text-right font-bold text-slate-700 whitespace-nowrap">
                 ยอดรวมทั้งสิ้น
               </th>
             </tr>
@@ -116,7 +122,7 @@ export const TermComparisonTable: React.FC<Props> = ({
                   }`}
                 >
                   {/* Column 1: งวดผ่อน */}
-                  <td className="py-2.5 pl-2.5 pr-2 align-middle">
+                  <td className="py-2.5 pl-2.5 pr-1.5 align-middle">
                     <div className="flex items-center gap-1.5">
                       {isSelected ? (
                         <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
@@ -136,7 +142,17 @@ export const TermComparisonTable: React.FC<Props> = ({
                     )}
                   </td>
 
-                  {/* Column 2: ค่างวด/เดือน */}
+                  {/* Column 2: ค่างวดไม่รวม PA */}
+                  <td className="py-2.5 px-2 text-right align-middle">
+                    <div className="font-bold text-slate-700 text-xs sm:text-sm whitespace-nowrap">
+                      {formatBaht(item.monthlyInstallmentWithoutInsurance)}
+                    </div>
+                    <div className="text-[9px] text-slate-400 font-normal">
+                      ฿/เดือน
+                    </div>
+                  </td>
+
+                  {/* Column 3: ค่างวด/เดือน */}
                   <td className="py-2.5 px-2 text-right align-middle">
                     <div className="font-bold text-cyan-800 text-xs sm:text-sm whitespace-nowrap">
                       {formatBaht(item.monthlyInstallment)}
