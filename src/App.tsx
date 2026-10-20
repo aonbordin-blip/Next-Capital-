@@ -357,6 +357,7 @@ export default function App() {
 
   // Copy quick summary to clipboard
   const handleQuickCopy = async () => {
+    const currentComp = comparisons.find((c) => c.term === currentCalculation.term);
     const summary = `🛵 Next Capital MotoLease เสนอราคาค่างวด
 บริษัท: บมจ. เน็กซ์ แคปปิตอล (NCAP)
 👨‍💼 ผู้เสนอราคา: ${officerDisplay}
@@ -377,7 +378,12 @@ ${
 ${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${currentCalculation.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
 💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
 ⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
-รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}
+${
+  currentComp && currentComp.hasInsurance && currentComp.insuranceMonthlyDiff > 0
+    ? `   • ค่างวดไม่รวมประกัน: ${formatBaht(currentComp.monthlyInstallmentWithoutInsurance)} /เดือน
+   • ประกันบวกเพิ่ม: +${formatBaht(currentComp.insuranceMonthlyDiff)} /เดือน\n`
+    : ''
+}รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}
 * ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital`;
 
     try {

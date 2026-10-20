@@ -691,6 +691,7 @@ export function getTermComparisons(
 ): TermComparisonItem[] {
   const proposal = PROPOSALS[proposalKey];
   return proposal.validTerms.map((t) => {
+    // คำนวณตามแผนปัจจุบัน (หากเลือกประกัน รวมยอดจัดประกัน)
     const res = calculateLease(
       proposalKey,
       price,
@@ -702,6 +703,54 @@ export function getTermComparisons(
       insurancePlan,
       insuranceYears
     );
+
+    // คำนวณเคสตัวรถล้วน (ไม่รวมประกัน) เป็นฐานเปรียบเทียบเสมอ
+    const resNoInsurance = calculateLease(
+      proposalKey,
+      price,
+      downValue,
+      downMode,
+      t,
+      0,
+      0,
+      'none',
+      1
+    );
+
+    // คำนวณทางเลือกแผน A และ B สำหรับดูส่วนต่างกรณีปัจจุบันยังไม่ได้เลือกประกัน
+    const resPlanA = calculateLease(
+      proposalKey,
+      price,
+      downValue,
+      downMode,
+      t,
+      0,
+      0,
+      'plan_a',
+      insuranceYears || 1
+    );
+
+    const resPlanB = calculateLease(
+      proposalKey,
+      price,
+      downValue,
+      downMode,
+      t,
+      0,
+      0,
+      'plan_b',
+      insuranceYears || 1
+    );
+
+    const hasInsurance = insurancePlan !== 'none';
+    const monthlyInstallmentWithoutInsurance = resNoInsurance.monthlyInstallment;
+    const insuranceMonthlyDiff = Math.max(
+      0,
+      res.monthlyInstallment - resNoInsurance.monthlyInstallment
+    );
+    const totalWithoutInsurance = resNoInsurance.totalWithVat;
+    const insuranceTotalDiff = Math.max(0, res.totalWithVat - resNoInsurance.totalWithVat);
+
     return {
       term: t,
       monthlyInstallment: res.monthlyInstallment,
@@ -714,6 +763,18 @@ export function getTermComparisons(
       effectiveMonthlyRate: res.effectiveMonthlyRate,
       isCappedByEir: res.isCappedByEir,
       eirAnnualPercent: res.eirAnnualPercent,
+
+      // ข้อมูลเปรียบเทียบประกันภัย PA
+      hasInsurance,
+      monthlyInstallmentWithoutInsurance,
+      insuranceMonthlyDiff,
+      totalWithoutInsurance,
+      insuranceTotalDiff,
+      insurancePlanName: res.insurancePlanName,
+      planAInstallment: resPlanA.monthlyInstallment,
+      planADiff: Math.max(0, resPlanA.monthlyInstallment - resNoInsurance.monthlyInstallment),
+      planBInstallment: resPlanB.monthlyInstallment,
+      planBDiff: Math.max(0, resPlanB.monthlyInstallment - resNoInsurance.monthlyInstallment),
     };
   });
 }
