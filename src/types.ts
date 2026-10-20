@@ -50,6 +50,7 @@ export interface BikePreset {
   defaultDownPercent: number;
   badge?: string;
   popular?: boolean;
+  code?: string;
 }
 
 export interface CalculationResult {

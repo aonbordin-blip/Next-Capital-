@@ -123,7 +123,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Matched Model Neat Status Card (ไม่มีราคาต้นทุน/แนนซ์ จัดระเบียบสวยงาม) */}
+      {/* Matched Model Neat Status Card (แสดงชื่อ, รหัสรุ่น, และราคา) */}
       {matchedModel && (
         <div className="mt-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white rounded-xl border border-blue-200/80 flex items-center justify-between text-xs shadow-2xs">
           <div className="flex items-center gap-1.5 truncate">
@@ -144,9 +144,16 @@ export const BikeModelCodeInput: React.FC<Props> = ({
               {matchedModel.name}
             </span>
           </div>
-          <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 flex items-center gap-1 flex-shrink-0">
-            <Check className="w-3 h-3" /> ตรวจพบในระบบ
-          </span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {matchedModel.price && (
+              <span className="font-mono text-xs font-black text-blue-900 bg-white px-2 py-0.5 rounded-md border border-blue-200 shadow-2xs">
+                ฿{matchedModel.price.toLocaleString()}
+              </span>
+            )}
+            <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 flex items-center gap-1">
+              <Check className="w-3 h-3" /> ตรวจพบในระบบ
+            </span>
+          </div>
         </div>
       )}
 
@@ -158,7 +165,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
               รายการรหัสรุ่น ({results.length} รุ่น)
             </span>
-            <span className="text-slate-400 text-[10px]">คลิกเพื่อเลือกรหัสรุ่น</span>
+            <span className="text-slate-400 text-[10px]">คลิกเพื่อเลือก • อัปเดตราคาอัตโนมัติ</span>
           </div>
 
           {results.length > 0 ? (
@@ -200,11 +207,18 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                       </span>
                     </div>
 
-                    {/* Right: Model Name & Status */}
-                    <div className="flex items-center gap-2 flex-shrink-0 text-right">
-                      <span className={`text-xs ${isSelected ? 'font-bold text-blue-950' : 'font-medium text-slate-700 group-hover:text-blue-900'}`}>
-                        {m.name}
-                      </span>
+                    {/* Right: Model Name & Price & Status */}
+                    <div className="flex items-center gap-2.5 flex-shrink-0 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className={`text-xs ${isSelected ? 'font-bold text-blue-950' : 'font-medium text-slate-700 group-hover:text-blue-900'}`}>
+                          {m.name}
+                        </span>
+                        {m.price ? (
+                          <span className="font-mono text-[11px] font-bold text-blue-700 group-hover:text-blue-800">
+                            ฿{m.price.toLocaleString()}
+                          </span>
+                        ) : null}
+                      </div>
                       {isSelected && (
                         <Check className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
                       )}

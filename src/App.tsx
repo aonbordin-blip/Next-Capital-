@@ -216,14 +216,18 @@ export default function App() {
     setVehiclePrice(bike.price);
     handleProposalChange(bike.proposalKey);
 
-    // Auto-match bike model code if available in MOTORCYCLE_MODELS
-    const cleanBikeName = bike.name.toLowerCase().replace(/[\s\-_/]+/g, '');
-    const matched = MOTORCYCLE_MODELS.find((m) => {
-      const cleanMName = m.name.toLowerCase().replace(/[\s\-_/]+/g, '');
-      return cleanBikeName.includes(cleanMName) || cleanMName.includes(cleanBikeName);
-    });
-    if (matched) {
-      setBikeModelCode(matched.code.toUpperCase());
+    // Auto-match bike model code if available in preset or MOTORCYCLE_MODELS
+    if (bike.code) {
+      setBikeModelCode(bike.code.toUpperCase());
+    } else {
+      const cleanBikeName = bike.name.toLowerCase().replace(/[\s\-_/()]+/g, '');
+      const matched = MOTORCYCLE_MODELS.find((m) => {
+        const cleanMName = m.name.toLowerCase().replace(/[\s\-_/()]+/g, '');
+        return cleanBikeName.includes(cleanMName) || cleanMName.includes(cleanBikeName);
+      });
+      if (matched) {
+        setBikeModelCode(matched.code.toUpperCase());
+      }
     }
 
     if (bike.proposalKey === 'honda_yamaha') {
@@ -248,11 +252,20 @@ export default function App() {
   const handleSelectMotorcycleModel = (model: MotorcycleModel) => {
     const upperCode = model.code.toUpperCase();
     setBikeModelCode(upperCode);
+    const updatedPrice = model.price || vehiclePrice;
+    if (model.price) {
+      setVehiclePrice(model.price);
+      if (downMode === 'amount') {
+        const currentDownRatio = vehiclePrice > 0 ? downValue / vehiclePrice : 0.15;
+        setDownValue(Math.round(model.price * (currentDownRatio || 0.15)));
+      }
+    }
     setSelectedBike({
       id: model.id,
+      code: upperCode,
       name: model.name,
       brand: toPresetBrand(model.brand),
-      price: vehiclePrice,
+      price: updatedPrice,
       proposalKey: proposalKey,
       defaultDownPercent: downMode === 'percent' ? downValue : 15,
     });
@@ -266,11 +279,20 @@ export default function App() {
       (m) => m.code.toUpperCase() === upperCode.trim().toUpperCase()
     );
     if (matched) {
+      const updatedPrice = matched.price || vehiclePrice;
+      if (matched.price) {
+        setVehiclePrice(matched.price);
+        if (downMode === 'amount') {
+          const currentDownRatio = vehiclePrice > 0 ? downValue / vehiclePrice : 0.15;
+          setDownValue(Math.round(matched.price * (currentDownRatio || 0.15)));
+        }
+      }
       setSelectedBike({
         id: matched.id,
+        code: matched.code.toUpperCase(),
         name: matched.name,
         brand: toPresetBrand(matched.brand),
-        price: vehiclePrice,
+        price: updatedPrice,
         proposalKey: proposalKey,
         defaultDownPercent: downMode === 'percent' ? downValue : 15,
       });

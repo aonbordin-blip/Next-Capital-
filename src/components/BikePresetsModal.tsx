@@ -28,6 +28,7 @@ export const BikePresetsModal: React.FC<Props> = ({
       bike.brand.toLowerCase() === selectedBrand.toLowerCase();
     const matchesSearch =
       bike.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (bike.code && bike.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
       PROPOSALS[bike.proposalKey].name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesBrand && matchesSearch;
   });
@@ -139,11 +140,18 @@ export const BikePresetsModal: React.FC<Props> = ({
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="font-bold text-xs sm:text-[13px] text-slate-800 group-hover:text-indigo-600 transition-colors">
-                      {bike.name}
-                    </span>
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs sm:text-[13px] text-slate-800 group-hover:text-indigo-600 transition-colors">
+                        {bike.name}
+                      </div>
+                      {bike.code && (
+                        <div className="font-mono text-[10px] font-bold text-indigo-600 tracking-wider mt-0.5">
+                          🏷️ {bike.code}
+                        </div>
+                      )}
+                    </div>
                     {bike.popular && (
-                      <span className="flex items-center gap-1 text-[10px] bg-amber-500/15 text-amber-800 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap backdrop-blur-xs">
+                      <span className="flex items-center gap-1 text-[10px] bg-amber-500/15 text-amber-800 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap backdrop-blur-xs flex-shrink-0">
                         <Sparkles className="w-2.5 h-2.5 text-amber-500" /> นิยม
                       </span>
                     )}
