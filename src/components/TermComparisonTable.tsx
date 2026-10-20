@@ -89,12 +89,7 @@ export const TermComparisonTable: React.FC<Props> = ({
 
               {/* Column 3: ค่างวด/เดือน */}
               <th className="py-2.5 px-2 text-right font-bold text-cyan-900 whitespace-nowrap">
-                <div>ค่างวด/เดือน</div>
-                {hasAnyInsurance && (
-                  <div className="text-[8.5px] text-amber-700 font-semibold normal-case">
-                    (รวม {activePlanName})
-                  </div>
-                )}
+                ค่างวด/เดือน
               </th>
 
               {/* Column 4: ยอดรวมทั้งสิ้น */}
