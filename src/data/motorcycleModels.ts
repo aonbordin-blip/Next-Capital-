@@ -6,6 +6,89 @@ export interface MotorcycleModel {
   price?: number;     // ราคาตามเอกสารทางการ Max Tax (บาท)
   isSpecial?: boolean; // ไฮไลท์พิเศษ (แถวสีแดงในเอกสาร)
   isGreen?: boolean;   // ไฮไลท์พิเศษ (แถวสีเขียว UC3)
+  isCustom?: boolean;  // รุ่นที่ผู้ใช้บันทึกเอง
+}
+
+const CUSTOM_MODELS_STORAGE_KEY = 'ncap_custom_motorcycle_models';
+
+/**
+ * ดึงรายการรหัสรุ่นรถที่ผู้ใช้บันทึกเองจาก localStorage
+ */
+export function getCustomMotorcycleModels(): MotorcycleModel[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(CUSTOM_MODELS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * บันทึกรหัสรุ่นรถใหม่ (รหัสรุ่น, ชื่อรถ, ราคา, แบรนด์) ลงใน localStorage
+ */
+export function saveCustomMotorcycleModel(data: {
+  code: string;
+  name: string;
+  brand?: string;
+  price?: number;
+}): MotorcycleModel {
+  const customList = getCustomMotorcycleModels();
+  const cleanCode = data.code.trim().toUpperCase();
+  const cleanName = data.name.trim();
+
+  // If exists with same code, update it, else prepend
+  const existingIdx = customList.findIndex(
+    (m) => m.code.toUpperCase() === cleanCode
+  );
+
+  const newModel: MotorcycleModel = {
+    id: existingIdx >= 0 ? customList[existingIdx].id : `custom-${Date.now()}`,
+    code: cleanCode,
+    name: cleanName || cleanCode,
+    brand: data.brand || 'HONDA',
+    price: data.price && data.price > 0 ? Number(data.price) : undefined,
+    isCustom: true,
+  };
+
+  let updatedList: MotorcycleModel[];
+  if (existingIdx >= 0) {
+    updatedList = [...customList];
+    updatedList[existingIdx] = newModel;
+  } else {
+    updatedList = [newModel, ...customList];
+  }
+
+  try {
+    localStorage.setItem(CUSTOM_MODELS_STORAGE_KEY, JSON.stringify(updatedList));
+  } catch (err) {
+    console.error('Failed to save custom model:', err);
+  }
+
+  return newModel;
+}
+
+/**
+ * ลบรหัสรุ่นรถที่ผู้ใช้บันทึกเอง
+ */
+export function deleteCustomMotorcycleModel(id: string): void {
+  const customList = getCustomMotorcycleModels();
+  const updatedList = customList.filter((m) => m.id !== id);
+  try {
+    localStorage.setItem(CUSTOM_MODELS_STORAGE_KEY, JSON.stringify(updatedList));
+  } catch (err) {
+    console.error('Failed to delete custom model:', err);
+  }
+}
+
+/**
+ * ดึงรายการรหัสรุ่นทั้งหมด (รวมรุ่นที่บันทึกเอง + ฐานข้อมูลทางการ)
+ */
+export function getAllMotorcycleModels(): MotorcycleModel[] {
+  const custom = getCustomMotorcycleModels();
+  return [...custom, ...MOTORCYCLE_MODELS];
 }
 
 /**
@@ -155,15 +238,16 @@ export const MOTORCYCLE_MODELS: MotorcycleModel[] = [
 ];
 
 /**
- * ค้นหารุ่นรถตามรหัสหรือชื่อรุ่น หรือแบรนด์
+ * ค้นหารุ่นรถตามรหัสหรือชื่อรุ่น หรือแบรนด์ (รวมรุ่นที่บันทึกเองและฐานข้อมูลทางการ)
  */
-export function searchMotorcycleModels(query: string): MotorcycleModel[] {
+export function searchMotorcycleModels(query: string, includeCustom = true): MotorcycleModel[] {
+  const baseList = includeCustom ? getAllMotorcycleModels() : MOTORCYCLE_MODELS;
   if (!query || !query.trim()) {
-    return MOTORCYCLE_MODELS;
+    return baseList;
   }
 
   const clean = query.trim().toUpperCase().replace(/[\s\-_/()]+/g, '');
-  return MOTORCYCLE_MODELS.filter((item) => {
+  return baseList.filter((item) => {
     const codeClean = item.code.toUpperCase().replace(/[\s\-_/()]+/g, '');
     const nameClean = item.name.toUpperCase().replace(/[\s\-_/()]+/g, '');
     const brandClean = (item.brand || '').toUpperCase().replace(/[\s\-_/()]+/g, '');
@@ -174,17 +258,18 @@ export function searchMotorcycleModels(query: string): MotorcycleModel[] {
 /**
  * ค้นหาชื่อรุ่นจากรหัสรุ่น (ยืดหยุ่นต่อช่องว่างหรือตัวพิมพ์เล็ก/ใหญ่)
  */
-export function findModelByCode(code: string): MotorcycleModel | undefined {
+export function findModelByCode(code: string, includeCustom = true): MotorcycleModel | undefined {
   if (!code || !code.trim()) return undefined;
+  const baseList = includeCustom ? getAllMotorcycleModels() : MOTORCYCLE_MODELS;
   const target = code.trim().toUpperCase().replace(/[\s\-_/()]+/g, '');
   // 1. Exact clean match
-  const exact = MOTORCYCLE_MODELS.find(
+  const exact = baseList.find(
     (m) => m.code.toUpperCase().replace(/[\s\-_/()]+/g, '') === target
   );
   if (exact) return exact;
 
   // 2. Starts with clean prefix or contains
-  return MOTORCYCLE_MODELS.find((m) => {
+  return baseList.find((m) => {
     const c = m.code.toUpperCase().replace(/[\s\-_/()]+/g, '');
     return c === target || c.startsWith(target) || target.startsWith(c);
   });
