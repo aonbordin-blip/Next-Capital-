@@ -31,17 +31,17 @@ export const TermComparisonTable: React.FC<Props> = ({
       {/* Subtle top specular sheen */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs flex-shrink-0">
+      {/* Header section with EIR button aligned to top-right corner */}
+      <div className="flex items-start justify-between gap-2.5 mb-3">
+        <div className="flex items-start gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs shrink-0 mt-0.5">
             <Layers className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
-                ตารางเปรียบเทียบระยะเวลางวดผ่อน
-              </h3>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
+              ตารางเปรียบเทียบระยะเวลางวดผ่อน
+            </h3>
+            <div className="flex items-center gap-1.5 flex-wrap mt-1">
               {hasAnyInsurance ? (
                 <span className="text-[9.5px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1 shadow-2xs">
                   <ShieldCheck className="w-3 h-3 text-amber-600" />
@@ -53,9 +53,6 @@ export const TermComparisonTable: React.FC<Props> = ({
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-slate-500 font-medium">
-              คลิกที่แถวเพื่อเลือกงวดผ่อนที่ต้องการคำนวณ
-            </p>
           </div>
         </div>
 
@@ -63,7 +60,8 @@ export const TermComparisonTable: React.FC<Props> = ({
           <button
             type="button"
             onClick={onOpenEirInfo}
-            className="text-[10px] text-cyan-800 hover:text-cyan-900 font-bold px-2.5 py-1 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors cursor-pointer shadow-2xs self-end sm:self-auto flex items-center gap-1"
+            className="text-[10px] text-cyan-800 hover:text-cyan-900 font-bold px-2.5 py-1 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors cursor-pointer shadow-2xs shrink-0 whitespace-nowrap flex items-center gap-1 mt-0.5"
+            title="ดูรายละเอียดเกณฑ์ EIR 23%"
           >
             <span>⚖️ เกณฑ์ EIR 23%</span>
             <HelpCircle className="w-3 h-3 text-cyan-600" />
