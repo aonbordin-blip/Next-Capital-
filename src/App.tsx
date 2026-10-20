@@ -312,12 +312,6 @@ export default function App() {
     setDownValue(amt);
   };
 
-  // Quick vehicle price adjustment helper (+/- step)
-  const handleAdjustPrice = (delta: number) => {
-    triggerHaptic('selection');
-    setVehiclePrice((prev) => Math.max(0, (prev || 0) + delta));
-  };
-
   // Perform hire purchase calculation (including insurance premium in vehicle price)
   const currentCalculation = calculateLease(
     proposalKey,
@@ -781,25 +775,6 @@ ${
                     className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
                     placeholder="เช่น 65000"
                   />
-                  {/* Interactive quick price adjustment steppers */}
-                  <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-0.5 text-[10px]">
-                    <span className="text-slate-400 font-medium mr-0.5 shrink-0">ปรับราคาเร็ว:</span>
-                    {[
-                      { label: '-5,000', delta: -5000 },
-                      { label: '-1,000', delta: -1000 },
-                      { label: '+1,000', delta: 1000 },
-                      { label: '+5,000', delta: 5000 },
-                    ].map((step) => (
-                      <button
-                        key={step.label}
-                        type="button"
-                        onClick={() => handleAdjustPrice(step.delta)}
-                        className="px-2 py-0.5 rounded-lg font-bold text-slate-600 hover:text-blue-700 bg-white/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
-                      >
-                        {step.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
 
