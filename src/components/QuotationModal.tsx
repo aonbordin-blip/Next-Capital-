@@ -102,6 +102,27 @@ export const QuotationModal: React.FC<Props> = ({
     }
   }, [initialCustomerPhone]);
 
+/**
+ * สร้างเลขที่เอกสารจากวันเดือนปีเวลาที่ทำรายการ ไม่เอาวินาที
+ * รูปแบบ: วว ดด ปป(2 หลัก) ชช(24ชม) นน เช่น 2010262026
+ */
+const generateQuotationDocNumber = (date: Date = new Date()): string => {
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${dd}${mm}${yy}${hh}${min}`;
+};
+
+  const [docNumber, setDocNumber] = useState<string>(() => generateQuotationDocNumber());
+
+  useEffect(() => {
+    if (isOpen) {
+      setDocNumber(generateQuotationDocNumber());
+    }
+  }, [isOpen]);
+
   const [quotationDate] = useState<string>(
     new Date().toLocaleDateString('th-TH', {
       year: 'numeric',
@@ -155,8 +176,6 @@ export const QuotationModal: React.FC<Props> = ({
 
   if (!isOpen) return null;
 
-  const docNumber = `QT-${Math.floor(100000 + (result.vehiclePrice % 900000))}`;
-
   // Direct In-Browser High-Quality Image (PNG) Generation matching the displayed preview 100%
   const handleDownloadImage = async () => {
     if (!exportTemplateRef.current || isGeneratingImage) return;
@@ -165,7 +184,7 @@ export const QuotationModal: React.FC<Props> = ({
 
     try {
       const cleanModelName = (modelName || 'รถจักรยานยนต์').replace(/\s+/g, '_');
-      const fileName = `ใบเสนอราคา_${cleanModelName}_NextCapital.png`;
+      const fileName = `ใบเสนอราคา_${docNumber}_${cleanModelName}_NextCapital.png`;
       await downloadElementAsImage(exportTemplateRef.current, fileName, 780);
 
       setImageSuccessMessage('ดาวน์โหลดรูปภาพใบเสนอราคาเรียบร้อยแล้ว!');
@@ -182,6 +201,7 @@ export const QuotationModal: React.FC<Props> = ({
     const cleanInsuranceName = cleanPlanNameForLine(result.insurancePlanName);
 
     const summary = `📄 ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
+🔢 เลขที่เอกสาร: ${docNumber}
 🏢 ${dealerName}
 ━━━━━━━━━━━━━━━━━━━━
 👨‍💼 ผู้เสนอราคา: ${officerNameAndCode}
