@@ -111,16 +111,4 @@ export interface TermComparisonItem {
   effectiveMonthlyRate?: number;
   isCappedByEir?: boolean;
   eirAnnualPercent?: number;
-
-  // เปรียบเทียบส่วนประกันภัย PA
-  hasInsurance?: boolean;
-  monthlyInstallmentWithoutInsurance: number;
-  insuranceMonthlyDiff: number; // ค่างวดที่เพิ่มมาเนื่องจากทำประกัน (บาท/เดือน)
-  totalWithoutInsurance: number;
-  insuranceTotalDiff: number;   // ยอดรวมทั้งสัญญาที่เพิ่มมาเนื่องจากทำประกัน (บาท)
-  insurancePlanName?: string;
-  planAInstallment?: number;
-  planADiff?: number;
-  planBInstallment?: number;
-  planBDiff?: number;
 }
