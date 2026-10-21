@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Bike,
   HelpCircle,
@@ -34,7 +34,6 @@ import {
   Pencil,
   RotateCcw,
   Sliders,
-  FileCheck2,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -215,6 +214,67 @@ export default function App() {
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
+
+  // Collapsible cards state: only one can be open at a time; auto-collapses on clicking outside / another box
+  const [expandedCard, setExpandedCard] = useState<'comparison' | 'dv' | null>(null);
+  const comparisonRef = useRef<HTMLDivElement>(null);
+  const dvRef = useRef<HTMLDivElement>(null);
+
+  // Auto-collapse when user clicks outside / goes to another box
+  useEffect(() => {
+    if (!expandedCard) return;
+
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // Ignore clicks on modals / dialogs / portal roots
+      if (
+        target.closest('[role="dialog"]') ||
+        target.closest('.modal-backdrop') ||
+        target.closest('.fixed.inset-0')
+      ) {
+        return;
+      }
+
+      const isInsideComparison = comparisonRef.current?.contains(target);
+      const isInsideDv = dvRef.current?.contains(target);
+
+      if (expandedCard === 'comparison') {
+        if (isInsideComparison) {
+          // Inside comparison card -> keep open
+          return;
+        }
+        if (isInsideDv) {
+          // Click is on DV card -> DV card header will handle switching
+          return;
+        }
+        // Clicked outside onto another box -> auto collapse
+        setExpandedCard(null);
+      } else if (expandedCard === 'dv') {
+        if (isInsideDv) {
+          // Inside DV card -> keep open
+          return;
+        }
+        if (isInsideComparison) {
+          // Click is on comparison card -> comparison card header will handle switching
+          return;
+        }
+        // Clicked outside onto another box -> auto collapse
+        setExpandedCard(null);
+      }
+    };
+
+    // Slight delay so the click that opened the box doesn't immediately close it
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleDocumentClick);
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [expandedCard]);
 
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
@@ -516,6 +576,7 @@ ${
 
   const scrollToDvApproval = () => {
     triggerHaptic('light');
+    setExpandedCard('dv');
     const el = document.getElementById('dv-approval-section');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1792,96 +1853,54 @@ ${
                 </div>
               )}
 
-              {/* Footer Actions on Result Card - จัดเรียงกึ่งกลางพอดี */}
-              <div className="mt-3.5 pt-3 border-t border-sky-100/90 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
-                {/* 1. ปุ่ม ตารางค่างวด */}
-                <button
-                  type="button"
-                  onClick={() => setShowSchedule(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-sky-50 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
-                  title="ดูตารางค่างวดแจกแจงเงินต้นและดอกเบี้ย"
-                >
-                  <Table className="w-3.5 h-3.5 text-sky-600" />
-                  <span>ตารางค่างวด</span>
-                </button>
 
-                {/* 2. ปุ่ม ขออนุมัติ DV */}
-                <button
-                  type="button"
-                  onClick={scrollToDvApproval}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 text-emerald-900 border border-emerald-200/90 hover:border-emerald-300 font-bold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
-                  title="กรอกข้อมูลขออนุมัติเคส DV ส่งเข้า LINE"
-                >
-                  <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>ขออนุมัติ DV</span>
-                </button>
-
-                {/* 3. ปุ่ม ส่ง Line สรุป */}
-                <button
-                  type="button"
-                  onClick={handleQuickCopy}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-xs shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer"
-                  title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
-                >
-                  {copyFeedback ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-white" />
-                      <span>คัดลอกสำเร็จ!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-3.5 h-3.5 text-white" />
-                      <span>ส่ง Line</span>
-                    </>
-                  )}
-                </button>
-
-                {/* 4. ปุ่ม ใบเสนอราคา */}
-                <button
-                  type="button"
-                  onClick={() => setShowQuotation(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-sky-50/80 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
-                  title="ดูและดาวน์โหลดใบเสนอราคาทางการ"
-                >
-                  <FileText className="w-3.5 h-3.5 text-sky-600" />
-                  <span>ใบเสนอราคา</span>
-                </button>
-              </div>
             </div>
 
             {/* Term Comparisons Table */}
-            <TermComparisonTable
-              comparisons={comparisons}
-              selectedTerm={term}
-              onSelectTerm={(newTerm) => setTerm(newTerm)}
-              onOpenEirInfo={() => setShowEirInfo(true)}
-            />
+            <div ref={comparisonRef}>
+              <TermComparisonTable
+                comparisons={comparisons}
+                selectedTerm={term}
+                onSelectTerm={(newTerm) => setTerm(newTerm)}
+                onOpenEirInfo={() => setShowEirInfo(true)}
+                isExpanded={expandedCard === 'comparison'}
+                onToggleExpand={() => {
+                  setExpandedCard((prev) => (prev === 'comparison' ? null : 'comparison'));
+                }}
+              />
+            </div>
 
             {/* DV Case Approval Box (กล่องขออนุมัติเคส DV พร้อมส่ง Line) */}
-            <DvApprovalCard
-              customerName={customerName}
-              bikeModelName={
-                selectedBike?.name ||
-                (bikeModelCode
-                  ? MOTORCYCLE_MODELS.find(
-                      (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
-                    )?.name || ''
-                  : '')
-              }
-              bikeModelCode={bikeModelCode}
-              downPaymentDisplay={
-                currentCalculation.downAmount === 0
-                  ? '0 บาท (ฟรีดาวน์ 0%)'
-                  : `${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)`
-              }
-              financeAmount={currentCalculation.financeAmount}
-              monthlyInstallment={currentCalculation.monthlyInstallment}
-              term={term}
-              officerName={officerName}
-              officerCode={officerCode}
-              officerDisplay={officerDisplay}
-              onUpdateCustomerName={handleCustomerNameChange}
-            />
+            <div ref={dvRef}>
+              <DvApprovalCard
+                customerName={customerName}
+                bikeModelName={
+                  selectedBike?.name ||
+                  (bikeModelCode
+                    ? MOTORCYCLE_MODELS.find(
+                        (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+                      )?.name || ''
+                    : '')
+                }
+                bikeModelCode={bikeModelCode}
+                downPaymentDisplay={
+                  currentCalculation.downAmount === 0
+                    ? '0 บาท (ฟรีดาวน์ 0%)'
+                    : `${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)`
+                }
+                financeAmount={currentCalculation.financeAmount}
+                monthlyInstallment={currentCalculation.monthlyInstallment}
+                term={term}
+                officerName={officerName}
+                officerCode={officerCode}
+                officerDisplay={officerDisplay}
+                onUpdateCustomerName={handleCustomerNameChange}
+                isExpanded={expandedCard === 'dv'}
+                onToggleExpand={() => {
+                  setExpandedCard((prev) => (prev === 'dv' ? null : 'dv'));
+                }}
+              />
+            </div>
           </div>
         </main>
 

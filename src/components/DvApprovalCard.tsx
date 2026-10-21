@@ -81,6 +81,8 @@ interface DvApprovalCardProps {
   officerDisplay?: string;
   onUpdateCustomerName?: (name: string) => void;
   className?: string;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export function DvApprovalCard({
@@ -96,6 +98,8 @@ export function DvApprovalCard({
   officerDisplay,
   onUpdateCustomerName,
   className = '',
+  isExpanded: controlledExpanded,
+  onToggleExpand,
 }: DvApprovalCardProps) {
   // Determine default officer label for CK
   const resolvedOfficer = useMemo(() => {
@@ -129,7 +133,18 @@ export function DvApprovalCard({
   const [yodRate, setYodRate] = useState<string>('หัก 3%');
 
   // UI state
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(false);
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalIsExpanded;
+
+  const handleToggle = () => {
+    triggerHaptic('light');
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else {
+      setInternalIsExpanded(!internalIsExpanded);
+    }
+  };
+
   const [showAllTopicsModal, setShowAllTopicsModal] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [lineSentFeedback, setLineSentFeedback] = useState<boolean>(false);
@@ -340,39 +355,51 @@ export function DvApprovalCard({
       <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-teal-400 via-emerald-500 to-sky-500 opacity-95" />
 
       {/* Header Row */}
-      <div className="flex items-center justify-between gap-2 pb-3 border-b border-sky-100/80">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs shadow-emerald-500/30">
+      <div
+        onClick={handleToggle}
+        className={`flex items-center justify-between gap-2 cursor-pointer select-none transition-all ${
+          isExpanded ? 'pb-3 border-b border-sky-100/80' : 'pb-0 border-b-0'
+        }`}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs shadow-emerald-500/30 shrink-0">
             <FileCheck2 className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight">
                 ขออนุมัติเคส DV
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
                 Dealer Verification
               </span>
+              {!isExpanded && (
+                <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  คลิกเพื่อขยาย
+                </span>
+              )}
             </div>
-            <p className="text-[10.5px] text-slate-500 font-medium">
+            <p className="text-[10.5px] text-slate-500 font-medium truncate">
               ดึงชื่อลูกค้า, รุ่นรถ, และชื่อเจ้าหน้าที่ (CK) อัตโนมัติ พร้อมส่งออกเข้า LINE ทันที
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {isExpanded && (
+            <button
+              type="button"
+              onClick={handleSyncFromCurrent}
+              className="p-1.5 rounded-xl bg-white/90 hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200/80 text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+              title="ดึงข้อมูลลูกค้า รุ่นรถ เงินดาวน์ และเจ้าหน้าที่ล่าสุด"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
+              <span className="hidden sm:inline text-[10.5px]">ดึงข้อมูลล่าสุด</span>
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleSyncFromCurrent}
-            className="p-1.5 rounded-xl bg-white/90 hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200/80 text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-            title="ดึงข้อมูลลูกค้า รุ่นรถ เงินดาวน์ และเจ้าหน้าที่ล่าสุด"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
-            <span className="hidden sm:inline text-[10.5px]">ดึงข้อมูลล่าสุด</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggle}
             className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
             title={isExpanded ? 'ย่อกล่อง' : 'ขยายกล่อง'}
           >
@@ -856,7 +883,7 @@ export function DvApprovalCard({
             <div className="flex items-center justify-between mb-1">
               <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
                 <Percent className="w-3.5 h-3.5 text-amber-600" />
-                <span>YOD1-9% (หักยอดจัดตามเงื่อนไข DV)</span>
+                <span>YOD1-9%</span>
               </label>
             </div>
             <input

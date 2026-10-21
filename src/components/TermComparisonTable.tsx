@@ -9,6 +9,8 @@ interface Props {
   selectedTerm: number;
   onSelectTerm: (term: number) => void;
   onOpenEirInfo?: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export const TermComparisonTable: React.FC<Props> = ({
@@ -16,8 +18,20 @@ export const TermComparisonTable: React.FC<Props> = ({
   selectedTerm,
   onSelectTerm,
   onOpenEirInfo,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [internalExpanded, setInternalExpanded] = useState<boolean>(false);
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    triggerHaptic('light');
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else {
+      setInternalExpanded(!internalExpanded);
+    }
+  };
 
   if (comparisons.length <= 1) {
     return null;
@@ -34,14 +48,17 @@ export const TermComparisonTable: React.FC<Props> = ({
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
       {/* Header section with EIR button aligned to top-right corner and collapse toggle */}
-      <div className={`flex items-start justify-between gap-2.5 ${isExpanded ? 'mb-3' : 'mb-0'}`}>
+      <div
+        onClick={handleToggle}
+        className={`flex items-start justify-between gap-2.5 cursor-pointer select-none transition-all ${isExpanded ? 'mb-3' : 'mb-0'}`}
+      >
         <div className="flex items-start gap-2 min-w-0">
           <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs shrink-0 mt-0.5">
             <Layers className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
-              ตารางเปรียบเทียบระยะเวลางวดผ่อน
+            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-1.5">
+              <span>ตารางเปรียบเทียบระยะเวลางวดผ่อน</span>
             </h3>
             <div className="flex items-center gap-1.5 flex-wrap mt-1">
               {hasAnyInsurance ? (
@@ -63,7 +80,7 @@ export const TermComparisonTable: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           {onOpenEirInfo && (
             <button
               type="button"
@@ -78,10 +95,7 @@ export const TermComparisonTable: React.FC<Props> = ({
 
           <button
             type="button"
-            onClick={() => {
-              triggerHaptic('light');
-              setIsExpanded(!isExpanded);
-            }}
+            onClick={handleToggle}
             className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
             title={isExpanded ? 'ย่อตารางเปรียบเทียบ' : 'ขยายตารางเปรียบเทียบ'}
           >
