@@ -14,6 +14,7 @@ import {
   Smartphone,
   Monitor,
   ChevronDown,
+  ChevronUp,
   Info,
   ShieldAlert,
   ShieldCheck,
@@ -216,7 +217,8 @@ export default function App() {
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
 
   // Collapsible cards state: only one can be open at a time; auto-collapses on clicking outside / another box
-  const [expandedCard, setExpandedCard] = useState<'comparison' | 'dv' | null>(null);
+  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | null>('financing');
+  const financingRef = useRef<HTMLDivElement>(null);
   const comparisonRef = useRef<HTMLDivElement>(null);
   const dvRef = useRef<HTMLDivElement>(null);
 
@@ -237,16 +239,28 @@ export default function App() {
         return;
       }
 
+      const isInsideFinancing = financingRef.current?.contains(target);
       const isInsideComparison = comparisonRef.current?.contains(target);
       const isInsideDv = dvRef.current?.contains(target);
 
-      if (expandedCard === 'comparison') {
+      if (expandedCard === 'financing') {
+        if (isInsideFinancing) {
+          // Inside financing card -> keep open
+          return;
+        }
+        if (isInsideComparison || isInsideDv) {
+          // Click is on another collapsible card -> that card's own click handler handles opening
+          return;
+        }
+        // Clicked outside onto another box -> auto collapse
+        setExpandedCard(null);
+      } else if (expandedCard === 'comparison') {
         if (isInsideComparison) {
           // Inside comparison card -> keep open
           return;
         }
-        if (isInsideDv) {
-          // Click is on DV card -> DV card header will handle switching
+        if (isInsideFinancing || isInsideDv) {
+          // Click is on another collapsible card -> that card's own click handler handles opening
           return;
         }
         // Clicked outside onto another box -> auto collapse
@@ -256,8 +270,8 @@ export default function App() {
           // Inside DV card -> keep open
           return;
         }
-        if (isInsideComparison) {
-          // Click is on comparison card -> comparison card header will handle switching
+        if (isInsideFinancing || isInsideComparison) {
+          // Click is on another collapsible card -> that card's own click handler handles opening
           return;
         }
         // Clicked outside onto another box -> auto collapse
@@ -1080,18 +1094,76 @@ ${
                 )}
               </div>
 
-              {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ จัดเป็นกล่องเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue">
+              {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ - ยุบเก็บได้และปิดอัตโนมัติเมื่อกดกล่องอื่น) */}
+              <div
+                ref={financingRef}
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
+              >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
-                    <Banknote className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
-                    <span>ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
-                  </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-blue-200/80 shadow-2xs">
-                    ยอดจัด & ระยะเวลาผ่อน
-                  </span>
+
+                {/* Collapsible Header: นำป้าย 'ยอดจัด & ระยะเวลาผ่อน' ออกตามที่ระบุในรูป */}
+                <div
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setExpandedCard((prev) => (prev === 'financing' ? null : 'financing'));
+                  }}
+                  className={`flex items-center justify-between gap-2 cursor-pointer select-none transition-all ${
+                    expandedCard === 'financing' ? 'pb-2.5 border-b border-blue-200/60' : 'pb-0'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-2xs shrink-0">
+                      <Banknote className="w-4 h-4 text-blue-700" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <label className="text-[11px] sm:text-xs text-slate-800 font-bold flex items-center gap-1.5 cursor-pointer">
+                          <span>ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
+                        </label>
+                        {expandedCard !== 'financing' && (
+                          <span className="text-[9.5px] font-semibold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                            คลิกเพื่อขยาย
+                          </span>
+                        )}
+                      </div>
+                      {expandedCard !== 'financing' && (
+                        <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-600 mt-0.5 font-medium">
+                          <span className="text-emerald-700 font-bold">
+                            ดาวน์ {formatBaht(currentCalculation.downAmount)} ({currentCalculation.downPercent.toFixed(1)}%)
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-blue-800 font-bold">
+                            ผ่อน {term} งวด
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-700 font-bold">
+                            จัด {formatBaht(currentCalculation.financeAmount, true)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerHaptic('light');
+                      setExpandedCard((prev) => (prev === 'financing' ? null : 'financing'));
+                    }}
+                    className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs shrink-0"
+                    title={expandedCard === 'financing' ? 'ย่อกล่อง' : 'ขยายกล่อง'}
+                  >
+                    {expandedCard === 'financing' ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
+
+                {expandedCard === 'financing' && (
+                  <div className="space-y-2.5 pt-2.5 animate-fade-in">
 
                 {/* Down Payment Section */}
                 <div>
@@ -1673,6 +1745,8 @@ ${
                   )}
                 </div>
               </div>
+            )}
+          </div>
 
               {/* Action Buttons: 2 beautiful, modern primary action buttons */}
               <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
