@@ -34,6 +34,7 @@ import {
   Pencil,
   RotateCcw,
   Sliders,
+  FileCheck2,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -53,6 +54,7 @@ import { BikePresetsModal } from './components/BikePresetsModal';
 import { QuotationModal } from './components/QuotationModal';
 import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
+import { DvApprovalCard } from './components/DvApprovalCard';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
@@ -509,6 +511,18 @@ ${
       setTimeout(() => setCopyFeedback(false), 2400);
     } catch {
       // ignore
+    }
+  };
+
+  const scrollToDvApproval = () => {
+    triggerHaptic('light');
+    const el = document.getElementById('dv-approval-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-4', 'ring-emerald-400/50');
+      setTimeout(() => {
+        el.classList.remove('ring-4', 'ring-emerald-400/50');
+      }, 2000);
     }
   };
 
@@ -1784,18 +1798,29 @@ ${
                 <button
                   type="button"
                   onClick={() => setShowSchedule(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-sky-50 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-sky-50 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
                   title="ดูตารางค่างวดแจกแจงเงินต้นและดอกเบี้ย"
                 >
                   <Table className="w-3.5 h-3.5 text-sky-600" />
                   <span>ตารางค่างวด</span>
                 </button>
 
-                {/* 2. ปุ่ม ส่ง Line */}
+                {/* 2. ปุ่ม ขออนุมัติ DV */}
+                <button
+                  type="button"
+                  onClick={scrollToDvApproval}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 text-emerald-900 border border-emerald-200/90 hover:border-emerald-300 font-bold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                  title="กรอกข้อมูลขออนุมัติเคส DV ส่งเข้า LINE"
+                >
+                  <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>ขออนุมัติ DV</span>
+                </button>
+
+                {/* 3. ปุ่ม ส่ง Line สรุป */}
                 <button
                   type="button"
                   onClick={handleQuickCopy}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-xs shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-xs shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer"
                   title="คัดลอกข้อความสรุปสำหรับส่งลูกค้าทาง LINE"
                 >
                   {copyFeedback ? (
@@ -1811,11 +1836,11 @@ ${
                   )}
                 </button>
 
-                {/* 3. ปุ่ม ใบเสนอราคา */}
+                {/* 4. ปุ่ม ใบเสนอราคา */}
                 <button
                   type="button"
                   onClick={() => setShowQuotation(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50/80 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-sky-50/80 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 hover:border-sky-300 font-semibold text-xs shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
                   title="ดูและดาวน์โหลดใบเสนอราคาทางการ"
                 >
                   <FileText className="w-3.5 h-3.5 text-sky-600" />
@@ -1830,6 +1855,29 @@ ${
               selectedTerm={term}
               onSelectTerm={(newTerm) => setTerm(newTerm)}
               onOpenEirInfo={() => setShowEirInfo(true)}
+            />
+
+            {/* DV Case Approval Box (กล่องขออนุมัติเคส DV พร้อมส่ง Line) */}
+            <DvApprovalCard
+              customerName={customerName}
+              bikeModelName={
+                selectedBike?.name ||
+                (bikeModelCode
+                  ? MOTORCYCLE_MODELS.find(
+                      (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+                    )?.name || ''
+                  : '')
+              }
+              bikeModelCode={bikeModelCode}
+              downPaymentDisplay={
+                currentCalculation.downAmount === 0
+                  ? '0 บาท (ฟรีดาวน์ 0%)'
+                  : `${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)`
+              }
+              financeAmount={currentCalculation.financeAmount}
+              monthlyInstallment={currentCalculation.monthlyInstallment}
+              term={term}
+              onUpdateCustomerName={handleCustomerNameChange}
             />
           </div>
         </main>
