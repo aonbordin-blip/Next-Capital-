@@ -1877,6 +1877,9 @@ ${
               financeAmount={currentCalculation.financeAmount}
               monthlyInstallment={currentCalculation.monthlyInstallment}
               term={term}
+              officerName={officerName}
+              officerCode={officerCode}
+              officerDisplay={officerDisplay}
               onUpdateCustomerName={handleCustomerNameChange}
             />
           </div>
