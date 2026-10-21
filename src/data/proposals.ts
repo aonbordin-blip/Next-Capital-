@@ -8,6 +8,7 @@ import {
   InsurancePlan,
   InsuranceYears,
   InsurancePlanDetail,
+  CustomRateConfig,
 } from '../types';
 
 export const INSURANCE_PLANS: Record<'plan_a' | 'plan_b', InsurancePlanDetail> = {
@@ -797,7 +798,8 @@ export function calculateLease(
   registrationFee: number = 0,
   theftInsuranceFee: number = 0,
   insurancePlan: InsurancePlan = 'none',
-  insuranceYears: InsuranceYears = 1
+  insuranceYears: InsuranceYears = 1,
+  customRateConfig?: CustomRateConfig | null
 ): CalculationResult {
   const proposal = PROPOSALS[proposalKey];
   const safeBasePrice = Math.max(0, price || 0);
@@ -849,7 +851,25 @@ export function calculateLease(
   let rateDisplayText = '';
   let remarkText = proposal.conditionNote || 'คำนวณตามเงื่อนไข Proposal';
 
-  if (proposalKey === 'small_bike') {
+  const isCustomRate = Boolean(customRateConfig && customRateConfig.rate > 0);
+  const customRateValue = customRateConfig?.rate || 0;
+  const customRateType = customRateConfig?.type || 'monthly';
+  const enforceEirCap = Boolean(customRateConfig?.enforceEirCap);
+
+  if (isCustomRate) {
+    if (customRateType === 'annual') {
+      isAnnualRate = true;
+      annualRate = customRateValue / 100;
+      proposalMonthlyRate = annualRate / 12;
+      rateDisplayText = `${customRateValue.toFixed(2)}% ต่อปี (${(proposalMonthlyRate * 100).toFixed(3)}%/เดือน) [กำหนดเอง]`;
+      remarkText = `อัตราดอกเบี้ยกำหนดเอง: ${customRateValue.toFixed(2)}% ต่อปี`;
+    } else {
+      isAnnualRate = false;
+      proposalMonthlyRate = customRateValue / 100;
+      rateDisplayText = `${customRateValue.toFixed(3)}% ต่อเดือน [กำหนดเอง]`;
+      remarkText = `อัตราดอกเบี้ยกำหนดเอง: ${customRateValue.toFixed(3)}% ต่อเดือน`;
+    }
+  } else if (proposalKey === 'small_bike') {
     if (validTerm === 12) proposalMonthlyRate = 0.0106;
     else if (validTerm === 18) proposalMonthlyRate = 0.0107;
     else if (validTerm === 24) proposalMonthlyRate = 0.0107;
@@ -905,9 +925,13 @@ export function calculateLease(
     ? 0.23 / 12
     : getMaxAllowedMonthlyFlatRate(validTerm);
 
-  // ตรวจสอบว่าอัตราที่ขอมาตาม Proposal เกินเพดาน EIR 23% หรือไม่
-  // หากเกิน: ระบบทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย
-  const isCappedByEir = !isAnnualRate && proposalMonthlyRate > maxAllowedMonthlyRate;
+  // ตรวจสอบเพดาน EIR 23% ต่อปี:
+  // หากเป็นอัตรากำหนดเองของผู้ใช้ (customRate):
+  // ถ้าไม่เลือก enforceEirCap จะคำนวณตามอัตราของระบบบริษัทตรงๆ เพื่อให้ตัวเลขตรงกับระบบบริษัท
+  const isCappedByEir = isCustomRate
+    ? (enforceEirCap && !isAnnualRate && proposalMonthlyRate > maxAllowedMonthlyRate)
+    : (!isAnnualRate && proposalMonthlyRate > maxAllowedMonthlyRate);
+
   const effectiveMonthlyRate = isCappedByEir ? maxAllowedMonthlyRate : proposalMonthlyRate;
   const monthlyRate = effectiveMonthlyRate;
 
@@ -919,6 +943,8 @@ export function calculateLease(
   if (isCappedByEir) {
     rateDisplayText = `${(effectiveMonthlyRate * 100).toFixed(3)}% ต่อเดือน (สูงสุดตามเกณฑ์ EIR 23%)`;
     eirReason = `เนื่องจากตามเงื่อนไขของเคสนี้ (ราคารถ ${formatBaht(safeBasePrice)}, เงินดาวน์ ${formatBaht(downAmount)} และระยะเวลาผ่อน ${validTerm} งวด) หากใช้ดอกเบี้ย ${(proposalMonthlyRate * 100).toFixed(3)}% จะทำให้อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR) สูงเกินเพดานกฎหมายกำหนด (ไม่เกิน 23% ต่อปี) ระบบจึงทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย คือ ${(effectiveMonthlyRate * 100).toFixed(3)}% แทน เพื่อให้ชุดข้อมูลชุดนี้ผ่านเกณฑ์การอนุมัติครับ`;
+  } else if (isCustomRate) {
+    eirReason = `คำนวณตามอัตราดอกเบี้ยระบบบริษัทที่คุณกำหนดเอง ${(effectiveMonthlyRate * 100).toFixed(3)}% ต่อเดือน`;
   } else {
     eirReason = `อัตราดอกเบี้ย ${(effectiveMonthlyRate * 100).toFixed(3)}% ต่อเดือน อยู่ในเกณฑ์ควบคุมสัญญาเช่าซื้อ ไม่เกินเพดาน EIR 23% ต่อปี`;
   }
@@ -942,7 +968,6 @@ export function calculateLease(
     minInterestApplied = true;
     remarkText = 'ปรับใช้ดอกเบี้ยขั้นต่ำตามเกณฑ์ 7,000 บาท';
   }
-
 
   // คำนวณยอดรวมสัญญาดิบและค่างวดดิบก่อนปัดเศษ
   const rawContractTotal = financeAmount + totalInterest;
@@ -1007,6 +1032,9 @@ export function calculateLease(
     monthlyInstallment,
     roundingRuleNote,
     remarkText,
+    isCustomRate,
+    customRateType: isCustomRate ? customRateType : undefined,
+    customRateValue: isCustomRate ? customRateValue : undefined,
     registrationFee,
     theftInsuranceFee,
     totalDriveAwayCost,
@@ -1020,7 +1048,8 @@ export function getTermComparisons(
   downMode: DownMode,
   currentTerm: number,
   insurancePlan: InsurancePlan = 'none',
-  insuranceYears: InsuranceYears = 1
+  insuranceYears: InsuranceYears = 1,
+  customRateConfig?: CustomRateConfig | null
 ): TermComparisonItem[] {
   const proposal = PROPOSALS[proposalKey];
   return proposal.validTerms.map((t) => {
@@ -1034,7 +1063,8 @@ export function getTermComparisons(
       0,
       0,
       insurancePlan,
-      insuranceYears
+      insuranceYears,
+      customRateConfig
     );
 
     // คำนวณเคสตัวรถล้วน (ไม่รวมประกัน) เป็นฐานเปรียบเทียบเสมอ
@@ -1047,7 +1077,8 @@ export function getTermComparisons(
       0,
       0,
       'none',
-      1
+      1,
+      customRateConfig
     );
 
     // คำนวณทางเลือกแผน A และ B สำหรับดูส่วนต่างกรณีปัจจุบันยังไม่ได้เลือกประกัน
@@ -1060,7 +1091,8 @@ export function getTermComparisons(
       0,
       0,
       'plan_a',
-      insuranceYears || 1
+      insuranceYears || 1,
+      customRateConfig
     );
 
     const resPlanB = calculateLease(
@@ -1072,7 +1104,8 @@ export function getTermComparisons(
       0,
       0,
       'plan_b',
-      insuranceYears || 1
+      insuranceYears || 1,
+      customRateConfig
     );
 
     const hasInsurance = insurancePlan !== 'none';

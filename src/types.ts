@@ -93,10 +93,20 @@ export interface CalculationResult {
   monthlyInstallment: number; // ค่างวดต่อเดือนตามเกณฑ์ Next Capital ปัดเศษลงท้าย 0 หรือ 5 เช่น 2,415 หรือ 2,420
   roundingRuleNote: string; // คำอธิบายเกณฑ์ปัดเศษค่างวด
   remarkText: string;
+  // Custom Interest Rate Fields (แก้ไขดอกเบี้ยตามระบบบริษัท)
+  isCustomRate?: boolean;
+  customRateType?: 'monthly' | 'annual';
+  customRateValue?: number;
   // Day of delivery costs
   registrationFee: number;
   theftInsuranceFee: number;
   totalDriveAwayCost: number; // เงินที่ต้องจ่ายวันออกรถ
+}
+
+export interface CustomRateConfig {
+  rate: number; // e.g. 1.09 for 1.09% per month or 6.5 for 6.5% per year
+  type: 'monthly' | 'annual';
+  enforceEirCap?: boolean; // false = calculate exact custom rate, true = cap at EIR 23%
 }
 
 export interface TermComparisonItem {

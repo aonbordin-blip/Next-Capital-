@@ -31,6 +31,9 @@ import {
   Plus,
   Minus,
   Banknote,
+  Pencil,
+  RotateCcw,
+  Sliders,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -43,7 +46,7 @@ import {
   cleanPlanNameForLine,
   formatTermYearMonth,
 } from './data/proposals';
-import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears } from './types';
+import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears, CustomRateConfig } from './types';
 import { ProposalInfoModal } from './components/ProposalInfoModal';
 import { ProposalSelectModal } from './components/ProposalSelectModal';
 import { BikePresetsModal } from './components/BikePresetsModal';
@@ -75,6 +78,33 @@ export default function App() {
   const [includeDeliveryFees, setIncludeDeliveryFees] = useState<boolean>(false);
   const [registrationFee, setRegistrationFee] = useState<number>(1500); // พรบ.+ทะเบียน
   const [theftInsuranceFee, setTheftInsuranceFee] = useState<number>(2500); // ประกันรถหาย
+
+  // Custom Interest Rate State (ฟังก์ชันแก้ไขอัตราดอกเบี้ยให้ตรงกับระบบบริษัท)
+  const [isCustomRateEnabled, setIsCustomRateEnabled] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ncap_custom_rate_enabled') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [customRateInput, setCustomRateInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_custom_rate_input') ?? '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [customRateType, setCustomRateType] = useState<'monthly' | 'annual'>(() => {
+    try {
+      return (localStorage.getItem('ncap_custom_rate_type') as 'monthly' | 'annual') || 'monthly';
+    } catch {
+      return 'monthly';
+    }
+  });
+
+  const [enforceEirCap, setEnforceEirCap] = useState<boolean>(false);
 
   // Selected preset metadata & Model Code (รหัสรุ่นรถ)
   const [selectedBike, setSelectedBike] = useState<BikePreset | null>(null);
@@ -312,6 +342,94 @@ export default function App() {
     setDownValue(amt);
   };
 
+  // Custom rate handlers and config (ฟังก์ชันแก้ไขอัตราดอกเบี้ยตามระบบบริษัท)
+  const handleToggleCustomRate = () => {
+    triggerHaptic('selection');
+    const nextState = !isCustomRateEnabled;
+    setIsCustomRateEnabled(nextState);
+    try {
+      localStorage.setItem('ncap_custom_rate_enabled', String(nextState));
+    } catch {}
+    if (nextState && !customRateInput) {
+      const defaultRate = (currentCalculation.proposalMonthlyRate * 100).toFixed(3);
+      setCustomRateInput(defaultRate);
+      try {
+        localStorage.setItem('ncap_custom_rate_input', defaultRate);
+      } catch {}
+    }
+  };
+
+  const handleCustomRateChange = (val: string) => {
+    setCustomRateInput(val);
+    try {
+      localStorage.setItem('ncap_custom_rate_input', val);
+    } catch {}
+  };
+
+  const handleCustomRateTypeChange = (type: 'monthly' | 'annual') => {
+    triggerHaptic('light');
+    setCustomRateType(type);
+    try {
+      localStorage.setItem('ncap_custom_rate_type', type);
+    } catch {}
+    const num = parseFloat(customRateInput);
+    if (!isNaN(num) && num > 0) {
+      if (type === 'annual' && num < 3) {
+        const annualEquivalent = (num * 12).toFixed(2);
+        setCustomRateInput(annualEquivalent);
+        try {
+          localStorage.setItem('ncap_custom_rate_input', annualEquivalent);
+        } catch {}
+      } else if (type === 'monthly' && num >= 3) {
+        const monthlyEquivalent = (num / 12).toFixed(3);
+        setCustomRateInput(monthlyEquivalent);
+        try {
+          localStorage.setItem('ncap_custom_rate_input', monthlyEquivalent);
+        } catch {}
+      }
+    }
+  };
+
+  const handleQuickSelectRate = (rate: number) => {
+    triggerHaptic('selection');
+    const str = rate.toString();
+    setCustomRateInput(str);
+    try {
+      localStorage.setItem('ncap_custom_rate_input', str);
+    } catch {}
+  };
+
+  const handleAdjustRate = (delta: number) => {
+    triggerHaptic('light');
+    const current = parseFloat(customRateInput) || (currentCalculation.proposalMonthlyRate * 100) || 1.09;
+    const next = Math.max(0.01, Number((current + delta).toFixed(3)));
+    const str = next.toString();
+    setCustomRateInput(str);
+    try {
+      localStorage.setItem('ncap_custom_rate_input', str);
+    } catch {}
+  };
+
+  const handleResetToProposalRate = () => {
+    triggerHaptic('medium');
+    setIsCustomRateEnabled(false);
+    try {
+      localStorage.setItem('ncap_custom_rate_enabled', 'false');
+    } catch {}
+  };
+
+  const parsedCustomRate = parseFloat(customRateInput);
+  const customRateConfig: CustomRateConfig | null = React.useMemo(() => {
+    if (!isCustomRateEnabled || isNaN(parsedCustomRate) || parsedCustomRate <= 0) {
+      return null;
+    }
+    return {
+      rate: parsedCustomRate,
+      type: customRateType,
+      enforceEirCap,
+    };
+  }, [isCustomRateEnabled, parsedCustomRate, customRateType, enforceEirCap]);
+
   // Perform hire purchase calculation (including insurance premium in vehicle price)
   const currentCalculation = calculateLease(
     proposalKey,
@@ -322,7 +440,8 @@ export default function App() {
     includeDeliveryFees ? registrationFee : 0,
     includeDeliveryFees ? theftInsuranceFee : 0,
     insurancePlan,
-    insuranceYears
+    insuranceYears,
+    customRateConfig
   );
 
   // Subtle hero card pulse/flash effect when calculations change
@@ -334,6 +453,8 @@ export default function App() {
   }, [
     currentCalculation.monthlyInstallment,
     currentCalculation.financeAmount,
+    currentCalculation.effectiveMonthlyRate,
+    isCustomRateEnabled,
     insurancePlan,
     term,
   ]);
@@ -346,7 +467,8 @@ export default function App() {
     downMode,
     term,
     insurancePlan,
-    insuranceYears
+    insuranceYears,
+    customRateConfig
   );
 
   // Copy quick summary to clipboard
@@ -1078,83 +1200,313 @@ ${
                   </div>
                 </div>
 
-                {/* Interest Rate Comparison: ช่องตาม Proposal (ซ้าย) vs ช่องอัตราสูงสุด (ขวา) */}
-                <div className="space-y-1.5 pt-0.5">
+                {/* Interest Rate Comparison & Custom Rate Editor: ฟังก์ชั่นแก้ไขดอกเบี้ยตามระบบบริษัท */}
+                <div className="space-y-2 pt-0.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-[11px] text-slate-700 font-bold">
-                      หลักเกณฑ์อัตราดอกเบี้ยที่ใช้
-                    </label>
-                    <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                      {currentCalculation.isCappedByEir ? (
-                        <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                          <Lock className="w-2.5 h-2.5" /> ล็อกตามเกณฑ์ EIR 23%
-                        </span>
-                      ) : (
-                        <span className="text-blue-700 font-medium">
-                          ✓ ไม่เกินเพดาน สคบ.
+                    <div className="flex items-center gap-1.5">
+                      <label className="block text-[11px] text-slate-700 font-bold">
+                        หลักเกณฑ์อัตราดอกเบี้ยที่ใช้
+                      </label>
+                      {isCustomRateEnabled && (
+                        <span className="text-[9.5px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.5 rounded-full border border-amber-300 flex items-center gap-0.5 shadow-2xs">
+                          <Pencil className="w-2.5 h-2.5 text-amber-700" /> ระบุเอง
                         </span>
                       )}
-                    </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {isCustomRateEnabled ? (
+                        <button
+                          type="button"
+                          onClick={handleResetToProposalRate}
+                          className="text-[10px] text-amber-800 hover:text-amber-950 font-bold px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                          title="รีเซ็ตกลับเป็นอัตราตามเงื่อนไข Proposal เดิม"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" />
+                          <span>รีเซ็ตตาม Proposal</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleToggleCustomRate}
+                          className="text-[10px] text-blue-700 hover:text-blue-900 font-bold px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                          title="คลิกเพื่อแก้ไขอัตราดอกเบี้ยให้ตรงกับระบบบริษัท"
+                        >
+                          <Pencil className="w-2.5 h-2.5" />
+                          <span>แก้ไขดอกเบี้ย (ระบบบริษัท)</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Panel แก้ไขอัตราดอกเบี้ยเมื่อเปิดใช้งาน (Custom Interest Rate Editor) */}
+                  {isCustomRateEnabled && (
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/90 to-amber-100/60 border-2 border-amber-400/90 shadow-sm space-y-2.5 animate-fade-in">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
+                            %
+                          </div>
+                          <div>
+                            <div className="text-[11.5px] font-bold text-amber-950 flex items-center gap-1">
+                              แก้ไขดอกเบี้ยให้ตรงระบบบริษัท
+                            </div>
+                            <div className="text-[9.5px] text-amber-800 leading-tight">
+                              ปรับเรทดอกเบี้ยสำหรับเคสพิเศษหรือระบบบริษัทที่ตัวเลขไม่ตรง
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Switch Type: % ต่อเดือน vs % ต่อปี */}
+                        <div className="flex items-center p-0.5 bg-amber-200/70 rounded-xl border border-amber-300/80 text-[10px] shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleCustomRateTypeChange('monthly')}
+                            className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                              customRateType === 'monthly'
+                                ? 'bg-white text-amber-950 shadow-xs'
+                                : 'text-amber-800 hover:text-amber-950'
+                            }`}
+                          >
+                            % ต่อเดือน
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomRateTypeChange('annual')}
+                            className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                              customRateType === 'annual'
+                                ? 'bg-white text-amber-950 shadow-xs'
+                                : 'text-amber-800 hover:text-amber-950'
+                            }`}
+                          >
+                            % ต่อปี
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Number Input with Stepper Buttons */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustRate(-0.05)}
+                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
+                          title="ลดลง 0.05%"
+                        >
+                          -0.05
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustRate(-0.01)}
+                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
+                          title="ลดลง 0.01%"
+                        >
+                          -0.01
+                        </button>
+
+                        <div className="relative flex-1">
+                          <input
+                            type="number"
+                            step="0.001"
+                            min="0"
+                            max="100"
+                            value={customRateInput}
+                            onChange={(e) => handleCustomRateChange(e.target.value)}
+                            placeholder={customRateType === 'monthly' ? 'เช่น 1.09 หรือ 1.10' : 'เช่น 6.50'}
+                            className="w-full bg-white text-center rounded-xl border-2 border-amber-400 focus:border-amber-600 focus:ring-2 focus:ring-amber-300 py-1.5 text-base font-black text-slate-900 outline-none transition-all shadow-inner"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-800 pointer-events-none">
+                            {customRateType === 'monthly' ? '%/เดือน' : '%/ปี'}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustRate(0.01)}
+                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
+                          title="เพิ่มขึ้น 0.01%"
+                        >
+                          +0.01
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustRate(0.05)}
+                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
+                          title="เพิ่มขึ้น 0.05%"
+                        >
+                          +0.05
+                        </button>
+                      </div>
+
+                      {/* Quick Preset Chips */}
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-amber-900 font-semibold flex items-center justify-between">
+                          <span>แตะเพื่อเลือกเรทดอกเบี้ยยอดนิยม:</span>
+                          <span className="text-[9.5px] text-amber-800">
+                            {customRateType === 'monthly' ? 'Flat Rate รายเดือน' : 'อัตราต่อปี'}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {(customRateType === 'monthly'
+                            ? [0.99, 1.05, 1.06, 1.07, 1.08, 1.09, 1.1, 1.15, 1.19, 1.2, 1.25, 1.29, 1.35, 1.49, 1.59]
+                            : [4.5, 5.0, 5.5, 6.0, 6.5, 6.75, 7.0, 7.5, 8.0, 9.0]
+                          ).map((presetRate) => {
+                            const isSelected = parseFloat(customRateInput) === presetRate;
+                            return (
+                              <button
+                                key={presetRate}
+                                type="button"
+                                onClick={() => handleQuickSelectRate(presetRate)}
+                                className={`text-[10px] px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-amber-600 text-white shadow-2xs scale-105'
+                                    : 'bg-white hover:bg-amber-100/90 text-amber-900 border border-amber-200'
+                                }`}
+                              >
+                                {presetRate.toFixed(2)}%
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Compliance & EIR Information */}
+                      <div className="pt-1.5 border-t border-amber-200/80 flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                        <span className="text-amber-950 font-medium">
+                          EIR สัญญานี้: <strong className="text-amber-950 font-black">{currentCalculation.eirAnnualPercent.toFixed(2)}% ต่อปี</strong>{' '}
+                          {currentCalculation.eirAnnualPercent <= 23 ? (
+                            <span className="text-emerald-700 font-bold">(✓ ไม่เกิน 23%)</span>
+                          ) : (
+                            <span className="text-amber-800 font-bold">(คำนวณตามเรทที่ระบุ)</span>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 cursor-pointer text-amber-950 font-medium">
+                            <input
+                              type="checkbox"
+                              checked={enforceEirCap}
+                              onChange={(e) => setEnforceEirCap(e.target.checked)}
+                              className="rounded border-amber-400 text-amber-600 focus:ring-amber-500 w-3 h-3 cursor-pointer"
+                            />
+                            <span>คุมเพดาน EIR 23%</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleResetToProposalRate}
+                            className="text-amber-800 underline hover:text-amber-950 font-bold cursor-pointer"
+                          >
+                            ยกเลิก
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {/* ช่องตาม Proposal (ซ้าย) */}
                     <div
                       className={`rounded-xl p-2.5 transition-all ${
-                        currentCalculation.isCappedByEir
+                        isCustomRateEnabled
+                          ? 'glass-mini-card opacity-85'
+                          : currentCalculation.isCappedByEir
                           ? 'glass-panel-amber'
                           : 'glass-mini-card'
                       }`}
                     >
                       <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
                         อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
-                        <span className="text-amber-600 font-bold">ตาม Proposal</span>
+                        <span className="text-amber-600 font-bold">ตาม Proposal ดั้งเดิม</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="text-base font-black text-slate-800">
                           {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}
                           <span className="text-[11px] font-normal text-slate-500 ml-1">% / เดือน</span>
                         </div>
-                        {currentCalculation.isCappedByEir && (
+                        {isCustomRateEnabled ? (
+                          <span className="text-slate-600 text-[9.5px] bg-slate-200/80 px-1.5 py-0.5 rounded font-bold">
+                            เรทเดิม
+                          </span>
+                        ) : currentCalculation.isCappedByEir ? (
                           <span className="text-amber-800 text-[9.5px] bg-amber-200/80 px-1.5 py-0.5 rounded font-bold">
                             เกินเพดาน
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       <div className="text-[10px] text-slate-500 mt-0.5">
-                        ขออัตรา {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% ตาม Proposal
+                        {isCustomRateEnabled
+                          ? 'ระบบคำนวณตามเรทที่คุณระบุเองด้านขวาแทน'
+                          : `ขออัตรา ${(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% ตามเงื่อนไข Proposal`}
                       </div>
                     </div>
 
-                    {/* ช่องอัตราสูงสุด (ขวา) */}
+                    {/* ช่องที่ใช้คำนวณจริง (ขวา) */}
                     <div
                       className={`rounded-xl p-2.5 transition-all ${
-                        currentCalculation.isCappedByEir
+                        isCustomRateEnabled
+                          ? 'glass-panel-amber ring-2 ring-amber-500/50'
+                          : currentCalculation.isCappedByEir
                           ? 'glass-panel-emerald ring-2 ring-emerald-500/25'
                           : 'glass-panel-blue'
                       }`}
                     >
-                      <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
-                        อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
-                        <span className="text-amber-600 font-bold">{currentCalculation.eirMaxMessage}</span>
+                      <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug flex items-center justify-between">
+                        <span>
+                          อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
+                          <span className={isCustomRateEnabled ? 'text-amber-800 font-bold' : 'text-amber-600 font-bold'}>
+                            {isCustomRateEnabled ? 'กำหนดเอง (ระบบบริษัท)' : currentCalculation.eirMaxMessage}
+                          </span>
+                        </span>
+                        {!isCustomRateEnabled && (
+                          <button
+                            type="button"
+                            onClick={handleToggleCustomRate}
+                            className="text-[9.5px] text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
+                          >
+                            แก้ไขเรท
+                          </button>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="text-base font-black text-emerald-700 flex items-center gap-1">
-                          <Lock className="w-3.5 h-3.5 text-emerald-600 inline" />
+                        <div
+                          className={`text-base font-black flex items-center gap-1 ${
+                            isCustomRateEnabled ? 'text-amber-950' : 'text-emerald-700'
+                          }`}
+                        >
+                          {isCustomRateEnabled ? (
+                            <Pencil className="w-3.5 h-3.5 text-amber-600 inline" />
+                          ) : (
+                            <Lock className="w-3.5 h-3.5 text-emerald-600 inline" />
+                          )}
                           {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}
-                          <span className="text-[11px] font-normal text-emerald-800 ml-1">% / เดือน</span>
+                          <span
+                            className={`text-[11px] font-normal ml-1 ${
+                              isCustomRateEnabled ? 'text-amber-800' : 'text-emerald-800'
+                            }`}
+                          >
+                            % / เดือน
+                          </span>
                         </div>
-                        <span className="text-[9.5px] bg-emerald-200 text-emerald-900 font-bold px-1.5 py-0.5 rounded">
-                          บังคับใช้จริง
+                        <span
+                          className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
+                            isCustomRateEnabled
+                              ? 'bg-amber-200 text-amber-950'
+                              : 'bg-emerald-200 text-emerald-900'
+                          }`}
+                        >
+                          {isCustomRateEnabled ? 'ใช้คำนวณจริง' : 'บังคับใช้จริง'}
                         </span>
                       </div>
-                      <div className="text-[10px] text-emerald-800 font-medium mt-0.5">
-                        อัตราสูงสุดที่ไม่เกินเพดาน EIR 23%
+                      <div
+                        className={`text-[10px] font-medium mt-0.5 ${
+                          isCustomRateEnabled ? 'text-amber-900 font-semibold' : 'text-emerald-800'
+                        }`}
+                      >
+                        {isCustomRateEnabled
+                          ? 'ตรงตามระบบบริษัทที่กำหนด ค่างวดคำนวณตามเรทนี้'
+                          : 'อัตราสูงสุดที่ไม่เกินเพดาน EIR 23%'}
                       </div>
                     </div>
                   </div>
 
-                  {/* Explanation Callout when Capped */}
+                  {/* Explanation Callout when Capped (only if not customized or if enforceEirCap is on) */}
                   {currentCalculation.isCappedByEir && (
                     <div className="p-2.5 rounded-xl glass-panel-amber text-[11px] text-amber-950 space-y-1 shadow-xs animate-fade-in">
                       <div className="flex items-start gap-1.5 font-bold text-amber-900">
@@ -1310,6 +1662,12 @@ ${
                   <span className="inline-flex items-center gap-1 bg-amber-50/85 backdrop-blur-md text-amber-800 border border-amber-200 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
                     <ShieldCheck className="w-3 h-3 text-amber-600" />
                     {currentCalculation.insurancePlanName}
+                  </span>
+                )}
+                {isCustomRateEnabled && (
+                  <span className="inline-flex items-center gap-1 bg-amber-100/90 backdrop-blur-md text-amber-950 border border-amber-300 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
+                    <Pencil className="w-2.5 h-2.5 text-amber-700" />
+                    ดอกเบี้ยกำหนดเอง: {currentCalculation.rateDisplayText}
                   </span>
                 )}
                 {currentCalculation.minInterestApplied && (
