@@ -700,7 +700,7 @@ ${
             {/* Input Form Card - Frosted Glass */}
             <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
               {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue">
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -758,7 +758,7 @@ ${
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald">
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -804,7 +804,7 @@ ${
               </div>
 
               {/* Vehicle & Proposal Information Card (กล่องข้อมูลรถเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue">
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -901,7 +901,7 @@ ${
               </div>
 
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber">
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5">
@@ -1006,7 +1006,7 @@ ${
               </div>
 
               {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ จัดเป็นกล่องเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden">
+              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue">
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -1240,7 +1240,7 @@ ${
 
                   {/* Panel แก้ไขอัตราดอกเบี้ยเมื่อเปิดใช้งาน (Custom Interest Rate Editor) */}
                   {isCustomRateEnabled && (
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/90 to-amber-100/60 border-2 border-amber-400/90 shadow-sm space-y-2.5 animate-fade-in">
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/90 to-amber-100/60 border-2 border-amber-400/90 shadow-sm space-y-2.5 animate-fade-in elevated-data-box elevated-box-amber">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
                           <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
@@ -1563,7 +1563,7 @@ ${
                   </button>
 
                   {includeDeliveryFees && (
-                    <div className="mt-2 p-2.5 glass-mini-card text-xs space-y-2">
+                    <div className="mt-2 p-2.5 glass-mini-card text-xs space-y-2 elevated-data-box">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[10px] text-slate-500 font-medium">

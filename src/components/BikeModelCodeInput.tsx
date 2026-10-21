@@ -434,7 +434,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                         setNewCode(e.target.value.toUpperCase());
                         setFormError('');
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-mono font-bold uppercase text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all tracking-wide"
+                      className="w-full px-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-mono font-bold uppercase text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all tracking-wide"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">
                       ระบบจะแปลงเป็นตัวพิมพ์ใหญ่ภาษาอังกฤษทั้งหมดให้อัตโนมัติ
@@ -455,7 +455,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                         setNewName(e.target.value);
                         setFormError('');
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      className="w-full px-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all"
                     />
                   </div>
 
@@ -480,7 +480,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                           setNewPrice(val);
                           setFormError('');
                         }}
-                        className="w-full pl-8 pr-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-bold font-mono text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="w-full pl-8 pr-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-bold font-mono text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all"
                       />
                     </div>
                     {newPrice && Number(newPrice) > 0 && (
@@ -548,7 +548,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                         placeholder="ค้นหารหัสหรือชื่อรุ่น เช่น ACF125, GIORNO, WAVE, PCX..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
-                        className="w-full pl-10 pr-9 py-2 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-md border border-white/80 rounded-2xl text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 transition-all shadow-inner/5 tracking-wide uppercase"
+                        className="w-full pl-10 pr-9 py-2 bg-white/70 hover:bg-white/85 focus:bg-white backdrop-blur-md border border-white/80 rounded-2xl text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:-translate-y-0.5 focus:shadow-md focus:shadow-indigo-500/15 transition-all shadow-inner/5 tracking-wide uppercase"
                       />
                       {searchQuery && (
                         <button
