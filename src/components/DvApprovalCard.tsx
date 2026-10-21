@@ -118,14 +118,8 @@ export function DvApprovalCard({
     }
   });
 
-  const resolvedBike = useMemo(() => {
-    if (bikeModelName && bikeModelCode) {
-      return `${bikeModelName} (${bikeModelCode})`;
-    }
-    return bikeModelName || (bikeModelCode ? `รหัส ${bikeModelCode}` : 'Honda Wave 110i');
-  }, [bikeModelName, bikeModelCode]);
-
-  const [bikeModel, setBikeModel] = useState<string>(resolvedBike);
+  const [bikeModel, setBikeModel] = useState<string>(bikeModelName || 'Honda Wave 110i');
+  const [bikeCode, setBikeCode] = useState<string>(bikeModelCode || '');
   const [occupation, setOccupation] = useState<string>('พนักงานประจำ / โรงงาน');
   const [income, setIncome] = useState<string>('18,000 บาท/เดือน');
   const [financialDocs, setFinancialDocs] = useState<string>('สลิปเงินเดือน');
@@ -147,12 +141,19 @@ export function DvApprovalCard({
     }
   }, [customerName]);
 
-  // Sync bike model
+  // Sync bike model name
   useEffect(() => {
-    if (resolvedBike) {
-      setBikeModel(resolvedBike);
+    if (bikeModelName) {
+      setBikeModel(bikeModelName);
     }
-  }, [resolvedBike]);
+  }, [bikeModelName]);
+
+  // Sync bike model code
+  useEffect(() => {
+    if (bikeModelCode !== undefined) {
+      setBikeCode(bikeModelCode);
+    }
+  }, [bikeModelCode]);
 
   // Sync down payment
   useEffect(() => {
@@ -182,7 +183,8 @@ export function DvApprovalCard({
   const handleSyncFromCurrent = () => {
     triggerHaptic('medium');
     setDvCustomerName(customerName || 'คุณลูกค้า');
-    setBikeModel(resolvedBike);
+    setBikeModel(bikeModelName || 'Honda Wave 110i');
+    setBikeCode(bikeModelCode || '');
     setDownPayment(downPaymentDisplay || '0 บาท (ฟรีดาวน์)');
     setCk(resolvedOfficer);
   };
@@ -233,6 +235,7 @@ export function DvApprovalCard({
     NCB : 
     Dealer : 
     รุ่นรถ : 
+    รหัสรุ่นรถ :
     อาชีพ : 
     รายได้ : 
     เอกสารการเงิน : 
@@ -253,6 +256,7 @@ export function DvApprovalCard({
       `NCB : ${ncb || '-'}`,
       `Dealer : ${dealer || '-'}`,
       `รุ่นรถ : ${bikeModel || '-'}`,
+      `รหัสรุ่นรถ : ${bikeCode || '-'}`,
       `อาชีพ : ${occupation || '-'}`,
       `รายได้ : ${income || '-'}`,
       `เอกสารการเงิน : ${financialDocs || '-'}`,
@@ -313,15 +317,6 @@ export function DvApprovalCard({
     'เช็คเกอร์ตรวจพื้นที่ผ่านแล้ว',
     'มีรายได้เสริมจากการค้าขาย',
     'ขออนุมัติตามเงื่อนไขพิเศษ',
-  ];
-
-  const YOD_PRESETS = [
-    'หัก 1%',
-    'หัก 3%',
-    'หัก 5%',
-    'หัก 7%',
-    'หัก 9%',
-    'ยอดจัดปกติ (ไม่หัก)',
   ];
 
   // Group topics by category for select dropdown
@@ -703,7 +698,27 @@ export function DvApprovalCard({
                   type="text"
                   value={bikeModel}
                   onChange={(e) => setBikeModel(e.target.value)}
-                  placeholder="ระบุชื่อรุ่นรถ / รหัสรุ่น"
+                  placeholder="ระบุชื่อรุ่นรถ เช่น Honda Wave 110i"
+                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
+                />
+              </div>
+
+              {/* 7.1 รหัสรุ่นรถ (NEW: แยกจากรุ่นรถชัดเจนตามความต้องการ) */}
+              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-indigo border border-indigo-100/90 shadow-2xs">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>รหัสรุ่นรถ</span>
+                  </label>
+                  <span className="text-[9px] text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded font-semibold">
+                    ดึงอัตโนมัติ
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={bikeCode}
+                  onChange={(e) => setBikeCode(e.target.value)}
+                  placeholder="ระบุรหัสรุ่นรถ เช่น AFS110"
                   className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
                 />
               </div>
@@ -728,12 +743,12 @@ export function DvApprovalCard({
                 />
               </div>
 
-              {/* 9. หมายเหตุ (NEW: วางไว้ใต้เงินดาวน์โดยตรงตามความต้องการ) */}
+              {/* 9. หมายเหตุ (วางไว้ใต้เงินดาวน์โดยตรง) */}
               <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-amber border border-amber-200/90 bg-gradient-to-br from-amber-50/40 via-white to-white shadow-2xs">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
                     <MessageSquareText className="w-3.5 h-3.5 text-amber-600" />
-                    <span>หมายเหตุ (ใต้เงินดาวน์)</span>
+                    <span>หมายเหตุ</span>
                   </label>
                   <span className="text-[9px] text-amber-800 bg-amber-100/80 border border-amber-300/70 px-1.5 py-0.5 rounded font-semibold">
                     ข้อมูลเพิ่มเติม
@@ -821,22 +836,6 @@ export function DvApprovalCard({
                     <Check className="w-3.5 h-3.5 text-teal-600" />
                     <span>CK (เจ้าหน้าที่ตรวจสอบ / ผู้เสนอราคา)</span>
                   </label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[9px] text-teal-700 bg-teal-50 border border-teal-200/80 px-1.5 py-0.5 rounded font-semibold">
-                      ดึงชื่อเจ้าหน้าที่อัตโนมัติ
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setCk(resolvedOfficer);
-                      }}
-                      className="text-[9px] text-sky-700 hover:text-sky-900 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200 transition-colors"
-                      title="รีเซ็ตเป็นชื่อเจ้าหน้าที่ปัจจุบัน"
-                    >
-                      รีเซ็ต
-                    </button>
-                  </div>
                 </div>
                 <input
                   type="text"
@@ -859,38 +858,14 @@ export function DvApprovalCard({
                 <Percent className="w-3.5 h-3.5 text-amber-600" />
                 <span>YOD1-9% (หักยอดจัดตามเงื่อนไข DV)</span>
               </label>
-              {financeAmount > 0 && (
-                <span className="text-[10px] text-slate-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/60">
-                  ยอดจัดอ้างอิง: {financeAmount.toLocaleString('th-TH')} บาท
-                </span>
-              )}
             </div>
             <input
               type="text"
               value={yodRate}
               onChange={(e) => setYodRate(e.target.value)}
               placeholder="เช่น หัก 3%, หัก 5% หรือระบุเงื่อนไข"
-              className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 mb-1.5"
+              className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
             />
-            <div className="flex flex-wrap gap-1.5">
-              {YOD_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setYodRate(p);
-                  }}
-                  className={`text-[9.5px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                    yodRate === p
-                      ? 'bg-amber-600 text-white border-amber-600 font-bold shadow-2xs'
-                      : 'bg-white hover:bg-amber-50 text-slate-600 border-slate-200/80 font-medium'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Live LINE Message Preview Box (ปรับสีให้อ่อน สว่าง สบายตา สไตล์ LINE) */}

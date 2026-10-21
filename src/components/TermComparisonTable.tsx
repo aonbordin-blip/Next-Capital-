@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layers, CheckCircle2, ShieldCheck, HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Layers, CheckCircle2, ShieldCheck, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { TermComparisonItem } from '../types';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
@@ -17,6 +17,8 @@ export const TermComparisonTable: React.FC<Props> = ({
   onSelectTerm,
   onOpenEirInfo,
 }) => {
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+
   if (comparisons.length <= 1) {
     return null;
   }
@@ -27,12 +29,12 @@ export const TermComparisonTable: React.FC<Props> = ({
   const activePlanName = comparisons[0]?.insurancePlanName || 'PA';
 
   return (
-    <div className="glass-card-primary rounded-[24px] p-3 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden">
+    <div className="glass-card-primary rounded-[24px] p-3 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden transition-all duration-200">
       {/* Subtle top specular sheen */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
-      {/* Header section with EIR button aligned to top-right corner */}
-      <div className="flex items-start justify-between gap-2.5 mb-3">
+      {/* Header section with EIR button aligned to top-right corner and collapse toggle */}
+      <div className={`flex items-start justify-between gap-2.5 ${isExpanded ? 'mb-3' : 'mb-0'}`}>
         <div className="flex items-start gap-2 min-w-0">
           <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs shrink-0 mt-0.5">
             <Layers className="w-3.5 h-3.5" />
@@ -52,25 +54,46 @@ export const TermComparisonTable: React.FC<Props> = ({
                   ไม่รวมประกัน
                 </span>
               )}
+              {!isExpanded && (
+                <span className="text-[9.5px] font-semibold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200">
+                  {comparisons.length} ตัวเลือกระยะเวลา (คลิกเพื่อขยาย)
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {onOpenEirInfo && (
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onOpenEirInfo && (
+            <button
+              type="button"
+              onClick={onOpenEirInfo}
+              className="text-[10px] text-cyan-800 hover:text-cyan-900 font-bold px-2.5 py-1 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors cursor-pointer shadow-2xs whitespace-nowrap flex items-center gap-1"
+              title="ดูรายละเอียดเกณฑ์ EIR 23%"
+            >
+              <span>⚖️ เกณฑ์ EIR 23%</span>
+              <HelpCircle className="w-3 h-3 text-cyan-600" />
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={onOpenEirInfo}
-            className="text-[10px] text-cyan-800 hover:text-cyan-900 font-bold px-2.5 py-1 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors cursor-pointer shadow-2xs shrink-0 whitespace-nowrap flex items-center gap-1 mt-0.5"
-            title="ดูรายละเอียดเกณฑ์ EIR 23%"
+            onClick={() => {
+              triggerHaptic('light');
+              setIsExpanded(!isExpanded);
+            }}
+            className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
+            title={isExpanded ? 'ย่อตารางเปรียบเทียบ' : 'ขยายตารางเปรียบเทียบ'}
           >
-            <span>⚖️ เกณฑ์ EIR 23%</span>
-            <HelpCircle className="w-3 h-3 text-cyan-600" />
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Table section: 4 explicit columns as requested */}
-      {/* งวดผ่อน | ค่างวดไม่รวม PA | ค่างวด/เดือน | ยอดรวมทั้งสิ้น */}
+      {isExpanded && (
+        <div className="animate-fade-in">
+          {/* Table section: 4 explicit columns as requested */}
+          {/* งวดผ่อน | ค่างวดไม่รวม PA | ค่างวด/เดือน | ยอดรวมทั้งสิ้น */}
       <div className="overflow-x-auto -mx-1 scrollbar-thin">
         <table className="w-full text-left text-xs min-w-[340px]">
           <thead>
@@ -180,6 +203,8 @@ export const TermComparisonTable: React.FC<Props> = ({
           </tbody>
         </table>
       </div>
+    </div>
+  )}
     </div>
   );
 };
