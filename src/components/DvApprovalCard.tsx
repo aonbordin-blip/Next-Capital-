@@ -327,12 +327,6 @@ export function DvApprovalCard({
     '30,000+ บาท/เดือน',
   ];
 
-  const REMARK_PRESETS = [
-    'มีผู้ค้ำประกันร่วม',
-    'เช็คเกอร์ตรวจพื้นที่ผ่านแล้ว',
-    'มีรายได้เสริมจากการค้าขาย',
-    'ขออนุมัติตามเงื่อนไขพิเศษ',
-  ];
 
   // Group topics by category for select dropdown
   const groupedTopics = useMemo(() => {
@@ -772,54 +766,37 @@ export function DvApprovalCard({
 
               {/* 9. หมายเหตุ (วางไว้ใต้เงินดาวน์โดยตรง) */}
               <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-amber border border-amber-200/90 bg-gradient-to-br from-amber-50/40 via-white to-white shadow-2xs">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
                     <MessageSquareText className="w-3.5 h-3.5 text-amber-600" />
                     <span>หมายเหตุ</span>
                   </label>
-                  <span className="text-[9px] text-amber-800 bg-amber-100/80 border border-amber-300/70 px-1.5 py-0.5 rounded font-semibold">
-                    ข้อมูลเพิ่มเติม
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {remark && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setRemark('');
+                        }}
+                        className="text-[9.5px] px-2 py-0.5 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/70 border border-amber-300/60 transition-colors"
+                        title="ล้างหมายเหตุ"
+                      >
+                        ล้างข้อมูล
+                      </button>
+                    )}
+                    <span className="text-[9px] text-amber-800 bg-amber-100/80 border border-amber-300/70 px-1.5 py-0.5 rounded font-semibold">
+                      ข้อมูลเพิ่มเติม
+                    </span>
+                  </div>
                 </div>
-                <input
-                  type="text"
+                <textarea
                   value={remark}
                   onChange={(e) => setRemark(e.target.value)}
-                  placeholder="ระบุข้อมูลเพิ่มเติม เช่น มีผู้ค้ำประกัน, ที่อยู่จัดส่งเอกสาร"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 mb-1.5"
+                  rows={3}
+                  placeholder="ระบุข้อมูลเพิ่มเติม เช่น มีผู้ค้ำประกัน, ที่อยู่จัดส่งเอกสาร หรือเงื่อนไขพิเศษ"
+                  className="w-full glass-input-field px-3 py-2 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 leading-relaxed min-h-[78px] resize-y outline-none transition-all focus:ring-1 focus:ring-amber-500/40"
                 />
-                <div className="flex flex-wrap gap-1">
-                  {REMARK_PRESETS.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setRemark(p);
-                      }}
-                      className={`text-[9.5px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
-                        remark === p
-                          ? 'bg-amber-600 text-white border-amber-600 font-bold'
-                          : 'bg-white hover:bg-amber-50 text-slate-600 border-amber-200/80 font-medium'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  {remark && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setRemark('');
-                      }}
-                      className="text-[9px] px-1.5 py-0.5 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
-                      title="ล้างหมายเหตุ"
-                    >
-                      ล้าง
-                    </button>
-                  )}
-                </div>
               </div>
 
               {/* 10. รายได้ */}
