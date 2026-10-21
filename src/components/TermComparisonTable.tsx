@@ -116,7 +116,7 @@ export const TermComparisonTable: React.FC<Props> = ({
                 >
                   {/* Column 1: งวดผ่อน */}
                   <td className="py-2.5 pl-2.5 pr-1.5 align-middle">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
                       {isSelected ? (
                         <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
                       ) : (
@@ -125,14 +125,12 @@ export const TermComparisonTable: React.FC<Props> = ({
                       <span className="font-bold text-slate-800 text-xs sm:text-sm whitespace-nowrap">
                         {item.term} งวด
                       </span>
-                    </div>
-                    {item.isCappedByEir && (
-                      <div className="mt-0.5 pl-5">
-                        <span className="text-[8.5px] px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold inline-flex items-center gap-0.5">
+                      {item.isCappedByEir && (
+                        <span className="text-[8.5px] px-1 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold inline-flex items-center gap-0.5 shrink-0 whitespace-nowrap">
                           🔒 EIR
                         </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </td>
 
                   {/* Column 2: ค่างวดไม่รวม PA */}
