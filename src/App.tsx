@@ -1283,26 +1283,12 @@ ${
                         </div>
                       </div>
 
-                      {/* Number Input with Stepper Buttons */}
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustRate(-0.05)}
-                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
-                          title="ลดลง 0.05%"
-                        >
-                          -0.05
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustRate(-0.01)}
-                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
-                          title="ลดลง 0.01%"
-                        >
-                          -0.01
-                        </button>
-
-                        <div className="relative flex-1">
+                      {/* Number Input - ปรับปรุงโครงสร้างให้กว้าง ไม่ซ้อนทับกัน */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center bg-white rounded-xl border-2 border-amber-400 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-300 shadow-inner px-3 py-1.5 transition-all">
+                          <label className="text-xs font-bold text-amber-900 mr-2 shrink-0 select-none">
+                            อัตราดอกเบี้ย:
+                          </label>
                           <input
                             type="number"
                             step="0.001"
@@ -1310,30 +1296,58 @@ ${
                             max="100"
                             value={customRateInput}
                             onChange={(e) => handleCustomRateChange(e.target.value)}
-                            placeholder={customRateType === 'monthly' ? 'เช่น 1.09 หรือ 1.10' : 'เช่น 6.50'}
-                            className="w-full bg-white text-center rounded-xl border-2 border-amber-400 focus:border-amber-600 focus:ring-2 focus:ring-amber-300 py-1.5 text-base font-black text-slate-900 outline-none transition-all shadow-inner"
+                            placeholder={customRateType === 'monthly' ? '1.10' : '6.50'}
+                            className="flex-1 text-center text-lg font-black text-slate-900 outline-none bg-transparent min-w-0"
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-800 pointer-events-none">
-                            {customRateType === 'monthly' ? '%/เดือน' : '%/ปี'}
+                          <span className="text-xs font-bold text-amber-900 bg-amber-100/90 px-2.5 py-1 rounded-lg border border-amber-300/80 shrink-0 ml-2 select-none whitespace-nowrap">
+                            {customRateType === 'monthly' ? '% ต่อเดือน' : '% ต่อปี'}
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustRate(0.01)}
-                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
-                          title="เพิ่มขึ้น 0.01%"
-                        >
-                          +0.01
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustRate(0.05)}
-                          className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs shrink-0"
-                          title="เพิ่มขึ้น 0.05%"
-                        >
-                          +0.05
-                        </button>
+                        {/* ปุ่มปรับละเอียด +/- 0.01 และ +/- 0.05 */}
+                        <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustRate(-0.05)}
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              title="ลดลง 0.05%"
+                            >
+                              -0.05%
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustRate(-0.01)}
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              title="ลดลง 0.01%"
+                            >
+                              -0.01%
+                            </button>
+                          </div>
+
+                          <span className="text-[10px] text-amber-800 font-medium select-none">
+                            ปุ่มปรับละเอียด
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustRate(0.01)}
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              title="เพิ่มขึ้น 0.01%"
+                            >
+                              +0.01%
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustRate(0.05)}
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              title="เพิ่มขึ้น 0.05%"
+                            >
+                              +0.05%
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Quick Preset Chips */}
