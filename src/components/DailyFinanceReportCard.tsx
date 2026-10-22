@@ -295,6 +295,28 @@ function createInitialDealers(): DealerReport[] {
   ];
 }
 
+// Format date string YYYY-MM-DD to Thai short date DD/MM/YY (e.g. 22/10/69)
+export function formatThaiShortDate(dateStr: string): string {
+  try {
+    if (!dateStr) return '';
+    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const day = Number(dayStr);
+    if (!year || !month || !day) return dateStr;
+
+    // Convert Gregorian year to Buddhist Era short year (e.g. 2026 -> 2569 -> 69)
+    const buddhistYear = year > 2400 ? year : year + 543;
+    const shortYear = String(buddhistYear).slice(-2);
+    const dd = String(day).padStart(2, '0');
+    const mm = String(month).padStart(2, '0');
+
+    return `${dd}/${mm}/${shortYear}`;
+  } catch {
+    return dateStr;
+  }
+}
+
 interface DailyFinanceReportCardProps {
   officerName?: string;
   officerCode?: string;
@@ -381,19 +403,9 @@ export function DailyFinanceReportCard({
     }
   }, [dealers]);
 
-  // Formatted Thai Date
+  // Formatted Thai Date: short format DD/MM/YY (e.g. 22/10/69) to prevent line wrapping in LINE chat
   const thaiFormattedDate = useMemo(() => {
-    try {
-      const [year, month, day] = reportDate.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      return date.toLocaleDateString('th-TH', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return reportDate;
-    }
+    return formatThaiShortDate(reportDate);
   }, [reportDate]);
 
   // Total cases summary calculation across all dealers
@@ -841,6 +853,9 @@ export function DailyFinanceReportCard({
                   onChange={(e) => setReportDate(e.target.value)}
                   className="text-xs font-semibold text-violet-950 bg-transparent outline-none cursor-pointer"
                 />
+                <span className="text-[10px] text-violet-700 font-bold bg-violet-50 px-1.5 py-0.5 rounded border border-violet-200/60 whitespace-nowrap">
+                  ({thaiFormattedDate})
+                </span>
               </div>
 
               {officerDisplay && (
