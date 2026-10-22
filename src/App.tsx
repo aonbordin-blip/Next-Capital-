@@ -55,6 +55,7 @@ import { QuotationModal } from './components/QuotationModal';
 import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { DvApprovalCard } from './components/DvApprovalCard';
+import { DailyFinanceReportCard } from './components/DailyFinanceReportCard';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
@@ -216,79 +217,78 @@ export default function App() {
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
 
-  // Collapsible cards state: only one can be open at a time; auto-collapses on clicking outside / another box
-  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | null>('financing');
-  const financingRef = useRef<HTMLDivElement>(null);
-  const comparisonRef = useRef<HTMLDivElement>(null);
-  const dvRef = useRef<HTMLDivElement>(null);
+  // Collapsible cards state: cards can be expanded or collapsed by clicking their header/toggle
+  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | 'daily_report' | null>('financing');
 
-  // Auto-collapse when user clicks outside / goes to another box
+  // Auto-collapse when clicking or interacting with another data box (ถ้ายังกดในกล่องเดิมไม่ยุบปิด)
   useEffect(() => {
     if (!expandedCard) return;
 
-    const handleDocumentClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
+    const handleInteraction = (target: HTMLElement | null) => {
       if (!target) return;
 
-      // Ignore clicks on modals / dialogs / portal roots
+      // 1. Ignore clicks inside open modal overlays, dialogs, or portals
       if (
         target.closest('[role="dialog"]') ||
-        target.closest('.modal-backdrop') ||
-        target.closest('.fixed.inset-0')
+        target.closest('.modal-container') ||
+        target.closest('.fixed.inset-0') ||
+        target.closest('[data-modal-portal]')
       ) {
         return;
       }
 
-      const isInsideFinancing = financingRef.current?.contains(target);
-      const isInsideComparison = comparisonRef.current?.contains(target);
-      const isInsideDv = dvRef.current?.contains(target);
+      // 2. Find which data box container was interacted with
+      const clickedCard = target.closest<HTMLElement>('[data-card-id]');
+      if (!clickedCard) {
+        // Neutral background, margin, dock, or footer: do not auto-collapse
+        return;
+      }
 
-      if (expandedCard === 'financing') {
-        if (isInsideFinancing) {
-          // Inside financing card -> keep open
-          return;
-        }
-        if (isInsideComparison || isInsideDv) {
-          // Click is on another collapsible card -> that card's own click handler handles opening
-          return;
-        }
-        // Clicked outside onto another box -> auto collapse
-        setExpandedCard(null);
-      } else if (expandedCard === 'comparison') {
-        if (isInsideComparison) {
-          // Inside comparison card -> keep open
-          return;
-        }
-        if (isInsideFinancing || isInsideDv) {
-          // Click is on another collapsible card -> that card's own click handler handles opening
-          return;
-        }
-        // Clicked outside onto another box -> auto collapse
-        setExpandedCard(null);
-      } else if (expandedCard === 'dv') {
-        if (isInsideDv) {
-          // Inside DV card -> keep open
-          return;
-        }
-        if (isInsideFinancing || isInsideComparison) {
-          // Click is on another collapsible card -> that card's own click handler handles opening
-          return;
-        }
-        // Clicked outside onto another box -> auto collapse
+      const clickedId = clickedCard.getAttribute('data-card-id');
+
+      // 3. If clicking inside the SAME expanded data box: KEEP OPEN! Never collapse!
+      if (clickedId === expandedCard) {
+        return;
+      }
+
+      // 4. If clicking on a toggle header/button, let its own onClick handle toggling
+      const isToggleHeader = Boolean(target.closest('[data-card-toggle]'));
+      if (isToggleHeader) {
+        return;
+      }
+
+      // 5. If clicking on another collapsible card, switch to that card
+      if (
+        clickedId === 'financing' ||
+        clickedId === 'comparison' ||
+        clickedId === 'dv' ||
+        clickedId === 'daily_report'
+      ) {
+        setExpandedCard(clickedId as 'financing' | 'comparison' | 'dv' | 'daily_report');
+      } else {
+        // Clicked inside another distinct data box (pricing, insurance, customer, officer, result, etc.)
+        // Automatically collapse the open collapsible card!
         setExpandedCard(null);
       }
     };
 
-    // Slight delay so the click that opened the box doesn't immediately close it
-    const timer = setTimeout(() => {
-      document.addEventListener('click', handleDocumentClick);
-    }, 50);
+    const onPointerDown = (e: PointerEvent) => {
+      handleInteraction(e.target as HTMLElement | null);
+    };
+
+    const onFocusIn = (e: FocusEvent) => {
+      handleInteraction(e.target as HTMLElement | null);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('focusin', onFocusIn, true);
 
     return () => {
-      clearTimeout(timer);
-      document.removeEventListener('click', handleDocumentClick);
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('focusin', onFocusIn, true);
     };
   }, [expandedCard]);
+
 
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
@@ -721,7 +721,7 @@ ${
           </div>
 
           {/* Pill Search / Model Code Bar matching Reference UI */}
-          <div className="relative z-10 mt-2.5">
+          <div data-card-id="model-bar" className="relative z-10 mt-2.5">
             <button
               type="button"
               onClick={() => setShowBikePresets(true)}
@@ -789,7 +789,10 @@ ${
             {/* Input Form Card - Frosted Glass */}
             <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
               {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue">
+              <div
+                data-card-id="officer"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
+              >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -847,7 +850,10 @@ ${
               </div>
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald">
+              <div
+                data-card-id="customer"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald"
+              >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -893,7 +899,10 @@ ${
               </div>
 
               {/* Vehicle & Proposal Information Card (กล่องข้อมูลรถเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue">
+              <div
+                data-card-id="pricing"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
+              >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
@@ -990,7 +999,10 @@ ${
               </div>
 
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
-              <div className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber">
+              <div
+                data-card-id="insurance"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
+              >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5">
@@ -1096,13 +1108,14 @@ ${
 
               {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ - ยุบเก็บได้และปิดอัตโนมัติเมื่อกดกล่องอื่น) */}
               <div
-                ref={financingRef}
+                data-card-id="financing"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
 
                 {/* Collapsible Header: นำป้าย 'ยอดจัด & ระยะเวลาผ่อน' ออกตามที่ระบุในรูป */}
                 <div
+                  data-card-toggle="true"
                   onClick={() => {
                     triggerHaptic('light');
                     setExpandedCard((prev) => (prev === 'financing' ? null : 'financing'));
@@ -1749,7 +1762,7 @@ ${
           </div>
 
               {/* Action Buttons: 2 beautiful, modern primary action buttons */}
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div data-card-id="actions" className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* 1. Coverage Plan Button */}
                 <button
                   type="button"
@@ -1812,7 +1825,7 @@ ${
             }`}
           >
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece matching Reference UI */}
-            <div className="glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden">
+            <div data-card-id="result" className="glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden">
               {/* Subtle top specular sheen */}
               <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95 pointer-events-none" />
 
@@ -1931,7 +1944,7 @@ ${
             </div>
 
             {/* Term Comparisons Table */}
-            <div ref={comparisonRef}>
+            <div data-card-id="comparison">
               <TermComparisonTable
                 comparisons={comparisons}
                 selectedTerm={term}
@@ -1945,7 +1958,7 @@ ${
             </div>
 
             {/* DV Case Approval Box (กล่องขออนุมัติเคส DV พร้อมส่ง Line) */}
-            <div ref={dvRef}>
+            <div data-card-id="dv">
               <DvApprovalCard
                 customerName={customerName}
                 bikeModelName={
@@ -1972,6 +1985,19 @@ ${
                 isExpanded={expandedCard === 'dv'}
                 onToggleExpand={() => {
                   setExpandedCard((prev) => (prev === 'dv' ? null : 'dv'));
+                }}
+              />
+            </div>
+
+            {/* Daily Dealer Finance Report Box (กล่องรายงานประจำวันยอดเคสไฟแนนซ์ราย Dealer พร้อมส่ง Line) */}
+            <div data-card-id="daily_report">
+              <DailyFinanceReportCard
+                officerName={officerName}
+                officerCode={officerCode}
+                officerDisplay={officerDisplay}
+                isExpanded={expandedCard === 'daily_report'}
+                onToggleExpand={() => {
+                  setExpandedCard((prev) => (prev === 'daily_report' ? null : 'daily_report'));
                 }}
               />
             </div>

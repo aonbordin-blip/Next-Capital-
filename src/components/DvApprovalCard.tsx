@@ -343,6 +343,7 @@ export function DvApprovalCard({
   return (
     <div
       id="dv-approval-section"
+      data-card-id="dv"
       className={`glass-card-primary rounded-[26px] p-4 sm:p-5 relative overflow-hidden elevated-data-box border border-sky-200/80 shadow-md ${className}`}
     >
       {/* Top Gradient Header Accent Bar */}
@@ -350,6 +351,7 @@ export function DvApprovalCard({
 
       {/* Header Row */}
       <div
+        data-card-toggle="true"
         onClick={handleToggle}
         className={`flex items-center justify-between gap-2 cursor-pointer select-none transition-all ${
           isExpanded ? 'pb-3 border-b border-sky-100/80' : 'pb-0 border-b-0'

@@ -43,12 +43,16 @@ export const TermComparisonTable: React.FC<Props> = ({
   const activePlanName = comparisons[0]?.insurancePlanName || 'PA';
 
   return (
-    <div className="glass-card-primary rounded-[24px] p-3 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden transition-all duration-200">
+    <div
+      data-card-id="comparison"
+      className="glass-card-primary rounded-[24px] p-3 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden transition-all duration-200"
+    >
       {/* Subtle top specular sheen */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
       {/* Header section with EIR button aligned to top-right corner and collapse toggle */}
       <div
+        data-card-toggle="true"
         onClick={handleToggle}
         className={`flex items-start justify-between gap-2.5 cursor-pointer select-none transition-all ${isExpanded ? 'mb-3' : 'mb-0'}`}
       >
