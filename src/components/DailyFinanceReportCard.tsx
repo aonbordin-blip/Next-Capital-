@@ -833,11 +833,6 @@ export function DailyFinanceReportCard({
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
                 Daily Finance Report
               </span>
-              {!isExpanded && (
-                <span className="text-[9.5px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-200">
-                  {dealers.length} Dealer • รวม {summary.totalNumericCases} เคส (คลิกเพื่อเปิด)
-                </span>
-              )}
             </div>
             <p className="text-[10.5px] text-slate-500 font-medium truncate">
               สรุปยอดแต่ละไฟแนนซ์แยกราย Dealer เพิ่ม-ลบได้ไม่จำกัด พร้อมคัดลอกส่งเข้า LINE ประจำวัน
