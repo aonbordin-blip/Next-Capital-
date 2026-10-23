@@ -386,80 +386,84 @@ export const SavedCasesModal: React.FC<Props> = ({
                         : 'border-slate-200/80 hover:border-sky-300'
                     }`}
                   >
-                    {/* Card Top: Title & Date */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        {isEditing ? (
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="text"
-                              value={editTitleInput}
-                              onChange={(e) => setEditTitleInput(e.target.value)}
-                              autoFocus
-                              className="w-full px-2 py-1 text-xs font-bold text-slate-800 bg-sky-50 border border-sky-300 rounded-lg focus:outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleSaveTitle(record.id)}
-                              className="p-1 rounded-lg bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700"
-                              title="บันทึกชื่อ"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(null)}
-                              className="p-1 rounded-lg bg-slate-200 text-slate-600 text-xs cursor-pointer hover:bg-slate-300"
-                              title="ยกเลิก"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h3 className="font-extrabold text-sm text-slate-800 truncate">
-                              {record.caseTitle}
-                            </h3>
-                            {isCurrentEditing && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
-                                <Pencil className="w-2.5 h-2.5 text-amber-700" />
-                                กำลังแก้ไข
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleStartEditTitle(record)}
-                              className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
-                              title="แก้ไขชื่อหัวข้อเคส"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2 flex-wrap text-[10.5px] text-slate-500 mt-1">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            {formatThaiDate(record.createdAt)}
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1 text-slate-700 font-medium">
-                            <User className="w-3 h-3 text-sky-600" />
-                            {record.customerName}
-                            {record.customerPhone && ` (${record.customerPhone})`}
-                          </span>
+                    {/* Card Top: Title, Date, Customer & Badges */}
+                    <div className="space-y-1.5">
+                      {/* Case Title Row */}
+                      {isEditing ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={editTitleInput}
+                            onChange={(e) => setEditTitleInput(e.target.value)}
+                            autoFocus
+                            className="w-full px-2 py-1 text-xs font-bold text-slate-800 bg-sky-50 border border-sky-300 rounded-lg focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveTitle(record.id)}
+                            className="p-1 rounded-lg bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700"
+                            title="บันทึกชื่อ"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            className="p-1 rounded-lg bg-slate-200 text-slate-600 text-xs cursor-pointer hover:bg-slate-300"
+                            title="ยกเลิก"
+                          >
+                            ✕
+                          </button>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-extrabold text-sm text-slate-800">
+                            {record.caseTitle}
+                          </h3>
+                          {isCurrentEditing && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
+                              <Pencil className="w-2.5 h-2.5 text-amber-700" />
+                              กำลังแก้ไข
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditTitle(record)}
+                            className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
+                            title="แก้ไขชื่อหัวข้อเคส"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
 
-                      {/* Motorcycle & Proposal Badges */}
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                      {/* Row 1: วันที่และเวลา + ประเภทข้อเสนอ (ย้ายมาต่อจากวันที่และเวลา) */}
+                      <div className="flex items-center gap-2 flex-wrap text-[10.5px] text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          {formatThaiDate(record.createdAt)}
+                        </span>
+                        <span>•</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 inline-flex items-center">
                           {record.snapshot.proposalCode}
                         </span>
+                      </div>
+
+                      {/* Row 2: ชื่อลูกค้าและเบอร์โทร + รุ่นรถ (ย้ายมาต่อหลังเบอร์โทร) */}
+                      <div className="flex items-center gap-2 flex-wrap text-[10.5px]">
+                        <span className="flex items-center gap-1 text-slate-700 font-medium">
+                          <User className="w-3.5 h-3.5 text-sky-600" />
+                          {record.customerName}
+                          {record.customerPhone && ` (${record.customerPhone})`}
+                        </span>
                         {record.bikeModelName && (
-                          <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.2 rounded-md max-w-[150px] truncate">
-                            {record.bikeModelName}
-                          </span>
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1 border border-slate-200/80 max-w-[280px] truncate">
+                              <Bike className="w-3 h-3 text-slate-500 shrink-0" />
+                              <span className="truncate">{record.bikeModelName}</span>
+                            </span>
+                          </>
                         )}
                       </div>
                     </div>
