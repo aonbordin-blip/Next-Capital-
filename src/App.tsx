@@ -1228,11 +1228,6 @@ ${
                         <label className="text-[11px] sm:text-xs text-slate-800 font-bold flex items-center gap-1.5 cursor-pointer">
                           <span>ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
                         </label>
-                        {expandedCard !== 'financing' && (
-                          <span className="text-[9.5px] font-semibold text-blue-700 bg-white/90 px-2 py-0.5 rounded-full border border-blue-200 shadow-2xs">
-                            คลิกเพื่อขยาย
-                          </span>
-                        )}
                       </div>
                       {expandedCard !== 'financing' && (
                         <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-600 mt-0.5 font-medium">

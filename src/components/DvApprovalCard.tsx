@@ -369,11 +369,6 @@ export function DvApprovalCard({
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
                 Dealer Verification
               </span>
-              {!isExpanded && (
-                <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  คลิกเพื่อขยาย
-                </span>
-              )}
             </div>
             <p className="text-[10.5px] text-slate-500 font-medium truncate">
               ดึงชื่อลูกค้า, รุ่นรถ, และชื่อเจ้าหน้าที่ (CK) อัตโนมัติ พร้อมส่งออกเข้า LINE ทันที

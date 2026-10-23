@@ -77,7 +77,7 @@ export const TermComparisonTable: React.FC<Props> = ({
               )}
               {!isExpanded && (
                 <span className="text-[9.5px] font-semibold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200">
-                  {comparisons.length} ตัวเลือกระยะเวลา (คลิกเพื่อขยาย)
+                  {comparisons.length} ตัวเลือกระยะเวลา
                 </span>
               )}
             </div>
