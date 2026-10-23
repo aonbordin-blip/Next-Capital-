@@ -39,6 +39,9 @@ import {
   Calculator,
   ArrowRight,
   ArrowLeft,
+  FolderArchive,
+  BookmarkPlus,
+  Save,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -51,7 +54,7 @@ import {
   cleanPlanNameForLine,
   formatTermYearMonth,
 } from './data/proposals';
-import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears, CustomRateConfig } from './types';
+import { ProposalKey, DownMode, BikePreset, InsurancePlan, InsuranceYears, CustomRateConfig, SavedCaseRecord } from './types';
 import { ProposalInfoModal } from './components/ProposalInfoModal';
 import { ProposalSelectModal } from './components/ProposalSelectModal';
 import { BikePresetsModal } from './components/BikePresetsModal';
@@ -64,6 +67,8 @@ import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
 import { EirInfoModal } from './components/EirInfoModal';
+import { SavedCasesModal } from './components/SavedCasesModal';
+import { getSavedCases, saveCaseRecord } from './utils/savedCasesStorage';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { BikeModelCodeInput } from './components/BikeModelCodeInput';
 import { MotorcycleModel, MOTORCYCLE_MODELS, findModelByCode } from './data/motorcycleModels';
@@ -220,6 +225,16 @@ export default function App() {
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
+  const [showSavedCases, setShowSavedCases] = useState<boolean>(false);
+  const [savedCasesCount, setSavedCasesCount] = useState<number>(() => {
+    return getSavedCases().length;
+  });
+  const [toastNotice, setToastNotice] = useState<string | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastNotice(msg);
+    setTimeout(() => setToastNotice(null), 3500);
+  };
 
   // 4-Page Navigation Tab State (โฮมเพจ, เงินดาวน์, ค่างวด, เอกสาร/เคส)
   type ActivePageTab = 'home' | 'financing' | 'calculation' | 'documents';
@@ -644,6 +659,110 @@ ${
     }
   };
 
+  // Save current case data to device (LocalStorage)
+  const handleSaveCurrentCase = () => {
+    triggerHaptic('success');
+    const bikeName = selectedBike
+      ? `${selectedBike.brand} ${selectedBike.name}`
+      : bikeModelCode
+      ? `รุ่นรหัส ${bikeModelCode}`
+      : 'รถจักรยานยนต์';
+    const defaultTitle = `${customerName || 'ลูกค้า'} - ${bikeName} (ดาวน์ ${formatBaht(currentCalculation.downAmount)})`;
+
+    const newRecord = saveCaseRecord({
+      caseTitle: defaultTitle,
+      officerName,
+      officerCode,
+      officerLicense,
+      customerName,
+      customerPhone,
+      customerNote: '',
+      proposalKey,
+      vehiclePrice,
+      bikeModelName: selectedBike?.name || (bikeModelCode ? `รุ่นรหัส ${bikeModelCode}` : undefined),
+      bikeModelCode: bikeModelCode || selectedBike?.code,
+      downMode,
+      downValue,
+      term,
+      includeDeliveryFees,
+      registrationFee,
+      theftInsuranceFee,
+      isCustomRateEnabled,
+      customRateInput,
+      customRateType,
+      enforceEirCap,
+      insurancePlan,
+      insuranceYears,
+      snapshot: {
+        monthlyInstallment: currentCalculation.monthlyInstallment,
+        rawMonthlyInstallment: currentCalculation.rawMonthlyInstallment,
+        financeAmount: currentCalculation.financeAmount,
+        downAmount: currentCalculation.downAmount,
+        downPercent: currentCalculation.downPercent,
+        totalInterest: currentCalculation.totalInterest,
+        totalWithVat: currentCalculation.totalWithVat,
+        effectiveMonthlyRate: currentCalculation.effectiveMonthlyRate,
+        eirAnnualPercent: currentCalculation.eirAnnualPercent,
+        proposalCode: currentCalculation.proposalCode,
+        proposalName: currentCalculation.proposalName,
+        rateDisplayText: currentCalculation.rateDisplayText,
+        totalDriveAwayCost: currentCalculation.totalDriveAwayCost,
+      },
+    });
+
+    setSavedCasesCount(getSavedCases().length);
+    triggerToast(`✓ บันทึกเคส "${newRecord.caseTitle}" ลงในอุปกรณ์เรียบร้อยแล้ว!`);
+  };
+
+  // Load a saved case from device
+  const handleLoadCase = (record: SavedCaseRecord) => {
+    triggerHaptic('success');
+    setProposalKey(record.proposalKey);
+    setVehiclePrice(record.vehiclePrice);
+    setDownMode(record.downMode);
+    setDownValue(record.downValue);
+    setTerm(record.term);
+    setCustomerName(record.customerName || 'คุณลูกค้า');
+    if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    if (record.officerName) setOfficerName(record.officerName);
+    if (record.officerCode) setOfficerCode(record.officerCode);
+    if (record.officerLicense) setOfficerLicense(record.officerLicense);
+
+    setInsurancePlan(record.insurancePlan);
+    setInsuranceYears(record.insuranceYears);
+
+    setIncludeDeliveryFees(record.includeDeliveryFees);
+    setRegistrationFee(record.registrationFee || 1500);
+    setTheftInsuranceFee(record.theftInsuranceFee || 2500);
+
+    setIsCustomRateEnabled(record.isCustomRateEnabled);
+    setCustomRateInput(record.customRateInput || '');
+    setCustomRateType(record.customRateType || 'monthly');
+    setEnforceEirCap(record.enforceEirCap ?? true);
+
+    if (record.bikeModelCode) {
+      setBikeModelCode(record.bikeModelCode);
+      const matched = findModelByCode(record.bikeModelCode);
+      if (matched) {
+        setSelectedBike({
+          id: matched.code,
+          name: matched.name,
+          brand: (matched.brand as any) || 'Other',
+          price: matched.price || record.vehiclePrice,
+          proposalKey: record.proposalKey,
+          defaultDownPercent: 15,
+          code: matched.code,
+        });
+      }
+    } else {
+      setSelectedBike(null);
+      setBikeModelCode('');
+    }
+
+    setActiveTab('calculation');
+    triggerToast(`✓ โหลดข้อมูลเคส "${record.caseTitle}" มาใช้งานเรียบร้อยแล้ว`);
+  };
+
   const currentProposal = PROPOSALS[proposalKey];
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
@@ -750,9 +869,24 @@ ${
               </div>
             </div>
 
-            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap">
-              พัฒนาระบบโดย Bordin 6683
-            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setShowSavedCases(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/35 text-[10.5px] font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95"
+                title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
+              >
+                <FolderArchive className="w-3.5 h-3.5 text-cyan-200" />
+                <span>เคสที่บันทึก ({savedCasesCount})</span>
+              </button>
+
+              <span className="hidden sm:inline-block text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap">
+                พัฒนาระบบโดย Bordin 6683
+              </span>
+            </div>
           </div>
 
           {/* Header Title Row */}
@@ -846,6 +980,31 @@ ${
                   <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
                     ขั้นตอน 1 / 4
                   </span>
+                </div>
+
+                {/* Quick Save & Saved Cases Action Bar */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveCurrentCase}
+                    className="flex-1 py-2 px-3 rounded-2xl bg-white/90 hover:bg-white text-sky-850 font-bold text-xs flex items-center justify-center gap-1.5 border border-sky-200/90 shadow-2xs transition-all cursor-pointer active:scale-98"
+                    title="บันทึกข้อมูลเคสปัจจุบันเก็บไว้ในอุปกรณ์"
+                  >
+                    <BookmarkPlus className="w-3.5 h-3.5 text-sky-600" />
+                    <span>บันทึกเคสนี้ลงเครื่อง</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('selection');
+                      setShowSavedCases(true);
+                    }}
+                    className="py-2 px-3.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-900 font-bold text-xs flex items-center gap-1.5 border border-sky-200/90 shadow-2xs transition-all cursor-pointer active:scale-98"
+                    title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
+                  >
+                    <FolderArchive className="w-3.5 h-3.5 text-sky-700" />
+                    <span>เคสที่บันทึก ({savedCasesCount})</span>
+                  </button>
                 </div>
 
                 {/* Input Form Card - Frosted Glass */}
@@ -2006,6 +2165,31 @@ ${
                   </span>
                 </div>
               )}
+
+              {/* Save Case Action inside Hero card */}
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-sky-100/80">
+                <button
+                  type="button"
+                  onClick={handleSaveCurrentCase}
+                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-sky-500/25 active:scale-98 transition-all cursor-pointer"
+                  title="บันทึกผลคำนวณเคสนี้ลงในอุปกรณ์"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  <span>บันทึกผลคำนวณเคสนี้</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setShowSavedCases(true);
+                  }}
+                  className="py-2 px-3 rounded-xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs active:scale-98 transition-all cursor-pointer"
+                  title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
+                >
+                  <FolderArchive className="w-3.5 h-3.5 text-slate-500" />
+                  <span>ดูเคสทั้งหมด ({savedCasesCount})</span>
+                </button>
+              </div>
             </div>
 
             {/* Term Comparisons Table */}
@@ -2349,6 +2533,25 @@ ${
         onClose={() => setShowEirInfo(false)}
         calculation={currentCalculation}
       />
+
+      {/* Saved Cases Modal (เปิดดู / นำข้อมูลมาใช้งาน / จัดการเคสที่บันทึก) */}
+      <SavedCasesModal
+        isOpen={showSavedCases}
+        onClose={() => {
+          setShowSavedCases(false);
+          setSavedCasesCount(getSavedCases().length);
+        }}
+        onLoadCase={handleLoadCase}
+        onSaveCurrentCase={handleSaveCurrentCase}
+      />
+
+      {/* Global Toast Notice */}
+      {toastNotice && (
+        <div className="fixed top-5 inset-x-4 mx-auto max-w-md z-50 p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-semibold text-center shadow-2xl border border-white/20 backdrop-blur-xl animate-fade-in flex items-center justify-center gap-2">
+          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="leading-tight">{toastNotice}</span>
+        </div>
+      )}
     </div>
   );
 }

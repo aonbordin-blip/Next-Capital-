@@ -134,3 +134,62 @@ export interface TermComparisonItem {
   planBInstallment?: number;
   planBDiff?: number;
 }
+
+export interface SavedCaseRecord {
+  id: string;
+  createdAt: number;
+  updatedAt: number;
+  caseTitle: string;
+
+  // Officer info
+  officerName: string;
+  officerCode: string;
+  officerLicense?: string;
+
+  // Customer info
+  customerName: string;
+  customerPhone?: string;
+  customerNote?: string;
+
+  // Bike & Proposal
+  proposalKey: ProposalKey;
+  vehiclePrice: number;
+  bikeModelName?: string;
+  bikeModelCode?: string;
+
+  // Financing terms
+  downMode: DownMode;
+  downValue: number;
+  term: number;
+  includeDeliveryFees: boolean;
+  registrationFee: number;
+  theftInsuranceFee: number;
+
+  // Custom rate
+  isCustomRateEnabled: boolean;
+  customRateInput: string;
+  customRateType: 'monthly' | 'annual';
+  enforceEirCap: boolean;
+
+  // Insurance
+  insurancePlan: InsurancePlan;
+  insuranceYears: InsuranceYears;
+
+  // Snapshot calculation results
+  snapshot: {
+    monthlyInstallment: number;
+    rawMonthlyInstallment?: number;
+    financeAmount: number;
+    downAmount: number;
+    downPercent: number;
+    totalInterest: number;
+    totalWithVat: number;
+    effectiveMonthlyRate: number;
+    eirAnnualPercent: number;
+    proposalCode: string;
+    proposalName: string;
+    rateDisplayText: string;
+    totalDriveAwayCost?: number;
+  };
+}
+
