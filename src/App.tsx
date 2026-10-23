@@ -663,25 +663,32 @@ ${
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-20" />
 
         {/* Organic Fluid Wave Header (Matching Reference Mobile App Style) */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-3 pb-6 px-4 sm:px-5 shadow-sm">
-          {/* Overlapping Organic Wave SVGs */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <svg
-              className="absolute -bottom-3 left-0 w-full h-20 text-white/20"
-              viewBox="0 0 1440 320"
-              preserveAspectRatio="none"
-              fill="currentColor"
-            >
-              <path d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,138.7C672,149,768,203,864,208C960,213,1056,171,1152,144C1248,117,1344,107,1392,101.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
-            </svg>
-            <svg
-              className="absolute -bottom-1 left-0 w-full h-16 text-white/40"
-              viewBox="0 0 1440 320"
-              preserveAspectRatio="none"
-              fill="currentColor"
-            >
-              <path d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,122.7C672,128,768,192,864,202.7C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
-            </svg>
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-3 pb-6 px-4 sm:px-5 rounded-b-[28px] sm:rounded-b-[32px] shadow-md shadow-sky-950/10">
+          {/* Overlapping Organic Water Wave Animation Layers */}
+          <div className="absolute inset-x-0 bottom-0 h-20 pointer-events-none overflow-hidden select-none">
+            {/* Back Wave (Slow Deep Swell - Soft Translucent Cyan Tone) */}
+            <div className="animate-wave-bob-1 absolute inset-x-0 -bottom-2 w-full h-full pointer-events-none">
+              <svg
+                className="animate-wave-slow w-[200%] min-w-[200%] max-w-none h-full text-white/25"
+                viewBox="0 0 1200 120"
+                preserveAspectRatio="none"
+                fill="currentColor"
+              >
+                <path d="M 0,45 C 100,20 200,20 300,45 C 400,70 500,70 600,45 C 700,20 800,20 900,45 C 1000,70 1100,70 1200,45 L 1200,120 L 0,120 Z" />
+              </svg>
+            </div>
+
+            {/* Front Wave (Surface Ripple - Crisp Bright Wave Tone) */}
+            <div className="animate-wave-bob-2 absolute inset-x-0 -bottom-1 w-full h-full pointer-events-none">
+              <svg
+                className="animate-wave-fast w-[200%] min-w-[200%] max-w-none h-full text-white/45"
+                viewBox="0 0 1200 120"
+                preserveAspectRatio="none"
+                fill="currentColor"
+              >
+                <path d="M 0,55 C 50,35 100,35 150,55 C 200,75 250,75 300,55 C 350,35 400,35 450,55 C 500,75 550,75 600,55 C 650,35 700,35 750,55 C 800,75 850,75 900,55 C 950,35 1000,35 1050,55 C 1100,75 1150,75 1200,55 L 1200,120 L 0,120 Z" />
+              </svg>
+            </div>
           </div>
 
           {/* Top Brand Bar */}

@@ -316,6 +316,72 @@
   animation: toast-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Fluid Water Wave Animations for Header */
+@keyframes wave-flow-slow {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes wave-flow-fast {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes wave-bobbing-1 {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3.5px);
+  }
+}
+
+@keyframes wave-bobbing-2 {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+.animate-wave-slow {
+  animation: wave-flow-slow 14s linear infinite;
+  will-change: transform;
+}
+
+.animate-wave-fast {
+  animation: wave-flow-fast 8.5s linear infinite;
+  will-change: transform;
+}
+
+.animate-wave-bob-1 {
+  animation: wave-bobbing-1 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-wave-bob-2 {
+  animation: wave-bobbing-2 3.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wave-slow,
+  .animate-wave-fast,
+  .animate-wave-bob-1,
+  .animate-wave-bob-2 {
+    animation: none !important;
+  }
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
