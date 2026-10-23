@@ -35,6 +35,10 @@ import {
   Pencil,
   RotateCcw,
   Sliders,
+  Home,
+  Calculator,
+  ArrowRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -216,6 +220,45 @@ export default function App() {
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
+
+  // 4-Page Navigation Tab State (โฮมเพจ, เงินดาวน์, ค่างวด, เอกสาร/เคส)
+  type ActivePageTab = 'home' | 'financing' | 'calculation' | 'documents';
+  const [activeTab, setActiveTab] = useState<ActivePageTab>('home');
+  const mainRef = useRef<HTMLElement>(null);
+
+  const NAV_TABS = [
+    {
+      id: 'home' as const,
+      label: 'โฮมเพจ',
+      icon: Home,
+    },
+    {
+      id: 'financing' as const,
+      label: 'เงินดาวน์',
+      icon: Banknote,
+    },
+    {
+      id: 'calculation' as const,
+      label: 'ค่างวด',
+      icon: Calculator,
+    },
+    {
+      id: 'documents' as const,
+      label: 'เอกสาร/เคส',
+      icon: FileText,
+    },
+  ];
+
+  const handleTabChange = (newTab: ActivePageTab) => {
+    triggerHaptic('selection');
+    setActiveTab(newTab);
+    if (newTab === 'financing') {
+      setExpandedCard('financing');
+    } else if (newTab === 'calculation') {
+      setExpandedCard('comparison');
+    }
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Collapsible cards state: cards can be expanded or collapsed by clicking their header/toggle
   const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | 'daily_report' | null>('financing');
@@ -781,23 +824,35 @@ ${
           </div>
         )}
 
-        {/* Main Content Area */}
+        {/* Main Content Area with 4 Connected Step Pages */}
         <main
-          className={`flex-1 overflow-y-auto px-2 sm:px-4 md:px-5 py-3 sm:py-4 space-y-3 sm:space-y-3.5 ${
-            viewMode === 'dashboard' ? 'grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 space-y-0' : ''
-          }`}
+          ref={mainRef}
+          className="flex-1 overflow-y-auto px-2 sm:px-4 md:px-5 py-3 sm:py-4 pb-36 sm:pb-40 space-y-3 sm:space-y-3.5"
         >
-          {/* Left Column / Input Controls */}
-          <div
-            className={`space-y-3 sm:space-y-3.5 ${
-              viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-5' : ''
-            }`}
-          >
-            {/* Input Form Card - Frosted Glass */}
-            <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
-              {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-              <div
-                data-card-id="officer"
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-3.5">
+            {/* ========================================================
+                หน้าโฮมเพจ: ข้อมูลทั่วไป & เงื่อนไขข้อเสนอ (ตามรูปที่ 1)
+                ======================================================== */}
+            {activeTab === 'home' && (
+              <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
+                {/* Step Header Badge */}
+                <div className="flex items-center justify-between px-1 text-xs">
+                  <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
+                      1
+                    </span>
+                    หน้าโฮมเพจ: ข้อมูลทั่วไป & เงื่อนไขข้อเสนอ
+                  </span>
+                  <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+                    ขั้นตอน 1 / 4
+                  </span>
+                </div>
+
+                {/* Input Form Card - Frosted Glass */}
+                <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
+                  {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
+                  <div
+                    data-card-id="officer"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
@@ -1112,10 +1167,43 @@ ${
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ - ยุบเก็บได้และปิดอัตโนมัติเมื่อกดกล่องอื่น) */}
-              <div
-                data-card-id="financing"
+            {/* Next Step Action Button */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => handleTabChange('financing')}
+                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-sky-500/25 transition-all cursor-pointer"
+              >
+                <span>ขั้นตอนถัดไป: ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            หน้าที่ 2: ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ (ตามรูปที่ 2)
+            ======================================================== */}
+        {activeTab === 'financing' && (
+          <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
+            {/* Step Header Badge */}
+            <div className="flex items-center justify-between px-1 text-xs">
+              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
+                  2
+                </span>
+                หน้าที่ 2: ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์
+              </span>
+              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+                ขั้นตอน 2 / 4
+              </span>
+            </div>
+
+            {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์) */}
+            <div
+              data-card-id="financing"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
@@ -1768,69 +1856,46 @@ ${
             )}
           </div>
 
-              {/* Action Buttons: 2 beautiful, modern primary action buttons */}
-              <div data-card-id="actions" className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* 1. Coverage Plan Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowInsuranceDoc(true)}
-                  className="group relative overflow-hidden btn-fluid-primary py-3 px-4 rounded-2xl font-bold transition-all flex items-center justify-between cursor-pointer border border-white/30"
-                  title="ดาวน์โหลดแผนความคุ้มครองประกันภัย (Group PA)"
-                >
-                  <div className="flex items-center gap-2.5 text-left">
-                    <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                      <ShieldCheck className="w-4.5 h-4.5 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
-                        แผนความคุ้มครอง
-                        <span className="text-[10px] bg-white/25 text-white px-2 py-0.2 rounded-full font-semibold">
-                          รูปภาพ
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] text-white/90 font-normal leading-tight mt-0.5">
-                        {cleanPlanNameForLine(currentCalculation.insurancePlanName)} ({insuranceYears} ปี)
-                      </div>
-                    </div>
-                  </div>
-                  <Download className="w-4 h-4 text-white group-hover:translate-y-0.5 transition-transform shrink-0" />
-                </button>
-
-                {/* 2. Quotation Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowQuotation(true)}
-                  className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-white/10"
-                  title="ดูและดาวน์โหลดใบเสนอราคาเช่าซื้อ (Quotation)"
-                >
-                  <div className="flex items-center gap-2.5 text-left">
-                    <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                      <FileText className="w-4.5 h-4.5 text-cyan-300" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
-                        ใบเสนอราคา
-                        <span className="text-[10px] bg-cyan-400/25 text-cyan-200 px-2 py-0.2 rounded-full font-semibold">
-                          รูปภาพ
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] text-slate-300 font-normal leading-tight mt-0.5">
-                        งวดละ {formatBaht(currentCalculation.monthlyInstallment)} บ.
-                      </div>
-                    </div>
-                  </div>
-                  <Printer className="w-4 h-4 text-slate-300 group-hover:scale-110 transition-transform shrink-0" />
-                </button>
-              </div>
+            {/* Navigation Buttons for Page 2 */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleTabChange('home')}
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <span>ย้อนกลับ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('calculation')}
+                className="flex-[2] py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-sky-500/25 transition-all cursor-pointer"
+              >
+                <span>ถัดไป: ผลคำนวณค่างวด</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        )}
 
-          {/* Right Column / Results & Analysis */}
-          <div
-            className={`space-y-3.5 ${
-              viewMode === 'dashboard' ? 'lg:col-span-6 xl:col-span-7' : ''
-            }`}
-          >
+        {/* ========================================================
+            หน้าที่ 3: สรุปผลค่างวด & ตารางเปรียบเทียบ (ตามรูปที่ 3)
+            ======================================================== */}
+        {activeTab === 'calculation' && (
+          <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
+            {/* Step Header Badge */}
+            <div className="flex items-center justify-between px-1 text-xs">
+              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
+                  3
+                </span>
+                หน้าที่ 3: สรุปผลค่างวด & ตารางเปรียบเทียบ
+              </span>
+              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+                ขั้นตอน 3 / 4
+              </span>
+            </div>
+
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece matching Reference UI */}
             <div data-card-id="result" className="glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden">
               {/* Subtle top specular sheen */}
@@ -1946,8 +2011,6 @@ ${
                   </span>
                 </div>
               )}
-
-
             </div>
 
             {/* Term Comparisons Table */}
@@ -1964,7 +2027,102 @@ ${
               />
             </div>
 
-            {/* DV Case Approval Box (กล่องขออนุมัติเคส DV พร้อมส่ง Line) */}
+            {/* Navigation Buttons for Page 3 */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleTabChange('financing')}
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <span>ย้อนกลับ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('documents')}
+                className="flex-[2] py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-sky-500/25 transition-all cursor-pointer"
+              >
+                <span>ถัดไป: เอกสาร & ขออนุมัติ DV</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            หน้าที่ 4: เอกสารเสนอราคา, ขออนุมัติ DV & รายงานยอด (ตามรูปที่ 4 และ 5)
+            ======================================================== */}
+        {activeTab === 'documents' && (
+          <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
+            {/* Step Header Badge */}
+            <div className="flex items-center justify-between px-1 text-xs">
+              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
+                  4
+                </span>
+                หน้าที่ 4: เอกสารเสนอราคา, ขออนุมัติ DV & รายงานยอด
+              </span>
+              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+                ขั้นตอน 4 / 4
+              </span>
+            </div>
+
+            {/* Action Buttons: 2 beautiful, modern primary action buttons (ตามรูปที่ 4) */}
+            <div data-card-id="actions" className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* 1. Coverage Plan Button */}
+              <button
+                type="button"
+                onClick={() => setShowInsuranceDoc(true)}
+                className="group relative overflow-hidden btn-fluid-primary py-3 px-4 rounded-2xl font-bold transition-all flex items-center justify-between cursor-pointer border border-white/30"
+                title="ดาวน์โหลดแผนความคุ้มครองประกันภัย (Group PA)"
+              >
+                <div className="flex items-center gap-2.5 text-left">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <ShieldCheck className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
+                      แผนความคุ้มครอง
+                      <span className="text-[10px] bg-white/25 text-white px-2 py-0.2 rounded-full font-semibold">
+                        รูปภาพ
+                      </span>
+                    </div>
+                    <div className="text-[10.5px] text-white/90 font-normal leading-tight mt-0.5">
+                      {cleanPlanNameForLine(currentCalculation.insurancePlanName)} ({insuranceYears} ปี)
+                    </div>
+                  </div>
+                </div>
+                <Download className="w-4 h-4 text-white group-hover:translate-y-0.5 transition-transform shrink-0" />
+              </button>
+
+              {/* 2. Quotation Button */}
+              <button
+                type="button"
+                onClick={() => setShowQuotation(true)}
+                className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-white/10"
+                title="ดูและดาวน์โหลดใบเสนอราคาเช่าซื้อ (Quotation)"
+              >
+                <div className="flex items-center gap-2.5 text-left">
+                  <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <FileText className="w-4.5 h-4.5 text-cyan-300" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
+                      ใบเสนอราคา
+                      <span className="text-[10px] bg-cyan-400/25 text-cyan-200 px-2 py-0.2 rounded-full font-semibold">
+                        รูปภาพ
+                      </span>
+                    </div>
+                    <div className="text-[10.5px] text-slate-300 font-normal leading-tight mt-0.5">
+                      งวดละ {formatBaht(currentCalculation.monthlyInstallment)} บ.
+                    </div>
+                  </div>
+                </div>
+                <Printer className="w-4 h-4 text-slate-300 group-hover:scale-110 transition-transform shrink-0" />
+              </button>
+            </div>
+
+            {/* DV Case Approval Box (ตามรูปที่ 5) */}
             <div data-card-id="dv">
               <DvApprovalCard
                 customerName={customerName}
@@ -1996,7 +2154,7 @@ ${
               />
             </div>
 
-            {/* Daily Dealer Finance Report Box (กล่องรายงานประจำวันยอดเคสไฟแนนซ์ราย Dealer พร้อมส่ง Line) */}
+            {/* Daily Dealer Finance Report Box (ตามรูปที่ 5) */}
             <div data-card-id="daily_report">
               <DailyFinanceReportCard
                 officerName={officerName}
@@ -2008,8 +2166,82 @@ ${
                 }}
               />
             </div>
+
+            {/* Navigation Buttons for Page 4 */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleTabChange('calculation')}
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <span>ย้อนกลับ: ตารางค่างวด</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('home')}
+                className="flex-1 py-3 px-3 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:opacity-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-sky-500/20 transition-all cursor-pointer"
+              >
+                <Home className="w-4 h-4" />
+                <span>กลับหน้าแรก (โฮมเพจ)</span>
+              </button>
+            </div>
           </div>
-        </main>
+        )}
+      </div>
+    </main>
+
+    {/* Floating Glassmorphic Bottom Navigation Bar (แถบเมนูลอยแบบกระจกโปร่งใสพร้อมเอฟเฟกต์การเคลื่อนไหวเมื่อกด) */}
+    <div className="fixed bottom-12 sm:bottom-14 inset-x-0 mx-auto w-[94%] max-w-[480px] z-30 pointer-events-auto">
+      <nav
+        aria-label="แถบนำทางหลัก"
+        className="relative bg-white/20 backdrop-blur-md border border-white/40 shadow-xl shadow-sky-950/10 rounded-full p-1 flex items-center justify-between overflow-hidden"
+      >
+        {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
+        <div
+          className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500/65 via-sky-600/65 to-cyan-500/65 backdrop-blur-sm shadow-md shadow-sky-500/25 border border-white/40 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+          style={{
+            width: 'calc(25% - 4px)',
+            left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
+          }}
+        >
+          {/* Subtle liquid shimmer light across the active pill */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-pulse pointer-events-none" />
+        </div>
+
+        {NAV_TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
+              className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
+                isActive
+                  ? 'text-white font-bold'
+                  : 'text-slate-700 hover:text-sky-800 hover:bg-white/15 font-semibold'
+              }`}
+            >
+              <Icon
+                className={`w-4 h-4 shrink-0 transition-transform duration-300 ${
+                  isActive
+                    ? 'text-white animate-tab-icon'
+                    : 'text-slate-700'
+                }`}
+              />
+              <span
+                className={`text-[11px] sm:text-xs leading-none whitespace-nowrap transition-transform duration-200 ${
+                  isActive ? 'scale-105' : ''
+                }`}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
 
         {/* Bottom Bar Info matching Reference Dock */}
         <footer className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/90 border-t border-sky-100 backdrop-blur-xl text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2 shadow-inner">
