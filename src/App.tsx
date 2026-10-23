@@ -732,17 +732,17 @@ ${
             <button
               type="button"
               onClick={() => setShowBikePresets(true)}
-              className="w-full bg-white/95 hover:bg-white text-slate-700 backdrop-blur-xl rounded-full py-2 px-3.5 shadow-sm shadow-sky-950/10 border border-white flex items-center justify-between text-xs transition-all cursor-pointer group"
+              className="w-full bg-white/25 hover:bg-white/35 text-white backdrop-blur-md rounded-full py-2 px-3.5 shadow-sm shadow-sky-950/20 border border-white/40 hover:border-white/60 flex items-center justify-between text-xs transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-2 truncate">
-                <div className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                <div className="w-5 h-5 rounded-full bg-white/25 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
                   <Bike className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-slate-600 font-medium truncate">
+                <span className="text-white/95 font-medium truncate drop-shadow-2xs">
                   {selectedBike ? `รุ่น: ${selectedBike.name}` : bikeModelCode ? `รหัสรุ่น: ${bikeModelCode}` : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full shrink-0 group-hover:bg-sky-100 transition-colors">
+              <span className="text-[10px] font-bold text-sky-900 bg-white/90 hover:bg-white px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs transition-all group-hover:scale-105">
                 เลือกรุ่นรถ
               </span>
             </button>
