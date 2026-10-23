@@ -1502,7 +1502,7 @@ ${
                 <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
                   2
                 </span>
-                หน้าที่ 2: ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์
+                ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์
               </span>
               <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
                 ขั้นตอน 2 / 4
@@ -2192,7 +2192,7 @@ ${
                 <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
                   3
                 </span>
-                หน้าที่ 3: สรุปผลค่างวด & ตารางเปรียบเทียบ
+                สรุปผลค่างวด & ตารางเปรียบเทียบ
               </span>
               <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
                 ขั้นตอน 3 / 4
@@ -2401,7 +2401,7 @@ ${
                 <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
                   4
                 </span>
-                หน้าที่ 4: เอกสารเสนอราคา, ขออนุมัติ DV & รายงานยอด
+                เอกสารเสนอราคา, ขออนุมัติ DV & รายงานยอด
               </span>
               <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
                 ขั้นตอน 4 / 4
