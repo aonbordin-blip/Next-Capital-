@@ -91,6 +91,21 @@ export const SavedCasesModal: React.FC<Props> = ({
     });
   }, [cases, searchQuery]);
 
+  // แสดงเฉพาะชื่อลูกค้าในส่วนหัวข้อเคสตามที่ผู้ใช้ต้องการ
+  const getCustomerDisplayName = (record: SavedCaseRecord): string => {
+    if (record.customerName && record.customerName.trim()) {
+      return record.customerName.trim();
+    }
+    if (record.caseTitle) {
+      const parts = record.caseTitle.split(' - ');
+      if (parts.length > 0 && parts[0].trim()) {
+        return parts[0].trim();
+      }
+      return record.caseTitle.trim();
+    }
+    return 'คุณลูกค้า';
+  };
+
   const executeDelete = (id: string) => {
     triggerHaptic('warning');
     const remaining = deleteCaseRecord(id);
@@ -104,7 +119,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   const handleStartEditTitle = (c: SavedCaseRecord) => {
     triggerHaptic('light');
     setEditingId(c.id);
-    setEditTitleInput(c.caseTitle);
+    setEditTitleInput(getCustomerDisplayName(c));
   };
 
   const handleSaveTitle = (id: string) => {
@@ -113,7 +128,7 @@ export const SavedCasesModal: React.FC<Props> = ({
     const updated = updateCaseTitle(id, editTitleInput.trim());
     setCases(updated);
     setEditingId(null);
-    showToast('แก้ไขชื่อรายการสำเร็จ');
+    showToast('แก้ไขชื่อลูกค้าสำเร็จ');
   };
 
   const handleClearAll = () => {
@@ -418,7 +433,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                       ) : (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h3 className="font-extrabold text-sm text-slate-800">
-                            {record.caseTitle}
+                            {getCustomerDisplayName(record)}
                           </h3>
                           {isCurrentEditing && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
@@ -430,7 +445,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                             type="button"
                             onClick={() => handleStartEditTitle(record)}
                             className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
-                            title="แก้ไขชื่อหัวข้อเคส"
+                            title="แก้ไขชื่อลูกค้า"
                           >
                             <Edit2 className="w-3 h-3" />
                           </button>

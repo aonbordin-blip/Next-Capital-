@@ -665,8 +665,9 @@ ${
   // Edit an existing saved case
   const handleEditCase = (record: SavedCaseRecord) => {
     triggerHaptic('medium');
+    const customerTitle = record.customerName?.trim() || record.caseTitle.split(' - ')[0]?.trim() || 'คุณลูกค้า';
     setEditingCaseId(record.id);
-    setEditingCaseTitle(record.caseTitle);
+    setEditingCaseTitle(customerTitle);
 
     setProposalKey(record.proposalKey);
     setVehiclePrice(record.vehiclePrice);
@@ -711,7 +712,7 @@ ${
     }
 
     setActiveTab('home');
-    triggerToast(`✏️ เข้าสู่โหมดแก้ไขเคส: "${record.caseTitle}"`);
+    triggerToast(`✏️ เข้าสู่โหมดแก้ไขเคส: "${customerTitle}"`);
   };
 
   const handleCancelEditing = () => {
@@ -724,12 +725,7 @@ ${
   // Save current case data to device (LocalStorage) or update existing when in editing mode
   const handleSaveCurrentCase = (saveAsNew: boolean = false) => {
     triggerHaptic('success');
-    const bikeName = selectedBike
-      ? `${selectedBike.brand} ${selectedBike.name}`
-      : bikeModelCode
-      ? `รุ่นรหัส ${bikeModelCode}`
-      : 'รถจักรยานยนต์';
-    const defaultTitle = `${customerName || 'ลูกค้า'} - ${bikeName} (ดาวน์ ${formatBaht(currentCalculation.downAmount)})`;
+    const defaultTitle = customerName?.trim() || 'คุณลูกค้า';
 
     const isUpdating = !saveAsNew && Boolean(editingCaseId);
     const targetTitle = isUpdating && editingCaseTitle ? editingCaseTitle : defaultTitle;

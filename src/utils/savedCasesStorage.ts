@@ -73,7 +73,9 @@ export function deleteCaseRecord(id: string): SavedCaseRecord[] {
 
 export function updateCaseTitle(id: string, newTitle: string): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const updated = cases.map((c) => (c.id === id ? { ...c, caseTitle: newTitle, updatedAt: Date.now() } : c));
+  const updated = cases.map((c) =>
+    c.id === id ? { ...c, caseTitle: newTitle, customerName: newTitle, updatedAt: Date.now() } : c
+  );
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
