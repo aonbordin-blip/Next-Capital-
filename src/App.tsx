@@ -839,7 +839,7 @@ ${
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-start sm:justify-center items-center p-0 sm:p-2 md:p-4 select-none">
+    <div className="h-[100dvh] max-h-[100dvh] w-full relative overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
       {/* Dynamic Ambient Background Glowing Blobs for Soft Neo-Glassmorphism Depth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Soft Cyan Ambient Glow */}
@@ -861,11 +861,11 @@ ${
       </div>
 
       {/* Top Floating View Mode Switcher on Desktop */}
-      <div className="no-print hidden sm:flex items-center gap-2 mb-3 bg-white/70 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm shadow-sky-900/10 text-xs z-10">
+      <div className="no-print hidden sm:flex items-center gap-2 mb-2 bg-white/70 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm shadow-sky-900/10 text-xs z-10 shrink-0">
         <span className="text-slate-500 font-medium">มุมมอง:</span>
         <button
           onClick={() => setViewMode('mobile')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
             viewMode === 'mobile'
               ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
@@ -875,7 +875,7 @@ ${
         </button>
         <button
           onClick={() => setViewMode('dashboard')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
             viewMode === 'dashboard'
               ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
@@ -889,17 +889,17 @@ ${
       <div
         className={`w-full transition-all duration-300 z-10 ${
           viewMode === 'mobile'
-            ? 'max-w-full sm:max-w-[560px] md:max-w-[580px] h-screen sm:h-[920px] sm:max-h-[96vh] sm:rounded-[36px]'
-            : 'max-w-6xl xl:max-w-7xl h-auto min-h-[750px] sm:rounded-[36px] my-1 sm:my-3'
+            ? 'max-w-full sm:max-w-[560px] md:max-w-[580px] h-full sm:h-[min(920px,94vh)] sm:max-h-[96vh] sm:rounded-[36px]'
+            : 'max-w-6xl xl:max-w-7xl h-full sm:h-[min(940px,96vh)] sm:max-h-[96vh] sm:rounded-[36px]'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
-        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-20" />
+        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-30" />
 
-        {/* Organic Fluid Wave Header (Matching Reference Mobile App Style) */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-3 pb-6 px-4 sm:px-5 rounded-b-[28px] sm:rounded-b-[32px] shadow-md shadow-sky-950/10">
+        {/* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
+        <header className="shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-2.5 sm:pt-3 pb-5 px-3.5 sm:px-5 rounded-b-[24px] sm:rounded-b-[32px] shadow-md shadow-sky-950/15">
           {/* Overlapping Organic Water Wave Animation Layers */}
-          <div className="absolute inset-x-0 bottom-0 h-20 pointer-events-none overflow-hidden select-none">
+          <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 pointer-events-none overflow-hidden select-none">
             {/* Back Wave (Slow Deep Swell - Soft Translucent Cyan Tone) */}
             <div className="animate-wave-bob-1 absolute inset-x-0 -bottom-2 w-full h-full pointer-events-none">
               <svg
@@ -927,168 +927,166 @@ ${
 
           {/* Top Brand Bar */}
           <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-xs border border-white/80 flex items-center justify-center shrink-0">
-                <NextCapitalLogo size={24} />
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white shadow-xs border border-white/80 flex items-center justify-center shrink-0">
+                <NextCapitalLogo size={22} />
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-xs tracking-tight text-white uppercase drop-shadow-xs">
+                <span className="font-extrabold text-[11px] sm:text-xs tracking-tight text-white uppercase drop-shadow-xs">
                   Next Capital
                 </span>
-                <span className="text-[9.5px] text-white/80 font-medium -mt-0.5">
+                <span className="text-[9px] sm:text-[9.5px] text-white/85 font-medium -mt-0.5">
                   บมจ. เน็กซ์ แคปปิตอล
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] sm:text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none">
+              <span className="text-[9.5px] sm:text-[10.5px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none">
                 พัฒนาระบบโดย Bordin 6683
               </span>
             </div>
           </div>
 
           {/* Header Title Row */}
-          <div className="relative z-10 flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-black text-white tracking-tight drop-shadow-xs">
+          <div className="relative z-10 flex items-center justify-between pt-0.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h1 className="text-base sm:text-lg md:text-xl font-black text-white tracking-tight drop-shadow-xs">
                 MotoLease Calc
               </h1>
-              <span className="text-[10px] font-bold bg-white/25 backdrop-blur-md text-white border border-white/30 px-2 py-0.5 rounded-full">
+              <span className="text-[9.5px] sm:text-[10px] font-bold bg-white/25 backdrop-blur-md text-white border border-white/30 px-2 py-0.5 rounded-full">
                 2569
               </span>
             </div>
-            <span className="text-[11px] text-white/90 font-medium">
+            <span className="text-[10px] sm:text-[11px] text-white/90 font-medium">
               ระบบคำนวณค่างวดรถจักรยานยนต์
             </span>
           </div>
 
           {/* Pill Search / Model Code Bar matching Reference UI */}
-          <div data-card-id="model-bar" className="relative z-10 mt-2.5">
+          <div data-card-id="model-bar" className="relative z-10 mt-2 sm:mt-2.5">
             <button
               type="button"
               onClick={() => setShowBikePresets(true)}
-              className="w-full bg-white/25 hover:bg-white/35 text-white backdrop-blur-md rounded-full py-2 px-3.5 shadow-sm shadow-sky-950/20 border border-white/40 hover:border-white/60 flex items-center justify-between text-xs transition-all cursor-pointer group"
+              className="w-full bg-white/25 hover:bg-white/35 text-white backdrop-blur-md rounded-full py-1.5 sm:py-2 px-3 sm:px-3.5 shadow-sm shadow-sky-950/20 border border-white/40 hover:border-white/60 flex items-center justify-between text-xs transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-2 truncate">
                 <div className="w-5 h-5 rounded-full bg-white/25 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
                   <Bike className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-white/95 font-medium truncate drop-shadow-2xs">
+                <span className="text-white/95 font-medium truncate drop-shadow-2xs text-[11px] sm:text-xs">
                   {selectedBike ? `รุ่น: ${selectedBike.name}` : bikeModelCode ? `รหัสรุ่น: ${bikeModelCode}` : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-sky-900 bg-white/90 hover:bg-white px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs transition-all group-hover:scale-105">
+              <span className="text-[10px] font-bold text-sky-900 bg-white/95 hover:bg-white px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs transition-all group-hover:scale-105">
                 เลือกรุ่นรถ
               </span>
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* In-App PWA Install Banner */}
-        <div className="pt-2 px-2 sm:px-4">
-          <InstallAppBanner />
-        </div>
-
-        {/* Selected Bike Banner if active */}
-        {(selectedBike || bikeModelCode) && (
-          <div className="mx-2 sm:mx-4 mt-1.5 px-3.5 py-2 bg-gradient-to-r from-sky-50 via-white to-cyan-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs shadow-2xs">
-            <div className="flex items-center gap-1.5 truncate">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
-              <span className="text-slate-500 font-medium">รุ่นที่เลือก:</span>
-              <span className="font-bold text-sky-950 truncate">
-                {selectedBike?.name || 'รถจักรยานยนต์'}
-              </span>
-              {bikeModelCode && (
-                <span className="font-mono text-[10px] font-bold text-sky-800 bg-white px-2 py-0.5 rounded-full border border-sky-200 ml-1">
-                  {bikeModelCode}
-                </span>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                setSelectedBike(null);
-                setBikeModelCode('');
-              }}
-              className="text-[11px] text-slate-400 hover:text-rose-600 ml-2 font-medium cursor-pointer"
-            >
-              ล้าง
-            </button>
-          </div>
-        )}
-
-        {/* Editing Mode Sticky Alert Banner if active */}
-        {editingCaseId && (
-          <div className="mx-2 sm:mx-4 mt-2 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-300/80 animate-fade-in space-y-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
-                  <Pencil className="w-4 h-4 text-white" />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full border border-white/30 text-white">
-                      โหมดแก้ไขเคส
-                    </span>
-                    <span className="text-xs font-black truncate drop-shadow-2xs text-white">
-                      {editingCaseTitle}
-                    </span>
-                  </div>
-                  <p className="text-[10.5px] text-amber-50/90 leading-tight mt-0.5">
-                    กำลังแก้ไขข้อมูลเคสนี้ คุณสามารถปรับเปลี่ยนราคา เงินดาวน์ หรือข้อเสนอ แล้วกดบันทึกการแก้ไข
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleCancelEditing}
-                className="p-1 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
-                title="ยกเลิกโหมดแก้ไข"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Quick Action Buttons for Edit Mode */}
-            <div className="flex items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={() => handleSaveCurrentCase(false)}
-                className="flex-1 py-2 px-3 rounded-xl bg-white text-amber-900 hover:bg-amber-50 font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
-                title="บันทึกทับข้อมูลในเคสเดิม"
-              >
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                <span>บันทึกการแก้ไขเคสนี้</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSaveCurrentCase(true)}
-                className="py-2 px-3 rounded-xl bg-amber-800/50 hover:bg-amber-800/70 text-white font-bold text-xs flex items-center justify-center gap-1 border border-white/30 active:scale-95 transition-all cursor-pointer shrink-0"
-                title="บันทึกเป็นเคสใหม่โดยไม่เขียนทับเคสเดิม"
-              >
-                <BookmarkPlus className="w-3.5 h-3.5 text-amber-200" />
-                <span>บันทึกเป็นเคสใหม่</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCancelEditing}
-                className="py-2 px-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs transition-colors cursor-pointer shrink-0"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content Area with 4 Connected Step Pages */}
+        {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-auto px-2 sm:px-4 md:px-5 py-3 sm:py-4 pb-36 sm:pb-40 space-y-3 sm:space-y-3.5"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 space-y-2.5 sm:space-y-3.5 overscroll-contain"
         >
-          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-3.5">
+          {/* In-App PWA Install Banner */}
+          <InstallAppBanner />
+
+          {/* Selected Bike Banner if active */}
+          {(selectedBike || bikeModelCode) && (
+            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-sky-50 via-white to-cyan-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs shadow-2xs">
+              <div className="flex items-center gap-1.5 truncate">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
+                <span className="text-slate-500 font-medium">รุ่นที่เลือก:</span>
+                <span className="font-bold text-sky-950 truncate">
+                  {selectedBike?.name || 'รถจักรยานยนต์'}
+                </span>
+                {bikeModelCode && (
+                  <span className="font-mono text-[10px] font-bold text-sky-800 bg-white px-2 py-0.5 rounded-full border border-sky-200 ml-1">
+                    {bikeModelCode}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedBike(null);
+                  setBikeModelCode('');
+                }}
+                className="text-[11px] text-slate-400 hover:text-rose-600 ml-2 font-medium cursor-pointer"
+              >
+                ล้าง
+              </button>
+            </div>
+          )}
+
+          {/* Editing Mode Sticky Alert Banner if active */}
+          {editingCaseId && (
+            <div className="mx-0 sm:mx-1 mt-1.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-300/80 animate-fade-in space-y-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
+                    <Pencil className="w-4 h-4 text-white" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full border border-white/30 text-white">
+                        โหมดแก้ไขเคส
+                      </span>
+                      <span className="text-xs font-black truncate drop-shadow-2xs text-white">
+                        {editingCaseTitle}
+                      </span>
+                    </div>
+                    <p className="text-[10.5px] text-amber-50/90 leading-tight mt-0.5">
+                      กำลังแก้ไขข้อมูลเคสนี้ คุณสามารถปรับเปลี่ยนราคา เงินดาวน์ หรือข้อเสนอ แล้วกดบันทึกการแก้ไข
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCancelEditing}
+                  className="p-1 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
+                  title="ยกเลิกโหมดแก้ไข"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Quick Action Buttons for Edit Mode */}
+              <div className="flex items-center gap-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => handleSaveCurrentCase(false)}
+                  className="flex-1 py-2 px-3 rounded-xl bg-white text-amber-900 hover:bg-amber-50 font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                  title="บันทึกทับข้อมูลในเคสเดิม"
+                >
+                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                  <span>บันทึกการแก้ไขเคสนี้</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSaveCurrentCase(true)}
+                  className="py-2 px-3 rounded-xl bg-amber-800/50 hover:bg-amber-800/70 text-white font-bold text-xs flex items-center justify-center gap-1 border border-white/30 active:scale-95 transition-all cursor-pointer shrink-0"
+                  title="บันทึกเป็นเคสใหม่โดยไม่เขียนทับเคสเดิม"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5 text-amber-200" />
+                  <span>บันทึกเป็นเคสใหม่</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCancelEditing}
+                  className="py-2 px-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs transition-colors cursor-pointer shrink-0"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-3.5 pb-6">
             {/* ========================================================
                 หน้าโฮมเพจ: ข้อมูลทั่วไป & เงื่อนไขข้อเสนอ (ตามรูปที่ 1)
                 ======================================================== */}
@@ -2532,71 +2530,74 @@ ${
       </div>
     </main>
 
-    {/* Floating Glassmorphic Bottom Navigation Bar (แถบเมนูลอยแบบกระจกโปร่งใสพร้อมเอฟเฟกต์การเคลื่อนไหวเมื่อกด) */}
-    <div className="fixed bottom-12 sm:bottom-14 inset-x-0 mx-auto w-[94%] max-w-[480px] z-30 pointer-events-auto">
-      <nav
-        aria-label="แถบนำทางหลัก"
-        className="relative bg-white/20 backdrop-blur-md border border-white/40 shadow-xl shadow-sky-950/10 rounded-full p-1 flex items-center justify-between overflow-hidden"
-      >
-        {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
-        <div
-          className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500/65 via-sky-600/65 to-cyan-500/65 backdrop-blur-sm shadow-md shadow-sky-500/25 border border-white/40 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
-          style={{
-            width: 'calc(25% - 4px)',
-            left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
-          }}
+    {/* Bottom Locked Section: Navigation Dock & Brand Footer (ล็อคค้างไว้ที่ด้านล่าง ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
+    <div className="shrink-0 z-20 sticky bottom-0 w-full bg-gradient-to-t from-white/95 via-white/85 to-white/30 pt-1.5 sm:pt-2 backdrop-blur-xl border-t border-sky-100/70 shadow-[0_-10px_25px_rgba(2,132,199,0.08)]">
+      {/* Floating Glassmorphic Bottom Navigation Bar */}
+      <div className="px-2.5 sm:px-4 pb-1.5 sm:pb-2">
+        <nav
+          aria-label="แถบนำทางหลัก"
+          className="relative mx-auto w-full max-w-[500px] bg-white/40 backdrop-blur-xl border border-white/70 shadow-lg shadow-sky-950/10 rounded-full p-1 flex items-center justify-between overflow-hidden"
         >
-          {/* Subtle liquid shimmer light across the active pill */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-pulse pointer-events-none" />
-        </div>
+          {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
+          <div
+            className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500/70 via-sky-600/70 to-cyan-500/70 backdrop-blur-sm shadow-md shadow-sky-500/25 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+            style={{
+              width: 'calc(25% - 4px)',
+              left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
+            }}
+          >
+            {/* Subtle liquid shimmer light across the active pill */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-pulse pointer-events-none" />
+          </div>
 
-        {NAV_TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id)}
-              className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
-                isActive
-                  ? 'text-white font-bold'
-                  : 'text-slate-700 hover:text-sky-800 hover:bg-white/15 font-semibold'
-              }`}
-            >
-              <Icon
-                className={`w-4 h-4 shrink-0 transition-transform duration-300 ${
+          {NAV_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
                   isActive
-                    ? 'text-white animate-tab-icon'
-                    : 'text-slate-700'
-                }`}
-              />
-              <span
-                className={`text-[11px] sm:text-xs leading-none whitespace-nowrap transition-transform duration-200 ${
-                  isActive ? 'scale-105' : ''
+                    ? 'text-white font-bold'
+                    : 'text-slate-700 hover:text-sky-800 hover:bg-white/15 font-semibold'
                 }`}
               >
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-    </div>
-
-        {/* Bottom Bar Info matching Reference Dock */}
-        <footer className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/90 border-t border-sky-100 backdrop-blur-xl text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2 shadow-inner">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-            <span className="font-semibold text-slate-700 text-[11px]">
-              ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
-            </span>
-          </div>
-          <span className="text-[10px] text-sky-800 font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200">
-            พัฒนาระบบโดย Bordin 6683
-          </span>
-        </footer>
+                <Icon
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-300 ${
+                    isActive
+                      ? 'text-white animate-tab-icon'
+                      : 'text-slate-700'
+                  }`}
+                />
+                <span
+                  className={`text-[10.5px] sm:text-xs leading-none whitespace-nowrap transition-transform duration-200 ${
+                    isActive ? 'scale-105' : ''
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
+
+      {/* Bottom Bar Info matching Reference Dock */}
+      <footer className="px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/90 border-t border-sky-100/80 backdrop-blur-xl text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shrink-0" />
+          <span className="font-semibold text-slate-700 text-[10px] sm:text-[11px] truncate">
+            ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
+          </span>
+        </div>
+        <span className="text-[9px] sm:text-[10px] text-sky-800 font-semibold px-2 sm:px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200 shrink-0 whitespace-nowrap">
+          พัฒนาระบบโดย Bordin 6683
+        </span>
+      </footer>
+    </div>
+  </div>
 
       {/* Modals */}
       <ProposalSelectModal
