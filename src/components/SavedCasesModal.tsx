@@ -18,6 +18,7 @@ import {
   Check,
   AlertCircle,
   Share2,
+  Pencil,
 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -35,14 +36,20 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onLoadCase: (record: SavedCaseRecord) => void;
+  onEditCase?: (record: SavedCaseRecord) => void;
   onSaveCurrentCase?: () => void;
+  onDeleteCase?: (deletedId?: string) => void;
+  activeEditingId?: string | null;
 }
 
 export const SavedCasesModal: React.FC<Props> = ({
   isOpen,
   onClose,
   onLoadCase,
+  onEditCase,
   onSaveCurrentCase,
+  onDeleteCase,
+  activeEditingId,
 }) => {
   const [cases, setCases] = useState<SavedCaseRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,6 +57,8 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [editTitleInput, setEditTitleInput] = useState('');
   const [previewCase, setPreviewCase] = useState<SavedCaseRecord | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState<boolean>(false);
 
   // Load cases when modal opens
   React.useEffect(() => {
@@ -58,6 +67,8 @@ export const SavedCasesModal: React.FC<Props> = ({
       setSearchQuery('');
       setEditingId(null);
       setPreviewCase(null);
+      setDeleteConfirmId(null);
+      setShowClearAllConfirm(false);
     }
   }, [isOpen]);
 
@@ -80,14 +91,14 @@ export const SavedCasesModal: React.FC<Props> = ({
     });
   }, [cases, searchQuery]);
 
-  const handleDelete = (id: string, title: string) => {
+  const executeDelete = (id: string) => {
     triggerHaptic('warning');
-    if (window.confirm(`ต้องการลบรายการ "${title}" ออกจากเครื่องหรือไม่?`)) {
-      const remaining = deleteCaseRecord(id);
-      setCases(remaining);
-      if (previewCase?.id === id) setPreviewCase(null);
-      showToast('ลบรายการเรียบร้อยแล้ว');
-    }
+    const remaining = deleteCaseRecord(id);
+    setCases(remaining);
+    if (previewCase?.id === id) setPreviewCase(null);
+    setDeleteConfirmId(null);
+    onDeleteCase?.(id);
+    showToast('ลบรายการเรียบร้อยแล้ว');
   };
 
   const handleStartEditTitle = (c: SavedCaseRecord) => {
@@ -108,12 +119,17 @@ export const SavedCasesModal: React.FC<Props> = ({
   const handleClearAll = () => {
     triggerHaptic('warning');
     if (cases.length === 0) return;
-    if (window.confirm('คำเตือน: ต้องการลบรายการเคสทั้งหมดที่บันทึกไว้ในอุปกรณ์หรือไม่? ข้อมูลจะไม่สามารถกู้คืนได้')) {
-      clearAllCaseRecords();
-      setCases([]);
-      setPreviewCase(null);
-      showToast('ล้างรายการทั้งหมดแล้ว');
-    }
+    setShowClearAllConfirm(true);
+  };
+
+  const executeClearAll = () => {
+    triggerHaptic('warning');
+    clearAllCaseRecords();
+    setCases([]);
+    setPreviewCase(null);
+    setShowClearAllConfirm(false);
+    onDeleteCase?.();
+    showToast('ล้างรายการทั้งหมดแล้ว');
   };
 
   const handleExport = () => {
@@ -145,7 +161,7 @@ export const SavedCasesModal: React.FC<Props> = ({
           showToast(`นำเข้าข้อมูลสำเร็จ ${res.count} รายการ`);
         } else {
           triggerHaptic('warning');
-          alert(res.error || 'เกิดข้อผิดพลาดในการนำเข้าไฟล์');
+          showToast(res.error || 'เกิดข้อผิดพลาดในการนำเข้าไฟล์');
         }
       }
     };
@@ -286,6 +302,34 @@ export const SavedCasesModal: React.FC<Props> = ({
               )}
             </div>
           </div>
+
+          {/* Clear All In-App Confirmation Banner */}
+          {showClearAllConfirm && (
+            <div className="mt-2.5 p-3 rounded-2xl bg-rose-50 border border-rose-300 text-rose-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fade-in shadow-xs">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span className="font-semibold text-rose-950">
+                  ต้องการลบเคสทั้งหมด ({cases.length} รายการ) ออกจากเครื่องใช่หรือไม่?
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={executeClearAll}
+                  className="px-3 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all"
+                >
+                  ยืนยันลบทั้งหมด
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowClearAllConfirm(false)}
+                  className="px-2.5 py-1 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Toast Feedback */}
@@ -332,10 +376,15 @@ export const SavedCasesModal: React.FC<Props> = ({
             <div className="grid grid-cols-1 gap-3">
               {filteredCases.map((record) => {
                 const isEditing = editingId === record.id;
+                const isCurrentEditing = activeEditingId === record.id;
                 return (
                   <div
                     key={record.id}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-sky-300 shadow-xs hover:shadow-md transition-all duration-200 space-y-2.5 relative group"
+                    className={`p-3.5 sm:p-4 rounded-2xl bg-white border shadow-xs hover:shadow-md transition-all duration-200 space-y-2.5 relative group ${
+                      isCurrentEditing
+                        ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
+                        : 'border-slate-200/80 hover:border-sky-300'
+                    }`}
                   >
                     {/* Card Top: Title & Date */}
                     <div className="flex items-start justify-between gap-2">
@@ -371,6 +420,12 @@ export const SavedCasesModal: React.FC<Props> = ({
                             <h3 className="font-extrabold text-sm text-slate-800 truncate">
                               {record.caseTitle}
                             </h3>
+                            {isCurrentEditing && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
+                                <Pencil className="w-2.5 h-2.5 text-amber-700" />
+                                กำลังแก้ไข
+                              </span>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleStartEditTitle(record)}
@@ -451,14 +506,59 @@ export const SavedCasesModal: React.FC<Props> = ({
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(record.id, record.caseTitle)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="ลบเคสนี้"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {deleteConfirmId === record.id ? (
+                          <div className="flex items-center gap-1 bg-rose-50 border border-rose-300 px-2 py-1 rounded-xl animate-fade-in shadow-2xs">
+                            <span className="text-[10px] text-rose-800 font-bold whitespace-nowrap">
+                              ลบเคสนี้?
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => executeDelete(record.id)}
+                              className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10.5px] cursor-pointer active:scale-95 shadow-2xs transition-all whitespace-nowrap"
+                            >
+                              ลบเลย
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmId(null)}
+                              className="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-[10.5px] cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+                            >
+                              ยกเลิก
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setDeleteConfirmId(record.id);
+                            }}
+                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="ลบเคสนี้"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {onEditCase && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('medium');
+                              onEditCase(record);
+                              onClose();
+                            }}
+                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer shadow-sm ${
+                              isCurrentEditing
+                                ? 'bg-amber-600 text-white shadow-amber-600/30 ring-2 ring-amber-400'
+                                : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/20'
+                            }`}
+                            title="ดึงเคสนี้กลับมาแก้ไขในโปรแกรมคำนวณ แล้วกดบันทึกการแก้ไขเพื่ออัปเดต"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            <span>{isCurrentEditing ? 'กำลังแก้ไข' : 'แก้ไข'}</span>
+                          </button>
+                        )}
 
                         <button
                           type="button"
@@ -468,6 +568,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                             onClose();
                           }}
                           className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-sky-500/25 active:scale-95 transition-all cursor-pointer"
+                          title="นำตัวเลขในเคสนี้มาใช้งานเป็นเคสใหม่"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>นำมาใช้งาน</span>

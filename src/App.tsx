@@ -42,6 +42,7 @@ import {
   FolderArchive,
   BookmarkPlus,
   Save,
+  X,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -229,6 +230,8 @@ export default function App() {
   const [savedCasesCount, setSavedCasesCount] = useState<number>(() => {
     return getSavedCases().length;
   });
+  const [editingCaseId, setEditingCaseId] = useState<string | null>(null);
+  const [editingCaseTitle, setEditingCaseTitle] = useState<string | null>(null);
   const [toastNotice, setToastNotice] = useState<string | null>(null);
 
   const triggerToast = (msg: string) => {
@@ -659,8 +662,67 @@ ${
     }
   };
 
-  // Save current case data to device (LocalStorage)
-  const handleSaveCurrentCase = () => {
+  // Edit an existing saved case
+  const handleEditCase = (record: SavedCaseRecord) => {
+    triggerHaptic('medium');
+    setEditingCaseId(record.id);
+    setEditingCaseTitle(record.caseTitle);
+
+    setProposalKey(record.proposalKey);
+    setVehiclePrice(record.vehiclePrice);
+    setDownMode(record.downMode);
+    setDownValue(record.downValue);
+    setTerm(record.term);
+    setCustomerName(record.customerName || 'คุณลูกค้า');
+    if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    if (record.officerName) setOfficerName(record.officerName);
+    if (record.officerCode) setOfficerCode(record.officerCode);
+    if (record.officerLicense) setOfficerLicense(record.officerLicense);
+
+    setInsurancePlan(record.insurancePlan);
+    setInsuranceYears(record.insuranceYears);
+
+    setIncludeDeliveryFees(record.includeDeliveryFees);
+    setRegistrationFee(record.registrationFee || 1500);
+    setTheftInsuranceFee(record.theftInsuranceFee || 2500);
+
+    setIsCustomRateEnabled(record.isCustomRateEnabled);
+    setCustomRateInput(record.customRateInput || '');
+    setCustomRateType(record.customRateType || 'monthly');
+    setEnforceEirCap(record.enforceEirCap ?? true);
+
+    if (record.bikeModelCode) {
+      setBikeModelCode(record.bikeModelCode);
+      const matched = findModelByCode(record.bikeModelCode);
+      if (matched) {
+        setSelectedBike({
+          id: matched.code,
+          name: matched.name,
+          brand: (matched.brand as any) || 'Other',
+          price: matched.price || record.vehiclePrice,
+          proposalKey: record.proposalKey,
+          defaultDownPercent: 15,
+          code: matched.code,
+        });
+      }
+    } else {
+      setSelectedBike(null);
+      setBikeModelCode('');
+    }
+
+    setActiveTab('home');
+    triggerToast(`✏️ เข้าสู่โหมดแก้ไขเคส: "${record.caseTitle}"`);
+  };
+
+  const handleCancelEditing = () => {
+    triggerHaptic('light');
+    setEditingCaseId(null);
+    setEditingCaseTitle(null);
+    triggerToast('ออกจากโหมดแก้ไขเคสแล้ว');
+  };
+
+  // Save current case data to device (LocalStorage) or update existing when in editing mode
+  const handleSaveCurrentCase = (saveAsNew: boolean = false) => {
     triggerHaptic('success');
     const bikeName = selectedBike
       ? `${selectedBike.brand} ${selectedBike.name}`
@@ -669,8 +731,12 @@ ${
       : 'รถจักรยานยนต์';
     const defaultTitle = `${customerName || 'ลูกค้า'} - ${bikeName} (ดาวน์ ${formatBaht(currentCalculation.downAmount)})`;
 
-    const newRecord = saveCaseRecord({
-      caseTitle: defaultTitle,
+    const isUpdating = !saveAsNew && Boolean(editingCaseId);
+    const targetTitle = isUpdating && editingCaseTitle ? editingCaseTitle : defaultTitle;
+
+    const savedRecord = saveCaseRecord({
+      ...(isUpdating && editingCaseId ? { id: editingCaseId } : {}),
+      caseTitle: targetTitle,
       officerName,
       officerCode,
       officerLicense,
@@ -711,7 +777,17 @@ ${
     });
 
     setSavedCasesCount(getSavedCases().length);
-    triggerToast(`✓ บันทึกเคส "${newRecord.caseTitle}" ลงในอุปกรณ์เรียบร้อยแล้ว!`);
+
+    if (isUpdating) {
+      setEditingCaseTitle(savedRecord.caseTitle);
+      triggerToast(`✓ บันทึกการแก้ไขเคส "${savedRecord.caseTitle}" เรียบร้อยแล้ว!`);
+    } else {
+      triggerToast(`✓ บันทึกเคสใหม่ "${savedRecord.caseTitle}" ลงในอุปกรณ์เรียบร้อยแล้ว!`);
+      if (editingCaseId) {
+        setEditingCaseId(null);
+        setEditingCaseTitle(null);
+      }
+    }
   };
 
   // Load a saved case from device
@@ -958,6 +1034,72 @@ ${
           </div>
         )}
 
+        {/* Editing Mode Sticky Alert Banner if active */}
+        {editingCaseId && (
+          <div className="mx-2 sm:mx-4 mt-2 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-300/80 animate-fade-in space-y-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
+                  <Pencil className="w-4 h-4 text-white" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full border border-white/30 text-white">
+                      โหมดแก้ไขเคส
+                    </span>
+                    <span className="text-xs font-black truncate drop-shadow-2xs text-white">
+                      {editingCaseTitle}
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] text-amber-50/90 leading-tight mt-0.5">
+                    กำลังแก้ไขข้อมูลเคสนี้ คุณสามารถปรับเปลี่ยนราคา เงินดาวน์ หรือข้อเสนอ แล้วกดบันทึกการแก้ไข
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCancelEditing}
+                className="p-1 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
+                title="ยกเลิกโหมดแก้ไข"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Action Buttons for Edit Mode */}
+            <div className="flex items-center gap-2 pt-0.5">
+              <button
+                type="button"
+                onClick={() => handleSaveCurrentCase(false)}
+                className="flex-1 py-2 px-3 rounded-xl bg-white text-amber-900 hover:bg-amber-50 font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                title="บันทึกทับข้อมูลในเคสเดิม"
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                <span>บันทึกการแก้ไขเคสนี้</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSaveCurrentCase(true)}
+                className="py-2 px-3 rounded-xl bg-amber-800/50 hover:bg-amber-800/70 text-white font-bold text-xs flex items-center justify-center gap-1 border border-white/30 active:scale-95 transition-all cursor-pointer shrink-0"
+                title="บันทึกเป็นเคสใหม่โดยไม่เขียนทับเคสเดิม"
+              >
+                <BookmarkPlus className="w-3.5 h-3.5 text-amber-200" />
+                <span>บันทึกเป็นเคสใหม่</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCancelEditing}
+                className="py-2 px-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs transition-colors cursor-pointer shrink-0"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Content Area with 4 Connected Step Pages */}
         <main
           ref={mainRef}
@@ -986,20 +1128,44 @@ ${
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleSaveCurrentCase}
-                    className="flex-1 py-2 px-3 rounded-2xl bg-white/90 hover:bg-white text-sky-850 font-bold text-xs flex items-center justify-center gap-1.5 border border-sky-200/90 shadow-2xs transition-all cursor-pointer active:scale-98"
-                    title="บันทึกข้อมูลเคสปัจจุบันเก็บไว้ในอุปกรณ์"
+                    onClick={() => handleSaveCurrentCase(false)}
+                    className={`flex-1 py-2 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 border shadow-2xs transition-all cursor-pointer active:scale-98 ${
+                      editingCaseId
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400 shadow-amber-500/20 hover:from-amber-600 hover:to-orange-600'
+                        : 'bg-white/90 hover:bg-white text-sky-850 border-sky-200/90'
+                    }`}
+                    title={editingCaseId ? 'บันทึกการแก้ไขเคสที่กำลังเปิดอยู่นี้' : 'บันทึกข้อมูลเคสปัจจุบันเก็บไว้ในอุปกรณ์'}
                   >
-                    <BookmarkPlus className="w-3.5 h-3.5 text-sky-600" />
-                    <span>บันทึกเคสนี้ลงเครื่อง</span>
+                    {editingCaseId ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                        <span>บันทึกการแก้ไขเคส</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookmarkPlus className="w-3.5 h-3.5 text-sky-600" />
+                        <span>บันทึกเคสนี้ลงเครื่อง</span>
+                      </>
+                    )}
                   </button>
+                  {editingCaseId && (
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCurrentCase(true)}
+                      className="py-2 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1 border border-slate-200/90 shadow-2xs transition-all cursor-pointer active:scale-98"
+                      title="บันทึกข้อมูลนี้เป็นเคสใหม่โดยไม่เขียนทับเคสเดิม"
+                    >
+                      <BookmarkPlus className="w-3.5 h-3.5 text-slate-500" />
+                      <span>บันทึกเป็นเคสใหม่</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
                       triggerHaptic('selection');
                       setShowSavedCases(true);
                     }}
-                    className="py-2 px-3.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-900 font-bold text-xs flex items-center gap-1.5 border border-sky-200/90 shadow-2xs transition-all cursor-pointer active:scale-98"
+                    className="py-2 px-3.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-900 font-bold text-xs flex items-center gap-1.5 border border-sky-200/90 shadow-2xs transition-all cursor-pointer active:scale-98 shrink-0"
                     title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
                   >
                     <FolderArchive className="w-3.5 h-3.5 text-sky-700" />
@@ -2170,12 +2336,25 @@ ${
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-sky-100/80">
                 <button
                   type="button"
-                  onClick={handleSaveCurrentCase}
-                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-sky-500/25 active:scale-98 transition-all cursor-pointer"
-                  title="บันทึกผลคำนวณเคสนี้ลงในอุปกรณ์"
+                  onClick={() => handleSaveCurrentCase(false)}
+                  className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all cursor-pointer ${
+                    editingCaseId
+                      ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/25'
+                      : 'bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white shadow-sky-500/25'
+                  }`}
+                  title={editingCaseId ? 'บันทึกการแก้ไขเคสนี้' : 'บันทึกผลคำนวณเคสนี้ลงในอุปกรณ์'}
                 >
-                  <BookmarkPlus className="w-3.5 h-3.5" />
-                  <span>บันทึกผลคำนวณเคสนี้</span>
+                  {editingCaseId ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>บันทึกการแก้ไขเคส</span>
+                    </>
+                  ) : (
+                    <>
+                      <BookmarkPlus className="w-3.5 h-3.5" />
+                      <span>บันทึกผลคำนวณเคสนี้</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -2542,7 +2721,16 @@ ${
           setSavedCasesCount(getSavedCases().length);
         }}
         onLoadCase={handleLoadCase}
-        onSaveCurrentCase={handleSaveCurrentCase}
+        onEditCase={handleEditCase}
+        onSaveCurrentCase={() => handleSaveCurrentCase(false)}
+        onDeleteCase={(deletedId) => {
+          setSavedCasesCount(getSavedCases().length);
+          if (!deletedId || editingCaseId === deletedId) {
+            setEditingCaseId(null);
+            setEditingCaseTitle(null);
+          }
+        }}
+        activeEditingId={editingCaseId}
       />
 
       {/* Global Toast Notice */}
