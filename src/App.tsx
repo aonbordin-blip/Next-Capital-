@@ -946,20 +946,7 @@ ${
             </div>
 
             <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('selection');
-                  setShowSavedCases(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/35 text-[10.5px] font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95"
-                title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
-              >
-                <FolderArchive className="w-3.5 h-3.5 text-cyan-200" />
-                <span>เคสที่บันทึก ({savedCasesCount})</span>
-              </button>
-
-              <span className="hidden sm:inline-block text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap">
+              <span className="text-[10px] sm:text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none">
                 พัฒนาระบบโดย Bordin 6683
               </span>
             </div>
