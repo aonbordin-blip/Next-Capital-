@@ -317,6 +317,42 @@ export function formatThaiShortDate(dateStr: string): string {
   }
 }
 
+/**
+ * Extract only first name and code (excluding surname per user requirement)
+ * e.g. "บดินทร์ วงศ์หาโคตร" + "6683" -> "บดินทร์ (6683)"
+ */
+export function formatOfficerShort(
+  name?: string,
+  code?: string,
+  display?: string
+): string {
+  let cleanCode = code ? code.replace(/[()]/g, '').trim() : '';
+  let rawName = name ? name.trim() : '';
+
+  if (!rawName && display) {
+    const codeMatch = display.match(/\(([^)]+)\)/);
+    if (codeMatch && !cleanCode) {
+      cleanCode = codeMatch[1].trim();
+    }
+    // Remove parenthesized code from display to get name
+    rawName = display.replace(/\([^)]*\)/g, '').trim();
+  }
+
+  // Extract only the first name (first word before whitespace)
+  const firstName = rawName.split(/\s+/)[0] || '';
+
+  if (firstName && cleanCode) {
+    return `${firstName} (${cleanCode})`;
+  }
+  if (firstName) {
+    return firstName;
+  }
+  if (cleanCode) {
+    return `(${cleanCode})`;
+  }
+  return '';
+}
+
 interface DailyFinanceReportCardProps {
   officerName?: string;
   officerCode?: string;
@@ -470,9 +506,10 @@ export function DailyFinanceReportCard({
 
     // Optional Header
     if (formatOptions.includeHeader) {
-      lines.push(`📊 รายงานยอดส่งเคสประจำวัน (${thaiFormattedDate})`);
-      if (officerDisplay || officerName || officerCode) {
-        lines.push(`👤 ผู้รายงาน: ${officerDisplay || `${officerName || ''} (${officerCode || ''})`}`);
+      lines.push(`📊 รายงานยอดประจำวัน (${thaiFormattedDate})`);
+      const reporterDisplay = formatOfficerShort(officerName, officerCode, officerDisplay);
+      if (reporterDisplay) {
+        lines.push(`👤 ผู้รายงาน: ${reporterDisplay}`);
       }
       lines.push('────────────────────────');
     }
@@ -858,10 +895,10 @@ export function DailyFinanceReportCard({
                 </span>
               </div>
 
-              {officerDisplay && (
+              {formatOfficerShort(officerName, officerCode, officerDisplay) && (
                 <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-violet-200/80 shadow-2xs text-[11px] font-semibold text-slate-700">
                   <User className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>เจ้าหน้าที่: <strong className="text-indigo-900">{officerDisplay}</strong></span>
+                  <span>เจ้าหน้าที่: <strong className="text-indigo-900">{formatOfficerShort(officerName, officerCode, officerDisplay)}</strong></span>
                 </div>
               )}
             </div>
