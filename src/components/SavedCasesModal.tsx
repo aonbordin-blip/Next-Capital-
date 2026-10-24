@@ -27,6 +27,9 @@ import {
   Filter,
   CalendarDays,
   Layers,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -118,6 +121,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showClearAllConfirm, setShowClearAllConfirm] = useState<boolean>(false);
+  const [expandedStatusId, setExpandedStatusId] = useState<string | null>(null);
 
   // Load cases when modal opens
   React.useEffect(() => {
@@ -132,6 +136,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       setPreviewCase(null);
       setDeleteConfirmId(null);
       setShowClearAllConfirm(false);
+      setExpandedStatusId(null);
     }
   }, [isOpen]);
 
@@ -816,21 +821,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                     ))}
                   </div>
                 </div>
-
-                {/* Reset button if month or year is filtered */}
-                {(selectedYear !== 'all' || selectedMonth !== 'all') && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setSelectedYear('all');
-                      setSelectedMonth('all');
-                    }}
-                    className="px-2 py-0.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10.5px] font-bold border border-sky-200 cursor-pointer transition-colors whitespace-nowrap"
-                  >
-                    ล้างตัวกรองเดือน/ปี ✕
-                  </button>
-                )}
               </div>
             </div>
           )}
@@ -940,11 +930,18 @@ export const SavedCasesModal: React.FC<Props> = ({
                     {group.items.map((record) => {
                       const isEditing = editingId === record.id;
                       const isCurrentEditing = activeEditingId === record.id;
+                      const isStatusExpanded = expandedStatusId === record.id;
                       return (
                         <div
                           key={record.id}
-                          className={`p-3.5 sm:p-4 rounded-2xl bg-white border shadow-xs hover:shadow-md transition-all duration-200 space-y-2.5 relative group ${
-                            isCurrentEditing
+                          onClick={() => {
+                            triggerHaptic('light');
+                            setExpandedStatusId((prev) => (prev === record.id ? null : record.id));
+                          }}
+                          className={`p-3.5 sm:p-4 rounded-2xl bg-white border shadow-xs hover:shadow-md transition-all duration-200 space-y-2.5 relative group cursor-pointer ${
+                            isStatusExpanded
+                              ? 'border-sky-400 ring-2 ring-sky-300/40 shadow-sm'
+                              : isCurrentEditing
                               ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
                               : 'border-slate-200/80 hover:border-sky-300'
                           }`}
@@ -953,7 +950,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                           <div className="space-y-1.5">
                             {/* Case Title Row */}
                             {isEditing ? (
-                              <div className="flex items-center gap-1.5">
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1.5"
+                              >
                                 <input
                                   type="text"
                                   value={editTitleInput}
@@ -963,7 +963,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                                 />
                                 <button
                                   type="button"
-                                  onClick={() => handleSaveTitle(record.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSaveTitle(record.id);
+                                  }}
                                   className="p-1 rounded-lg bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700"
                                   title="บันทึกชื่อ"
                                 >
@@ -971,7 +974,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setEditingId(null)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingId(null);
+                                  }}
                                   className="p-1 rounded-lg bg-slate-200 text-slate-600 text-xs cursor-pointer hover:bg-slate-300"
                                   title="ยกเลิก"
                                 >
@@ -992,7 +998,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   )}
                                   <button
                                     type="button"
-                                    onClick={() => handleStartEditTitle(record)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStartEditTitle(record);
+                                    }}
                                     className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
                                     title="แก้ไขชื่อลูกค้า"
                                   >
@@ -1146,160 +1155,196 @@ export const SavedCasesModal: React.FC<Props> = ({
                             </div>
                           </div>
 
-                          {/* Status Selection & Vehicle Delivery Control Strip (จัดตำแหน่งกึ่งกลาง) */}
-                          <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/95 border border-slate-200/80 space-y-2 text-xs">
-                            {/* Header label */}
-                            <div className="text-[10px] sm:text-[10.5px] font-bold text-slate-500 text-center tracking-wide">
-                              สถานะเคส:
+                          {/* Expand/Collapse Toggle Strip (รูปที่ 3: แตะเพื่อเปิด/ปิด แผงสถานะและวันที่) */}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerHaptic('light');
+                              setExpandedStatusId((prev) => (prev === record.id ? null : record.id));
+                            }}
+                            className={`px-3 py-1.5 rounded-xl flex items-center justify-between transition-all cursor-pointer border select-none ${
+                              isStatusExpanded
+                                ? 'bg-sky-50 border-sky-300 text-sky-900 shadow-2xs'
+                                : 'bg-slate-50/80 hover:bg-slate-100/90 border-slate-200/80 text-slate-600 hover:text-slate-800'
+                            }`}
+                            title={isStatusExpanded ? 'คลิกเพื่อยุบซ่อน' : 'คลิกเพื่อเปิดเปลี่ยนสถานะและวันที่'}
+                          >
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                              <SlidersHorizontal className={`w-3.5 h-3.5 ${isStatusExpanded ? 'text-sky-600' : 'text-slate-500'}`} />
+                              <span>{isStatusExpanded ? 'ซ่อนแผงปรับสถานะและวันที่' : 'แตะเพื่อเปลี่ยนสถานะเคส / วันที่'}</span>
                             </div>
-
-                            {/* Status Switcher Buttons (Centered) */}
-                            <div className="flex items-center justify-center w-full">
-                              <div className="inline-flex items-center justify-center rounded-xl p-1 bg-slate-200/80 text-[10.5px] sm:text-xs font-bold gap-1 shadow-2xs max-w-full overflow-x-auto">
-                                {/* รอผล */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetApprovalStatus(record.id, 'pending')}
-                                  className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                                    (!record.approvalStatus || record.approvalStatus === 'pending')
-                                      ? 'bg-white text-sky-800 shadow-xs font-extrabold'
-                                      : 'text-slate-600 hover:text-slate-900'
-                                  }`}
-                                  title="เปลี่ยนเป็น รอผลพิจารณา"
-                                >
-                                  <Clock className="w-3 h-3 text-sky-500 shrink-0" />
-                                  <span>รอผล</span>
-                                </button>
-
-                                {/* อนุมัติ */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetApprovalStatus(record.id, 'approved')}
-                                  className={`px-3 sm:px-3.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                                    record.approvalStatus === 'approved'
-                                      ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
-                                      : 'text-slate-600 hover:text-emerald-700'
-                                  }`}
-                                  title="เปลี่ยนเป็น อนุมัติ"
-                                >
-                                  <CheckCircle2 className="w-3 h-3 shrink-0" />
-                                  <span>อนุมัติ</span>
-                                </button>
-
-                                {/* ไม่อนุมัติ */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
-                                  className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                                    record.approvalStatus === 'rejected'
-                                      ? 'bg-rose-600 text-white shadow-xs font-extrabold'
-                                      : 'text-slate-600 hover:text-rose-700'
-                                  }`}
-                                  title="เปลี่ยนเป็น ไม่อนุมัติ"
-                                >
-                                  <XCircle className="w-3 h-3 shrink-0" />
-                                  <span>ไม่อนุมัติ</span>
-                                </button>
-
-                                {/* ยกเลิก */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
-                                  className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                                    record.approvalStatus === 'cancelled'
-                                      ? 'bg-slate-700 text-white shadow-xs font-extrabold'
-                                      : 'text-slate-600 hover:text-slate-900'
-                                  }`}
-                                  title="เปลี่ยนเป็น ยกเลิก"
-                                >
-                                  <Ban className="w-3 h-3 shrink-0" />
-                                  <span>ยกเลิก</span>
-                                </button>
-                              </div>
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+                              <span>{isStatusExpanded ? 'ยุบ' : 'เปิด'}</span>
+                              {isStatusExpanded ? (
+                                <ChevronUp className="w-3.5 h-3.5 text-sky-600" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                              )}
                             </div>
-
-                            {/* If Approved: Vehicle Delivery Status & Dates (Centered) */}
-                            {record.approvalStatus === 'approved' && (
-                              <div className="space-y-2 pt-0.5 animate-fade-in w-full">
-                                {/* Centered Delivery Toggle Button */}
-                                <div className="flex items-center justify-center w-full">
-                                  <div className="inline-flex items-center justify-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs">
-                                    <span className="text-[10.5px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
-                                      <Bike className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                      การรับรถ:
-                                    </span>
-                                    <div className="inline-flex rounded-lg p-0.5 bg-slate-100 text-[10.5px] font-bold gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSetDeliveryStatus(record.id, 'pending_delivery')}
-                                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                          (!record.deliveryStatus || record.deliveryStatus === 'pending_delivery')
-                                            ? 'bg-amber-500 text-white shadow-xs font-extrabold'
-                                            : 'text-slate-600 hover:text-amber-800'
-                                        }`}
-                                        title="ยังไม่ได้รับรถ (รอส่งมอบ)"
-                                      >
-                                        <Clock className="w-3 h-3 shrink-0" />
-                                        <span>รอรับรถ</span>
-                                      </button>
-
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSetDeliveryStatus(record.id, 'delivered')}
-                                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                          record.deliveryStatus === 'delivered'
-                                            ? 'bg-teal-600 text-white shadow-xs font-extrabold'
-                                            : 'text-slate-600 hover:text-teal-800'
-                                        }`}
-                                        title="ลูกค้ารับมอบรถเรียบร้อยแล้ว"
-                                      >
-                                        <Check className="w-3 h-3 shrink-0" />
-                                        <span>รับรถแล้ว</span>
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Editable Date Pickers for วันอนุมัติ and วันรับรถ */}
-                                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1.5 border-t border-slate-200/70 w-full">
-                                  {/* วันอนุมัติ Picker */}
-                                  <div className="inline-flex items-center justify-between gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto">
-                                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-emerald-800 shrink-0">
-                                      <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                      <span>วันอนุมัติ:</span>
-                                    </div>
-                                    <input
-                                      type="date"
-                                      value={record.approvalDate || toInputDateStr(record.createdAt)}
-                                      onChange={(e) => handleSetDates(record.id, { approvalDate: e.target.value })}
-                                      className="text-[11px] font-bold text-slate-800 bg-emerald-50/60 hover:bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                                      title="คลิกเพื่อเลือกวันอนุมัติ"
-                                    />
-                                  </div>
-
-                                  {/* วันรับรถ / วันนัดรับรถ Picker */}
-                                  <div className="inline-flex items-center justify-between gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto">
-                                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-teal-800 shrink-0">
-                                      <Bike className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                      <span>
-                                        {record.deliveryStatus === 'delivered' ? 'วันรับรถ:' : 'วันนัดรับรถ:'}
-                                      </span>
-                                    </div>
-                                    <input
-                                      type="date"
-                                      value={record.deliveryDate || (record.deliveryStatus === 'delivered' ? toInputDateStr(record.createdAt) : '')}
-                                      onChange={(e) => handleSetDates(record.id, { deliveryDate: e.target.value })}
-                                      className="text-[11px] font-bold text-slate-800 bg-teal-50/60 hover:bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
-                                      title={record.deliveryStatus === 'delivered' ? 'คลิกเพื่อเลือกวันรับรถ' : 'คลิกเพื่อระบุวันนัดรับรถ'}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                           </div>
 
+                          {/* Status Selection & Vehicle Delivery Control Strip (รูปที่ 3: แสดงเมื่อกดเปิด และจะปิดอัตโนมัติเมื่อแตะกล่องข้อมูลอื่น) */}
+                          {isStatusExpanded && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/95 border border-slate-200/80 space-y-2 text-xs animate-fade-in"
+                            >
+                              {/* Header label */}
+                              <div className="text-[10px] sm:text-[10.5px] font-bold text-slate-500 text-center tracking-wide">
+                                สถานะเคส:
+                              </div>
+
+                              {/* Status Switcher Buttons (Centered) */}
+                              <div className="flex items-center justify-center w-full">
+                                <div className="inline-flex items-center justify-center rounded-xl p-1 bg-slate-200/80 text-[10.5px] sm:text-xs font-bold gap-1 shadow-2xs max-w-full overflow-x-auto">
+                                  {/* รอผล */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetApprovalStatus(record.id, 'pending')}
+                                    className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                      (!record.approvalStatus || record.approvalStatus === 'pending')
+                                        ? 'bg-white text-sky-800 shadow-xs font-extrabold'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                    title="เปลี่ยนเป็น รอผลพิจารณา"
+                                  >
+                                    <Clock className="w-3 h-3 text-sky-500 shrink-0" />
+                                    <span>รอผล</span>
+                                  </button>
+
+                                  {/* อนุมัติ */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetApprovalStatus(record.id, 'approved')}
+                                    className={`px-3 sm:px-3.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                      record.approvalStatus === 'approved'
+                                        ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+                                        : 'text-slate-600 hover:text-emerald-700'
+                                    }`}
+                                    title="เปลี่ยนเป็น อนุมัติ"
+                                  >
+                                    <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                    <span>อนุมัติ</span>
+                                  </button>
+
+                                  {/* ไม่อนุมัติ */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
+                                    className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                      record.approvalStatus === 'rejected'
+                                        ? 'bg-rose-600 text-white shadow-xs font-extrabold'
+                                        : 'text-slate-600 hover:text-rose-700'
+                                    }`}
+                                    title="เปลี่ยนเป็น ไม่อนุมัติ"
+                                  >
+                                    <XCircle className="w-3 h-3 shrink-0" />
+                                    <span>ไม่อนุมัติ</span>
+                                  </button>
+
+                                  {/* ยกเลิก */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
+                                    className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                      record.approvalStatus === 'cancelled'
+                                        ? 'bg-slate-700 text-white shadow-xs font-extrabold'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                    title="เปลี่ยนเป็น ยกเลิก"
+                                  >
+                                    <Ban className="w-3 h-3 shrink-0" />
+                                    <span>ยกเลิก</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* If Approved: Vehicle Delivery Status & Dates (Centered) */}
+                              {record.approvalStatus === 'approved' && (
+                                <div className="space-y-2 pt-0.5 animate-fade-in w-full">
+                                  {/* Centered Delivery Toggle Button */}
+                                  <div className="flex items-center justify-center w-full">
+                                    <div className="inline-flex items-center justify-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs">
+                                      <span className="text-[10.5px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
+                                        <Bike className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        การรับรถ:
+                                      </span>
+                                      <div className="inline-flex rounded-lg p-0.5 bg-slate-100 text-[10.5px] font-bold gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSetDeliveryStatus(record.id, 'pending_delivery')}
+                                          className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                            (!record.deliveryStatus || record.deliveryStatus === 'pending_delivery')
+                                              ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                                              : 'text-slate-600 hover:text-amber-800'
+                                          }`}
+                                          title="ยังไม่ได้รับรถ (รอส่งมอบ)"
+                                        >
+                                          <Clock className="w-3 h-3 shrink-0" />
+                                          <span>รอรับรถ</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSetDeliveryStatus(record.id, 'delivered')}
+                                          className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                            record.deliveryStatus === 'delivered'
+                                              ? 'bg-teal-600 text-white shadow-xs font-extrabold'
+                                              : 'text-slate-600 hover:text-teal-800'
+                                          }`}
+                                          title="ลูกค้ารับมอบรถเรียบร้อยแล้ว"
+                                        >
+                                          <Check className="w-3 h-3 shrink-0" />
+                                          <span>รับรถแล้ว</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Editable Date Pickers for วันอนุมัติ and วันรับรถ */}
+                                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1.5 border-t border-slate-200/70 w-full">
+                                    {/* วันอนุมัติ Picker */}
+                                    <div className="inline-flex items-center justify-between gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto">
+                                      <div className="flex items-center gap-1 text-[10.5px] font-bold text-emerald-800 shrink-0">
+                                        <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                        <span>วันอนุมัติ:</span>
+                                      </div>
+                                      <input
+                                        type="date"
+                                        value={record.approvalDate || toInputDateStr(record.createdAt)}
+                                        onChange={(e) => handleSetDates(record.id, { approvalDate: e.target.value })}
+                                        className="text-[11px] font-bold text-slate-800 bg-emerald-50/60 hover:bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                                        title="คลิกเพื่อเลือกวันอนุมัติ"
+                                      />
+                                    </div>
+
+                                    {/* วันรับรถ / วันนัดรับรถ Picker */}
+                                    <div className="inline-flex items-center justify-between gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto">
+                                      <div className="flex items-center gap-1 text-[10.5px] font-bold text-teal-800 shrink-0">
+                                        <Bike className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                        <span>
+                                          {record.deliveryStatus === 'delivered' ? 'วันรับรถ:' : 'วันนัดรับรถ:'}
+                                        </span>
+                                      </div>
+                                      <input
+                                        type="date"
+                                        value={record.deliveryDate || (record.deliveryStatus === 'delivered' ? toInputDateStr(record.createdAt) : '')}
+                                        onChange={(e) => handleSetDates(record.id, { deliveryDate: e.target.value })}
+                                        className="text-[11px] font-bold text-slate-800 bg-teal-50/60 hover:bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+                                        title={record.deliveryStatus === 'delivered' ? 'คลิกเพื่อเลือกวันรับรถ' : 'คลิกเพื่อระบุวันนัดรับรถ'}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Action Buttons Row */}
-                          <div className="flex items-center justify-between gap-2 pt-1">
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-between gap-2 pt-1"
+                          >
                             <div className="text-[10px] text-slate-500 truncate">
                               {record.officerName ? `ผู้เสนอ: ${record.officerName}` : 'บันทึกในอุปกรณ์'}
                             </div>
@@ -1312,14 +1357,20 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => executeDelete(record.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      executeDelete(record.id);
+                                    }}
                                     className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10.5px] cursor-pointer active:scale-95 shadow-2xs transition-all whitespace-nowrap"
                                   >
                                     ลบเลย
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => setDeleteConfirmId(null)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeleteConfirmId(null);
+                                    }}
                                     className="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-[10.5px] cursor-pointer active:scale-95 transition-all whitespace-nowrap"
                                   >
                                     ยกเลิก
@@ -1328,7 +1379,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     triggerHaptic('light');
                                     setDeleteConfirmId(record.id);
                                   }}
@@ -1342,7 +1394,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                               {onEditCase && (
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     triggerHaptic('medium');
                                     onEditCase(record);
                                     onClose();
@@ -1361,7 +1414,8 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                               <button
                                 type="button"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   triggerHaptic('success');
                                   onLoadCase(record);
                                   onClose();
