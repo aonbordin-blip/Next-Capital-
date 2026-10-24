@@ -906,74 +906,11 @@ export const SavedCasesModal: React.FC<Props> = ({
               {groupedCases.map((group) => (
                 <div key={group.key} className="space-y-2.5">
                   {/* Sticky Month & Year Header Banner */}
-                  <div className="flex items-center justify-between gap-2 px-3 sm:px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-sky-100/90 via-sky-50 to-white border border-sky-200/80 text-slate-800 shadow-2xs">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <CalendarDays className="w-4 h-4 text-sky-600 shrink-0" />
-                      <span className="font-extrabold text-xs sm:text-sm text-slate-900">
-                        {group.monthName} พ.ศ. {group.year}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-sky-600 text-white shadow-2xs">
-                        {group.items.length} รายการ
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                      {/* ปุ่ม รับรถ (คลิกเพื่อแสดงเฉพาะเคสรับรถแล้ว) */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          if (deliveryFilter === 'delivered') {
-                            setDeliveryFilter('all');
-                          } else {
-                            setDeliveryFilter('delivered');
-                            if (statusFilter !== 'all' && statusFilter !== 'approved') {
-                              setStatusFilter('approved');
-                            }
-                          }
-                        }}
-                        className={`px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1 border shadow-2xs active:scale-95 ${
-                          deliveryFilter === 'delivered'
-                            ? 'bg-teal-600 text-white border-teal-700 shadow-xs ring-1 ring-teal-400'
-                            : 'bg-white hover:bg-teal-50 text-teal-800 border-teal-200'
-                        }`}
-                        title={deliveryFilter === 'delivered' ? 'คลิกเพื่อดูทั้งหมด' : 'คลิกเพื่อแสดงเฉพาะเคสที่รับรถแล้ว'}
-                      >
-                        <PackageCheck className="w-3 h-3 shrink-0" />
-                        <span>รับรถ {group.deliveredCount}</span>
-                        {deliveryFilter === 'delivered' && (
-                          <span className="text-[9px] font-extrabold ml-0.5">✕</span>
-                        )}
-                      </button>
-
-                      {/* ปุ่ม รอรับ (คลิกเพื่อแสดงเฉพาะเคสรอรับรถ) */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          if (deliveryFilter === 'pending_delivery') {
-                            setDeliveryFilter('all');
-                          } else {
-                            setDeliveryFilter('pending_delivery');
-                            if (statusFilter !== 'all' && statusFilter !== 'approved') {
-                              setStatusFilter('approved');
-                            }
-                          }
-                        }}
-                        className={`px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1 border shadow-2xs active:scale-95 ${
-                          deliveryFilter === 'pending_delivery'
-                            ? 'bg-amber-500 text-white border-amber-600 shadow-xs ring-1 ring-amber-400'
-                            : 'bg-white hover:bg-amber-50 text-amber-900 border-amber-200'
-                        }`}
-                        title={deliveryFilter === 'pending_delivery' ? 'คลิกเพื่อดูทั้งหมด' : 'คลิกเพื่อแสดงเฉพาะเคสที่รอรับรถ'}
-                      >
-                        <Clock className="w-3 h-3 shrink-0" />
-                        <span>รอรับ {group.pendingDeliveryCount}</span>
-                        {deliveryFilter === 'pending_delivery' && (
-                          <span className="text-[9px] font-extrabold ml-0.5">✕</span>
-                        )}
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-sky-100/90 via-sky-50 to-white border border-sky-200/80 text-slate-800 shadow-2xs">
+                    <CalendarDays className="w-4 h-4 text-sky-600 shrink-0" />
+                    <span className="font-extrabold text-xs sm:text-sm text-slate-900">
+                      {group.monthName} พ.ศ. {group.year}
+                    </span>
                   </div>
 
                   {/* Cards for this Month Group */}
