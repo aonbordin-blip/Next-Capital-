@@ -25,6 +25,8 @@ import {
   PackageCheck,
   CheckCheck,
   Filter,
+  CalendarDays,
+  Layers,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -35,6 +37,7 @@ import {
   updateCaseTitle,
   updateCaseApprovalStatus,
   updateCaseDeliveryStatus,
+  updateCaseDates,
   clearAllCaseRecords,
   exportCasesAsJson,
   importCasesFromJson,
@@ -50,6 +53,50 @@ interface Props {
   activeEditingId?: string | null;
 }
 
+const THAI_MONTHS = [
+  { id: 1, name: 'มกราคม', short: 'ม.ค.' },
+  { id: 2, name: 'กุมภาพันธ์', short: 'ก.พ.' },
+  { id: 3, name: 'มีนาคม', short: 'มี.ค.' },
+  { id: 4, name: 'เมษายน', short: 'เม.ย.' },
+  { id: 5, name: 'พฤษภาคม', short: 'พ.ค.' },
+  { id: 6, name: 'มิถุนายน', short: 'มิ.ย.' },
+  { id: 7, name: 'กรกฎาคม', short: 'ก.ค.' },
+  { id: 8, name: 'สิงหาคม', short: 'ส.ค.' },
+  { id: 9, name: 'กันยายน', short: 'ก.ย.' },
+  { id: 10, name: 'ตุลาคม', short: 'ต.ค.' },
+  { id: 11, name: 'พฤศจิกายน', short: 'พ.ย.' },
+  { id: 12, name: 'ธันวาคม', short: 'ธ.ค.' },
+];
+
+function toInputDateStr(timestampOrStr?: number | string): string {
+  if (!timestampOrStr) return '';
+  if (typeof timestampOrStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(timestampOrStr)) {
+    return timestampOrStr;
+  }
+  const d = new Date(timestampOrStr);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatThaiDateOnly(dateInput?: string | number): string {
+  if (!dateInput) return '';
+  let d: Date;
+  if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+    const parts = dateInput.split('-').map(Number);
+    d = new Date(parts[0], parts[1] - 1, parts[2]);
+  } else {
+    d = new Date(dateInput);
+  }
+  if (isNaN(d.getTime())) return '';
+  const day = d.getDate();
+  const month = THAI_MONTHS[d.getMonth()]?.short || '';
+  const year = d.getFullYear() + 543;
+  return `${day} ${month} ${year}`;
+}
+
 export const SavedCasesModal: React.FC<Props> = ({
   isOpen,
   onClose,
@@ -63,6 +110,8 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | CaseApprovalStatus>('all');
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | VehicleDeliveryStatus>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all'); // 'all' or '2569'
+  const [selectedMonth, setSelectedMonth] = useState<string>('all'); // 'all' or '1'..'12'
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitleInput, setEditTitleInput] = useState('');
   const [previewCase, setPreviewCase] = useState<SavedCaseRecord | null>(null);
@@ -77,6 +126,8 @@ export const SavedCasesModal: React.FC<Props> = ({
       setSearchQuery('');
       setStatusFilter('all');
       setDeliveryFilter('all');
+      setSelectedYear('all');
+      setSelectedMonth('all');
       setEditingId(null);
       setPreviewCase(null);
       setDeleteConfirmId(null);
@@ -88,6 +139,42 @@ export const SavedCasesModal: React.FC<Props> = ({
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Extract available Thai years (พ.ศ.) from cases
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    const currentThaiYear = new Date().getFullYear() + 543;
+    years.add(currentThaiYear);
+
+    cases.forEach((c) => {
+      const d = new Date(c.createdAt);
+      if (!isNaN(d.getTime())) years.add(d.getFullYear() + 543);
+      if (c.approvalDate) {
+        const ad = new Date(c.approvalDate);
+        if (!isNaN(ad.getTime())) years.add(ad.getFullYear() + 543);
+      }
+      if (c.deliveryDate) {
+        const dd = new Date(c.deliveryDate);
+        if (!isNaN(dd.getTime())) years.add(dd.getFullYear() + 543);
+      }
+    });
+
+    return Array.from(years).sort((a, b) => b - a);
+  }, [cases]);
+
+  // Count cases per month for the chosen year
+  const monthStats = useMemo(() => {
+    const counts: Record<number, number> = {};
+    cases.forEach((c) => {
+      const d = new Date(c.createdAt);
+      const yr = d.getFullYear() + 543;
+      if (selectedYear === 'all' || yr.toString() === selectedYear) {
+        const mo = d.getMonth() + 1;
+        counts[mo] = (counts[mo] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [cases, selectedYear]);
 
   // Status statistics and counters
   const statusCounts = useMemo(() => {
@@ -129,6 +216,18 @@ export const SavedCasesModal: React.FC<Props> = ({
 
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {
+      // Year & Month filter (based on case creation date / active date)
+      const d = new Date(c.createdAt);
+      const caseYear = (d.getFullYear() + 543).toString();
+      const caseMonth = (d.getMonth() + 1).toString();
+
+      if (selectedYear !== 'all' && caseYear !== selectedYear) {
+        return false;
+      }
+      if (selectedMonth !== 'all' && caseMonth !== selectedMonth) {
+        return false;
+      }
+
       // Status filter
       const caseStatus = c.approvalStatus || 'pending';
       if (statusFilter !== 'all' && caseStatus !== statusFilter) {
@@ -157,7 +256,48 @@ export const SavedCasesModal: React.FC<Props> = ({
 
       return true;
     });
-  }, [cases, searchQuery, statusFilter, deliveryFilter]);
+  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedYear, selectedMonth]);
+
+  // Group filtered cases by Year and Month for clean separation
+  const groupedCases = useMemo(() => {
+    const map = new Map<string, SavedCaseRecord[]>();
+    filteredCases.forEach((c) => {
+      const d = new Date(c.createdAt);
+      const yr = d.getFullYear() + 543;
+      const mo = d.getMonth() + 1;
+      const key = `${yr}-${mo.toString().padStart(2, '0')}`;
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+      map.get(key)!.push(c);
+    });
+
+    const groups: {
+      key: string;
+      year: number;
+      month: number;
+      monthName: string;
+      items: SavedCaseRecord[];
+    }[] = [];
+
+    Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .forEach(([key, items]) => {
+        const [yrStr, moStr] = key.split('-');
+        const yr = parseInt(yrStr, 10);
+        const mo = parseInt(moStr, 10);
+        const monthObj = THAI_MONTHS.find((m) => m.id === mo);
+        groups.push({
+          key,
+          year: yr,
+          month: mo,
+          monthName: monthObj ? monthObj.name : `เดือน ${mo}`,
+          items,
+        });
+      });
+
+    return groups;
+  }, [filteredCases]);
 
   const handleSetApprovalStatus = (
     id: string,
@@ -187,6 +327,20 @@ export const SavedCasesModal: React.FC<Props> = ({
         ? '✓ อัปเดตสถานะ: "รับรถแล้ว"'
         : '⏳ อัปเดตสถานะ: "รอรับรถ"'
     );
+  };
+
+  const handleSetDates = (
+    id: string,
+    dates: { approvalDate?: string; deliveryDate?: string }
+  ) => {
+    triggerHaptic('success');
+    const updated = updateCaseDates(id, dates);
+    setCases(updated);
+    if (dates.approvalDate) {
+      showToast(`✓ อัปเดตวันอนุมัติ: ${formatThaiDateOnly(dates.approvalDate)}`);
+    } else if (dates.deliveryDate) {
+      showToast(`✓ อัปเดตวันรับรถ: ${formatThaiDateOnly(dates.deliveryDate)}`);
+    }
   };
 
   // แสดงเฉพาะชื่อลูกค้าในส่วนหัวข้อเคสตามที่ผู้ใช้ต้องการ
@@ -594,6 +748,90 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </button>
                 </div>
               )}
+
+              {/* Month & Year Filter Bar (แบ่งแยกเดือนและปี ให้เลือกได้) */}
+              <div className="pt-2 mt-1 border-t border-slate-200/70 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+                  <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-600 shrink-0">
+                    <CalendarDays className="w-3.5 h-3.5 text-sky-600" />
+                    <span>เลือกเดือน/ปี:</span>
+                  </div>
+
+                  {/* Year Select (พ.ศ.) */}
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setSelectedYear(e.target.value);
+                    }}
+                    className="px-2.5 py-1 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-2xs"
+                  >
+                    <option value="all">ทุกปี</option>
+                    {availableYears.map((yr) => (
+                      <option key={yr} value={yr.toString()}>
+                        พ.ศ. {yr}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Month Select */}
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setSelectedMonth(e.target.value);
+                    }}
+                    className="px-2.5 py-1 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-2xs"
+                  >
+                    <option value="all">ทุกเดือน</option>
+                    {THAI_MONTHS.map((m) => {
+                      const count = monthStats[m.id] || 0;
+                      return (
+                        <option key={m.id} value={m.id.toString()}>
+                          {m.name} {count > 0 ? `(${count})` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+
+                  {/* Quick Month Filter Chips for months with cases */}
+                  <div className="hidden sm:flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none">
+                    {THAI_MONTHS.filter((m) => (monthStats[m.id] || 0) > 0).map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setSelectedMonth(selectedMonth === m.id.toString() ? 'all' : m.id.toString());
+                        }}
+                        className={`px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          selectedMonth === m.id.toString()
+                            ? 'bg-sky-600 text-white shadow-2xs ring-1 ring-sky-300'
+                            : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        }`}
+                      >
+                        <span>{m.short}</span>
+                        <span className="ml-0.5 text-[9px] opacity-80">({monthStats[m.id] || 0})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reset button if month or year is filtered */}
+                {(selectedYear !== 'all' || selectedMonth !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSelectedYear('all');
+                      setSelectedMonth('all');
+                    }}
+                    className="px-2 py-0.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10.5px] font-bold border border-sky-200 cursor-pointer transition-colors whitespace-nowrap"
+                  >
+                    ล้างตัวกรองเดือน/ปี ✕
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -667,374 +905,481 @@ export const SavedCasesModal: React.FC<Props> = ({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
-              {filteredCases.map((record) => {
-                const isEditing = editingId === record.id;
-                const isCurrentEditing = activeEditingId === record.id;
-                return (
-                  <div
-                    key={record.id}
-                    className={`p-3.5 sm:p-4 rounded-2xl bg-white border shadow-xs hover:shadow-md transition-all duration-200 space-y-2.5 relative group ${
-                      isCurrentEditing
-                        ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
-                        : 'border-slate-200/80 hover:border-sky-300'
-                    }`}
-                  >
-                    {/* Card Top: Title, Date, Customer & Badges */}
-                    <div className="space-y-1.5">
-                      {/* Case Title Row */}
-                      {isEditing ? (
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={editTitleInput}
-                            onChange={(e) => setEditTitleInput(e.target.value)}
-                            autoFocus
-                            className="w-full px-2 py-1 text-xs font-bold text-slate-800 bg-sky-50 border border-sky-300 rounded-lg focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSaveTitle(record.id)}
-                            className="p-1 rounded-lg bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700"
-                            title="บันทึกชื่อ"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                            className="p-1 rounded-lg bg-slate-200 text-slate-600 text-xs cursor-pointer hover:bg-slate-300"
-                            title="ยกเลิก"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h3 className="font-extrabold text-sm text-slate-800">
-                              {getCustomerDisplayName(record)}
-                            </h3>
-                            {isCurrentEditing && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
-                                <Pencil className="w-2.5 h-2.5 text-amber-700" />
-                                กำลังแก้ไข
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleStartEditTitle(record)}
-                              className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
-                              title="แก้ไขชื่อลูกค้า"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
+            <div className="space-y-4">
+              {groupedCases.map((group) => (
+                <div key={group.key} className="space-y-2.5">
+                  {/* Sticky Month & Year Header Banner */}
+                  <div className="flex items-center justify-between gap-2 px-3 sm:px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-sky-100/90 via-sky-50 to-white border border-sky-200/80 text-slate-800 shadow-2xs">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <CalendarDays className="w-4 h-4 text-sky-600 shrink-0" />
+                      <span className="font-extrabold text-xs sm:text-sm text-slate-900">
+                        {group.monthName} พ.ศ. {group.year}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-sky-600 text-white shadow-2xs">
+                        {group.items.length} รายการ
+                      </span>
+                    </div>
 
-                          {/* Approval & Delivery Status Indicators (สัญลักษณ์สถานะ) */}
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {/* Case Approval Status Badge */}
-                            {(!record.approvalStatus || record.approvalStatus === 'pending') && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 inline-flex items-center gap-1 shadow-2xs">
-                                <Clock className="w-3 h-3 text-sky-500" />
-                                <span>รอผล</span>
-                              </span>
+                    <div className="text-[10px] sm:text-[10.5px] font-semibold text-slate-600 flex items-center gap-1.5 sm:gap-2">
+                      <span className="text-emerald-700 font-bold">
+                        อนุมัติ {group.items.filter((i) => i.approvalStatus === 'approved').length}
+                      </span>
+                      <span>•</span>
+                      <span className="text-teal-700">
+                        รับรถ {group.items.filter((i) => i.approvalStatus === 'approved' && i.deliveryStatus === 'delivered').length}
+                      </span>
+                      <span>•</span>
+                      <span className="text-amber-700">
+                        รอรับ {group.items.filter((i) => i.approvalStatus === 'approved' && (!i.deliveryStatus || i.deliveryStatus === 'pending_delivery')).length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Cards for this Month Group */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {group.items.map((record) => {
+                      const isEditing = editingId === record.id;
+                      const isCurrentEditing = activeEditingId === record.id;
+                      return (
+                        <div
+                          key={record.id}
+                          className={`p-3.5 sm:p-4 rounded-2xl bg-white border shadow-xs hover:shadow-md transition-all duration-200 space-y-2.5 relative group ${
+                            isCurrentEditing
+                              ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
+                              : 'border-slate-200/80 hover:border-sky-300'
+                          }`}
+                        >
+                          {/* Card Top: Title, Date, Customer & Badges */}
+                          <div className="space-y-1.5">
+                            {/* Case Title Row */}
+                            {isEditing ? (
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  type="text"
+                                  value={editTitleInput}
+                                  onChange={(e) => setEditTitleInput(e.target.value)}
+                                  autoFocus
+                                  className="w-full px-2 py-1 text-xs font-bold text-slate-800 bg-sky-50 border border-sky-300 rounded-lg focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveTitle(record.id)}
+                                  className="p-1 rounded-lg bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700"
+                                  title="บันทึกชื่อ"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingId(null)}
+                                  className="p-1 rounded-lg bg-slate-200 text-slate-600 text-xs cursor-pointer hover:bg-slate-300"
+                                  title="ยกเลิก"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h3 className="font-extrabold text-sm text-slate-800">
+                                    {getCustomerDisplayName(record)}
+                                  </h3>
+                                  {isCurrentEditing && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
+                                      <Pencil className="w-2.5 h-2.5 text-amber-700" />
+                                      กำลังแก้ไข
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditTitle(record)}
+                                    className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
+                                    title="แก้ไขชื่อลูกค้า"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+
+                                {/* Approval & Delivery Status Indicators (สัญลักษณ์สถานะ) */}
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {/* Case Approval Status Badge */}
+                                  {(!record.approvalStatus || record.approvalStatus === 'pending') && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 inline-flex items-center gap-1 shadow-2xs">
+                                      <Clock className="w-3 h-3 text-sky-500" />
+                                      <span>รอผล</span>
+                                    </span>
+                                  )}
+                                  {record.approvalStatus === 'approved' && (
+                                    <>
+                                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                        <span>อนุมัติ</span>
+                                      </span>
+                                      {/* Vehicle Delivery Status Badge (ถ้าอนุมัติ ให้ดูได้ด้วย รับรถแล้ว หรือ รอรับรถ) */}
+                                      {record.deliveryStatus === 'delivered' ? (
+                                        <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300 inline-flex items-center gap-1 shadow-2xs">
+                                          <PackageCheck className="w-3.5 h-3.5 text-teal-600" />
+                                          <span>รับรถแล้ว ✓</span>
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+                                          <Clock className="w-3 h-3 text-amber-600" />
+                                          <span>รอรับรถ ⏳</span>
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                  {record.approvalStatus === 'rejected' && (
+                                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300 inline-flex items-center gap-1 shadow-2xs">
+                                      <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                      <span>ไม่อนุมัติ</span>
+                                    </span>
+                                  )}
+                                  {record.approvalStatus === 'cancelled' && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1 shadow-2xs">
+                                      <Ban className="w-3 h-3 text-slate-500" />
+                                      <span>ยกเลิก</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             )}
+
+                            {/* Row 1: วันที่และเวลา + ประเภทข้อเสนอ (ย้ายมาต่อจากวันที่และเวลา) */}
+                            <div className="flex items-center gap-2 flex-wrap text-[10.5px] text-slate-500">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                {formatThaiDate(record.createdAt)}
+                              </span>
+                              <span>•</span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 inline-flex items-center">
+                                {record.snapshot.proposalCode}
+                              </span>
+                            </div>
+
+                            {/* Row 2: ชื่อลูกค้าและเบอร์โทร + รุ่นรถ (ย้ายมาต่อหลังเบอร์โทร) */}
+                            <div className="flex items-center gap-2 flex-wrap text-[10.5px]">
+                              <span className="flex items-center gap-1 text-slate-700 font-medium">
+                                <User className="w-3.5 h-3.5 text-sky-600" />
+                                {record.customerName}
+                                {record.customerPhone && ` (${record.customerPhone})`}
+                              </span>
+                              {record.bikeModelName && (
+                                <>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1 border border-slate-200/80 max-w-[280px] truncate">
+                                    <Bike className="w-3 h-3 text-slate-500 shrink-0" />
+                                    <span className="truncate">{record.bikeModelName}</span>
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Row 3: วันอนุมัติ และ วันรับรถ (แสดงข้อมูลวันที่ชัดเจน) */}
                             {record.approvalStatus === 'approved' && (
-                              <>
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                  <span>อนุมัติ</span>
-                                </span>
-                                {/* Vehicle Delivery Status Badge (ถ้าอนุมัติ ให้ดูได้ด้วย รับรถแล้ว หรือ รอรับรถ) */}
+                              <div className="flex items-center gap-2 flex-wrap text-[10.5px] pt-0.5 animate-fade-in">
+                                {/* วันอนุมัติ */}
+                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-900 border border-emerald-200/90 font-medium shadow-2xs">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span className="text-emerald-700 font-bold">วันอนุมัติ:</span>
+                                  <span className="font-extrabold text-emerald-950">
+                                    {formatThaiDateOnly(record.approvalDate || record.createdAt)}
+                                  </span>
+                                </div>
+
+                                {/* วันรับรถ */}
                                 {record.deliveryStatus === 'delivered' ? (
-                                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300 inline-flex items-center gap-1 shadow-2xs">
-                                    <PackageCheck className="w-3.5 h-3.5 text-teal-600" />
-                                    <span>รับรถแล้ว ✓</span>
-                                  </span>
+                                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-teal-50 text-teal-900 border border-teal-200/90 font-medium shadow-2xs">
+                                    <PackageCheck className="w-3 h-3 text-teal-600 shrink-0" />
+                                    <span className="text-teal-700 font-bold">วันรับรถ:</span>
+                                    <span className="font-extrabold text-teal-950">
+                                      {formatThaiDateOnly(record.deliveryDate || record.createdAt)}
+                                    </span>
+                                  </div>
                                 ) : (
-                                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
-                                    <Clock className="w-3 h-3 text-amber-600" />
-                                    <span>รอรับรถ ⏳</span>
-                                  </span>
+                                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-950 border border-amber-200/90 font-medium shadow-2xs">
+                                    <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                                    <span className="text-amber-800 font-bold">
+                                      {record.deliveryDate ? 'นัดรับรถ:' : 'การรับรถ:'}
+                                    </span>
+                                    <span className="font-extrabold text-amber-950">
+                                      {record.deliveryDate ? formatThaiDateOnly(record.deliveryDate) : 'รอรับรถ ⏳'}
+                                    </span>
+                                  </div>
                                 )}
-                              </>
-                            )}
-                            {record.approvalStatus === 'rejected' && (
-                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300 inline-flex items-center gap-1 shadow-2xs">
-                                <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                                <span>ไม่อนุมัติ</span>
-                              </span>
-                            )}
-                            {record.approvalStatus === 'cancelled' && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1 shadow-2xs">
-                                <Ban className="w-3 h-3 text-slate-500" />
-                                <span>ยกเลิก</span>
-                              </span>
+                              </div>
                             )}
                           </div>
-                        </div>
-                      )}
 
-                      {/* Row 1: วันที่และเวลา + ประเภทข้อเสนอ (ย้ายมาต่อจากวันที่และเวลา) */}
-                      <div className="flex items-center gap-2 flex-wrap text-[10.5px] text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          {formatThaiDate(record.createdAt)}
-                        </span>
-                        <span>•</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 inline-flex items-center">
-                          {record.snapshot.proposalCode}
-                        </span>
-                      </div>
+                          {/* Financial Summary Strip */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-xs">
+                            <div>
+                              <div className="text-[10px] text-slate-400 font-medium">ค่างวดต่อเดือน:</div>
+                              <div className="text-sm font-black text-sky-700">
+                                {formatBaht(record.snapshot.monthlyInstallment)}
+                                <span className="text-[9.5px] font-normal text-slate-500"> /งวด</span>
+                              </div>
+                            </div>
 
-                      {/* Row 2: ชื่อลูกค้าและเบอร์โทร + รุ่นรถ (ย้ายมาต่อหลังเบอร์โทร) */}
-                      <div className="flex items-center gap-2 flex-wrap text-[10.5px]">
-                        <span className="flex items-center gap-1 text-slate-700 font-medium">
-                          <User className="w-3.5 h-3.5 text-sky-600" />
-                          {record.customerName}
-                          {record.customerPhone && ` (${record.customerPhone})`}
-                        </span>
-                        {record.bikeModelName && (
-                          <>
-                            <span className="text-slate-300">•</span>
-                            <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1 border border-slate-200/80 max-w-[280px] truncate">
-                              <Bike className="w-3 h-3 text-slate-500 shrink-0" />
-                              <span className="truncate">{record.bikeModelName}</span>
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                            <div>
+                              <div className="text-[10px] text-slate-400 font-medium">ระยะเวลาผ่อน:</div>
+                              <div className="font-bold text-slate-800 text-xs">
+                                {record.term} งวด ({record.snapshot.rateDisplayText})
+                              </div>
+                            </div>
 
-                    {/* Financial Summary Strip */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-xs">
-                      <div>
-                        <div className="text-[10px] text-slate-400 font-medium">ค่างวดต่อเดือน:</div>
-                        <div className="text-sm font-black text-sky-700">
-                          {formatBaht(record.snapshot.monthlyInstallment)}
-                          <span className="text-[9.5px] font-normal text-slate-500"> /งวด</span>
-                        </div>
-                      </div>
+                            <div>
+                              <div className="text-[10px] text-slate-400 font-medium">เงินดาวน์:</div>
+                              <div className="font-bold text-slate-800 text-xs">
+                                {formatBaht(record.snapshot.downAmount)}
+                                <span className="text-[10px] text-slate-500 font-normal">
+                                  {' '}({record.snapshot.downPercent.toFixed(1)}%)
+                                </span>
+                              </div>
+                            </div>
 
-                      <div>
-                        <div className="text-[10px] text-slate-400 font-medium">ระยะเวลาผ่อน:</div>
-                        <div className="font-bold text-slate-800 text-xs">
-                          {record.term} งวด ({record.snapshot.rateDisplayText})
-                        </div>
-                      </div>
+                            <div>
+                              <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์:</div>
+                              <div className="font-bold text-slate-800 text-xs">
+                                {formatBaht(record.snapshot.financeAmount, true)}
+                              </div>
+                            </div>
+                          </div>
 
-                      <div>
-                        <div className="text-[10px] text-slate-400 font-medium">เงินดาวน์:</div>
-                        <div className="font-bold text-slate-800 text-xs">
-                          {formatBaht(record.snapshot.downAmount)}
-                          <span className="text-[10px] text-slate-500 font-normal">
-                            {' '}({record.snapshot.downPercent.toFixed(1)}%)
-                          </span>
-                        </div>
-                      </div>
+                          {/* Status Selection & Vehicle Delivery Control Strip (จัดตำแหน่งกึ่งกลาง) */}
+                          <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/95 border border-slate-200/80 space-y-2 text-xs">
+                            {/* Header label */}
+                            <div className="text-[10px] sm:text-[10.5px] font-bold text-slate-500 text-center tracking-wide">
+                              สถานะเคส:
+                            </div>
 
-                      <div>
-                        <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์:</div>
-                        <div className="font-bold text-slate-800 text-xs">
-                          {formatBaht(record.snapshot.financeAmount, true)}
-                        </div>
-                      </div>
-                    </div>
+                            {/* Status Switcher Buttons (Centered) */}
+                            <div className="flex items-center justify-center w-full">
+                              <div className="inline-flex items-center justify-center rounded-xl p-1 bg-slate-200/80 text-[10.5px] sm:text-xs font-bold gap-1 shadow-2xs max-w-full overflow-x-auto">
+                                {/* รอผล */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetApprovalStatus(record.id, 'pending')}
+                                  className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                    (!record.approvalStatus || record.approvalStatus === 'pending')
+                                      ? 'bg-white text-sky-800 shadow-xs font-extrabold'
+                                      : 'text-slate-600 hover:text-slate-900'
+                                  }`}
+                                  title="เปลี่ยนเป็น รอผลพิจารณา"
+                                >
+                                  <Clock className="w-3 h-3 text-sky-500 shrink-0" />
+                                  <span>รอผล</span>
+                                </button>
 
-                    {/* Status Selection & Vehicle Delivery Control Strip (จัดตำแหน่งกึ่งกลาง) */}
-                    <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/95 border border-slate-200/80 space-y-2 text-xs">
-                      {/* Header label */}
-                      <div className="text-[10px] sm:text-[10.5px] font-bold text-slate-500 text-center tracking-wide">
-                        สถานะเคส:
-                      </div>
+                                {/* อนุมัติ */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetApprovalStatus(record.id, 'approved')}
+                                  className={`px-3 sm:px-3.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                    record.approvalStatus === 'approved'
+                                      ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+                                      : 'text-slate-600 hover:text-emerald-700'
+                                  }`}
+                                  title="เปลี่ยนเป็น อนุมัติ"
+                                >
+                                  <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                  <span>อนุมัติ</span>
+                                </button>
 
-                      {/* Status Switcher Buttons (Centered) */}
-                      <div className="flex items-center justify-center w-full">
-                        <div className="inline-flex items-center justify-center rounded-xl p-1 bg-slate-200/80 text-[10.5px] sm:text-xs font-bold gap-1 shadow-2xs max-w-full overflow-x-auto">
-                          {/* รอผล */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetApprovalStatus(record.id, 'pending')}
-                            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                              (!record.approvalStatus || record.approvalStatus === 'pending')
-                                ? 'bg-white text-sky-800 shadow-xs font-extrabold'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                            title="เปลี่ยนเป็น รอผลพิจารณา"
-                          >
-                            <Clock className="w-3 h-3 text-sky-500 shrink-0" />
-                            <span>รอผล</span>
-                          </button>
+                                {/* ไม่อนุมัติ */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
+                                  className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                    record.approvalStatus === 'rejected'
+                                      ? 'bg-rose-600 text-white shadow-xs font-extrabold'
+                                      : 'text-slate-600 hover:text-rose-700'
+                                  }`}
+                                  title="เปลี่ยนเป็น ไม่อนุมัติ"
+                                >
+                                  <XCircle className="w-3 h-3 shrink-0" />
+                                  <span>ไม่อนุมัติ</span>
+                                </button>
 
-                          {/* อนุมัติ */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetApprovalStatus(record.id, 'approved')}
-                            className={`px-3 sm:px-3.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                              record.approvalStatus === 'approved'
-                                ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
-                                : 'text-slate-600 hover:text-emerald-700'
-                            }`}
-                            title="เปลี่ยนเป็น อนุมัติ"
-                          >
-                            <CheckCircle2 className="w-3 h-3 shrink-0" />
-                            <span>อนุมัติ</span>
-                          </button>
+                                {/* ยกเลิก */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
+                                  className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                                    record.approvalStatus === 'cancelled'
+                                      ? 'bg-slate-700 text-white shadow-xs font-extrabold'
+                                      : 'text-slate-600 hover:text-slate-900'
+                                  }`}
+                                  title="เปลี่ยนเป็น ยกเลิก"
+                                >
+                                  <Ban className="w-3 h-3 shrink-0" />
+                                  <span>ยกเลิก</span>
+                                </button>
+                              </div>
+                            </div>
 
-                          {/* ไม่อนุมัติ */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
-                            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                              record.approvalStatus === 'rejected'
-                                ? 'bg-rose-600 text-white shadow-xs font-extrabold'
-                                : 'text-slate-600 hover:text-rose-700'
-                            }`}
-                            title="เปลี่ยนเป็น ไม่อนุมัติ"
-                          >
-                            <XCircle className="w-3 h-3 shrink-0" />
-                            <span>ไม่อนุมัติ</span>
-                          </button>
+                            {/* If Approved: Vehicle Delivery Status & Dates (Centered) */}
+                            {record.approvalStatus === 'approved' && (
+                              <div className="space-y-2 pt-0.5 animate-fade-in w-full">
+                                {/* Centered Delivery Toggle Button */}
+                                <div className="flex items-center justify-center w-full">
+                                  <div className="inline-flex items-center justify-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs">
+                                    <span className="text-[10.5px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
+                                      <Bike className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      การรับรถ:
+                                    </span>
+                                    <div className="inline-flex rounded-lg p-0.5 bg-slate-100 text-[10.5px] font-bold gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSetDeliveryStatus(record.id, 'pending_delivery')}
+                                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                          (!record.deliveryStatus || record.deliveryStatus === 'pending_delivery')
+                                            ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                                            : 'text-slate-600 hover:text-amber-800'
+                                        }`}
+                                        title="ยังไม่ได้รับรถ (รอส่งมอบ)"
+                                      >
+                                        <Clock className="w-3 h-3 shrink-0" />
+                                        <span>รอรับรถ</span>
+                                      </button>
 
-                          {/* ยกเลิก */}
-                          <button
-                            type="button"
-                            onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
-                            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                              record.approvalStatus === 'cancelled'
-                                ? 'bg-slate-700 text-white shadow-xs font-extrabold'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                            title="เปลี่ยนเป็น ยกเลิก"
-                          >
-                            <Ban className="w-3 h-3 shrink-0" />
-                            <span>ยกเลิก</span>
-                          </button>
-                        </div>
-                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSetDeliveryStatus(record.id, 'delivered')}
+                                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                          record.deliveryStatus === 'delivered'
+                                            ? 'bg-teal-600 text-white shadow-xs font-extrabold'
+                                            : 'text-slate-600 hover:text-teal-800'
+                                        }`}
+                                        title="ลูกค้ารับมอบรถเรียบร้อยแล้ว"
+                                      >
+                                        <Check className="w-3 h-3 shrink-0" />
+                                        <span>รับรถแล้ว</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
 
-                      {/* If Approved: Vehicle Delivery Status Toggle (Centered) */}
-                      {record.approvalStatus === 'approved' && (
-                        <div className="flex items-center justify-center w-full pt-0.5 animate-fade-in">
-                          <div className="inline-flex items-center justify-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs">
-                            <span className="text-[10.5px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
-                              <Bike className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              การรับรถ:
-                            </span>
-                            <div className="inline-flex rounded-lg p-0.5 bg-slate-100 text-[10.5px] font-bold gap-1">
+                                {/* Editable Date Pickers for วันอนุมัติ and วันรับรถ */}
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1.5 border-t border-slate-200/70 w-full">
+                                  {/* วันอนุมัติ Picker */}
+                                  <div className="inline-flex items-center justify-between gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto">
+                                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-emerald-800 shrink-0">
+                                      <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                      <span>วันอนุมัติ:</span>
+                                    </div>
+                                    <input
+                                      type="date"
+                                      value={record.approvalDate || toInputDateStr(record.createdAt)}
+                                      onChange={(e) => handleSetDates(record.id, { approvalDate: e.target.value })}
+                                      className="text-[11px] font-bold text-slate-800 bg-emerald-50/60 hover:bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                                      title="คลิกเพื่อเลือกวันอนุมัติ"
+                                    />
+                                  </div>
+
+                                  {/* วันรับรถ / วันนัดรับรถ Picker */}
+                                  <div className="inline-flex items-center justify-between gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto">
+                                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-teal-800 shrink-0">
+                                      <Bike className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                      <span>
+                                        {record.deliveryStatus === 'delivered' ? 'วันรับรถ:' : 'วันนัดรับรถ:'}
+                                      </span>
+                                    </div>
+                                    <input
+                                      type="date"
+                                      value={record.deliveryDate || (record.deliveryStatus === 'delivered' ? toInputDateStr(record.createdAt) : '')}
+                                      onChange={(e) => handleSetDates(record.id, { deliveryDate: e.target.value })}
+                                      className="text-[11px] font-bold text-slate-800 bg-teal-50/60 hover:bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+                                      title={record.deliveryStatus === 'delivered' ? 'คลิกเพื่อเลือกวันรับรถ' : 'คลิกเพื่อระบุวันนัดรับรถ'}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Buttons Row */}
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <div className="text-[10px] text-slate-500 truncate">
+                              {record.officerName ? `ผู้เสนอ: ${record.officerName}` : 'บันทึกในอุปกรณ์'}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {deleteConfirmId === record.id ? (
+                                <div className="flex items-center gap-1 bg-rose-50 border border-rose-300 px-2 py-1 rounded-xl animate-fade-in shadow-2xs">
+                                  <span className="text-[10px] text-rose-800 font-bold whitespace-nowrap">
+                                    ลบเคสนี้?
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => executeDelete(record.id)}
+                                    className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10.5px] cursor-pointer active:scale-95 shadow-2xs transition-all whitespace-nowrap"
+                                  >
+                                    ลบเลย
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeleteConfirmId(null)}
+                                    className="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-[10.5px] cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+                                  >
+                                    ยกเลิก
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    setDeleteConfirmId(record.id);
+                                  }}
+                                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                  title="ลบเคสนี้"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+
+                              {onEditCase && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('medium');
+                                    onEditCase(record);
+                                    onClose();
+                                  }}
+                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer shadow-sm ${
+                                    isCurrentEditing
+                                      ? 'bg-amber-600 text-white shadow-amber-600/30 ring-2 ring-amber-400'
+                                      : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/20'
+                                  }`}
+                                  title="ดึงเคสนี้กลับมาแก้ไขในโปรแกรมคำนวณ แล้วกดบันทึกการแก้ไขเพื่ออัปเดต"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                  <span>{isCurrentEditing ? 'กำลังแก้ไข' : 'แก้ไข'}</span>
+                                </button>
+                              )}
+
                               <button
                                 type="button"
-                                onClick={() => handleSetDeliveryStatus(record.id, 'pending_delivery')}
-                                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                  (!record.deliveryStatus || record.deliveryStatus === 'pending_delivery')
-                                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
-                                    : 'text-slate-600 hover:text-amber-800'
-                                }`}
-                                title="ยังไม่ได้รับรถ (รอส่งมอบ)"
+                                onClick={() => {
+                                  triggerHaptic('success');
+                                  onLoadCase(record);
+                                  onClose();
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-sky-500/25 active:scale-95 transition-all cursor-pointer"
+                                title="นำตัวเลขในเคสนี้มาใช้งานเป็นเคสใหม่"
                               >
-                                <Clock className="w-3 h-3 shrink-0" />
-                                <span>รอรับรถ</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleSetDeliveryStatus(record.id, 'delivered')}
-                                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                  record.deliveryStatus === 'delivered'
-                                    ? 'bg-teal-600 text-white shadow-xs font-extrabold'
-                                    : 'text-slate-600 hover:text-teal-800'
-                                }`}
-                                title="ลูกค้ารับมอบรถเรียบร้อยแล้ว"
-                              >
-                                <Check className="w-3 h-3 shrink-0" />
-                                <span>รับรถแล้ว</span>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>นำมาใช้งาน</span>
                               </button>
                             </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Action Buttons Row */}
-                    <div className="flex items-center justify-between gap-2 pt-1">
-                      <div className="text-[10px] text-slate-500 truncate">
-                        {record.officerName ? `ผู้เสนอ: ${record.officerName}` : 'บันทึกในอุปกรณ์'}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {deleteConfirmId === record.id ? (
-                          <div className="flex items-center gap-1 bg-rose-50 border border-rose-300 px-2 py-1 rounded-xl animate-fade-in shadow-2xs">
-                            <span className="text-[10px] text-rose-800 font-bold whitespace-nowrap">
-                              ลบเคสนี้?
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => executeDelete(record.id)}
-                              className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10.5px] cursor-pointer active:scale-95 shadow-2xs transition-all whitespace-nowrap"
-                            >
-                              ลบเลย
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(null)}
-                              className="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-[10.5px] cursor-pointer active:scale-95 transition-all whitespace-nowrap"
-                            >
-                              ยกเลิก
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              triggerHaptic('light');
-                              setDeleteConfirmId(record.id);
-                            }}
-                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                            title="ลบเคสนี้"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-
-                        {onEditCase && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              triggerHaptic('medium');
-                              onEditCase(record);
-                              onClose();
-                            }}
-                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer shadow-sm ${
-                              isCurrentEditing
-                                ? 'bg-amber-600 text-white shadow-amber-600/30 ring-2 ring-amber-400'
-                                : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/20'
-                            }`}
-                            title="ดึงเคสนี้กลับมาแก้ไขในโปรแกรมคำนวณ แล้วกดบันทึกการแก้ไขเพื่ออัปเดต"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                            <span>{isCurrentEditing ? 'กำลังแก้ไข' : 'แก้ไข'}</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            triggerHaptic('success');
-                            onLoadCase(record);
-                            onClose();
-                          }}
-                          className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-sky-500/25 active:scale-95 transition-all cursor-pointer"
-                          title="นำตัวเลขในเคสนี้มาใช้งานเป็นเคสใหม่"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>นำมาใช้งาน</span>
-                        </button>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>

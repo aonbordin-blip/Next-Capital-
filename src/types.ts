@@ -195,6 +195,8 @@ export interface SavedCaseRecord {
   // Case Status & Delivery Tracking (สถานะการอนุมัติและการรับรถ)
   approvalStatus?: CaseApprovalStatus; // 'pending' (รอผล) | 'approved' (อนุมัติ) | 'rejected' (ไม่อนุมัติ) | 'cancelled' (ยกเลิก)
   deliveryStatus?: VehicleDeliveryStatus; // 'pending_delivery' (รอรับรถ) | 'delivered' (รับรถแล้ว)
+  approvalDate?: string; // วันที่อนุมัติ รูปแบบ YYYY-MM-DD
+  deliveryDate?: string; // วันที่รับรถ รูปแบบ YYYY-MM-DD
   approvalNote?: string;
   approvalUpdatedAt?: number;
 }

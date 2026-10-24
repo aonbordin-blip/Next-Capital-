@@ -34,6 +34,8 @@ export function saveCaseRecord(
         id: data.id,
         approvalStatus: data.approvalStatus !== undefined ? data.approvalStatus : (existing.approvalStatus || 'pending'),
         deliveryStatus: data.deliveryStatus !== undefined ? data.deliveryStatus : existing.deliveryStatus,
+        approvalDate: data.approvalDate !== undefined ? data.approvalDate : existing.approvalDate,
+        deliveryDate: data.deliveryDate !== undefined ? data.deliveryDate : existing.deliveryDate,
         updatedAt: now,
       };
       cases[index] = updated;
@@ -51,10 +53,18 @@ export function saveCaseRecord(
   const initialDeliveryStatus: VehicleDeliveryStatus | undefined =
     initialApprovalStatus === 'approved' ? (data.deliveryStatus || 'pending_delivery') : data.deliveryStatus;
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const initialApprovalDate =
+    initialApprovalStatus === 'approved' ? (data.approvalDate || todayStr) : data.approvalDate;
+  const initialDeliveryDate =
+    initialDeliveryStatus === 'delivered' ? (data.deliveryDate || todayStr) : data.deliveryDate;
+
   const newRecord: SavedCaseRecord = {
     ...data,
     approvalStatus: initialApprovalStatus,
     deliveryStatus: initialDeliveryStatus,
+    approvalDate: initialApprovalDate,
+    deliveryDate: initialDeliveryDate,
     id: `case-${now}-${Math.random().toString(36).substring(2, 7)}`,
     createdAt: now,
     updatedAt: now,
@@ -99,6 +109,7 @@ export function updateCaseApprovalStatus(
   deliveryStatus?: VehicleDeliveryStatus
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
+  const todayStr = new Date().toISOString().slice(0, 10);
   const updated = cases.map((c) => {
     if (c.id !== id) return c;
     const resolvedDeliveryStatus: VehicleDeliveryStatus | undefined =
@@ -106,10 +117,16 @@ export function updateCaseApprovalStatus(
         ? (deliveryStatus || c.deliveryStatus || 'pending_delivery')
         : undefined;
 
+    const resolvedApprovalDate =
+      approvalStatus === 'approved'
+        ? (c.approvalDate || todayStr)
+        : c.approvalDate;
+
     return {
       ...c,
       approvalStatus,
       deliveryStatus: resolvedDeliveryStatus,
+      approvalDate: resolvedApprovalDate,
       updatedAt: Date.now(),
       approvalUpdatedAt: Date.now(),
     };
@@ -127,11 +144,18 @@ export function updateCaseDeliveryStatus(
   deliveryStatus: VehicleDeliveryStatus
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
+  const todayStr = new Date().toISOString().slice(0, 10);
   const updated = cases.map((c) => {
     if (c.id !== id) return c;
+    const resolvedDeliveryDate =
+      deliveryStatus === 'delivered'
+        ? (c.deliveryDate || todayStr)
+        : c.deliveryDate;
+
     return {
       ...c,
       deliveryStatus,
+      deliveryDate: resolvedDeliveryDate,
       updatedAt: Date.now(),
     };
   });
@@ -139,6 +163,28 @@ export function updateCaseDeliveryStatus(
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
     console.error('Failed to update delivery status in localStorage:', err);
+  }
+  return updated;
+}
+
+export function updateCaseDates(
+  id: string,
+  dates: { approvalDate?: string; deliveryDate?: string }
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    return {
+      ...c,
+      approvalDate: dates.approvalDate !== undefined ? dates.approvalDate : c.approvalDate,
+      deliveryDate: dates.deliveryDate !== undefined ? dates.deliveryDate : c.deliveryDate,
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update case dates in localStorage:', err);
   }
   return updated;
 }
