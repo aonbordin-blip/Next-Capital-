@@ -30,6 +30,8 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
+  HelpCircle,
+  Smartphone,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -122,6 +124,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showClearAllConfirm, setShowClearAllConfirm] = useState<boolean>(false);
   const [expandedStatusId, setExpandedStatusId] = useState<string | null>(null);
+  const [showTransferGuide, setShowTransferGuide] = useState<boolean>(false);
 
   // Load cases when modal opens
   React.useEffect(() => {
@@ -137,6 +140,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeleteConfirmId(null);
       setShowClearAllConfirm(false);
       setExpandedStatusId(null);
+      setShowTransferGuide(false);
     }
   }, [isOpen]);
 
@@ -425,14 +429,34 @@ export const SavedCasesModal: React.FC<Props> = ({
     showToast('ล้างรายการทั้งหมดแล้ว');
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     triggerHaptic('success');
     const jsonStr = exportCasesAsJson();
+    const fileName = `MotoLease_Saved_Cases_${new Date().toISOString().slice(0, 10)}.json`;
     const blob = new Blob([jsonStr], { type: 'application/json' });
+
+    // Support Web Share API (share directly via LINE, AirDrop, Chat, etc.)
+    if (typeof navigator !== 'undefined' && navigator.canShare) {
+      try {
+        const file = new File([blob], fileName, { type: 'application/json' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'ข้อมูลเคสที่บันทึก MotoLease',
+            text: `ส่งออกข้อมูลเคส ${cases.length} รายการ`,
+          });
+          showToast('แชร์ไฟล์ข้อมูลเรียบร้อยแล้ว');
+          return;
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+      }
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `MotoLease_Saved_Cases_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -553,23 +577,25 @@ export const SavedCasesModal: React.FC<Props> = ({
                 </button>
               )}
 
+              {/* ส่งออก / แชร์ไฟล์ */}
               <button
                 type="button"
                 onClick={handleExport}
                 disabled={cases.length === 0}
-                className="px-2.5 py-2 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 font-medium text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap"
-                title="ดาวน์โหลดไฟล์สำรองข้อมูล (JSON)"
+                className="px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-sky-50 disabled:opacity-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
+                title="ส่งออก / แชร์ไฟล์ข้อมูลเคสเพื่อส่งต่อไปอีกเครื่อง"
               >
-                <Download className="w-3.5 h-3.5 text-slate-500" />
-                <span className="hidden sm:inline">สำรองไฟล์</span>
+                <Download className="w-3.5 h-3.5 text-sky-600" />
+                <span className="text-[11px]">ส่งออก</span>
               </button>
 
+              {/* นำเข้าไฟล์ */}
               <label
-                className="px-2.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-medium text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap"
-                title="นำเข้าไฟล์สำรองข้อมูล (JSON)"
+                className="px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-teal-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
+                title="นำเข้าไฟล์ข้อมูลเคสจากอีกเครื่อง"
               >
-                <Upload className="w-3.5 h-3.5 text-slate-500" />
-                <span className="hidden sm:inline">นำเข้า</span>
+                <Upload className="w-3.5 h-3.5 text-teal-600" />
+                <span className="text-[11px]">นำเข้า</span>
                 <input
                   type="file"
                   accept=".json,application/json"
@@ -577,6 +603,24 @@ export const SavedCasesModal: React.FC<Props> = ({
                   className="hidden"
                 />
               </label>
+
+              {/* ปุ่มช่วยเหลือวิธีย้ายเครื่อง */}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowTransferGuide((prev) => !prev);
+                }}
+                className={`px-2 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1 border shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all ${
+                  showTransferGuide
+                    ? 'bg-amber-500 text-white border-amber-600'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200/90'
+                }`}
+                title="วิธีย้ายข้อมูลเคสจากเครื่องหนึ่งไปอีกเครื่อง"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span className="hidden sm:inline text-[11px]">วิธีย้ายเครื่อง</span>
+              </button>
 
               {cases.length > 0 && (
                 <button
@@ -855,6 +899,62 @@ export const SavedCasesModal: React.FC<Props> = ({
                   className="px-2.5 py-1 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs cursor-pointer active:scale-95 transition-all"
                 >
                   ยกเลิก
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Transfer Guide Dialog (วิธีย้ายข้อมูลเคสข้ามเครื่อง) */}
+          {showTransferGuide && (
+            <div className="mt-2.5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-50 via-sky-50 to-white border border-amber-300 text-slate-800 text-xs space-y-2.5 animate-fade-in shadow-xs relative">
+              <div className="flex items-center justify-between gap-2 border-b border-amber-200/80 pb-2">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="font-extrabold text-xs sm:text-sm text-slate-900">
+                    วิธีย้ายข้อมูลเคสจากเครื่องหนึ่งไปอีกเครื่อง
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTransferGuide(false)}
+                  className="p-1 rounded-lg hover:bg-amber-100 text-slate-500 hover:text-slate-800 cursor-pointer text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-2 text-slate-700 leading-relaxed text-[11px] sm:text-xs">
+                <div className="p-2.5 rounded-xl bg-white/90 border border-sky-200 shadow-2xs space-y-1">
+                  <div className="font-extrabold text-sky-800 flex items-center gap-1.5">
+                    <Download className="w-3.5 h-3.5 text-sky-600" />
+                    <span>ขั้นตอนที่ 1: เครื่องต้นทาง (เครื่องเดิมที่มีข้อมูล)</span>
+                  </div>
+                  <p className="text-slate-600 pl-5">
+                    1. กดปุ่ม <strong className="text-sky-700">"ส่งออก"</strong> ด้านบน<br />
+                    2. เลือกว่าจะส่งไฟล์เข้า <strong className="text-emerald-700">LINE / ส่งต่อให้อีกเครื่อง</strong> หรือ บันทึกลงในเครื่อง (ไฟล์จะมีนามสกุล <span className="font-mono text-[10px] bg-slate-100 px-1 py-0.2 rounded">.json</span>)
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white/90 border border-teal-200 shadow-2xs space-y-1">
+                  <div className="font-extrabold text-teal-800 flex items-center gap-1.5">
+                    <Upload className="w-3.5 h-3.5 text-teal-600" />
+                    <span>ขั้นตอนที่ 2: เครื่องปลายทาง (เครื่องใหม่ที่ต้องการรับเคส)</span>
+                  </div>
+                  <p className="text-slate-600 pl-5">
+                    1. ในเครื่องใหม่ เปิดแอปแล้วกดเข้ามาที่หน้านี้ ("เคสที่บันทึกไว้ในอุปกรณ์")<br />
+                    2. กดปุ่ม <strong className="text-teal-700">"นำเข้า"</strong> ด้านบน แล้วเลือกไฟล์ <span className="font-mono text-[10px] bg-slate-100 px-1 py-0.2 rounded">.json</span> ที่ได้รับมา<br />
+                    3. ระบบจะดึงเคสทั้งหมดเข้ามาในเครื่องใหม่ทันที โดยไม่ทับข้อมูลเก่า
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowTransferGuide(false)}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all"
+                >
+                  เข้าใจแล้ว ปิดหน้าต่างนี้
                 </button>
               </div>
             </div>
