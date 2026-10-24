@@ -233,18 +233,19 @@ export const SavedCasesModal: React.FC<Props> = ({
         return false;
       }
 
+      // Delivery filter (เมื่อเลือกดูเฉพาะ รับรถ หรือ รอรับ)
+      if (deliveryFilter !== 'all') {
+        const isApproved = c.approvalStatus === 'approved';
+        const caseDelivery = c.deliveryStatus || 'pending_delivery';
+        if (!isApproved || caseDelivery !== deliveryFilter) {
+          return false;
+        }
+      }
+
       // Status filter
       const caseStatus = c.approvalStatus || 'pending';
       if (statusFilter !== 'all' && caseStatus !== statusFilter) {
         return false;
-      }
-
-      // Delivery sub-filter (applicable when viewing approved cases)
-      if (statusFilter === 'approved' && deliveryFilter !== 'all') {
-        const caseDelivery = c.deliveryStatus || 'pending_delivery';
-        if (caseDelivery !== deliveryFilter) {
-          return false;
-        }
       }
 
       // Text search query
@@ -283,6 +284,8 @@ export const SavedCasesModal: React.FC<Props> = ({
       month: number;
       monthName: string;
       items: SavedCaseRecord[];
+      deliveredCount: number;
+      pendingDeliveryCount: number;
     }[] = [];
 
     Array.from(map.entries())
@@ -292,17 +295,35 @@ export const SavedCasesModal: React.FC<Props> = ({
         const yr = parseInt(yrStr, 10);
         const mo = parseInt(moStr, 10);
         const monthObj = THAI_MONTHS.find((m) => m.id === mo);
+
+        // Calculate delivery counts for this month
+        const monthCases = cases.filter((c) => {
+          const d = new Date(c.createdAt);
+          const cYr = d.getFullYear() + 543;
+          const cMo = d.getMonth() + 1;
+          return cYr === yr && cMo === mo;
+        });
+
+        const deliveredCount = monthCases.filter(
+          (c) => c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered'
+        ).length;
+        const pendingDeliveryCount = monthCases.filter(
+          (c) => c.approvalStatus === 'approved' && (!c.deliveryStatus || c.deliveryStatus === 'pending_delivery')
+        ).length;
+
         groups.push({
           key,
           year: yr,
           month: mo,
           monthName: monthObj ? monthObj.name : `เดือน ${mo}`,
           items,
+          deliveredCount,
+          pendingDeliveryCount,
         });
       });
 
     return groups;
-  }, [filteredCases]);
+  }, [filteredCases, cases]);
 
   const handleSetApprovalStatus = (
     id: string,
@@ -896,18 +917,62 @@ export const SavedCasesModal: React.FC<Props> = ({
                       </span>
                     </div>
 
-                    <div className="text-[10px] sm:text-[10.5px] font-semibold text-slate-600 flex items-center gap-1.5 sm:gap-2">
-                      <span className="text-emerald-700 font-bold">
-                        อนุมัติ {group.items.filter((i) => i.approvalStatus === 'approved').length}
-                      </span>
-                      <span>•</span>
-                      <span className="text-teal-700">
-                        รับรถ {group.items.filter((i) => i.approvalStatus === 'approved' && i.deliveryStatus === 'delivered').length}
-                      </span>
-                      <span>•</span>
-                      <span className="text-amber-700">
-                        รอรับ {group.items.filter((i) => i.approvalStatus === 'approved' && (!i.deliveryStatus || i.deliveryStatus === 'pending_delivery')).length}
-                      </span>
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                      {/* ปุ่ม รับรถ (คลิกเพื่อแสดงเฉพาะเคสรับรถแล้ว) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          if (deliveryFilter === 'delivered') {
+                            setDeliveryFilter('all');
+                          } else {
+                            setDeliveryFilter('delivered');
+                            if (statusFilter !== 'all' && statusFilter !== 'approved') {
+                              setStatusFilter('approved');
+                            }
+                          }
+                        }}
+                        className={`px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1 border shadow-2xs active:scale-95 ${
+                          deliveryFilter === 'delivered'
+                            ? 'bg-teal-600 text-white border-teal-700 shadow-xs ring-1 ring-teal-400'
+                            : 'bg-white hover:bg-teal-50 text-teal-800 border-teal-200'
+                        }`}
+                        title={deliveryFilter === 'delivered' ? 'คลิกเพื่อดูทั้งหมด' : 'คลิกเพื่อแสดงเฉพาะเคสที่รับรถแล้ว'}
+                      >
+                        <PackageCheck className="w-3 h-3 shrink-0" />
+                        <span>รับรถ {group.deliveredCount}</span>
+                        {deliveryFilter === 'delivered' && (
+                          <span className="text-[9px] font-extrabold ml-0.5">✕</span>
+                        )}
+                      </button>
+
+                      {/* ปุ่ม รอรับ (คลิกเพื่อแสดงเฉพาะเคสรอรับรถ) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          if (deliveryFilter === 'pending_delivery') {
+                            setDeliveryFilter('all');
+                          } else {
+                            setDeliveryFilter('pending_delivery');
+                            if (statusFilter !== 'all' && statusFilter !== 'approved') {
+                              setStatusFilter('approved');
+                            }
+                          }
+                        }}
+                        className={`px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1 border shadow-2xs active:scale-95 ${
+                          deliveryFilter === 'pending_delivery'
+                            ? 'bg-amber-500 text-white border-amber-600 shadow-xs ring-1 ring-amber-400'
+                            : 'bg-white hover:bg-amber-50 text-amber-900 border-amber-200'
+                        }`}
+                        title={deliveryFilter === 'pending_delivery' ? 'คลิกเพื่อดูทั้งหมด' : 'คลิกเพื่อแสดงเฉพาะเคสที่รอรับรถ'}
+                      >
+                        <Clock className="w-3 h-3 shrink-0" />
+                        <span>รอรับ {group.pendingDeliveryCount}</span>
+                        {deliveryFilter === 'pending_delivery' && (
+                          <span className="text-[9px] font-extrabold ml-0.5">✕</span>
+                        )}
+                      </button>
                     </div>
                   </div>
 
