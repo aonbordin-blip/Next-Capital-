@@ -471,23 +471,9 @@ export const SavedCasesModal: React.FC<Props> = ({
               <FolderArchive className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">
-                  เคสที่บันทึกไว้ในอุปกรณ์
-                </h2>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
-                  {cases.length} รายการ
-                </span>
-                {statusCounts.approved > 0 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    <span>อนุมัติ {statusCounts.approved}</span>
-                    <span className="text-[9px] font-semibold text-emerald-900 bg-white/80 px-1.5 py-0.2 rounded-full">
-                      รับรถ {statusCounts.delivered} / รอรับ {statusCounts.pendingDelivery}
-                    </span>
-                  </span>
-                )}
-              </div>
+              <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">
+                เคสที่บันทึกไว้ในอุปกรณ์
+              </h2>
               <p className="text-[11px] text-slate-500">
                 ข้อมูลถูกเก็บไว้ในเครื่องของคุณ สามารถดึงกลับมาคำนวณหรือดูได้ทุกเมื่อโดยไม่ต้องต่อเน็ต
               </p>
