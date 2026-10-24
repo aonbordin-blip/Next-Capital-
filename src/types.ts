@@ -191,5 +191,15 @@ export interface SavedCaseRecord {
     rateDisplayText: string;
     totalDriveAwayCost?: number;
   };
+
+  // Case Status & Delivery Tracking (สถานะการอนุมัติและการรับรถ)
+  approvalStatus?: CaseApprovalStatus; // 'pending' (รอผล) | 'approved' (อนุมัติ) | 'rejected' (ไม่อนุมัติ) | 'cancelled' (ยกเลิก)
+  deliveryStatus?: VehicleDeliveryStatus; // 'pending_delivery' (รอรับรถ) | 'delivered' (รับรถแล้ว)
+  approvalNote?: string;
+  approvalUpdatedAt?: number;
 }
+
+export type CaseApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+export type VehicleDeliveryStatus = 'pending_delivery' | 'delivered';
+
 

@@ -35,8 +35,8 @@ export const InstallAppBanner: React.FC = () => {
       {/* Sleek Floating Glassmorphic Install Bar */}
       <div className="no-print mx-4 mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-blue-700/90 via-indigo-700/90 to-blue-800/90 text-white backdrop-blur-xl border border-white/30 shadow-lg shadow-blue-900/20 flex items-center justify-between gap-3 animate-fade-in z-20">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center shadow-xs flex-shrink-0">
-            <NextCapitalLogo size={22} />
+          <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs flex-shrink-0 overflow-hidden">
+            <NextCapitalLogo size={22} className="flex items-center justify-center" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">

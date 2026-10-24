@@ -25,8 +25,8 @@ export const ProposalInfoModal: React.FC<Props> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-slate-50/70">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-2xs border border-slate-200/80 flex items-center justify-center shrink-0">
-              <NextCapitalLogo size={28} />
+            <div className="w-10 h-10 rounded-xl bg-white shadow-2xs border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden">
+              <NextCapitalLogo size={28} className="flex items-center justify-center" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-800">

@@ -19,14 +19,22 @@ import {
   AlertCircle,
   Share2,
   Pencil,
+  CheckCircle2,
+  XCircle,
+  Ban,
+  PackageCheck,
+  CheckCheck,
+  Filter,
 } from 'lucide-react';
-import { SavedCaseRecord } from '../types';
+import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import {
   getSavedCases,
   deleteCaseRecord,
   updateCaseTitle,
+  updateCaseApprovalStatus,
+  updateCaseDeliveryStatus,
   clearAllCaseRecords,
   exportCasesAsJson,
   importCasesFromJson,
@@ -53,6 +61,8 @@ export const SavedCasesModal: React.FC<Props> = ({
 }) => {
   const [cases, setCases] = useState<SavedCaseRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | CaseApprovalStatus>('all');
+  const [deliveryFilter, setDeliveryFilter] = useState<'all' | VehicleDeliveryStatus>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitleInput, setEditTitleInput] = useState('');
   const [previewCase, setPreviewCase] = useState<SavedCaseRecord | null>(null);
@@ -65,6 +75,8 @@ export const SavedCasesModal: React.FC<Props> = ({
     if (isOpen) {
       setCases(getSavedCases());
       setSearchQuery('');
+      setStatusFilter('all');
+      setDeliveryFilter('all');
       setEditingId(null);
       setPreviewCase(null);
       setDeleteConfirmId(null);
@@ -77,19 +89,105 @@ export const SavedCasesModal: React.FC<Props> = ({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const filteredCases = useMemo(() => {
-    if (!searchQuery.trim()) return cases;
-    const q = searchQuery.toLowerCase().trim();
-    return cases.filter((c) => {
-      const titleMatch = c.caseTitle.toLowerCase().includes(q);
-      const custMatch = c.customerName.toLowerCase().includes(q);
-      const phoneMatch = c.customerPhone?.toLowerCase().includes(q);
-      const bikeMatch = c.bikeModelName?.toLowerCase().includes(q);
-      const codeMatch = c.bikeModelCode?.toLowerCase().includes(q);
-      const proposalMatch = c.snapshot.proposalCode.toLowerCase().includes(q);
-      return titleMatch || custMatch || phoneMatch || bikeMatch || codeMatch || proposalMatch;
+  // Status statistics and counters
+  const statusCounts = useMemo(() => {
+    let pending = 0;
+    let approved = 0;
+    let rejected = 0;
+    let cancelled = 0;
+    let pendingDelivery = 0;
+    let delivered = 0;
+
+    cases.forEach((c) => {
+      const st = c.approvalStatus || 'pending';
+      if (st === 'approved') {
+        approved++;
+        if (c.deliveryStatus === 'delivered') {
+          delivered++;
+        } else {
+          pendingDelivery++;
+        }
+      } else if (st === 'rejected') {
+        rejected++;
+      } else if (st === 'cancelled') {
+        cancelled++;
+      } else {
+        pending++;
+      }
     });
-  }, [cases, searchQuery]);
+
+    return {
+      all: cases.length,
+      pending,
+      approved,
+      rejected,
+      cancelled,
+      pendingDelivery,
+      delivered,
+    };
+  }, [cases]);
+
+  const filteredCases = useMemo(() => {
+    return cases.filter((c) => {
+      // Status filter
+      const caseStatus = c.approvalStatus || 'pending';
+      if (statusFilter !== 'all' && caseStatus !== statusFilter) {
+        return false;
+      }
+
+      // Delivery sub-filter (applicable when viewing approved cases)
+      if (statusFilter === 'approved' && deliveryFilter !== 'all') {
+        const caseDelivery = c.deliveryStatus || 'pending_delivery';
+        if (caseDelivery !== deliveryFilter) {
+          return false;
+        }
+      }
+
+      // Text search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const titleMatch = c.caseTitle.toLowerCase().includes(q);
+        const custMatch = c.customerName.toLowerCase().includes(q);
+        const phoneMatch = c.customerPhone?.toLowerCase().includes(q);
+        const bikeMatch = c.bikeModelName?.toLowerCase().includes(q);
+        const codeMatch = c.bikeModelCode?.toLowerCase().includes(q);
+        const proposalMatch = c.snapshot.proposalCode.toLowerCase().includes(q);
+        return titleMatch || custMatch || phoneMatch || bikeMatch || codeMatch || proposalMatch;
+      }
+
+      return true;
+    });
+  }, [cases, searchQuery, statusFilter, deliveryFilter]);
+
+  const handleSetApprovalStatus = (
+    id: string,
+    status: CaseApprovalStatus,
+    deliveryStatus?: VehicleDeliveryStatus
+  ) => {
+    triggerHaptic(status === 'approved' ? 'success' : 'light');
+    const updated = updateCaseApprovalStatus(id, status, deliveryStatus);
+    setCases(updated);
+    const label =
+      status === 'approved'
+        ? '✓ เปลี่ยนสถานะเป็น "อนุมัติ" เรียบร้อย'
+        : status === 'rejected'
+        ? '✕ เปลี่ยนสถานะเป็น "ไม่อนุมัติ"'
+        : status === 'cancelled'
+        ? '⊘ เปลี่ยนสถานะเป็น "ยกเลิก"'
+        : '⏱ เปลี่ยนสถานะเป็น "รอผล"';
+    showToast(label);
+  };
+
+  const handleSetDeliveryStatus = (id: string, deliveryStatus: VehicleDeliveryStatus) => {
+    triggerHaptic('success');
+    const updated = updateCaseDeliveryStatus(id, deliveryStatus);
+    setCases(updated);
+    showToast(
+      deliveryStatus === 'delivered'
+        ? '✓ อัปเดตสถานะ: "รับรถแล้ว"'
+        : '⏳ อัปเดตสถานะ: "รอรับรถ"'
+    );
+  };
 
   // แสดงเฉพาะชื่อลูกค้าในส่วนหัวข้อเคสตามที่ผู้ใช้ต้องการ
   const getCustomerDisplayName = (record: SavedCaseRecord): string => {
@@ -214,13 +312,22 @@ export const SavedCasesModal: React.FC<Props> = ({
               <FolderArchive className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">
                   เคสที่บันทึกไว้ในอุปกรณ์
                 </h2>
                 <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
                   {cases.length} รายการ
                 </span>
+                {statusCounts.approved > 0 && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>อนุมัติ {statusCounts.approved}</span>
+                    <span className="text-[9px] font-semibold text-emerald-900 bg-white/80 px-1.5 py-0.2 rounded-full">
+                      รับรถ {statusCounts.delivered} / รอรับ {statusCounts.pendingDelivery}
+                    </span>
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-500">
                 ข้อมูลถูกเก็บไว้ในเครื่องของคุณ สามารถดึงกลับมาคำนวณหรือดูได้ทุกเมื่อโดยไม่ต้องต่อเน็ต
@@ -317,6 +424,178 @@ export const SavedCasesModal: React.FC<Props> = ({
               )}
             </div>
           </div>
+
+          {/* Status Filter Chips Bar */}
+          {cases.length > 0 && (
+            <div className="pt-1 space-y-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
+                {/* ทั้งหมด */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatusFilter('all');
+                    setDeliveryFilter('all');
+                  }}
+                  className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    statusFilter === 'all'
+                      ? 'bg-slate-800 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  <span>ทั้งหมด</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9.5px] ${
+                    statusFilter === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {statusCounts.all}
+                  </span>
+                </button>
+
+                {/* อนุมัติ */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatusFilter('approved');
+                    setDeliveryFilter('all');
+                  }}
+                  className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    statusFilter === 'approved'
+                      ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300'
+                      : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-200'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>อนุมัติ</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9.5px] ${
+                    statusFilter === 'approved' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {statusCounts.approved}
+                  </span>
+                </button>
+
+                {/* รอผล */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatusFilter('pending');
+                    setDeliveryFilter('all');
+                  }}
+                  className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    statusFilter === 'pending'
+                      ? 'bg-sky-600 text-white shadow-xs ring-2 ring-sky-300'
+                      : 'bg-white text-sky-800 hover:bg-sky-50 border border-sky-200'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>รอผล</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9.5px] ${
+                    statusFilter === 'pending' ? 'bg-sky-700 text-white' : 'bg-sky-100 text-sky-800'
+                  }`}>
+                    {statusCounts.pending}
+                  </span>
+                </button>
+
+                {/* ไม่อนุมัติ */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatusFilter('rejected');
+                    setDeliveryFilter('all');
+                  }}
+                  className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    statusFilter === 'rejected'
+                      ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-300'
+                      : 'bg-white text-rose-800 hover:bg-rose-50 border border-rose-200'
+                  }`}
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>ไม่อนุมัติ</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9.5px] ${
+                    statusFilter === 'rejected' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    {statusCounts.rejected}
+                  </span>
+                </button>
+
+                {/* ยกเลิก */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatusFilter('cancelled');
+                    setDeliveryFilter('all');
+                  }}
+                  className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    statusFilter === 'cancelled'
+                      ? 'bg-slate-700 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  <span>ยกเลิก</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9.5px] ${
+                    statusFilter === 'cancelled' ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {statusCounts.cancelled}
+                  </span>
+                </button>
+              </div>
+
+              {/* Sub-filter for Delivery Status when "อนุมัติ" is active */}
+              {statusFilter === 'approved' && (
+                <div className="flex items-center gap-1.5 pt-1 pl-1 text-[11px] text-slate-600 animate-fade-in flex-wrap">
+                  <span className="font-bold text-slate-400 text-[10px]">การรับรถ:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDeliveryFilter('all');
+                    }}
+                    className={`px-2 py-0.5 rounded-lg font-medium cursor-pointer transition-all ${
+                      deliveryFilter === 'all'
+                        ? 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-300'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    ทั้งหมด ({statusCounts.approved})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDeliveryFilter('pending_delivery');
+                    }}
+                    className={`px-2 py-0.5 rounded-lg font-medium cursor-pointer transition-all flex items-center gap-1 ${
+                      deliveryFilter === 'pending_delivery'
+                        ? 'bg-amber-100 text-amber-900 font-bold border border-amber-300'
+                        : 'bg-white text-amber-800 border border-slate-200 hover:bg-amber-50'
+                    }`}
+                  >
+                    <Clock className="w-3 h-3 text-amber-600" />
+                    <span>รอรับรถ ({statusCounts.pendingDelivery})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDeliveryFilter('delivered');
+                    }}
+                    className={`px-2 py-0.5 rounded-lg font-medium cursor-pointer transition-all flex items-center gap-1 ${
+                      deliveryFilter === 'delivered'
+                        ? 'bg-teal-100 text-teal-900 font-bold border border-teal-300'
+                        : 'bg-white text-teal-800 border border-slate-200 hover:bg-teal-50'
+                    }`}
+                  >
+                    <Check className="w-3 h-3 text-teal-600" />
+                    <span>รับรถแล้ว ({statusCounts.delivered})</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Clear All In-App Confirmation Banner */}
           {showClearAllConfirm && (
@@ -431,24 +710,69 @@ export const SavedCasesModal: React.FC<Props> = ({
                           </button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h3 className="font-extrabold text-sm text-slate-800">
-                            {getCustomerDisplayName(record)}
-                          </h3>
-                          {isCurrentEditing && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
-                              <Pencil className="w-2.5 h-2.5 text-amber-700" />
-                              กำลังแก้ไข
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleStartEditTitle(record)}
-                            className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
-                            title="แก้ไขชื่อลูกค้า"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h3 className="font-extrabold text-sm text-slate-800">
+                              {getCustomerDisplayName(record)}
+                            </h3>
+                            {isCurrentEditing && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1">
+                                <Pencil className="w-2.5 h-2.5 text-amber-700" />
+                                กำลังแก้ไข
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditTitle(record)}
+                              className="text-slate-400 hover:text-sky-600 transition-colors p-0.5 cursor-pointer opacity-70 group-hover:opacity-100"
+                              title="แก้ไขชื่อลูกค้า"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Approval & Delivery Status Indicators (สัญลักษณ์สถานะ) */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Case Approval Status Badge */}
+                            {(!record.approvalStatus || record.approvalStatus === 'pending') && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 inline-flex items-center gap-1 shadow-2xs">
+                                <Clock className="w-3 h-3 text-sky-500" />
+                                <span>รอผล</span>
+                              </span>
+                            )}
+                            {record.approvalStatus === 'approved' && (
+                              <>
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>อนุมัติ</span>
+                                </span>
+                                {/* Vehicle Delivery Status Badge (ถ้าอนุมัติ ให้ดูได้ด้วย รับรถแล้ว หรือ รอรับรถ) */}
+                                {record.deliveryStatus === 'delivered' ? (
+                                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300 inline-flex items-center gap-1 shadow-2xs">
+                                    <PackageCheck className="w-3.5 h-3.5 text-teal-600" />
+                                    <span>รับรถแล้ว ✓</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+                                    <Clock className="w-3 h-3 text-amber-600" />
+                                    <span>รอรับรถ ⏳</span>
+                                  </span>
+                                )}
+                              </>
+                            )}
+                            {record.approvalStatus === 'rejected' && (
+                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300 inline-flex items-center gap-1 shadow-2xs">
+                                <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                <span>ไม่อนุมัติ</span>
+                              </span>
+                            )}
+                            {record.approvalStatus === 'cancelled' && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1 shadow-2xs">
+                                <Ban className="w-3 h-3 text-slate-500" />
+                                <span>ยกเลิก</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -515,6 +839,118 @@ export const SavedCasesModal: React.FC<Props> = ({
                         <div className="font-bold text-slate-800 text-xs">
                           {formatBaht(record.snapshot.financeAmount, true)}
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Status Selection & Vehicle Delivery Control Strip */}
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 space-y-1.5 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        {/* Status Switcher Buttons */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-slate-500 shrink-0">
+                            สถานะเคส:
+                          </span>
+                          <div className="inline-flex rounded-lg p-0.5 bg-slate-200/70 text-[10.5px] font-bold gap-0.5">
+                            {/* รอผล */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetApprovalStatus(record.id, 'pending')}
+                              className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                (!record.approvalStatus || record.approvalStatus === 'pending')
+                                  ? 'bg-white text-sky-800 shadow-2xs font-extrabold'
+                                  : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                              title="เปลี่ยนเป็น รอผลพิจารณา"
+                            >
+                              <Clock className="w-3 h-3 text-sky-500" />
+                              <span>รอผล</span>
+                            </button>
+
+                            {/* อนุมัติ */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetApprovalStatus(record.id, 'approved')}
+                              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                record.approvalStatus === 'approved'
+                                  ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+                                  : 'text-slate-600 hover:text-emerald-700'
+                              }`}
+                              title="เปลี่ยนเป็น อนุมัติ"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>อนุมัติ</span>
+                            </button>
+
+                            {/* ไม่อนุมัติ */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
+                              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                record.approvalStatus === 'rejected'
+                                  ? 'bg-rose-600 text-white shadow-xs font-extrabold'
+                                  : 'text-slate-600 hover:text-rose-700'
+                              }`}
+                              title="เปลี่ยนเป็น ไม่อนุมัติ"
+                            >
+                              <XCircle className="w-3 h-3" />
+                              <span>ไม่อนุมัติ</span>
+                            </button>
+
+                            {/* ยกเลิก */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
+                              className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                                record.approvalStatus === 'cancelled'
+                                  ? 'bg-slate-700 text-white shadow-xs font-extrabold'
+                                  : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                              title="เปลี่ยนเป็น ยกเลิก"
+                            >
+                              <Ban className="w-3 h-3" />
+                              <span>ยกเลิก</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* If Approved: Vehicle Delivery Status Toggle (ถ้าอนุมัติ ก็ให้สามารถดูได้ด้วย รับรถแล้ว หรือยัง หรือ รอรับรถ) */}
+                        {record.approvalStatus === 'approved' && (
+                          <div className="flex items-center gap-1.5 animate-fade-in bg-white px-2 py-1 rounded-lg border border-slate-200/90 shadow-2xs self-start sm:self-auto">
+                            <span className="text-[10px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
+                              <Bike className="w-3 h-3 text-slate-400" />
+                              การรับรถ:
+                            </span>
+                            <div className="inline-flex rounded-md p-0.5 bg-slate-100 text-[10px] font-bold gap-0.5">
+                              <button
+                                type="button"
+                                onClick={() => handleSetDeliveryStatus(record.id, 'pending_delivery')}
+                                className={`px-2 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1 ${
+                                  (!record.deliveryStatus || record.deliveryStatus === 'pending_delivery')
+                                    ? 'bg-amber-500 text-white shadow-2xs font-extrabold'
+                                    : 'text-slate-600 hover:text-amber-800'
+                                }`}
+                                title="ยังไม่ได้รับรถ (รอส่งมอบ)"
+                              >
+                                <Clock className="w-2.5 h-2.5" />
+                                <span>รอรับรถ</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleSetDeliveryStatus(record.id, 'delivered')}
+                                className={`px-2 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1 ${
+                                  record.deliveryStatus === 'delivered'
+                                    ? 'bg-teal-600 text-white shadow-2xs font-extrabold'
+                                    : 'text-slate-600 hover:text-teal-800'
+                                }`}
+                                title="ลูกค้ารับมอบรถเรียบร้อยแล้ว"
+                              >
+                                <Check className="w-2.5 h-2.5" />
+                                <span>รับรถแล้ว</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

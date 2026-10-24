@@ -1,4 +1,4 @@
-import { SavedCaseRecord } from '../types';
+import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 
 const STORAGE_KEY = 'ncap_saved_cases_v1';
 
@@ -27,10 +27,13 @@ export function saveCaseRecord(
     // Update existing
     const index = cases.findIndex((c) => c.id === data.id);
     if (index >= 0) {
+      const existing = cases[index];
       const updated: SavedCaseRecord = {
-        ...cases[index],
+        ...existing,
         ...data,
         id: data.id,
+        approvalStatus: data.approvalStatus !== undefined ? data.approvalStatus : (existing.approvalStatus || 'pending'),
+        deliveryStatus: data.deliveryStatus !== undefined ? data.deliveryStatus : existing.deliveryStatus,
         updatedAt: now,
       };
       cases[index] = updated;
@@ -44,8 +47,14 @@ export function saveCaseRecord(
   }
 
   // Create new
+  const initialApprovalStatus: CaseApprovalStatus = data.approvalStatus || 'pending';
+  const initialDeliveryStatus: VehicleDeliveryStatus | undefined =
+    initialApprovalStatus === 'approved' ? (data.deliveryStatus || 'pending_delivery') : data.deliveryStatus;
+
   const newRecord: SavedCaseRecord = {
     ...data,
+    approvalStatus: initialApprovalStatus,
+    deliveryStatus: initialDeliveryStatus,
     id: `case-${now}-${Math.random().toString(36).substring(2, 7)}`,
     createdAt: now,
     updatedAt: now,
@@ -80,6 +89,56 @@ export function updateCaseTitle(id: string, newTitle: string): SavedCaseRecord[]
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
     console.error('Failed to update title in localStorage:', err);
+  }
+  return updated;
+}
+
+export function updateCaseApprovalStatus(
+  id: string,
+  approvalStatus: CaseApprovalStatus,
+  deliveryStatus?: VehicleDeliveryStatus
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    const resolvedDeliveryStatus: VehicleDeliveryStatus | undefined =
+      approvalStatus === 'approved'
+        ? (deliveryStatus || c.deliveryStatus || 'pending_delivery')
+        : undefined;
+
+    return {
+      ...c,
+      approvalStatus,
+      deliveryStatus: resolvedDeliveryStatus,
+      updatedAt: Date.now(),
+      approvalUpdatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update approval status in localStorage:', err);
+  }
+  return updated;
+}
+
+export function updateCaseDeliveryStatus(
+  id: string,
+  deliveryStatus: VehicleDeliveryStatus
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    return {
+      ...c,
+      deliveryStatus,
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update delivery status in localStorage:', err);
   }
   return updated;
 }

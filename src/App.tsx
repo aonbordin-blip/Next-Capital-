@@ -928,8 +928,8 @@ ${
           {/* Top Brand Bar */}
           <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5">
             <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white shadow-xs border border-white/80 flex items-center justify-center shrink-0">
-                <NextCapitalLogo size={22} />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white shadow-xs border border-white/90 flex items-center justify-center shrink-0 overflow-hidden">
+                <NextCapitalLogo size={22} className="flex items-center justify-center" />
               </div>
               <div className="flex flex-col">
                 <span className="font-extrabold text-[11px] sm:text-xs tracking-tight text-white uppercase drop-shadow-xs">

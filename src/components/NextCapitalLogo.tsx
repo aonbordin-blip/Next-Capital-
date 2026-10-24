@@ -40,14 +40,15 @@ export const NextCapitalLogo: React.FC<NextCapitalLogoProps> = ({
   `;
 
   return (
-    <div className={`inline-flex items-center justify-center ${showText ? 'gap-2' : ''} ${className}`}>
+    <div className={`flex items-center justify-center leading-none ${showText ? 'gap-2' : ''} ${className}`}>
       <svg
         width={size}
         height={size}
         viewBox="0 0 500 500"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0 block"
+        className="shrink-0 block"
+        style={{ display: 'block' }}
       >
         {/* Blue Upper Shape (Royal Blue) */}
         <path

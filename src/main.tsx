@@ -15,9 +15,7 @@ if (typeof window !== 'undefined') {
   if ('caches' in window) {
     caches.keys().then((keys) => {
       for (const key of keys) {
-        if (key.includes('workbox') || key.includes('pwa') || key.includes('google-fonts') || key.includes('sw')) {
-          caches.delete(key).catch(() => {});
-        }
+        caches.delete(key).catch(() => {});
       }
     }).catch(() => {});
   }
