@@ -2531,12 +2531,12 @@ ${
     </main>
 
     {/* Bottom Locked Section: Navigation Dock & Brand Footer (ล็อคค้างไว้ที่ด้านล่าง ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
-    <div className="shrink-0 z-20 sticky bottom-0 w-full bg-gradient-to-t from-white/95 via-white/85 to-white/30 pt-1.5 sm:pt-2 backdrop-blur-xl border-t border-sky-100/70 shadow-[0_-10px_25px_rgba(2,132,199,0.08)]">
+    <div className="shrink-0 z-20 sticky bottom-0 w-full bg-transparent pt-1 sm:pt-1.5 pointer-events-none">
       {/* Floating Glassmorphic Bottom Navigation Bar */}
-      <div className="px-2.5 sm:px-4 pb-1.5 sm:pb-2">
+      <div className="px-2.5 sm:px-4 pb-2 pointer-events-auto">
         <nav
           aria-label="แถบนำทางหลัก"
-          className="relative mx-auto w-full max-w-[500px] bg-white/40 backdrop-blur-xl border border-white/70 shadow-lg shadow-sky-950/10 rounded-full p-1 flex items-center justify-between overflow-hidden"
+          className="relative mx-auto w-full max-w-[500px] liquid-glass-pill rounded-full p-1 flex items-center justify-between overflow-hidden"
         >
           {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
           <div
@@ -2585,7 +2585,7 @@ ${
       </div>
 
       {/* Bottom Bar Info matching Reference Dock */}
-      <footer className="px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/90 border-t border-sky-100/80 backdrop-blur-xl text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+      <footer className="pointer-events-auto px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/55 border-t border-sky-100/50 backdrop-blur-md text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shrink-0" />
           <span className="font-semibold text-slate-700 text-[10px] sm:text-[11px] truncate">
