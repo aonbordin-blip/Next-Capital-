@@ -2531,16 +2531,16 @@ ${
     </main>
 
     {/* Bottom Locked Section: Navigation Dock & Brand Footer (ล็อคค้างไว้ที่ด้านล่าง ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
-    <div className="shrink-0 z-20 sticky bottom-0 w-full bg-transparent pt-1 sm:pt-1.5 pointer-events-none">
+    <div className="shrink-0 z-20 sticky bottom-0 w-full bg-transparent pt-1 sm:pt-1.5 pointer-events-none border-none shadow-none">
       {/* Floating Glassmorphic Bottom Navigation Bar */}
       <div className="px-2.5 sm:px-4 pb-2 pointer-events-auto">
         <nav
           aria-label="แถบนำทางหลัก"
-          className="relative mx-auto w-full max-w-[500px] liquid-glass-pill rounded-full p-1 flex items-center justify-between overflow-hidden"
+          className="relative mx-auto w-full max-w-[500px] bg-white/35 hover:bg-white/45 backdrop-blur-xl border border-white/75 shadow-lg shadow-sky-950/10 rounded-full p-1 flex items-center justify-between overflow-hidden transition-all duration-200"
         >
           {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
           <div
-            className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500/70 via-sky-600/70 to-cyan-500/70 backdrop-blur-sm shadow-md shadow-sky-500/25 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+            className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/25 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
             style={{
               width: 'calc(25% - 4px)',
               left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
@@ -2584,8 +2584,8 @@ ${
         </nav>
       </div>
 
-      {/* Bottom Bar Info matching Reference Dock */}
-      <footer className="pointer-events-auto px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/55 border-t border-sky-100/50 backdrop-blur-md text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+      {/* Bottom Bar Info: มีพื้นหลังขาวเฉพาะแถบนี้ที่บอกชื่อแอพและผู้พัฒนา */}
+      <footer className="pointer-events-auto px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/95 border-t border-sky-100/90 backdrop-blur-xl text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-sm">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shrink-0" />
           <span className="font-semibold text-slate-700 text-[10px] sm:text-[11px] truncate">
