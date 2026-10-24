@@ -988,7 +988,7 @@ ${
         {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 space-y-2.5 sm:space-y-3.5 overscroll-contain"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-20 sm:pb-24 space-y-2.5 sm:space-y-3.5 overscroll-contain"
         >
           {/* In-App PWA Install Banner */}
           <InstallAppBanner />
@@ -2530,74 +2530,71 @@ ${
       </div>
     </main>
 
-    {/* Bottom Locked Section: Navigation Dock & Brand Footer (ล็อคค้างไว้ที่ด้านล่าง ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
-    <div className="shrink-0 z-20 sticky bottom-0 w-full bg-transparent pt-1 sm:pt-1.5 pointer-events-none border-none shadow-none">
-      {/* Floating Glassmorphic Bottom Navigation Bar */}
-      <div className="px-2.5 sm:px-4 pb-2 pointer-events-auto">
-        <nav
-          aria-label="แถบนำทางหลัก"
-          className="relative mx-auto w-full max-w-[500px] bg-white/35 hover:bg-white/45 backdrop-blur-xl border border-white/75 shadow-lg shadow-sky-950/10 rounded-full p-1 flex items-center justify-between overflow-hidden transition-all duration-200"
-        >
-          {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
-          <div
-            className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/25 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
-            style={{
-              width: 'calc(25% - 4px)',
-              left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
-            }}
+        {/* Floating Glassmorphic Bottom Navigation Bar: ลอยอยู่เหนือเนื้อหา ไม่มีพื้นหลังสีขาวมารองรับ */}
+        <div className="absolute bottom-[38px] sm:bottom-[44px] inset-x-0 z-30 px-2.5 sm:px-4 pointer-events-none">
+          <nav
+            aria-label="แถบนำทางหลัก"
+            className="pointer-events-auto relative mx-auto w-full max-w-[500px] bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/40 hover:border-white/60 shadow-sm shadow-sky-950/20 rounded-full p-1 flex items-center justify-between overflow-hidden transition-all duration-200"
           >
-            {/* Subtle liquid shimmer light across the active pill */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-pulse pointer-events-none" />
-          </div>
+            {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
+            <div
+              className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/25 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+              style={{
+                width: 'calc(25% - 4px)',
+                left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
+              }}
+            >
+              {/* Subtle liquid shimmer light across the active pill */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-pulse pointer-events-none" />
+            </div>
 
-          {NAV_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => handleTabChange(tab.id)}
-                className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
-                  isActive
-                    ? 'text-white font-bold'
-                    : 'text-slate-700 hover:text-sky-800 hover:bg-white/15 font-semibold'
-                }`}
-              >
-                <Icon
-                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-300 ${
+            {NAV_TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
                     isActive
-                      ? 'text-white animate-tab-icon'
-                      : 'text-slate-700'
-                  }`}
-                />
-                <span
-                  className={`text-[10.5px] sm:text-xs leading-none whitespace-nowrap transition-transform duration-200 ${
-                    isActive ? 'scale-105' : ''
+                      ? 'text-white font-bold'
+                      : 'text-slate-700 hover:text-sky-800 hover:bg-white/15 font-semibold'
                   }`}
                 >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Bottom Bar Info: มีพื้นหลังขาวเฉพาะแถบนี้ที่บอกชื่อแอพและผู้พัฒนา */}
-      <footer className="pointer-events-auto px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/95 border-t border-sky-100/90 backdrop-blur-xl text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-sm">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shrink-0" />
-          <span className="font-semibold text-slate-700 text-[10px] sm:text-[11px] truncate">
-            ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
-          </span>
+                  <Icon
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-300 ${
+                      isActive
+                        ? 'text-white animate-tab-icon'
+                        : 'text-slate-700'
+                    }`}
+                  />
+                  <span
+                    className={`text-[10.5px] sm:text-xs leading-none whitespace-nowrap transition-transform duration-200 ${
+                      isActive ? 'scale-105' : ''
+                    }`}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
-        <span className="text-[9px] sm:text-[10px] text-sky-800 font-semibold px-2 sm:px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200 shrink-0 whitespace-nowrap">
-          พัฒนาระบบโดย Bordin 6683
-        </span>
-      </footer>
-    </div>
-  </div>
+
+        {/* Bottom Bar Info: มีพื้นหลังขาวเฉพาะแถบนี้ที่บอกชื่อแอพและผู้พัฒนา */}
+        <footer className="shrink-0 z-20 w-full px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/95 border-t border-sky-100/90 backdrop-blur-xl text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shrink-0" />
+            <span className="font-semibold text-slate-700 text-[10px] sm:text-[11px] truncate">
+              ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
+            </span>
+          </div>
+          <span className="text-[9px] sm:text-[10px] text-sky-800 font-semibold px-2 sm:px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200 shrink-0 whitespace-nowrap">
+            พัฒนาระบบโดย Bordin 6683
+          </span>
+        </footer>
+      </div>
 
       {/* Modals */}
       <ProposalSelectModal
