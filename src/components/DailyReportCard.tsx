@@ -31,20 +31,22 @@ export interface DealerReportItem {
 
 const DEFAULT_FINANCE_NAMES = [
   'Next Capital',
-  'Summit',
+  'SM',
   'S Leasing',
   'Cathay',
   'AY',
   'เสริม',
+  'HW',
 ];
 
 const QUICK_FINANCE_PRESETS = [
   'Next Capital',
-  'Summit',
+  'SM (Summit)',
   'S Leasing',
   'Cathay',
   'AY',
   'เสริม',
+  'HW (ไฮเวย์)',
   'ฐิติกร (TK)',
   'ศรีสวัสดิ์',
   'เมืองไทย',
@@ -65,11 +67,12 @@ const QUICK_VALUE_PRESETS = ['0', '1', '2', '3', '1A', '2A', '3A'];
 
 const createDefaultFinances = (): FinanceEntry[] => [
   { id: 'f-1', name: 'Next Capital', value: '1A' },
-  { id: 'f-2', name: 'Summit', value: '1' },
+  { id: 'f-2', name: 'SM', value: '1' },
   { id: 'f-3', name: 'S Leasing', value: '0' },
   { id: 'f-4', name: 'Cathay', value: '1' },
   { id: 'f-5', name: 'AY', value: '1' },
   { id: 'f-6', name: 'เสริม', value: '0' },
+  { id: 'f-7', name: 'HW', value: '0' },
 ];
 
 const createEmptyFinances = (): FinanceEntry[] =>

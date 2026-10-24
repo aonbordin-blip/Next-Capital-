@@ -184,11 +184,12 @@ export function getDealerNumericTotal(dealer: DealerReport): number {
 
 export const STANDARD_FINANCES = [
   'NCAP',
-  'SMT',
+  'SM',
   'SL',
   'CT',
   'AY',
   'เสริม',
+  'HW',
 ];
 
 export const OTHER_FINANCES = [
@@ -208,12 +209,14 @@ export const OTHER_FINANCES = [
 
 export const FINANCE_DESCRIPTIONS: Record<string, string> = {
   'NCAP': 'Next Capital',
-  'SMT': 'Summit Capital',
+  'SM': 'Summit Capital (ซัมมิท)',
+  'SMT': 'Summit Capital (ซัมมิท)',
   'SL': 'S Leasing',
   'CT': 'Cathay Lease',
   'CL': 'Cathay Leaseplan',
   'AY': 'Krungsri Auto (อย.)',
   'เสริม': 'เสริมสร้าง / เสริมสุข',
+  'HW': 'ไฮเวย์ (Highway / สมหวัง)',
   'SS': 'เสริมสร้าง (SS)',
   'TTB': 'ทีทีบี (TTB Drive)',
   'MTC': 'เมืองไทย แคปปิตอล',
@@ -231,8 +234,10 @@ export const FINANCE_NAME_TO_ABBREVIATION: Record<string, string> = {
   'next capital': 'NCAP',
   'nextcapital': 'NCAP',
   'next': 'NCAP',
-  'summit': 'SMT',
-  'summit capital': 'SMT',
+  'summit': 'SM',
+  'summit capital': 'SM',
+  'smt': 'SM',
+  'sm': 'SM',
   's leasing': 'SL',
   's-leasing': 'SL',
   's lease': 'SL',
@@ -240,6 +245,10 @@ export const FINANCE_NAME_TO_ABBREVIATION: Record<string, string> = {
   'cathay': 'CT',
   'cathay lease': 'CT',
   'cathay leaseplan': 'CT',
+  'highway': 'HW',
+  'hw': 'HW',
+  'ไฮเวย์': 'HW',
+  'สมหวัง': 'HW',
   'เมืองไทย แคปปิตอล': 'MTC',
   'ศรีสวัสดิ์': 'SAWAD',
   'เงินติดล้อ': 'TIDLOR',
@@ -269,11 +278,12 @@ const STORAGE_KEY = 'ncap_daily_dealer_report_v1';
 function createDefaultFinances(): FinanceItem[] {
   return [
     { id: 'f-1', name: 'NCAP', count: '1A' },
-    { id: 'f-2', name: 'SMT', count: '1' },
+    { id: 'f-2', name: 'SM', count: '1' },
     { id: 'f-3', name: 'SL', count: '0' },
     { id: 'f-4', name: 'CT', count: '1' },
     { id: 'f-5', name: 'AY', count: '1' },
     { id: 'f-6', name: 'เสริม', count: '0' },
+    { id: 'f-7', name: 'HW', count: '0' },
   ];
 }
 
