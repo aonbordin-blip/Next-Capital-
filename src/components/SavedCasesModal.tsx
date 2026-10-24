@@ -842,116 +842,118 @@ export const SavedCasesModal: React.FC<Props> = ({
                       </div>
                     </div>
 
-                    {/* Status Selection & Vehicle Delivery Control Strip */}
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 space-y-1.5 text-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        {/* Status Switcher Buttons */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-bold text-slate-500 shrink-0">
-                            สถานะเคส:
-                          </span>
-                          <div className="inline-flex rounded-lg p-0.5 bg-slate-200/70 text-[10.5px] font-bold gap-0.5">
-                            {/* รอผล */}
-                            <button
-                              type="button"
-                              onClick={() => handleSetApprovalStatus(record.id, 'pending')}
-                              className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                (!record.approvalStatus || record.approvalStatus === 'pending')
-                                  ? 'bg-white text-sky-800 shadow-2xs font-extrabold'
-                                  : 'text-slate-600 hover:text-slate-900'
-                              }`}
-                              title="เปลี่ยนเป็น รอผลพิจารณา"
-                            >
-                              <Clock className="w-3 h-3 text-sky-500" />
-                              <span>รอผล</span>
-                            </button>
+                    {/* Status Selection & Vehicle Delivery Control Strip (จัดตำแหน่งกึ่งกลาง) */}
+                    <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/95 border border-slate-200/80 space-y-2 text-xs">
+                      {/* Header label */}
+                      <div className="text-[10px] sm:text-[10.5px] font-bold text-slate-500 text-center tracking-wide">
+                        สถานะเคส:
+                      </div>
 
-                            {/* อนุมัติ */}
-                            <button
-                              type="button"
-                              onClick={() => handleSetApprovalStatus(record.id, 'approved')}
-                              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                record.approvalStatus === 'approved'
-                                  ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
-                                  : 'text-slate-600 hover:text-emerald-700'
-                              }`}
-                              title="เปลี่ยนเป็น อนุมัติ"
-                            >
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>อนุมัติ</span>
-                            </button>
+                      {/* Status Switcher Buttons (Centered) */}
+                      <div className="flex items-center justify-center w-full">
+                        <div className="inline-flex items-center justify-center rounded-xl p-1 bg-slate-200/80 text-[10.5px] sm:text-xs font-bold gap-1 shadow-2xs max-w-full overflow-x-auto">
+                          {/* รอผล */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetApprovalStatus(record.id, 'pending')}
+                            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                              (!record.approvalStatus || record.approvalStatus === 'pending')
+                                ? 'bg-white text-sky-800 shadow-xs font-extrabold'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                            title="เปลี่ยนเป็น รอผลพิจารณา"
+                          >
+                            <Clock className="w-3 h-3 text-sky-500 shrink-0" />
+                            <span>รอผล</span>
+                          </button>
 
-                            {/* ไม่อนุมัติ */}
-                            <button
-                              type="button"
-                              onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
-                              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                record.approvalStatus === 'rejected'
-                                  ? 'bg-rose-600 text-white shadow-xs font-extrabold'
-                                  : 'text-slate-600 hover:text-rose-700'
-                              }`}
-                              title="เปลี่ยนเป็น ไม่อนุมัติ"
-                            >
-                              <XCircle className="w-3 h-3" />
-                              <span>ไม่อนุมัติ</span>
-                            </button>
+                          {/* อนุมัติ */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetApprovalStatus(record.id, 'approved')}
+                            className={`px-3 sm:px-3.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                              record.approvalStatus === 'approved'
+                                ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+                                : 'text-slate-600 hover:text-emerald-700'
+                            }`}
+                            title="เปลี่ยนเป็น อนุมัติ"
+                          >
+                            <CheckCircle2 className="w-3 h-3 shrink-0" />
+                            <span>อนุมัติ</span>
+                          </button>
 
-                            {/* ยกเลิก */}
-                            <button
-                              type="button"
-                              onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
-                              className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                                record.approvalStatus === 'cancelled'
-                                  ? 'bg-slate-700 text-white shadow-xs font-extrabold'
-                                  : 'text-slate-600 hover:text-slate-900'
-                              }`}
-                              title="เปลี่ยนเป็น ยกเลิก"
-                            >
-                              <Ban className="w-3 h-3" />
-                              <span>ยกเลิก</span>
-                            </button>
-                          </div>
+                          {/* ไม่อนุมัติ */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetApprovalStatus(record.id, 'rejected')}
+                            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                              record.approvalStatus === 'rejected'
+                                ? 'bg-rose-600 text-white shadow-xs font-extrabold'
+                                : 'text-slate-600 hover:text-rose-700'
+                            }`}
+                            title="เปลี่ยนเป็น ไม่อนุมัติ"
+                          >
+                            <XCircle className="w-3 h-3 shrink-0" />
+                            <span>ไม่อนุมัติ</span>
+                          </button>
+
+                          {/* ยกเลิก */}
+                          <button
+                            type="button"
+                            onClick={() => handleSetApprovalStatus(record.id, 'cancelled')}
+                            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                              record.approvalStatus === 'cancelled'
+                                ? 'bg-slate-700 text-white shadow-xs font-extrabold'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                            title="เปลี่ยนเป็น ยกเลิก"
+                          >
+                            <Ban className="w-3 h-3 shrink-0" />
+                            <span>ยกเลิก</span>
+                          </button>
                         </div>
+                      </div>
 
-                        {/* If Approved: Vehicle Delivery Status Toggle (ถ้าอนุมัติ ก็ให้สามารถดูได้ด้วย รับรถแล้ว หรือยัง หรือ รอรับรถ) */}
-                        {record.approvalStatus === 'approved' && (
-                          <div className="flex items-center gap-1.5 animate-fade-in bg-white px-2 py-1 rounded-lg border border-slate-200/90 shadow-2xs self-start sm:self-auto">
-                            <span className="text-[10px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
-                              <Bike className="w-3 h-3 text-slate-400" />
+                      {/* If Approved: Vehicle Delivery Status Toggle (Centered) */}
+                      {record.approvalStatus === 'approved' && (
+                        <div className="flex items-center justify-center w-full pt-0.5 animate-fade-in">
+                          <div className="inline-flex items-center justify-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs">
+                            <span className="text-[10.5px] font-bold text-slate-500 shrink-0 flex items-center gap-1">
+                              <Bike className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               การรับรถ:
                             </span>
-                            <div className="inline-flex rounded-md p-0.5 bg-slate-100 text-[10px] font-bold gap-0.5">
+                            <div className="inline-flex rounded-lg p-0.5 bg-slate-100 text-[10.5px] font-bold gap-1">
                               <button
                                 type="button"
                                 onClick={() => handleSetDeliveryStatus(record.id, 'pending_delivery')}
-                                className={`px-2 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1 ${
+                                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
                                   (!record.deliveryStatus || record.deliveryStatus === 'pending_delivery')
-                                    ? 'bg-amber-500 text-white shadow-2xs font-extrabold'
+                                    ? 'bg-amber-500 text-white shadow-xs font-extrabold'
                                     : 'text-slate-600 hover:text-amber-800'
                                 }`}
                                 title="ยังไม่ได้รับรถ (รอส่งมอบ)"
                               >
-                                <Clock className="w-2.5 h-2.5" />
+                                <Clock className="w-3 h-3 shrink-0" />
                                 <span>รอรับรถ</span>
                               </button>
 
                               <button
                                 type="button"
                                 onClick={() => handleSetDeliveryStatus(record.id, 'delivered')}
-                                className={`px-2 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1 ${
+                                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
                                   record.deliveryStatus === 'delivered'
-                                    ? 'bg-teal-600 text-white shadow-2xs font-extrabold'
+                                    ? 'bg-teal-600 text-white shadow-xs font-extrabold'
                                     : 'text-slate-600 hover:text-teal-800'
                                 }`}
                                 title="ลูกค้ารับมอบรถเรียบร้อยแล้ว"
                               >
-                                <Check className="w-2.5 h-2.5" />
+                                <Check className="w-3 h-3 shrink-0" />
                                 <span>รับรถแล้ว</span>
                               </button>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Buttons Row */}
