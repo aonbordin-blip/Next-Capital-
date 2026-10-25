@@ -585,7 +585,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                 className="px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-sky-50 disabled:opacity-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
                 title="ส่งออก / แชร์ไฟล์ข้อมูลเคสเพื่อส่งต่อไปอีกเครื่อง"
               >
-                <Download className="w-3.5 h-3.5 text-sky-600" />
+                <Share2 className="w-3.5 h-3.5 text-sky-600" />
                 <span className="text-[11px]">ส่งออก</span>
               </button>
 
@@ -594,7 +594,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                 className="px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-teal-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
                 title="นำเข้าไฟล์ข้อมูลเคสจากอีกเครื่อง"
               >
-                <Upload className="w-3.5 h-3.5 text-teal-600" />
+                <Download className="w-3.5 h-3.5 text-teal-600" />
                 <span className="text-[11px]">นำเข้า</span>
                 <input
                   type="file"
@@ -926,7 +926,7 @@ export const SavedCasesModal: React.FC<Props> = ({
               <div className="space-y-2 text-slate-700 leading-relaxed text-[11px] sm:text-xs">
                 <div className="p-2.5 rounded-xl bg-white/90 border border-sky-200 shadow-2xs space-y-1">
                   <div className="font-extrabold text-sky-800 flex items-center gap-1.5">
-                    <Download className="w-3.5 h-3.5 text-sky-600" />
+                    <Share2 className="w-3.5 h-3.5 text-sky-600" />
                     <span>ขั้นตอนที่ 1: เครื่องต้นทาง (เครื่องเดิมที่มีข้อมูล)</span>
                   </div>
                   <p className="text-slate-600 pl-5">
@@ -937,7 +937,7 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                 <div className="p-2.5 rounded-xl bg-white/90 border border-teal-200 shadow-2xs space-y-1">
                   <div className="font-extrabold text-teal-800 flex items-center gap-1.5">
-                    <Upload className="w-3.5 h-3.5 text-teal-600" />
+                    <Download className="w-3.5 h-3.5 text-teal-600" />
                     <span>ขั้นตอนที่ 2: เครื่องปลายทาง (เครื่องใหม่ที่ต้องการรับเคส)</span>
                   </div>
                   <p className="text-slate-600 pl-5">
