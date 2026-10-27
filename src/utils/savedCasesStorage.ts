@@ -160,6 +160,7 @@ export function updateCaseDeliveryStatus(
       ...c,
       deliveryStatus,
       deliveryDate: resolvedDeliveryDate,
+      paymentDueDay: deliveryStatus === 'delivered' ? (c.paymentDueDay || 2) : c.paymentDueDay,
       updatedAt: Date.now(),
     };
   });
@@ -306,3 +307,100 @@ export function importCasesFromJson(jsonStr: string): { success: boolean; count:
     return { success: false, count: 0, error: 'ไม่สามารถอ่านไฟล์ JSON ได้ หรือไฟล์เสียหาย' };
   }
 }
+
+export interface FirstPaymentDueDateInfo {
+  date: Date;
+  isoDateStr: string; // "2026-11-02"
+  day: number; // 2
+  month: number; // 1 to 12
+  monthName: string; // "พฤศจิกายน"
+  monthShort: string; // "พ.ย."
+  year: number; // 2026
+  thaiYear: number; // 2569
+  thaiShortYear: string; // "69"
+  formattedShort: string; // "2 พ.ย. 2569"
+  formattedLong: string; // "2 พฤศจิกายน พ.ศ. 2569"
+  cycleRangeText: string; // "รอบรับรถ 11 ก.ย. - 10 ต.ค."
+  key: string; // "2569-11"
+}
+
+const THAI_MONTH_NAMES_LIST = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+const THAI_MONTH_SHORTS_LIST = [
+  'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+];
+
+/**
+ * คำนวณวันกำหนดชำระงวดแรกอัตโนมัติตามเกณฑ์:
+ * - กำหนดชำระทุกวันที่ 2 ของทุกเดือนทุกราย
+ * - ช่วงวันรับรถ 11 เดือน M ถึง 10 เดือน M+1 จะชำระงวดแรก 2 เดือน M+2
+ *   ตัวอย่าง:
+ *   - รับรถ 11 ก.ย. - 10 ต.ค. -> งวดแรก 2 พ.ย.
+ *   - รับรถ 11 ต.ค. - 10 พ.ย. -> งวดแรก 2 ธ.ค.
+ */
+export function calculateFirstPaymentDueDate(deliveryDateInput?: string | number): FirstPaymentDueDateInfo {
+  let d: Date;
+  if (!deliveryDateInput) {
+    d = new Date();
+  } else if (typeof deliveryDateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(deliveryDateInput)) {
+    const parts = deliveryDateInput.split('-').map(Number);
+    d = new Date(parts[0], parts[1] - 1, parts[2]);
+  } else {
+    d = new Date(deliveryDateInput);
+  }
+
+  if (isNaN(d.getTime())) {
+    d = new Date();
+  }
+
+  const deliveryDay = d.getDate();
+  const deliveryMonth = d.getMonth(); // 0 to 11
+  const deliveryYear = d.getFullYear();
+
+  // กฎการตัดรอบ:
+  // หากรับรถวันที่ 1-10 ของเดือน ให้บวก 1 เดือน -> วันที่ 2 ของเดือนถัดไป
+  // หากรับรถวันที่ 11 ขึ้นไปของเดือน ให้บวก 2 เดือน -> วันที่ 2 ของอีก 2 เดือนถัดไป
+  const offset = deliveryDay <= 10 ? 1 : 2;
+  const dueDate = new Date(deliveryYear, deliveryMonth + offset, 2);
+
+  const dueDay = 2;
+  const dueMonth = dueDate.getMonth() + 1; // 1 to 12
+  const dueYear = dueDate.getFullYear();
+  const thaiYear = dueYear + 543;
+  const thaiShortYear = (thaiYear % 100).toString().padStart(2, '0');
+
+  const monthName = THAI_MONTH_NAMES_LIST[dueMonth - 1] || `เดือน ${dueMonth}`;
+  const monthShort = THAI_MONTH_SHORTS_LIST[dueMonth - 1] || `${dueMonth}`;
+
+  // คำนวณช่วงรอบการรับรถเพื่อแสดงผลประกอบความเข้าใจ
+  const startCycleMonthIndex = deliveryDay <= 10 ? deliveryMonth - 1 : deliveryMonth;
+  const endCycleMonthIndex = deliveryDay <= 10 ? deliveryMonth : deliveryMonth + 1;
+  const startRef = new Date(deliveryYear, startCycleMonthIndex, 11);
+  const endRef = new Date(deliveryYear, endCycleMonthIndex, 10);
+  const startMonthShort = THAI_MONTH_SHORTS_LIST[startRef.getMonth()];
+  const endMonthShort = THAI_MONTH_SHORTS_LIST[endRef.getMonth()];
+  const cycleRangeText = `รอบรับรถ 11 ${startMonthShort} - 10 ${endMonthShort}`;
+
+  const isoMonthStr = dueMonth.toString().padStart(2, '0');
+  const isoDateStr = `${dueYear}-${isoMonthStr}-02`;
+
+  return {
+    date: dueDate,
+    isoDateStr,
+    day: dueDay,
+    month: dueMonth,
+    monthName,
+    monthShort,
+    year: dueYear,
+    thaiYear,
+    thaiShortYear,
+    formattedShort: `2 ${monthShort} ${thaiYear}`,
+    formattedLong: `2 ${monthName} พ.ศ. ${thaiYear}`,
+    cycleRangeText,
+    key: `${thaiYear}-${isoMonthStr}`,
+  };
+}
+

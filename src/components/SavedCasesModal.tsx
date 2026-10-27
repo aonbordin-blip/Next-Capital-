@@ -50,6 +50,7 @@ import {
   updateCasePaymentDueDay,
   updateCaseGoogleMapsLocation,
   getGoogleMapsNavigationUrl,
+  calculateFirstPaymentDueDate,
   clearAllCaseRecords,
   exportCasesAsJson,
   importCasesFromJson,
@@ -124,7 +125,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | VehicleDeliveryStatus>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all'); // 'all' or '2569'
   const [selectedMonth, setSelectedMonth] = useState<string>('all'); // 'all' or '1'..'12'
-  const [selectedDueDay, setSelectedDueDay] = useState<string>('all'); // 'all', 'unset', or '1'..'31'
+  const [selectedDueMonth, setSelectedDueMonth] = useState<string>('all'); // 'all' or '2569-11'
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitleInput, setEditTitleInput] = useState('');
   const [previewCase, setPreviewCase] = useState<SavedCaseRecord | null>(null);
@@ -143,7 +144,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeliveryFilter('all');
       setSelectedYear('all');
       setSelectedMonth('all');
-      setSelectedDueDay('all');
+      setSelectedDueMonth('all');
       setEditingId(null);
       setPreviewCase(null);
       setDeleteConfirmId(null);
@@ -232,11 +233,10 @@ export const SavedCasesModal: React.FC<Props> = ({
     };
   }, [cases]);
 
-  // Extract payment due day statistics for filtering
-  const dueDayStats = useMemo(() => {
-    const counts: Record<number, number> = {};
-    let totalWithDueDay = 0;
-    let totalDeliveredWithoutDueDay = 0;
+  // สถิติและตัวนับกำหนดชำระงวดแรก สำหรับคัดกรองรายชื่อลูกค้าตามงวดที่ต้องชำระ
+  const dueMonthStats = useMemo(() => {
+    const counts: Record<string, { key: string; label: string; shortLabel: string; thaiYear: number; month: number; count: number }> = {};
+    let totalDelivered = 0;
 
     cases.forEach((c) => {
       // Scope by selected year and month if filtered
@@ -247,24 +247,31 @@ export const SavedCasesModal: React.FC<Props> = ({
       if (selectedMonth !== 'all' && caseMonth !== selectedMonth) return;
 
       if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
-        if (c.paymentDueDay && c.paymentDueDay >= 1 && c.paymentDueDay <= 31) {
-          counts[c.paymentDueDay] = (counts[c.paymentDueDay] || 0) + 1;
-          totalWithDueDay++;
-        } else {
-          totalDeliveredWithoutDueDay++;
+        totalDelivered++;
+        const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
+        if (!counts[dueInfo.key]) {
+          counts[dueInfo.key] = {
+            key: dueInfo.key,
+            label: dueInfo.formattedShort,
+            shortLabel: `2 ${dueInfo.monthShort} ${dueInfo.thaiShortYear}`,
+            thaiYear: dueInfo.thaiYear,
+            month: dueInfo.month,
+            count: 0,
+          };
         }
+        counts[dueInfo.key].count++;
       }
     });
 
-    const activeDays = Object.keys(counts)
-      .map(Number)
-      .sort((a, b) => a - b);
+    const activeDueMonths = Object.values(counts).sort((a, b) => {
+      if (a.thaiYear !== b.thaiYear) return a.thaiYear - b.thaiYear;
+      return a.month - b.month;
+    });
 
     return {
       counts,
-      activeDays,
-      totalWithDueDay,
-      totalDeliveredWithoutDueDay,
+      activeDueMonths,
+      totalDelivered,
     };
   }, [cases, selectedYear, selectedMonth]);
 
@@ -291,17 +298,14 @@ export const SavedCasesModal: React.FC<Props> = ({
         }
       }
 
-      // Payment Due Day filter (กำหนดวันชำระในแต่ละเดือน)
-      if (selectedDueDay !== 'all') {
-        if (selectedDueDay === 'unset') {
-          if (c.paymentDueDay || c.approvalStatus !== 'approved' || c.deliveryStatus !== 'delivered') {
-            return false;
-          }
-        } else {
-          const targetDay = parseInt(selectedDueDay, 10);
-          if (c.paymentDueDay !== targetDay) {
-            return false;
-          }
+      // First Installment Due Month filter (กำหนดชำระงวดแรกตามที่เลือก)
+      if (selectedDueMonth !== 'all') {
+        if (c.approvalStatus !== 'approved' || c.deliveryStatus !== 'delivered') {
+          return false;
+        }
+        const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
+        if (dueInfo.key !== selectedDueMonth) {
+          return false;
         }
       }
 
@@ -321,13 +325,21 @@ export const SavedCasesModal: React.FC<Props> = ({
         const codeMatch = c.bikeModelCode?.toLowerCase().includes(q);
         const proposalMatch = c.snapshot.proposalCode.toLowerCase().includes(q);
         const locationMatch = c.googleMapsLocation?.toLowerCase().includes(q);
-        const dueMatch = c.paymentDueDay ? `วันที่ ${c.paymentDueDay}`.includes(q) : false;
+        let dueMatch = false;
+        if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
+          const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
+          dueMatch =
+            dueInfo.formattedShort.toLowerCase().includes(q) ||
+            dueInfo.formattedLong.toLowerCase().includes(q) ||
+            dueInfo.cycleRangeText.toLowerCase().includes(q) ||
+            `ชำระ 2 ${dueInfo.monthName}`.toLowerCase().includes(q);
+        }
         return titleMatch || custMatch || phoneMatch || bikeMatch || codeMatch || proposalMatch || Boolean(locationMatch) || dueMatch;
       }
 
       return true;
     });
-  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedYear, selectedMonth, selectedDueDay]);
+  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedYear, selectedMonth, selectedDueMonth]);
 
   // Group filtered cases by Year and Month for clean separation
   const groupedCases = useMemo(() => {
@@ -979,84 +991,83 @@ export const SavedCasesModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Payment Due Day Filter Bar (แสดงรายชื่อข้อมูลลูกค้าตามวันกำหนดชำระที่เลือกในแต่ละเดือน) */}
+              {/* Payment First Due Month Filter Bar (แสดงรายชื่อข้อมูลลูกค้าตามงวดแรกที่กำหนดชำระ ชำระทุกวันที่ 2) */}
               <div className="pt-2 mt-1 border-t border-slate-200/70 flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
                   <div className="flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 shrink-0">
                     <CalendarClock className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>วันกำหนดชำระ:</span>
+                    <span>กำหนดชำระงวดแรก:</span>
                   </div>
 
-                  {/* Due Day Select */}
+                  {/* Due Month Select */}
                   <select
-                    value={selectedDueDay}
+                    value={selectedDueMonth}
                     onChange={(e) => {
                       triggerHaptic('light');
-                      setSelectedDueDay(e.target.value);
+                      setSelectedDueMonth(e.target.value);
                     }}
                     className={`px-2.5 py-1 rounded-xl text-xs font-bold border cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
-                      selectedDueDay !== 'all'
+                      selectedDueMonth !== 'all'
                         ? 'bg-indigo-50 border-indigo-400 text-indigo-900 ring-1 ring-indigo-300'
                         : 'bg-white border-slate-200 text-slate-800'
                     }`}
                   >
-                    <option value="all">ทุกวันกำหนดชำระ</option>
-                    {dueDayStats.totalDeliveredWithoutDueDay > 0 && (
-                      <option value="unset">
-                        ยังไม่กำหนดวันชำระ ({dueDayStats.totalDeliveredWithoutDueDay} คน)
-                      </option>
-                    )}
-                    {dueDayStats.activeDays.map((day) => (
-                      <option key={day} value={day.toString()}>
-                        ทุกวันที่ {day} ของเดือน ({dueDayStats.counts[day]} คน)
+                    <option value="all">ทุกงวดแรกที่ครบกำหนด</option>
+                    {dueMonthStats.activeDueMonths.map((item) => (
+                      <option key={item.key} value={item.key}>
+                        งวดแรก: {item.label} ({item.count} คน)
                       </option>
                     ))}
-                    {Array.from({ length: 31 }, (_, i) => i + 1)
-                      .filter((d) => !dueDayStats.counts[d])
-                      .map((d) => (
-                        <option key={d} value={d.toString()}>
-                          วันที่ {d} ของเดือน (0 คน)
-                        </option>
-                      ))}
                   </select>
 
-                  {/* Quick Due Day Filter Chips for days with active cases */}
+                  {/* Quick Due Month Filter Chips for months with active cases */}
                   <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none">
-                    {dueDayStats.activeDays.map((day) => (
+                    {dueMonthStats.activeDueMonths.map((item) => (
                       <button
-                        key={day}
+                        key={item.key}
                         type="button"
                         onClick={() => {
                           triggerHaptic('light');
-                          setSelectedDueDay(selectedDueDay === day.toString() ? 'all' : day.toString());
+                          setSelectedDueMonth(selectedDueMonth === item.key ? 'all' : item.key);
                         }}
                         className={`px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          selectedDueDay === day.toString()
+                          selectedDueMonth === item.key
                             ? 'bg-indigo-600 text-white shadow-2xs ring-1 ring-indigo-300'
                             : 'bg-indigo-50/70 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
                         }`}
-                        title={`แสดงเฉพาะลูกค้าที่ครบกำหนดชำระทุกวันที่ ${day} ของเดือน`}
+                        title={`แสดงเฉพาะลูกค้าที่ครบกำหนดชำระงวดแรก ${item.label}`}
                       >
-                        <span>วันที่ {day}</span>
-                        <span className="ml-0.5 text-[9px] opacity-80">({dueDayStats.counts[day]})</span>
+                        <span>{item.shortLabel}</span>
+                        <span className="ml-0.5 text-[9px] opacity-80">({item.count})</span>
                       </button>
                     ))}
 
-                    {selectedDueDay !== 'all' && (
+                    {selectedDueMonth !== 'all' && (
                       <button
                         type="button"
                         onClick={() => {
                           triggerHaptic('light');
-                          setSelectedDueDay('all');
+                          setSelectedDueMonth('all');
                         }}
                         className="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 cursor-pointer whitespace-nowrap transition-colors"
-                        title="ล้างตัวกรองวันกำหนดชำระ"
+                        title="ล้างตัวกรองกำหนดชำระงวดแรก"
                       >
-                        ✕ ล้างตัวกรองวัน
+                        ✕ ล้างตัวกรองงวด
                       </button>
                     )}
                   </div>
                 </div>
+
+                {dueMonthStats.totalDelivered > 0 && (
+                  <div className="text-[10px] text-slate-500 font-medium shrink-0">
+                    รับรถแล้ว <span className="font-bold text-teal-700">{dueMonthStats.totalDelivered}</span> คน
+                    {selectedDueMonth !== 'all' && (
+                      <span className="text-indigo-700 font-bold ml-1">
+                        (งวดนี้ {dueMonthStats.counts[selectedDueMonth]?.count || 0} คน)
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1390,23 +1401,22 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   </div>
                                 )}
 
-                                {/* วันกำหนดชำระค่างวด (สำหรับลูกค้าที่อนุมัติ & รับรถแล้ว) */}
-                                {record.deliveryStatus === 'delivered' && (
-                                  record.paymentDueDay ? (
-                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200/90 font-medium shadow-2xs">
+                                {/* กำหนดชำระงวดแรก (ขึ้นสถานะอัตโนมัติเมื่อรับรถแล้ว ชำระทุกวันที่ 2 ของเดือน) */}
+                                {record.deliveryStatus === 'delivered' && (() => {
+                                  const firstDue = calculateFirstPaymentDueDate(record.deliveryDate || record.createdAt);
+                                  return (
+                                    <div
+                                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200/90 font-medium shadow-2xs"
+                                      title={`${firstDue.cycleRangeText} ➔ ชำระงวดแรก ${firstDue.formattedShort} (งวดถัดไปทุกวันที่ 2 ของทุกเดือน)`}
+                                    >
                                       <CalendarClock className="w-3 h-3 text-indigo-600 shrink-0" />
-                                      <span className="text-indigo-700 font-bold">กำหนดชำระ:</span>
+                                      <span className="text-indigo-700 font-bold">กำหนดชำระงวดแรก:</span>
                                       <span className="font-extrabold text-indigo-950">
-                                        ทุกวันที่ {record.paymentDueDay}
+                                        {firstDue.formattedShort}
                                       </span>
                                     </div>
-                                  ) : (
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 text-[10px]">
-                                      <CalendarClock className="w-3 h-3 text-slate-400 shrink-0" />
-                                      <span>ยังไม่กำหนดวันชำระ</span>
-                                    </div>
-                                  )
-                                )}
+                                  );
+                                })()}
 
                                 {/* ปุ่มนำทาง Maps ด่วนบนการ์ด */}
                                 {record.googleMapsLocation && (
@@ -1646,63 +1656,56 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   {/* Payment Due Day & Google Maps Location (สำหรับลูกค้าอนุมัติ รับรถแล้ว) */}
                                   {record.deliveryStatus === 'delivered' && (
                                     <div className="pt-2.5 border-t border-slate-200/80 space-y-2.5 animate-fade-in w-full text-left">
-                                      {/* กำหนดวันชำระค่างวดประจำเดือน */}
-                                      <div className="bg-white p-3 rounded-xl border border-indigo-200/90 space-y-2 shadow-2xs">
-                                        <div className="flex items-center justify-between gap-1 flex-wrap">
-                                          <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-950">
-                                            <CalendarClock className="w-4 h-4 text-indigo-600 shrink-0" />
-                                            <span>กำหนดวันชำระค่างวด (ประจำทุกเดือน):</span>
-                                          </div>
-                                          {record.paymentDueDay && (
-                                            <button
-                                              type="button"
-                                              onClick={() => handleSetPaymentDueDay(record.id, undefined)}
-                                              className="text-[10px] font-bold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer px-1.5 py-0.5 rounded bg-slate-50 hover:bg-rose-50"
-                                            >
-                                              ล้างค่า
-                                            </button>
-                                          )}
-                                        </div>
+                                      {/* กำหนดชำระงวดแรก (คำนวณอัตโนมัติจากวันรับรถ ทุกวันที่ 2 ของทุกเดือน) */}
+                                      {(() => {
+                                        const firstDue = calculateFirstPaymentDueDate(record.deliveryDate || record.createdAt);
+                                        return (
+                                          <div className="bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/50 p-3 sm:p-3.5 rounded-2xl border border-indigo-200/90 space-y-2 shadow-2xs">
+                                            <div className="flex items-center justify-between gap-1 flex-wrap">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                                                  <CalendarClock className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                  <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-black text-indigo-950">
+                                                      กำหนดชำระงวดแรก
+                                                    </span>
+                                                    <span className="text-[9.5px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                                      อัตโนมัติ
+                                                    </span>
+                                                  </div>
+                                                  <p className="text-[10px] text-slate-500">
+                                                    คำนวณอัตโนมัติจากวันรับรถ (ชำระทุกวันที่ 2 ของเดือนทุกราย)
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            </div>
 
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-                                            <span>ทุกวันที่:</span>
-                                            <select
-                                              value={record.paymentDueDay || ''}
-                                              onChange={(e) => {
-                                                const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                                                handleSetPaymentDueDay(record.id, val);
-                                              }}
-                                              className="px-2.5 py-1 text-xs font-black text-indigo-900 bg-indigo-50/80 border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-2xs"
-                                            >
-                                              <option value="">-- ยังไม่กำหนด --</option>
-                                              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                                                <option key={d} value={d}>
-                                                  วันที่ {d} ของทุกเดือน
-                                                </option>
-                                              ))}
-                                            </select>
+                                            {/* Due Date & Cycle Info Display Box */}
+                                            <div className="p-2.5 rounded-xl bg-white border border-indigo-100 shadow-2xs space-y-1.5">
+                                              <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                                                <span className="text-[11px] font-bold text-slate-500">
+                                                  วันครบกำหนดชำระงวดแรก:
+                                                </span>
+                                                <span className="text-sm sm:text-base font-black text-indigo-900 tracking-tight">
+                                                  {firstDue.formattedLong}
+                                                </span>
+                                              </div>
+                                              <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 text-[10.5px] text-slate-600 flex-wrap">
+                                                <div className="flex items-center gap-1 text-slate-600">
+                                                  <span className="font-bold text-indigo-800">{firstDue.cycleRangeText}</span>
+                                                  <span className="text-slate-400">➔</span>
+                                                  <span>ชำระงวดแรกวันที่ 2 ของรอบถัดไป</span>
+                                                </div>
+                                                <span className="text-[10px] text-indigo-900 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                                                  งวดถัดไป: ทุกวันที่ 2 ของทุกเดือน
+                                                </span>
+                                              </div>
+                                            </div>
                                           </div>
-
-                                          {/* Quick presets for common payment days */}
-                                          <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none">
-                                            {[1, 5, 10, 15, 20, 25, 28, 30].map((d) => (
-                                              <button
-                                                key={d}
-                                                type="button"
-                                                onClick={() => handleSetPaymentDueDay(record.id, d)}
-                                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                                                  record.paymentDueDay === d
-                                                    ? 'bg-indigo-600 text-white shadow-2xs ring-1 ring-indigo-300'
-                                                    : 'bg-indigo-50/70 hover:bg-indigo-100 text-indigo-800 border border-indigo-200/80'
-                                                }`}
-                                              >
-                                                วันที่ {d}
-                                              </button>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      </div>
+                                        );
+                                      })()}
 
                                       {/* ตำแหน่งที่อยู่ Google Maps & ปุ่มนำทาง */}
                                       <div className="bg-white p-3 rounded-xl border border-sky-200/90 space-y-2.5 shadow-2xs">
