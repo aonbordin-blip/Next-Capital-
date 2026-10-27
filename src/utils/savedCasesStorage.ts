@@ -36,6 +36,8 @@ export function saveCaseRecord(
         deliveryStatus: data.deliveryStatus !== undefined ? data.deliveryStatus : existing.deliveryStatus,
         approvalDate: data.approvalDate !== undefined ? data.approvalDate : existing.approvalDate,
         deliveryDate: data.deliveryDate !== undefined ? data.deliveryDate : existing.deliveryDate,
+        paymentDueDay: data.paymentDueDay !== undefined ? data.paymentDueDay : existing.paymentDueDay,
+        googleMapsLocation: data.googleMapsLocation !== undefined ? data.googleMapsLocation : existing.googleMapsLocation,
         updatedAt: now,
       };
       cases[index] = updated;
@@ -65,6 +67,8 @@ export function saveCaseRecord(
     deliveryStatus: initialDeliveryStatus,
     approvalDate: initialApprovalDate,
     deliveryDate: initialDeliveryDate,
+    paymentDueDay: data.paymentDueDay,
+    googleMapsLocation: data.googleMapsLocation,
     id: `case-${now}-${Math.random().toString(36).substring(2, 7)}`,
     createdAt: now,
     updatedAt: now,
@@ -187,6 +191,59 @@ export function updateCaseDates(
     console.error('Failed to update case dates in localStorage:', err);
   }
   return updated;
+}
+
+export function updateCasePaymentDueDay(
+  id: string,
+  paymentDueDay: number | undefined
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    return {
+      ...c,
+      paymentDueDay,
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update payment due day in localStorage:', err);
+  }
+  return updated;
+}
+
+export function updateCaseGoogleMapsLocation(
+  id: string,
+  googleMapsLocation: string
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    return {
+      ...c,
+      googleMapsLocation,
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update Google Maps location in localStorage:', err);
+  }
+  return updated;
+}
+
+export function getGoogleMapsNavigationUrl(input?: string): string {
+  if (!input || !input.trim()) return '';
+  const trimmed = input.trim();
+  // If already a web link (https://maps.app.goo.gl/..., https://goo.gl/maps/..., https://www.google.com/maps...)
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  // Otherwise format as Google Maps search / navigation query
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmed)}`;
 }
 
 export function clearAllCaseRecords(): void {

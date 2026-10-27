@@ -199,6 +199,10 @@ export interface SavedCaseRecord {
   deliveryDate?: string; // วันที่รับรถ รูปแบบ YYYY-MM-DD
   approvalNote?: string;
   approvalUpdatedAt?: number;
+
+  // Payment Schedule & Customer Location (สำหรับลูกค้าอนุมัติ/รับรถแล้ว)
+  paymentDueDay?: number; // กำหนดวันชำระค่างวด (เช่น วันที่ 1-31 ของทุกเดือน)
+  googleMapsLocation?: string; // ลิงก์ พิกัด หรือที่อยู่ปัจจุบันที่คัดลอกมาจาก Google Maps
 }
 
 export type CaseApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';

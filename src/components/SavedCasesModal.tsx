@@ -26,12 +26,16 @@ import {
   CheckCheck,
   Filter,
   CalendarDays,
+  CalendarClock,
   Layers,
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
   HelpCircle,
   Smartphone,
+  MapPin,
+  Navigation,
+  ClipboardCopy,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -43,6 +47,9 @@ import {
   updateCaseApprovalStatus,
   updateCaseDeliveryStatus,
   updateCaseDates,
+  updateCasePaymentDueDay,
+  updateCaseGoogleMapsLocation,
+  getGoogleMapsNavigationUrl,
   clearAllCaseRecords,
   exportCasesAsJson,
   importCasesFromJson,
@@ -117,6 +124,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | VehicleDeliveryStatus>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all'); // 'all' or '2569'
   const [selectedMonth, setSelectedMonth] = useState<string>('all'); // 'all' or '1'..'12'
+  const [selectedDueDay, setSelectedDueDay] = useState<string>('all'); // 'all', 'unset', or '1'..'31'
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitleInput, setEditTitleInput] = useState('');
   const [previewCase, setPreviewCase] = useState<SavedCaseRecord | null>(null);
@@ -135,6 +143,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeliveryFilter('all');
       setSelectedYear('all');
       setSelectedMonth('all');
+      setSelectedDueDay('all');
       setEditingId(null);
       setPreviewCase(null);
       setDeleteConfirmId(null);
@@ -223,6 +232,42 @@ export const SavedCasesModal: React.FC<Props> = ({
     };
   }, [cases]);
 
+  // Extract payment due day statistics for filtering
+  const dueDayStats = useMemo(() => {
+    const counts: Record<number, number> = {};
+    let totalWithDueDay = 0;
+    let totalDeliveredWithoutDueDay = 0;
+
+    cases.forEach((c) => {
+      // Scope by selected year and month if filtered
+      const d = new Date(c.createdAt);
+      const caseYear = (d.getFullYear() + 543).toString();
+      const caseMonth = (d.getMonth() + 1).toString();
+      if (selectedYear !== 'all' && caseYear !== selectedYear) return;
+      if (selectedMonth !== 'all' && caseMonth !== selectedMonth) return;
+
+      if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
+        if (c.paymentDueDay && c.paymentDueDay >= 1 && c.paymentDueDay <= 31) {
+          counts[c.paymentDueDay] = (counts[c.paymentDueDay] || 0) + 1;
+          totalWithDueDay++;
+        } else {
+          totalDeliveredWithoutDueDay++;
+        }
+      }
+    });
+
+    const activeDays = Object.keys(counts)
+      .map(Number)
+      .sort((a, b) => a - b);
+
+    return {
+      counts,
+      activeDays,
+      totalWithDueDay,
+      totalDeliveredWithoutDueDay,
+    };
+  }, [cases, selectedYear, selectedMonth]);
+
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {
       // Year & Month filter (based on case creation date / active date)
@@ -246,6 +291,20 @@ export const SavedCasesModal: React.FC<Props> = ({
         }
       }
 
+      // Payment Due Day filter (กำหนดวันชำระในแต่ละเดือน)
+      if (selectedDueDay !== 'all') {
+        if (selectedDueDay === 'unset') {
+          if (c.paymentDueDay || c.approvalStatus !== 'approved' || c.deliveryStatus !== 'delivered') {
+            return false;
+          }
+        } else {
+          const targetDay = parseInt(selectedDueDay, 10);
+          if (c.paymentDueDay !== targetDay) {
+            return false;
+          }
+        }
+      }
+
       // Status filter
       const caseStatus = c.approvalStatus || 'pending';
       if (statusFilter !== 'all' && caseStatus !== statusFilter) {
@@ -261,12 +320,14 @@ export const SavedCasesModal: React.FC<Props> = ({
         const bikeMatch = c.bikeModelName?.toLowerCase().includes(q);
         const codeMatch = c.bikeModelCode?.toLowerCase().includes(q);
         const proposalMatch = c.snapshot.proposalCode.toLowerCase().includes(q);
-        return titleMatch || custMatch || phoneMatch || bikeMatch || codeMatch || proposalMatch;
+        const locationMatch = c.googleMapsLocation?.toLowerCase().includes(q);
+        const dueMatch = c.paymentDueDay ? `วันที่ ${c.paymentDueDay}`.includes(q) : false;
+        return titleMatch || custMatch || phoneMatch || bikeMatch || codeMatch || proposalMatch || Boolean(locationMatch) || dueMatch;
       }
 
       return true;
     });
-  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedYear, selectedMonth]);
+  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedYear, selectedMonth, selectedDueDay]);
 
   // Group filtered cases by Year and Month for clean separation
   const groupedCases = useMemo(() => {
@@ -371,6 +432,50 @@ export const SavedCasesModal: React.FC<Props> = ({
     } else if (dates.deliveryDate) {
       showToast(`✓ อัปเดตวันรับรถ: ${formatThaiDateOnly(dates.deliveryDate)}`);
     }
+  };
+
+  const handleSetPaymentDueDay = (id: string, dueDay: number | undefined) => {
+    triggerHaptic('success');
+    const updated = updateCasePaymentDueDay(id, dueDay);
+    setCases(updated);
+    if (dueDay) {
+      showToast(`✓ กำหนดวันชำระ: ทุกวันที่ ${dueDay} ของทุกเดือน`);
+    } else {
+      showToast('ยกเลิกวันกำหนดชำระแล้ว');
+    }
+  };
+
+  const handleSaveLocation = (id: string, location: string) => {
+    const updated = updateCaseGoogleMapsLocation(id, location);
+    setCases(updated);
+  };
+
+  const handlePasteLocation = async (id: string) => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          triggerHaptic('success');
+          handleSaveLocation(id, text.trim());
+          showToast('✓ วางลิงก์/ที่อยู่ Google Maps เรียบร้อย');
+          return;
+        }
+      }
+    } catch {
+      // Clipboard API might require permission or not available in iframe
+    }
+    showToast('💡 สามารถแตะค้างที่ช่องแล้วเลือก "วาง" (Paste) ได้เลย');
+  };
+
+  const handleOpenGoogleMaps = (location?: string) => {
+    const url = getGoogleMapsNavigationUrl(location);
+    if (!url) {
+      triggerHaptic('warning');
+      showToast('⚠️ กรุณาระบุหรือวางที่อยู่ / ลิงก์ Google Maps ก่อนนำทาง');
+      return;
+    }
+    triggerHaptic('success');
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   // แสดงเฉพาะชื่อลูกค้าในส่วนหัวข้อเคสตามที่ผู้ใช้ต้องการ
@@ -873,6 +978,86 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Payment Due Day Filter Bar (แสดงรายชื่อข้อมูลลูกค้าตามวันกำหนดชำระที่เลือกในแต่ละเดือน) */}
+              <div className="pt-2 mt-1 border-t border-slate-200/70 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+                  <div className="flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 shrink-0">
+                    <CalendarClock className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>วันกำหนดชำระ:</span>
+                  </div>
+
+                  {/* Due Day Select */}
+                  <select
+                    value={selectedDueDay}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setSelectedDueDay(e.target.value);
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold border cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                      selectedDueDay !== 'all'
+                        ? 'bg-indigo-50 border-indigo-400 text-indigo-900 ring-1 ring-indigo-300'
+                        : 'bg-white border-slate-200 text-slate-800'
+                    }`}
+                  >
+                    <option value="all">ทุกวันกำหนดชำระ</option>
+                    {dueDayStats.totalDeliveredWithoutDueDay > 0 && (
+                      <option value="unset">
+                        ยังไม่กำหนดวันชำระ ({dueDayStats.totalDeliveredWithoutDueDay} คน)
+                      </option>
+                    )}
+                    {dueDayStats.activeDays.map((day) => (
+                      <option key={day} value={day.toString()}>
+                        ทุกวันที่ {day} ของเดือน ({dueDayStats.counts[day]} คน)
+                      </option>
+                    ))}
+                    {Array.from({ length: 31 }, (_, i) => i + 1)
+                      .filter((d) => !dueDayStats.counts[d])
+                      .map((d) => (
+                        <option key={d} value={d.toString()}>
+                          วันที่ {d} ของเดือน (0 คน)
+                        </option>
+                      ))}
+                  </select>
+
+                  {/* Quick Due Day Filter Chips for days with active cases */}
+                  <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none">
+                    {dueDayStats.activeDays.map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setSelectedDueDay(selectedDueDay === day.toString() ? 'all' : day.toString());
+                        }}
+                        className={`px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          selectedDueDay === day.toString()
+                            ? 'bg-indigo-600 text-white shadow-2xs ring-1 ring-indigo-300'
+                            : 'bg-indigo-50/70 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
+                        }`}
+                        title={`แสดงเฉพาะลูกค้าที่ครบกำหนดชำระทุกวันที่ ${day} ของเดือน`}
+                      >
+                        <span>วันที่ {day}</span>
+                        <span className="ml-0.5 text-[9px] opacity-80">({dueDayStats.counts[day]})</span>
+                      </button>
+                    ))}
+
+                    {selectedDueDay !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setSelectedDueDay('all');
+                        }}
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 cursor-pointer whitespace-nowrap transition-colors"
+                        title="ล้างตัวกรองวันกำหนดชำระ"
+                      >
+                        ✕ ล้างตัวกรองวัน
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1204,6 +1389,40 @@ export const SavedCasesModal: React.FC<Props> = ({
                                     </span>
                                   </div>
                                 )}
+
+                                {/* วันกำหนดชำระค่างวด (สำหรับลูกค้าที่อนุมัติ & รับรถแล้ว) */}
+                                {record.deliveryStatus === 'delivered' && (
+                                  record.paymentDueDay ? (
+                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200/90 font-medium shadow-2xs">
+                                      <CalendarClock className="w-3 h-3 text-indigo-600 shrink-0" />
+                                      <span className="text-indigo-700 font-bold">กำหนดชำระ:</span>
+                                      <span className="font-extrabold text-indigo-950">
+                                        ทุกวันที่ {record.paymentDueDay}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 text-[10px]">
+                                      <CalendarClock className="w-3 h-3 text-slate-400 shrink-0" />
+                                      <span>ยังไม่กำหนดวันชำระ</span>
+                                    </div>
+                                  )
+                                )}
+
+                                {/* ปุ่มนำทาง Maps ด่วนบนการ์ด */}
+                                {record.googleMapsLocation && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenGoogleMaps(record.googleMapsLocation);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold shadow-2xs cursor-pointer active:scale-95 transition-all"
+                                    title="เปิด Google Maps เพื่อนำทางทันที"
+                                  >
+                                    <Navigation className="w-2.5 h-2.5 text-blue-600 shrink-0" />
+                                    <span>นำทาง Maps</span>
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1423,6 +1642,130 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       />
                                     </div>
                                   </div>
+
+                                  {/* Payment Due Day & Google Maps Location (สำหรับลูกค้าอนุมัติ รับรถแล้ว) */}
+                                  {record.deliveryStatus === 'delivered' && (
+                                    <div className="pt-2.5 border-t border-slate-200/80 space-y-2.5 animate-fade-in w-full text-left">
+                                      {/* กำหนดวันชำระค่างวดประจำเดือน */}
+                                      <div className="bg-white p-3 rounded-xl border border-indigo-200/90 space-y-2 shadow-2xs">
+                                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                                          <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-950">
+                                            <CalendarClock className="w-4 h-4 text-indigo-600 shrink-0" />
+                                            <span>กำหนดวันชำระค่างวด (ประจำทุกเดือน):</span>
+                                          </div>
+                                          {record.paymentDueDay && (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSetPaymentDueDay(record.id, undefined)}
+                                              className="text-[10px] font-bold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer px-1.5 py-0.5 rounded bg-slate-50 hover:bg-rose-50"
+                                            >
+                                              ล้างค่า
+                                            </button>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                                            <span>ทุกวันที่:</span>
+                                            <select
+                                              value={record.paymentDueDay || ''}
+                                              onChange={(e) => {
+                                                const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                                                handleSetPaymentDueDay(record.id, val);
+                                              }}
+                                              className="px-2.5 py-1 text-xs font-black text-indigo-900 bg-indigo-50/80 border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-2xs"
+                                            >
+                                              <option value="">-- ยังไม่กำหนด --</option>
+                                              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                                                <option key={d} value={d}>
+                                                  วันที่ {d} ของทุกเดือน
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </div>
+
+                                          {/* Quick presets for common payment days */}
+                                          <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none">
+                                            {[1, 5, 10, 15, 20, 25, 28, 30].map((d) => (
+                                              <button
+                                                key={d}
+                                                type="button"
+                                                onClick={() => handleSetPaymentDueDay(record.id, d)}
+                                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                                  record.paymentDueDay === d
+                                                    ? 'bg-indigo-600 text-white shadow-2xs ring-1 ring-indigo-300'
+                                                    : 'bg-indigo-50/70 hover:bg-indigo-100 text-indigo-800 border border-indigo-200/80'
+                                                }`}
+                                              >
+                                                วันที่ {d}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* ตำแหน่งที่อยู่ Google Maps & ปุ่มนำทาง */}
+                                      <div className="bg-white p-3 rounded-xl border border-sky-200/90 space-y-2.5 shadow-2xs">
+                                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                                          <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-slate-900">
+                                            <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+                                            <span>ตำแหน่งที่อยู่ปัจจุบัน (คัดลอกจาก Google Maps):</span>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => handlePasteLocation(record.id)}
+                                            className="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-md border border-sky-200 transition-colors flex items-center gap-1 cursor-pointer"
+                                            title="วางลิงก์หรือที่อยู่จากคลิปบอร์ด"
+                                          >
+                                            <ClipboardCopy className="w-3 h-3" />
+                                            <span>วางลิงก์/ที่อยู่</span>
+                                          </button>
+                                        </div>
+
+                                        <div className="relative">
+                                          <input
+                                            type="text"
+                                            value={record.googleMapsLocation || ''}
+                                            onChange={(e) => handleSaveLocation(record.id, e.target.value)}
+                                            placeholder="วางลิงก์ Google Maps, พิกัด GPS หรือที่อยู่ปัจจุบันที่คัดลอกมา..."
+                                            className="w-full pl-3 pr-8 py-2 text-xs text-slate-800 bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white focus:border-sky-400 font-medium"
+                                          />
+                                          {record.googleMapsLocation && (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSaveLocation(record.id, '')}
+                                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-0.5"
+                                              title="ล้างข้อความ"
+                                            >
+                                              ✕
+                                            </button>
+                                          )}
+                                        </div>
+
+                                        {/* Button to open and navigate via Google Maps */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenGoogleMaps(record.googleMapsLocation)}
+                                          disabled={!record.googleMapsLocation?.trim()}
+                                          className={`w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer ${
+                                            record.googleMapsLocation?.trim()
+                                              ? 'bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white active:scale-[0.98]'
+                                              : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                                          }`}
+                                        >
+                                          <Navigation className="w-4 h-4 shrink-0" />
+                                          <span>
+                                            {record.googleMapsLocation?.trim()
+                                              ? 'เปิด Google Maps เพื่อนำทางไปยังที่อยู่นี้'
+                                              : 'กรุณากรอกหรือวางที่อยู่ Google Maps เพื่อเปิดนำทาง'}
+                                          </span>
+                                          {record.googleMapsLocation?.trim() && (
+                                            <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-80" />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
