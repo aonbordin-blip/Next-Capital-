@@ -658,11 +658,8 @@ export const SavedCasesModal: React.FC<Props> = ({
             <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs">
               <button
                 type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setViewMode('list');
-                }}
-                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-all cursor-pointer ${
+                onClick={() => setViewMode('list')}
+                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation ${
                   viewMode === 'list'
                     ? 'bg-white text-sky-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
@@ -674,11 +671,8 @@ export const SavedCasesModal: React.FC<Props> = ({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setViewMode('cards');
-                }}
-                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-all cursor-pointer ${
+                onClick={() => setViewMode('cards')}
+                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation ${
                   viewMode === 'cards'
                     ? 'bg-white text-sky-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
@@ -1194,7 +1188,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </div>
 
                   {/* Customer Records: LIST VIEW (รายการชื่อลูกค้า - แนะนำ) */}
-                  {viewMode === 'list' ? (
+                  <div className={viewMode === 'list' ? 'block' : 'hidden'}>
                     <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                       {group.items.map((record) => {
                         const isCurrentEditing = activeEditingId === record.id;
@@ -1213,7 +1207,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                               triggerHaptic('light');
                               setDetailCase(record);
                             }}
-                            className={`p-3 sm:p-3.5 flex items-center justify-between gap-2.5 hover:bg-sky-50/60 transition-all cursor-pointer group active:bg-sky-100/60 ${
+                            className={`p-3 sm:p-3.5 flex items-center justify-between gap-2.5 hover:bg-sky-50/60 transition-colors duration-150 cursor-pointer group active:bg-sky-100/60 ${
                               isCurrentEditing ? 'bg-amber-50/30' : ''
                             }`}
                           >
@@ -1332,7 +1326,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                               <span className="hidden xs:inline text-[11px] font-bold text-sky-600 group-hover:text-sky-700">
                                 ดูข้อมูล
                               </span>
-                              <div className="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-400 flex items-center justify-center transition-all shadow-2xs">
+                              <div className="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-400 flex items-center justify-center transition-colors duration-150 shadow-2xs">
                                 <ChevronRight className="w-4 h-4" />
                               </div>
                             </div>
@@ -1340,8 +1334,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                         );
                       })}
                     </div>
-                  ) : (
-                    /* CARDS VIEW (การ์ดสรุป) */
+                  </div>
+
+                  {/* Customer Records: CARDS VIEW (การ์ดสรุป) */}
+                  <div className={viewMode === 'cards' ? 'block' : 'hidden'}>
                     <div className="grid grid-cols-1 gap-2.5">
                       {group.items.map((record) => {
                         const isCurrentEditing = activeEditingId === record.id;
@@ -1359,7 +1355,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                               triggerHaptic('light');
                               setDetailCase(record);
                             }}
-                            className={`p-3 sm:p-4 rounded-2xl bg-white border shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-2 relative group ${
+                            className={`p-3 sm:p-4 rounded-2xl bg-white border shadow-2xs hover:shadow-md transition-colors duration-150 cursor-pointer space-y-2 relative group ${
                               isCurrentEditing
                                 ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
                                 : 'border-slate-200/80 hover:border-sky-300'
@@ -1471,7 +1467,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                         );
                       })}
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
