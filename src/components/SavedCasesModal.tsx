@@ -646,9 +646,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                 <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight truncate">
                   เคสที่บันทึกไว้ในอุปกรณ์
                 </h2>
-                <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
-                  {filteredCases.length} เคส
-                </span>
               </div>
               <p className="text-[10.5px] sm:text-[11px] text-slate-500 truncate">
                 บันทึกลงในเครื่อง เรียกดูหรือนำกลับมาใช้งานได้ตลอดเวลา
