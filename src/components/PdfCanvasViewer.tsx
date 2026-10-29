@@ -5,12 +5,12 @@ import {
   ZoomOut,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
   Download,
   Loader2,
   AlertTriangle,
   RotateCw,
   Maximize,
+  ExternalLink,
 } from 'lucide-react';
 
 // Configure PDF.js worker
@@ -40,15 +40,15 @@ interface PdfCanvasViewerProps {
   dataUrl: string;
   fileName?: string;
   mode?: 'inline' | 'popup';
-  onExpand?: () => void;
+  onOpenExternal?: () => void;
   className?: string;
 }
 
 export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
   dataUrl,
   fileName = 'เอกสารการอนุมัติ.pdf',
-  mode = 'popup',
-  onExpand,
+  mode = 'inline',
+  onOpenExternal,
   className = '',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -249,15 +249,15 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
               </div>
             )}
 
-            {onExpand && (
+            {onOpenExternal && (
               <button
                 type="button"
-                onClick={onExpand}
+                onClick={onOpenExternal}
                 className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[10.5px] flex items-center gap-1 shadow-xs cursor-pointer transition-colors"
-                title="ขยายดูแบบเต็มจอ Popup"
+                title="เปิดดูเอกสารด้วยแอพภายนอก"
               >
-                <Maximize2 className="w-3 h-3" />
-                <span>ขยายเต็มจอ</span>
+                <ExternalLink className="w-3 h-3" />
+                <span>เปิดในแอพภายนอก</span>
               </button>
             )}
           </div>

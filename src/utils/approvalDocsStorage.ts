@@ -171,3 +171,86 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
+
+/**
+ * Open PDF in an external application (e.g. mobile PDF viewer, Google Drive, browser)
+ */
+export function openPdfInExternalApp(dataUrl: string, filename: string = 'เอกสารการอนุมัติ.pdf'): boolean {
+  try {
+    const base64Index = dataUrl.indexOf('base64,');
+    const base64 = base64Index !== -1 ? dataUrl.substring(base64Index + 7) : dataUrl;
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Open via anchor tag to support both desktop and mobile external intent / new tab
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.target = '_blank';
+    a.rel = 'noopener,noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        // ignore
+      }
+    }, 60000);
+    return true;
+  } catch (err) {
+    console.error('Failed to open PDF in external app:', err);
+    try {
+      window.open(dataUrl, '_blank');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * Download PDF directly to local storage / file system
+ */
+export function downloadPdfFile(dataUrl: string, filename: string = 'เอกสารการอนุมัติ.pdf'): void {
+  try {
+    const base64Index = dataUrl.indexOf('base64,');
+    const base64 = base64Index !== -1 ? dataUrl.substring(base64Index + 7) : dataUrl;
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        // ignore
+      }
+    }, 60000);
+  } catch {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+}
+

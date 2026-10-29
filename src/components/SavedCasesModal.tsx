@@ -72,6 +72,8 @@ import {
   getApprovalDocData,
   deleteApprovalDocFile,
   formatFileSize,
+  openPdfInExternalApp,
+  downloadPdfFile,
 } from '../utils/approvalDocsStorage';
 import { PdfCanvasViewer } from './PdfCanvasViewer';
 
@@ -176,14 +178,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [showClearAllConfirm, setShowClearAllConfirm] = useState<boolean>(false);
   const [showTransferGuide, setShowTransferGuide] = useState<boolean>(false);
 
-  // Approval PDF viewer and upload states
-  const [activePdfViewer, setActivePdfViewer] = useState<{
-    caseId: string;
-    url: string;
-    name: string;
-    size?: number;
-    customerName?: string;
-  } | null>(null);
+  // Approval PDF state and upload states
   const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState<boolean>(false);
   const [deleteDocConfirmId, setDeleteDocConfirmId] = useState<string | null>(null);
@@ -208,7 +203,6 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeleteConfirmId(null);
       setShowClearAllConfirm(false);
       setShowTransferGuide(false);
-      setActivePdfViewer(null);
       setIsLoadingPdf(false);
       setIsUploadingPdf(false);
       setDeleteDocConfirmId(null);
@@ -612,7 +606,7 @@ export const SavedCasesModal: React.FC<Props> = ({
     }
   };
 
-  const handleOpenPdfViewer = async (caseItem: SavedCaseRecord) => {
+  const handleOpenExternalPdf = async (caseItem: SavedCaseRecord) => {
     try {
       setIsLoadingPdf(true);
       triggerHaptic('light');
@@ -622,15 +616,17 @@ export const SavedCasesModal: React.FC<Props> = ({
         showToast('⚠️ ไม่พบข้อมูลไฟล์เอกสารในเครื่อง กรุณาลองอัปโหลดใหม่อีกครั้ง');
         return;
       }
-      setActivePdfViewer({
-        caseId: caseItem.id,
-        url: data.dataUrl,
-        name: data.name || caseItem.approvalDoc?.name || 'เอกสารการอนุมัติ.pdf',
-        size: data.size || caseItem.approvalDoc?.size,
-        customerName: getCustomerDisplayName(caseItem),
-      });
-      triggerHaptic('success');
-    } catch {
+      const fileName = data.name || caseItem.approvalDoc?.name || 'เอกสารการอนุมัติ.pdf';
+      const opened = openPdfInExternalApp(data.dataUrl, fileName);
+      if (opened) {
+        triggerHaptic('success');
+        showToast('✓ เปิดดูเอกสารด้วยแอพภายนอกเรียบร้อย');
+      } else {
+        triggerHaptic('warning');
+        showToast('⚠️ ไม่สามารถเปิดด้วยแอพภายนอกได้โดยตรง กรุณากดปุ่มดาวน์โหลด');
+      }
+    } catch (err: any) {
+      console.error('Failed to open PDF externally:', err);
       triggerHaptic('warning');
       showToast('✕ ไม่สามารถเปิดไฟล์เอกสารได้');
     } finally {
@@ -646,9 +642,6 @@ export const SavedCasesModal: React.FC<Props> = ({
       setCases(updated);
       setInlinePdfDataUrl(null);
       setDeleteDocConfirmId(null);
-      if (activePdfViewer?.caseId === caseId) {
-        setActivePdfViewer(null);
-      }
       triggerHaptic('success');
       showToast('✓ ลบเอกสารการอนุมัติเรียบร้อยแล้ว');
     } catch {
@@ -2186,33 +2179,57 @@ export const SavedCasesModal: React.FC<Props> = ({
                         </div>
                       </div>
 
-                      {/* AUTOMATIC LIVE PREVIEW (แสดงตัวอย่างอัตโนมัติไม่ต้องกดเปิด) */}
+                      {/* AUTOMATIC LIVE PREVIEW (แสดงแค่ตัวอย่าง) */}
                       {inlinePdfDataUrl ? (
                         <div className="space-y-1 pt-1">
                           <PdfCanvasViewer
                             dataUrl={inlinePdfDataUrl}
                             fileName={detailCase.approvalDoc.name}
                             mode="inline"
-                            onExpand={() => handleOpenPdfViewer(detailCase)}
+                            onOpenExternal={() => handleOpenExternalPdf(detailCase)}
                           />
                         </div>
                       ) : isLoadingInlinePdf ? (
                         <div className="py-8 bg-slate-900 rounded-xl text-center text-xs text-white flex flex-col items-center justify-center gap-2">
                           <div className="w-5 h-5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-[11px] text-slate-300">กำลังแสดงตัวอย่างเอกสารอัตโนมัติ...</span>
+                          <span className="text-[11px] text-slate-300">กำลังแสดงตัวอย่างเอกสาร...</span>
                         </div>
                       ) : null}
 
-                      {/* Main Action: Primary Display Button that triggers Popup */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenPdfViewer(detailCase)}
-                        disabled={isLoadingPdf}
-                        className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm shadow-rose-500/20 bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white active:scale-[0.98] transition-all cursor-pointer"
-                      >
-                        <Maximize2 className="w-4 h-4 shrink-0" />
-                        <span>เปิดดูเอกสารแบบเต็มจอ (Popup)</span>
-                      </button>
+                      {/* External App Actions: Open in External App / Download */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenExternalPdf(detailCase)}
+                          disabled={isLoadingPdf}
+                          className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm shadow-rose-500/20 bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white active:scale-[0.98] transition-all cursor-pointer"
+                          title="เปิดดูเอกสารด้วยแอพภายนอกของเครื่อง (เช่น PDF Viewer, Google Drive, เบราว์เซอร์)"
+                        >
+                          <ExternalLink className="w-4 h-4 shrink-0" />
+                          <span>เปิดดูเอกสารจากแอพภายนอก</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!detailCase) return;
+                            const data = await getApprovalDocData(detailCase.id);
+                            if (data?.dataUrl) {
+                              downloadPdfFile(
+                                data.dataUrl,
+                                data.name || detailCase.approvalDoc?.name || 'เอกสารการอนุมัติ.pdf'
+                              );
+                              triggerHaptic('success');
+                              showToast('✓ ดาวน์โหลดไฟล์ PDF เรียบร้อย');
+                            }
+                          }}
+                          className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 active:scale-[0.98] transition-all cursor-pointer"
+                          title="ดาวน์โหลดไฟล์ PDF เก็บไว้ในอุปกรณ์"
+                        >
+                          <Download className="w-4 h-4 shrink-0 text-slate-600" />
+                          <span>ดาวน์โหลด PDF</span>
+                        </button>
+                      </div>
 
                       {/* Auxiliary Actions: Change file or Delete file */}
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
@@ -2356,126 +2373,6 @@ export const SavedCasesModal: React.FC<Props> = ({
           </div>
         )}
       </div>
-
-      {/* =========================================================================
-          POPUP MODAL: PDF DOCUMENT VIEWER (หน้าต่างแสดงเอกสารการอนุมัติ)
-          ========================================================================= */}
-      {activePdfViewer && (
-        <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full h-[92vh] max-h-[850px] flex flex-col overflow-hidden border border-slate-200">
-            {/* Popup Header */}
-            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-slate-900 via-slate-800 to-rose-950 text-white flex items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/30 shrink-0">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-black truncate text-white">
-                      เอกสารการอนุมัติ: {activePdfViewer.customerName || 'ลูกค้า'}
-                    </h3>
-                    <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-rose-500/30 text-rose-200 border border-rose-400/30 uppercase tracking-wider">
-                      PDF
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 truncate">
-                    {activePdfViewer.name} {activePdfViewer.size ? `(${formatFileSize(activePdfViewer.size)})` : ''}
-                  </p>
-                </div>
-              </div>
-
-              {/* Header Action Buttons */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Download button */}
-                <a
-                  href={activePdfViewer.url}
-                  download={activePdfViewer.name}
-                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="ดาวน์โหลดไฟล์ PDF ลงเครื่อง"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">ดาวน์โหลด</span>
-                </a>
-
-                {/* Open in new window */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const w = window.open('');
-                    if (w) {
-                      w.document.write(
-                        `<iframe src="${activePdfViewer.url}" style="position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;border:none;margin:0;padding:0;overflow:hidden;z-index:999999;"></iframe>`
-                      );
-                    }
-                  }}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-                  title="เปิดเต็มจอในแท็บใหม่"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </button>
-
-                {/* Close popup */}
-                <button
-                  type="button"
-                  onClick={() => setActivePdfViewer(null)}
-                  className="p-2 rounded-full bg-white/10 hover:bg-rose-600 text-white transition-colors cursor-pointer"
-                  title="ปิดหน้าต่างเอกสาร"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Top Info Bar */}
-            <div className="bg-slate-800 px-3.5 py-1.5 border-b border-slate-700/80 flex items-center justify-between text-[11px] text-slate-300 shrink-0">
-              <span className="truncate pr-2">
-                ✨ แสดงผลเอกสาร PDF อัตโนมัติ (สามารถซูม ย่อ-ขยาย หรือเลื่อนดูแต่ละหน้าได้)
-              </span>
-              <a
-                href={activePdfViewer.url}
-                download={activePdfViewer.name}
-                className="text-[10px] font-bold text-rose-400 hover:text-rose-300 underline shrink-0 inline-flex items-center gap-1"
-              >
-                <Download className="w-3 h-3" />
-                ดาวน์โหลดไฟล์
-              </a>
-            </div>
-
-            {/* Document Viewer Embed Area - 100% Native Canvas Automatic Rendering */}
-            <div className="flex-1 w-full bg-slate-900 relative min-h-0 overflow-hidden">
-              <PdfCanvasViewer
-                dataUrl={activePdfViewer.url}
-                fileName={activePdfViewer.name}
-                mode="popup"
-              />
-            </div>
-
-            {/* Popup Footer */}
-            <div className="p-3 sm:px-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
-              <span className="text-xs text-slate-500 truncate max-w-[200px] sm:max-w-md">
-                {activePdfViewer.name}
-              </span>
-              <div className="flex items-center gap-2 shrink-0">
-                <a
-                  href={activePdfViewer.url}
-                  download={activePdfViewer.name}
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm shadow-rose-500/20 transition-all cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>ดาวน์โหลด PDF</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setActivePdfViewer(null)}
-                  className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
-                >
-                  ปิด
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
