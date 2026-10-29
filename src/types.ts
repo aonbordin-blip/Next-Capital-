@@ -203,6 +203,17 @@ export interface SavedCaseRecord {
   // Payment Schedule & Customer Location (สำหรับลูกค้าอนุมัติ/รับรถแล้ว)
   paymentDueDay?: number; // กำหนดวันชำระค่างวด (เช่น วันที่ 1-31 ของทุกเดือน)
   googleMapsLocation?: string; // ลิงก์ พิกัด หรือที่อยู่ปัจจุบันที่คัดลอกมาจาก Google Maps
+
+  // Approval Document (เอกสารการอนุมัติ PDF)
+  approvalDoc?: ApprovalDocInfo;
+}
+
+export interface ApprovalDocInfo {
+  name: string; // ชื่อไฟล์ เช่น "ใบอนุมัติ_ศราวิน.pdf"
+  size: number; // ขนาดไฟล์ (bytes)
+  uploadedAt: number; // วันที่อัปโหลด (timestamp)
+  type?: string; // mime type
+  dataUrl?: string; // data URL สำรอง (ถ้ามี)
 }
 
 export type CaseApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';

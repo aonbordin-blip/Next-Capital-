@@ -1,4 +1,5 @@
-import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
+import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
+import { deleteApprovalDocFile } from './approvalDocsStorage';
 
 const STORAGE_KEY = 'ncap_saved_cases_v1';
 
@@ -38,6 +39,7 @@ export function saveCaseRecord(
         deliveryDate: data.deliveryDate !== undefined ? data.deliveryDate : existing.deliveryDate,
         paymentDueDay: data.paymentDueDay !== undefined ? data.paymentDueDay : existing.paymentDueDay,
         googleMapsLocation: data.googleMapsLocation !== undefined ? data.googleMapsLocation : existing.googleMapsLocation,
+        approvalDoc: data.approvalDoc !== undefined ? data.approvalDoc : existing.approvalDoc,
         updatedAt: now,
       };
       cases[index] = updated;
@@ -69,6 +71,7 @@ export function saveCaseRecord(
     deliveryDate: initialDeliveryDate,
     paymentDueDay: data.paymentDueDay,
     googleMapsLocation: data.googleMapsLocation,
+    approvalDoc: data.approvalDoc,
     id: `case-${now}-${Math.random().toString(36).substring(2, 7)}`,
     createdAt: now,
     updatedAt: now,
@@ -88,6 +91,8 @@ export function deleteCaseRecord(id: string): SavedCaseRecord[] {
   const filtered = cases.filter((c) => c.id !== id);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    // Clean up indexedDB stored file if present
+    deleteApprovalDocFile(id).catch((err) => console.warn('Could not delete doc file:', err));
   } catch (err) {
     console.error('Failed to delete case from localStorage:', err);
   }
@@ -232,6 +237,27 @@ export function updateCaseGoogleMapsLocation(
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
     console.error('Failed to update Google Maps location in localStorage:', err);
+  }
+  return updated;
+}
+
+export function updateCaseApprovalDoc(
+  id: string,
+  approvalDoc?: ApprovalDocInfo
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    return {
+      ...c,
+      approvalDoc,
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update approval doc in localStorage:', err);
   }
   return updated;
 }

@@ -41,8 +41,14 @@ import {
   Percent,
   Receipt,
   RotateCcw,
+  FileText,
+  Eye,
+  Paperclip,
+  UploadCloud,
+  FileCheck,
+  Maximize2,
 } from 'lucide-react';
-import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
+import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import {
@@ -54,12 +60,20 @@ import {
   updateCaseDates,
   updateCasePaymentDueDay,
   updateCaseGoogleMapsLocation,
+  updateCaseApprovalDoc,
   getGoogleMapsNavigationUrl,
   calculateFirstPaymentDueDate,
   clearAllCaseRecords,
   exportCasesAsJson,
   importCasesFromJson,
 } from '../utils/savedCasesStorage';
+import {
+  saveApprovalDocFile,
+  getApprovalDocData,
+  deleteApprovalDocFile,
+  formatFileSize,
+} from '../utils/approvalDocsStorage';
+import { PdfCanvasViewer } from './PdfCanvasViewer';
 
 interface Props {
   isOpen: boolean;
@@ -162,6 +176,23 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [showClearAllConfirm, setShowClearAllConfirm] = useState<boolean>(false);
   const [showTransferGuide, setShowTransferGuide] = useState<boolean>(false);
 
+  // Approval PDF viewer and upload states
+  const [activePdfViewer, setActivePdfViewer] = useState<{
+    caseId: string;
+    url: string;
+    name: string;
+    size?: number;
+    customerName?: string;
+  } | null>(null);
+  const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState<boolean>(false);
+  const [deleteDocConfirmId, setDeleteDocConfirmId] = useState<string | null>(null);
+  const pdfFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Inline PDF preview state (แสดงตัวอย่างอัตโนมัติไม่ต้องกดเปิด)
+  const [inlinePdfDataUrl, setInlinePdfDataUrl] = useState<string | null>(null);
+  const [isLoadingInlinePdf, setIsLoadingInlinePdf] = useState<boolean>(false);
+
   // Load cases when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -177,6 +208,12 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeleteConfirmId(null);
       setShowClearAllConfirm(false);
       setShowTransferGuide(false);
+      setActivePdfViewer(null);
+      setIsLoadingPdf(false);
+      setIsUploadingPdf(false);
+      setDeleteDocConfirmId(null);
+      setInlinePdfDataUrl(null);
+      setIsLoadingInlinePdf(false);
     }
   }, [isOpen]);
 
@@ -189,6 +226,32 @@ export const SavedCasesModal: React.FC<Props> = ({
       }
     }
   }, [cases]);
+
+  // Automatically load PDF data for instant inline preview when detailCase has an approvalDoc
+  useEffect(() => {
+    if (detailCase?.approvalDoc) {
+      let isCancelled = false;
+      setIsLoadingInlinePdf(true);
+      getApprovalDocData(detailCase.id)
+        .then((doc) => {
+          if (!isCancelled) {
+            setInlinePdfDataUrl(doc?.dataUrl || null);
+            setIsLoadingInlinePdf(false);
+          }
+        })
+        .catch(() => {
+          if (!isCancelled) {
+            setIsLoadingInlinePdf(false);
+          }
+        });
+      return () => {
+        isCancelled = true;
+      };
+    } else {
+      setInlinePdfDataUrl(null);
+      setIsLoadingInlinePdf(false);
+    }
+  }, [detailCase?.id, detailCase?.approvalDoc?.uploadedAt]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -511,6 +574,87 @@ export const SavedCasesModal: React.FC<Props> = ({
     }
     triggerHaptic('success');
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handlePdfUpload = async (caseId: string, file: File) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      triggerHaptic('warning');
+      showToast('⚠️ รองรับเฉพาะไฟล์เอกสาร PDF (.pdf) เท่านั้น');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      triggerHaptic('warning');
+      showToast('⚠️ ไฟล์มีขนาดเกิน 25MB กรุณาลดขนาดไฟล์ก่อนอัปโหลด');
+      return;
+    }
+
+    try {
+      setIsUploadingPdf(true);
+      triggerHaptic('light');
+      const docInfo = await saveApprovalDocFile(caseId, file);
+      const updated = updateCaseApprovalDoc(caseId, docInfo);
+      setCases(updated);
+      const stored = await getApprovalDocData(caseId);
+      if (stored?.dataUrl) {
+        setInlinePdfDataUrl(stored.dataUrl);
+      }
+      triggerHaptic('success');
+      showToast(`✓ อัปโหลด "${file.name}" เรียบร้อยแล้ว`);
+    } catch (err: any) {
+      triggerHaptic('warning');
+      showToast(`✕ เกิดข้อผิดพลาดในการอัปโหลด: ${err?.message || 'ไม่สามารถบันทึกได้'}`);
+    } finally {
+      setIsUploadingPdf(false);
+      if (pdfFileInputRef.current) {
+        pdfFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleOpenPdfViewer = async (caseItem: SavedCaseRecord) => {
+    try {
+      setIsLoadingPdf(true);
+      triggerHaptic('light');
+      const data = await getApprovalDocData(caseItem.id);
+      if (!data || !data.dataUrl) {
+        triggerHaptic('warning');
+        showToast('⚠️ ไม่พบข้อมูลไฟล์เอกสารในเครื่อง กรุณาลองอัปโหลดใหม่อีกครั้ง');
+        return;
+      }
+      setActivePdfViewer({
+        caseId: caseItem.id,
+        url: data.dataUrl,
+        name: data.name || caseItem.approvalDoc?.name || 'เอกสารการอนุมัติ.pdf',
+        size: data.size || caseItem.approvalDoc?.size,
+        customerName: getCustomerDisplayName(caseItem),
+      });
+      triggerHaptic('success');
+    } catch {
+      triggerHaptic('warning');
+      showToast('✕ ไม่สามารถเปิดไฟล์เอกสารได้');
+    } finally {
+      setIsLoadingPdf(false);
+    }
+  };
+
+  const handleDeletePdfDoc = async (caseId: string) => {
+    try {
+      triggerHaptic('light');
+      await deleteApprovalDocFile(caseId);
+      const updated = updateCaseApprovalDoc(caseId, undefined);
+      setCases(updated);
+      setInlinePdfDataUrl(null);
+      setDeleteDocConfirmId(null);
+      if (activePdfViewer?.caseId === caseId) {
+        setActivePdfViewer(null);
+      }
+      triggerHaptic('success');
+      showToast('✓ ลบเอกสารการอนุมัติเรียบร้อยแล้ว');
+    } catch {
+      triggerHaptic('warning');
+      showToast('✕ เกิดข้อผิดพลาดในการลบเอกสาร');
+    }
   };
 
   const getCustomerDisplayName = (record: SavedCaseRecord): string => {
@@ -1285,6 +1429,17 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       )}
                                     </>
                                   )}
+
+                                  {/* Approval PDF Badge */}
+                                  {record.approvalDoc && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-0.5"
+                                      title={`แนบเอกสารแล้ว: ${record.approvalDoc.name}`}
+                                    >
+                                      <FileText className="w-2.5 h-2.5 text-rose-600" />
+                                      <span>PDF</span>
+                                    </span>
+                                  )}
                                 </div>
 
                                 {/* Row 2: Phone + Bike Model */}
@@ -1399,6 +1554,16 @@ export const SavedCasesModal: React.FC<Props> = ({
                                     }`}
                                   >
                                     {isDelivered ? 'รับรถแล้ว ✓' : 'รอรับรถ ⏳'}
+                                  </span>
+                                )}
+
+                                {record.approvalDoc && (
+                                  <span
+                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300 inline-flex items-center gap-1"
+                                    title={`แนบเอกสารแล้ว: ${record.approvalDoc.name}`}
+                                  >
+                                    <FileText className="w-3 h-3 text-rose-600" />
+                                    <span>PDF</span>
                                   </span>
                                 )}
                               </div>
@@ -1762,6 +1927,158 @@ export const SavedCasesModal: React.FC<Props> = ({
                 )}
               </div>
 
+              {/* SECTION 1.5: Approval Document (เอกสารการอนุมัติ PDF) - เฉพาะเคสที่อนุมัติแล้ว */}
+              {detailCase.approvalStatus === 'approved' && (
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-rose-50/60 via-white to-red-50/30 border border-rose-200 space-y-3 shadow-2xs animate-fade-in">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-rose-950">
+                      <FileText className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>เอกสารการอนุมัติ (PDF):</span>
+                    </div>
+                    {detailCase.approvalDoc ? (
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        แนบเอกสารแล้ว
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                        ยังไม่ได้แนบเอกสาร
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Hidden file input for uploading PDF */}
+                  <input
+                    ref={pdfFileInputRef}
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handlePdfUpload(detailCase.id, file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  {detailCase.approvalDoc ? (
+                    /* Case with Uploaded PDF */
+                    <div className="p-3 rounded-xl bg-white border border-rose-100 shadow-2xs space-y-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span
+                            className="text-xs font-black text-slate-900 block truncate"
+                            title={detailCase.approvalDoc.name}
+                          >
+                            {detailCase.approvalDoc.name}
+                          </span>
+                          <span className="text-[10px] text-slate-500 block truncate">
+                            {formatFileSize(detailCase.approvalDoc.size)} • อัปโหลดเมื่อ {formatThaiDateTime(detailCase.approvalDoc.uploadedAt)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* AUTOMATIC LIVE PREVIEW (แสดงตัวอย่างอัตโนมัติไม่ต้องกดเปิด) */}
+                      {inlinePdfDataUrl ? (
+                        <div className="space-y-1 pt-1">
+                          <PdfCanvasViewer
+                            dataUrl={inlinePdfDataUrl}
+                            fileName={detailCase.approvalDoc.name}
+                            mode="inline"
+                            onExpand={() => handleOpenPdfViewer(detailCase)}
+                          />
+                        </div>
+                      ) : isLoadingInlinePdf ? (
+                        <div className="py-8 bg-slate-900 rounded-xl text-center text-xs text-white flex flex-col items-center justify-center gap-2">
+                          <div className="w-5 h-5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-[11px] text-slate-300">กำลังแสดงตัวอย่างเอกสารอัตโนมัติ...</span>
+                        </div>
+                      ) : null}
+
+                      {/* Main Action: Primary Display Button that triggers Popup */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPdfViewer(detailCase)}
+                        disabled={isLoadingPdf}
+                        className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm shadow-rose-500/20 bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white active:scale-[0.98] transition-all cursor-pointer"
+                      >
+                        <Maximize2 className="w-4 h-4 shrink-0" />
+                        <span>เปิดดูเอกสารแบบเต็มจอ (Popup)</span>
+                      </button>
+
+                      {/* Auxiliary Actions: Change file or Delete file */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => pdfFileInputRef.current?.click()}
+                          disabled={isUploadingPdf}
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                          title="เลือกไฟล์ PDF ใหม่เพื่อแทนที่ไฟล์เดิม"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>เปลี่ยนไฟล์</span>
+                        </button>
+
+                        {deleteDocConfirmId === detailCase.id ? (
+                          <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">
+                            <span className="text-[10px] text-rose-800 font-bold">ยืนยันลบไฟล์?</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePdfDoc(detailCase.id)}
+                              className="px-2 py-0.5 rounded-md bg-rose-600 text-white font-bold text-[10px] cursor-pointer"
+                            >
+                              ลบ
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteDocConfirmId(null)}
+                              className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 text-[10px] cursor-pointer"
+                            >
+                              ยกเลิก
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteDocConfirmId(detailCase.id)}
+                            className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="ลบเอกสารออกจากเคสนี้"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>ลบเอกสาร</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Dropzone / Upload button when no PDF is attached */
+                    <div
+                      onClick={() => pdfFileInputRef.current?.click()}
+                      className="p-4 rounded-xl border-2 border-dashed border-rose-300 hover:border-rose-400 bg-white hover:bg-rose-50/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group text-center"
+                    >
+                      <div className="w-10 h-10 rounded-2xl bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors shadow-2xs">
+                        <UploadCloud className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 group-hover:text-rose-700 block">
+                          {isUploadingPdf ? 'กำลังอัปโหลดไฟล์...' : 'คลิกเพื่ออัปโหลดไฟล์ PDF เอกสารการอนุมัติ'}
+                        </span>
+                        <span className="text-[10.5px] text-slate-400 mt-0.5 block">
+                          รองรับไฟล์ .PDF (เช่น เอกสารอนุมัติสินเชื่อ, ใบแจ้งผลการพิจารณา)
+                        </span>
+                      </div>
+                      <div className="mt-1 px-3 py-1.5 rounded-lg bg-rose-50 group-hover:bg-rose-600 text-rose-700 group-hover:text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 pointer-events-none">
+                        <Paperclip className="w-3.5 h-3.5" />
+                        <span>เลือกไฟล์ PDF จากอุปกรณ์</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* SECTION 2: Google Maps Location & Navigation */}
               <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-sky-200/90 space-y-2.5 shadow-2xs">
                 <div className="flex items-center justify-between gap-2">
@@ -2039,6 +2356,126 @@ export const SavedCasesModal: React.FC<Props> = ({
           </div>
         )}
       </div>
+
+      {/* =========================================================================
+          POPUP MODAL: PDF DOCUMENT VIEWER (หน้าต่างแสดงเอกสารการอนุมัติ)
+          ========================================================================= */}
+      {activePdfViewer && (
+        <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full h-[92vh] max-h-[850px] flex flex-col overflow-hidden border border-slate-200">
+            {/* Popup Header */}
+            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-slate-900 via-slate-800 to-rose-950 text-white flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/30 shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-black truncate text-white">
+                      เอกสารการอนุมัติ: {activePdfViewer.customerName || 'ลูกค้า'}
+                    </h3>
+                    <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-rose-500/30 text-rose-200 border border-rose-400/30 uppercase tracking-wider">
+                      PDF
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 truncate">
+                    {activePdfViewer.name} {activePdfViewer.size ? `(${formatFileSize(activePdfViewer.size)})` : ''}
+                  </p>
+                </div>
+              </div>
+
+              {/* Header Action Buttons */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Download button */}
+                <a
+                  href={activePdfViewer.url}
+                  download={activePdfViewer.name}
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="ดาวน์โหลดไฟล์ PDF ลงเครื่อง"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">ดาวน์โหลด</span>
+                </a>
+
+                {/* Open in new window */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const w = window.open('');
+                    if (w) {
+                      w.document.write(
+                        `<iframe src="${activePdfViewer.url}" style="position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;border:none;margin:0;padding:0;overflow:hidden;z-index:999999;"></iframe>`
+                      );
+                    }
+                  }}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                  title="เปิดเต็มจอในแท็บใหม่"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </button>
+
+                {/* Close popup */}
+                <button
+                  type="button"
+                  onClick={() => setActivePdfViewer(null)}
+                  className="p-2 rounded-full bg-white/10 hover:bg-rose-600 text-white transition-colors cursor-pointer"
+                  title="ปิดหน้าต่างเอกสาร"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Top Info Bar */}
+            <div className="bg-slate-800 px-3.5 py-1.5 border-b border-slate-700/80 flex items-center justify-between text-[11px] text-slate-300 shrink-0">
+              <span className="truncate pr-2">
+                ✨ แสดงผลเอกสาร PDF อัตโนมัติ (สามารถซูม ย่อ-ขยาย หรือเลื่อนดูแต่ละหน้าได้)
+              </span>
+              <a
+                href={activePdfViewer.url}
+                download={activePdfViewer.name}
+                className="text-[10px] font-bold text-rose-400 hover:text-rose-300 underline shrink-0 inline-flex items-center gap-1"
+              >
+                <Download className="w-3 h-3" />
+                ดาวน์โหลดไฟล์
+              </a>
+            </div>
+
+            {/* Document Viewer Embed Area - 100% Native Canvas Automatic Rendering */}
+            <div className="flex-1 w-full bg-slate-900 relative min-h-0 overflow-hidden">
+              <PdfCanvasViewer
+                dataUrl={activePdfViewer.url}
+                fileName={activePdfViewer.name}
+                mode="popup"
+              />
+            </div>
+
+            {/* Popup Footer */}
+            <div className="p-3 sm:px-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+              <span className="text-xs text-slate-500 truncate max-w-[200px] sm:max-w-md">
+                {activePdfViewer.name}
+              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={activePdfViewer.url}
+                  download={activePdfViewer.name}
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm shadow-rose-500/20 transition-all cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>ดาวน์โหลด PDF</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setActivePdfViewer(null)}
+                  className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  ปิด
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
