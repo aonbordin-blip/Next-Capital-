@@ -630,12 +630,15 @@ export const SavedCasesModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 animate-fade-in">
-      {!detailCase ? (
-        <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-2xl max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative">
+      <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-2xl max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative">
         {/* Top Specular Accent Sheen */}
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-600 opacity-95" />
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-600 opacity-95" />
 
-        {/* Modal Header */}
+        {/* =========================================================================
+            PANEL 1: SAVED CASES LIST / CARDS VIEW (หน้ารวมเคสทั้งหมด)
+            ========================================================================= */}
+        <div className={`flex-1 flex flex-col min-h-0 ${detailCase ? 'hidden' : 'flex'}`}>
+          {/* Modal Header */}
         <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 flex items-center justify-between gap-3 bg-gradient-to-b from-sky-50/80 to-transparent shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-600 text-white flex items-center justify-center shadow-md shadow-sky-500/25 shrink-0">
@@ -1203,10 +1206,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                         return (
                           <div
                             key={record.id}
-                            onClick={() => {
-                              triggerHaptic('light');
-                              setDetailCase(record);
-                            }}
+                            onClick={() => setDetailCase(record)}
                             className={`p-3 sm:p-3.5 flex items-center justify-between gap-2.5 hover:bg-sky-50/60 transition-colors duration-150 cursor-pointer group active:bg-sky-100/60 ${
                               isCurrentEditing ? 'bg-amber-50/30' : ''
                             }`}
@@ -1351,10 +1351,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                         return (
                           <div
                             key={record.id}
-                            onClick={() => {
-                              triggerHaptic('light');
-                              setDetailCase(record);
-                            }}
+                            onClick={() => setDetailCase(record)}
                             className={`p-3 sm:p-4 rounded-2xl bg-white border shadow-2xs hover:shadow-md transition-colors duration-150 cursor-pointer space-y-2 relative group ${
                               isCurrentEditing
                                 ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
@@ -1488,25 +1485,20 @@ export const SavedCasesModal: React.FC<Props> = ({
           </button>
         </div>
       </div>
-    ) : (
-      /* =========================================================================
-           DEDICATED CASE DETAIL POPUP MODAL (เปิดเมื่อแตะที่รายการชื่อลูกค้า)
-           ========================================================================= */
-        <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative">
-          {/* Top Cyan Accent Strip */}
-          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-600" />
 
+      {/* =========================================================================
+          PANEL 2: DEDICATED CASE DETAIL VIEW (หน้ารายละเอียดเคสที่เลือก)
+          ========================================================================= */}
+      {detailCase && (
+        <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
           {/* Popup Header */}
           <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 flex items-center justify-between gap-2.5 bg-gradient-to-b from-sky-50/90 to-white shrink-0">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               {/* ปุ่มย้อนกลับไปหน้ารายการเคส */}
               <button
                 type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setDetailCase(null);
-                }}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-800 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer transition-all shrink-0 active:scale-95"
+                onClick={() => setDetailCase(null)}
+                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-800 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer transition-colors duration-150 shrink-0 active:scale-95 select-none touch-manipulation"
                 title="กลับไปยังหน้ารายการเคสทั้งหมด"
               >
                 <ChevronLeft className="w-4 h-4 text-sky-600" />
@@ -2047,5 +2039,6 @@ export const SavedCasesModal: React.FC<Props> = ({
           </div>
         )}
       </div>
-    );
-  };
+    </div>
+  );
+};

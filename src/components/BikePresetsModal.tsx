@@ -131,13 +131,8 @@ export const BikePresetsModal: React.FC<Props> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/40 backdrop-blur-md animate-fade-in">
-      <div 
-        className="ios-glass-modal rounded-[32px] w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden transition-all duration-300"
-        style={{
-          boxShadow: '0 30px 60px -12px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.7) inset'
-        }}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 animate-fade-in">
+      <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
         {/* iOS Top Pull Indicator */}
         <div className="pt-2.5 pb-1 flex justify-center shrink-0">
           <div className="w-10 h-1 bg-slate-400/40 rounded-full" />
