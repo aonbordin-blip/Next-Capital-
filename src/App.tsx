@@ -64,6 +64,7 @@ import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { DvApprovalCard } from './components/DvApprovalCard';
 import { DailyFinanceReportCard } from './components/DailyFinanceReportCard';
+import { CheckerCommissionCard } from './components/CheckerCommissionCard';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
@@ -279,7 +280,7 @@ export default function App() {
   };
 
   // Collapsible cards state: cards can be expanded or collapsed by clicking their header/toggle
-  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | 'daily_report' | null>('financing');
+  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | 'daily_report' | 'checker_commission' | null>('financing');
 
   // Auto-collapse when clicking or interacting with another data box (ถ้ายังกดในกล่องเดิมไม่ยุบปิด)
   useEffect(() => {
@@ -2503,6 +2504,20 @@ ${
                 onToggleExpand={() => {
                   setExpandedCard((prev) => (prev === 'daily_report' ? null : 'daily_report'));
                 }}
+              />
+            </div>
+
+            {/* Checker Insurance Commission Report Box */}
+            <div data-card-id="checker_commission">
+              <CheckerCommissionCard
+                officerName={officerName}
+                officerCode={officerCode}
+                officerDisplay={officerDisplay}
+                isExpanded={expandedCard === 'checker_commission'}
+                onToggleExpand={() => {
+                  setExpandedCard((prev) => (prev === 'checker_commission' ? null : 'checker_commission'));
+                }}
+                onOpenSavedCases={() => setShowSavedCases(true)}
               />
             </div>
 
