@@ -1087,14 +1087,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                       className="w-full appearance-none pl-2.5 pr-7 py-1 rounded-xl text-xs sm:text-[13px] font-extrabold bg-white border border-sky-200 text-sky-950 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-2xs truncate"
                     >
                       <option value="all">ทุกช่วงเวลา (เคสทั้งหมด)</option>
-                      {availableMonthOptions.map((ym) => {
-                        const isCurrent = ym === getCurrentYearMonthKey();
-                        return (
-                          <option key={ym} value={ym}>
-                            {formatYearMonthLabel(ym)} {isCurrent ? '⭐ (เดือนปัจจุบัน)' : ''}
-                          </option>
-                        );
-                      })}
+                      {availableMonthOptions.map((ym) => (
+                        <option key={ym} value={ym}>
+                          {formatYearMonthLabel(ym)}
+                        </option>
+                      ))}
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-sky-700 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
@@ -1113,7 +1110,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </button>
                 </div>
 
-                {/* Quick Jump to Current Month Button */}
+                {/* Quick Reset to Current Month Button */}
                 {selectedMonthKey !== getCurrentYearMonthKey() && (
                   <button
                     type="button"
@@ -1121,11 +1118,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                       triggerHaptic('success');
                       setSelectedMonthKey(getCurrentYearMonthKey());
                     }}
-                    className="px-2 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 text-[11px] font-extrabold flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 transition-all active:scale-95"
-                    title="กลับมาดูข้อมูลเดือนปัจจุบัน"
+                    className="p-1 sm:p-1.5 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 text-xs font-extrabold flex items-center justify-center shadow-2xs cursor-pointer shrink-0 transition-all active:scale-95"
+                    title="กลับไปยังเดือนปัจจุบัน"
                   >
-                    <RotateCcw className="w-3 h-3 text-sky-600" />
-                    <span>เดือนปัจจุบัน</span>
+                    <RotateCcw className="w-3.5 h-3.5 text-sky-600" />
                   </button>
                 )}
               </div>
