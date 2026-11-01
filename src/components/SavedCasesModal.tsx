@@ -39,6 +39,7 @@ import {
   Phone,
   ShieldCheck,
   Percent,
+  BadgePercent,
   Receipt,
   RotateCcw,
   FileText,
@@ -115,6 +116,52 @@ function toInputDateStr(timestampOrStr?: number | string): string {
   return `${y}-${m}-${day}`;
 }
 
+function getCurrentYearMonthKey(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = (now.getMonth() + 1).toString().padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+function formatYearMonthLabel(ymKey: string): string {
+  if (ymKey === 'all') return 'ทั้งหมด (ทุกช่วงเวลา)';
+  const [yStr, mStr] = ymKey.split('-');
+  const y = parseInt(yStr, 10);
+  const m = parseInt(mStr, 10);
+  if (isNaN(y) || isNaN(m)) return ymKey;
+  const thaiYear = y + 543;
+  const monthName = THAI_MONTHS.find((item) => item.id === m)?.name || `เดือน ${m}`;
+  return `${monthName} ${thaiYear}`;
+}
+
+function getAdjacentMonthKey(ymKey: string, direction: -1 | 1): string {
+  const [yStr, mStr] = (ymKey === 'all' ? getCurrentYearMonthKey() : ymKey).split('-');
+  const y = parseInt(yStr, 10);
+  const m = parseInt(mStr, 10);
+  const d = new Date(y, m - 1 + direction, 1);
+  const nextY = d.getFullYear();
+  const nextM = (d.getMonth() + 1).toString().padStart(2, '0');
+  return `${nextY}-${nextM}`;
+}
+
+function getCaseCreatedYM(c: SavedCaseRecord): string {
+  return toInputDateStr(c.createdAt).slice(0, 7);
+}
+
+function getCaseApprovalYM(c: SavedCaseRecord): string {
+  if (c.approvalDate && /^\d{4}-\d{2}-\d{2}$/.test(c.approvalDate)) {
+    return c.approvalDate.slice(0, 7);
+  }
+  return c.approvalStatus === 'approved' ? getCaseCreatedYM(c) : '';
+}
+
+function getCaseDeliveryYM(c: SavedCaseRecord): string {
+  if (c.deliveryDate && /^\d{4}-\d{2}-\d{2}$/.test(c.deliveryDate)) {
+    return c.deliveryDate.slice(0, 7);
+  }
+  return c.deliveryStatus === 'delivered' ? (getCaseApprovalYM(c) || getCaseCreatedYM(c)) : '';
+}
+
 function formatThaiDateOnly(dateInput?: string | number): string {
   if (!dateInput) return '';
   let d: Date;
@@ -159,8 +206,8 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | CaseApprovalStatus>('all');
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | VehicleDeliveryStatus>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('all'); // 'all' or '2569'
-  const [selectedMonth, setSelectedMonth] = useState<string>('all'); // 'all' or '1'..'12'
+  // Monthly filter key: 'YYYY-MM' (e.g. '2026-11') or 'all' - Defaults to current month on open!
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string>(() => getCurrentYearMonthKey());
   const [selectedDueMonth, setSelectedDueMonth] = useState<string>('all'); // 'all' or '2569-11'
   const [viewMode, setViewMode] = useState<'list' | 'cards'>('list'); // 'list' = รายการชื่อลูกค้า (แนะนำ), 'cards' = การ์ดเต็ม
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
@@ -188,15 +235,14 @@ export const SavedCasesModal: React.FC<Props> = ({
   const [inlinePdfDataUrl, setInlinePdfDataUrl] = useState<string | null>(null);
   const [isLoadingInlinePdf, setIsLoadingInlinePdf] = useState<boolean>(false);
 
-  // Load cases when modal opens
+  // Load cases when modal opens - ALWAYS default to current month!
   useEffect(() => {
     if (isOpen) {
       setCases(getSavedCases());
       setSearchQuery('');
       setStatusFilter('all');
       setDeliveryFilter('all');
-      setSelectedYear('all');
-      setSelectedMonth('all');
+      setSelectedMonthKey(getCurrentYearMonthKey()); // Default to current month as requested
       setSelectedDueMonth('all');
       setEditingId(null);
       setDetailCase(null);
@@ -252,79 +298,132 @@ export const SavedCasesModal: React.FC<Props> = ({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Extract available Thai years (พ.ศ.) from cases
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-    const currentThaiYear = new Date().getFullYear() + 543;
-    years.add(currentThaiYear);
+  // Available month options (YYYY-MM), sorted descending, plus 'all'
+  const availableMonthOptions = useMemo(() => {
+    const set = new Set<string>();
+    const currentYM = getCurrentYearMonthKey();
+    set.add(currentYM);
+    // Add prev and next month around current
+    set.add(getAdjacentMonthKey(currentYM, -1));
+    set.add(getAdjacentMonthKey(currentYM, 1));
 
     cases.forEach((c) => {
-      const d = new Date(c.createdAt);
-      if (!isNaN(d.getTime())) years.add(d.getFullYear() + 543);
-      if (c.approvalDate) {
-        const ad = new Date(c.approvalDate);
-        if (!isNaN(ad.getTime())) years.add(ad.getFullYear() + 543);
-      }
-      if (c.deliveryDate) {
-        const dd = new Date(c.deliveryDate);
-        if (!isNaN(dd.getTime())) years.add(dd.getFullYear() + 543);
-      }
+      const cr = getCaseCreatedYM(c);
+      if (cr) set.add(cr);
+      const ap = getCaseApprovalYM(c);
+      if (ap) set.add(ap);
+      const dl = getCaseDeliveryYM(c);
+      if (dl) set.add(dl);
     });
 
-    return Array.from(years).sort((a, b) => b - a);
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
   }, [cases]);
 
-  // Count cases per month for the chosen year
-  const monthStats = useMemo(() => {
-    const counts: Record<number, number> = {};
-    cases.forEach((c) => {
-      const d = new Date(c.createdAt);
-      const yr = d.getFullYear() + 543;
-      if (selectedYear === 'all' || yr.toString() === selectedYear) {
-        const mo = d.getMonth() + 1;
-        counts[mo] = (counts[mo] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [cases, selectedYear]);
+  // Statistics for the selected month (or all) taking into account cross-month approvals vs deliveries
+  const monthlyStats = useMemo(() => {
+    let deliveredInMonth = 0;
+    let approvedInMonth = 0;
+    let carriedOverDelivered = 0; // อนุมัติเดือนก่อน แต่มารับรถเดือนนี้
+    let approvedPendingDelivery = 0; // อนุมัติเดือนนี้ ยังไม่ได้รับรถในเดือนนี้
+    let approvedDeliveredLater = 0; // อนุมัติเดือนนี้ แต่ไปรับรถเดือนหน้า
+    let pendingInMonth = 0;
+    let rejectedInMonth = 0;
+    let cancelledInMonth = 0;
+    let totalInMonth = 0;
 
-  // Status statistics and counters
-  const statusCounts = useMemo(() => {
-    let pending = 0;
-    let approved = 0;
-    let rejected = 0;
-    let cancelled = 0;
-    let pendingDelivery = 0;
-    let delivered = 0;
+    const isAll = selectedMonthKey === 'all';
 
     cases.forEach((c) => {
-      const st = c.approvalStatus || 'pending';
-      if (st === 'approved') {
-        approved++;
-        if (c.deliveryStatus === 'delivered') {
-          delivered++;
+      const createdYM = getCaseCreatedYM(c);
+      const approvalYM = getCaseApprovalYM(c);
+      const deliveryYM = getCaseDeliveryYM(c);
+      const isApproved = c.approvalStatus === 'approved';
+      const isDelivered = isApproved && c.deliveryStatus === 'delivered';
+
+      if (isAll) {
+        if (isDelivered) {
+          deliveredInMonth++;
+        } else if (isApproved) {
+          approvedPendingDelivery++;
+        } else if (c.approvalStatus === 'rejected') {
+          rejectedInMonth++;
+        } else if (c.approvalStatus === 'cancelled') {
+          cancelledInMonth++;
         } else {
-          pendingDelivery++;
+          pendingInMonth++;
         }
-      } else if (st === 'rejected') {
-        rejected++;
-      } else if (st === 'cancelled') {
-        cancelled++;
+        if (isApproved) approvedInMonth++;
+        totalInMonth++;
+        return;
+      }
+
+      // Specific Month:
+      // 1. Check if delivered in this month:
+      const deliveredHere = isDelivered && deliveryYM === selectedMonthKey;
+      if (deliveredHere) {
+        deliveredInMonth++;
+        // Did approval happen in an earlier month?
+        if (approvalYM && approvalYM < selectedMonthKey) {
+          carriedOverDelivered++;
+        }
+      }
+
+      // 2. Check if approved in this month:
+      const approvedHere = isApproved && approvalYM === selectedMonthKey;
+      if (approvedHere) {
+        approvedInMonth++;
+        if (!isDelivered || deliveryYM === '' || deliveryYM === selectedMonthKey) {
+          if (!isDelivered) {
+            approvedPendingDelivery++;
+          }
+        } else if (deliveryYM > selectedMonthKey) {
+          // Approved in this month, but customer receives car in a future month!
+          approvedDeliveredLater++;
+          approvedPendingDelivery++;
+        }
+      }
+
+      // 3. Other statuses (pending, rejected, cancelled) based on createdYM
+      if (!isApproved) {
+        if (createdYM === selectedMonthKey) {
+          if (c.approvalStatus === 'rejected') rejectedInMonth++;
+          else if (c.approvalStatus === 'cancelled') cancelledInMonth++;
+          else pendingInMonth++;
+          totalInMonth++;
+        }
       } else {
-        pending++;
+        // If approved, it is part of this month if approved here OR delivered here
+        if (deliveredHere || approvedHere) {
+          totalInMonth++;
+        }
       }
     });
 
     return {
-      all: cases.length,
-      pending,
-      approved,
-      rejected,
-      cancelled,
-      pendingDelivery,
-      delivered,
+      deliveredInMonth,
+      approvedInMonth,
+      carriedOverDelivered,
+      approvedPendingDelivery,
+      approvedDeliveredLater,
+      pendingInMonth,
+      rejectedInMonth,
+      cancelledInMonth,
+      totalInMonth,
     };
-  }, [cases]);
+  }, [cases, selectedMonthKey]);
+
+  // Status statistics and counters for filter chips
+  const statusCounts = useMemo(() => {
+    return {
+      all: monthlyStats.totalInMonth,
+      pending: monthlyStats.pendingInMonth,
+      approved: monthlyStats.approvedInMonth + monthlyStats.carriedOverDelivered,
+      rejected: monthlyStats.rejectedInMonth,
+      cancelled: monthlyStats.cancelledInMonth,
+      pendingDelivery: monthlyStats.approvedPendingDelivery,
+      delivered: monthlyStats.deliveredInMonth,
+    };
+  }, [monthlyStats]);
 
   // สถิติและตัวนับกำหนดชำระงวดแรก
   const dueMonthStats = useMemo(() => {
@@ -332,27 +431,26 @@ export const SavedCasesModal: React.FC<Props> = ({
     let totalDelivered = 0;
 
     cases.forEach((c) => {
-      const d = new Date(c.createdAt);
-      const caseYear = (d.getFullYear() + 543).toString();
-      const caseMonth = (d.getMonth() + 1).toString();
-      if (selectedYear !== 'all' && caseYear !== selectedYear) return;
-      if (selectedMonth !== 'all' && caseMonth !== selectedMonth) return;
+      if (c.approvalStatus !== 'approved' || c.deliveryStatus !== 'delivered') return;
 
-      if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
-        totalDelivered++;
-        const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
-        if (!counts[dueInfo.key]) {
-          counts[dueInfo.key] = {
-            key: dueInfo.key,
-            label: dueInfo.formattedShort,
-            shortLabel: `2 ${dueInfo.monthShort} ${dueInfo.thaiShortYear}`,
-            thaiYear: dueInfo.thaiYear,
-            month: dueInfo.month,
-            count: 0,
-          };
-        }
-        counts[dueInfo.key].count++;
+      const deliveryYM = getCaseDeliveryYM(c);
+      if (selectedMonthKey !== 'all' && deliveryYM !== selectedMonthKey) {
+        return;
       }
+
+      totalDelivered++;
+      const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
+      if (!counts[dueInfo.key]) {
+        counts[dueInfo.key] = {
+          key: dueInfo.key,
+          label: dueInfo.formattedShort,
+          shortLabel: `2 ${dueInfo.monthShort} ${dueInfo.thaiShortYear}`,
+          thaiYear: dueInfo.thaiYear,
+          month: dueInfo.month,
+          count: 0,
+        };
+      }
+      counts[dueInfo.key].count++;
     });
 
     const activeDueMonths = Object.values(counts).sort((a, b) => {
@@ -365,46 +463,68 @@ export const SavedCasesModal: React.FC<Props> = ({
       activeDueMonths,
       totalDelivered,
     };
-  }, [cases, selectedYear, selectedMonth]);
+  }, [cases, selectedMonthKey]);
 
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {
-      // Year & Month filter
-      const d = new Date(c.createdAt);
-      const caseYear = (d.getFullYear() + 543).toString();
-      const caseMonth = (d.getMonth() + 1).toString();
+      const createdYM = getCaseCreatedYM(c);
+      const approvalYM = getCaseApprovalYM(c);
+      const deliveryYM = getCaseDeliveryYM(c);
+      const isApproved = c.approvalStatus === 'approved';
+      const isDelivered = isApproved && c.deliveryStatus === 'delivered';
 
-      if (selectedYear !== 'all' && caseYear !== selectedYear) {
-        return false;
-      }
-      if (selectedMonth !== 'all' && caseMonth !== selectedMonth) {
-        return false;
+      // Month Key Filter:
+      if (selectedMonthKey !== 'all') {
+        const deliveredHere = isDelivered && deliveryYM === selectedMonthKey;
+        const approvedHere = isApproved && approvalYM === selectedMonthKey;
+        const createdHere = createdYM === selectedMonthKey;
+
+        // If case is delivered in this month, it belongs to this month!
+        // If case was approved in this month, it belongs to this month!
+        // If not approved yet (pending, rejected, cancelled), it belongs if created in this month.
+        if (!deliveredHere && !approvedHere && !(!isApproved && createdHere)) {
+          return false;
+        }
       }
 
       // Delivery filter
       if (deliveryFilter !== 'all') {
-        const isApproved = c.approvalStatus === 'approved';
-        const caseDelivery = c.deliveryStatus || 'pending_delivery';
-        if (!isApproved || caseDelivery !== deliveryFilter) {
-          return false;
+        if (!isApproved) return false;
+        if (deliveryFilter === 'delivered') {
+          // If viewing a specific month, must be delivered in that month
+          if (selectedMonthKey !== 'all') {
+            if (!isDelivered || deliveryYM !== selectedMonthKey) return false;
+          } else {
+            if (!isDelivered) return false;
+          }
+        } else if (deliveryFilter === 'pending_delivery') {
+          // If viewing a specific month, either not yet delivered, or delivered in a later month
+          if (selectedMonthKey !== 'all') {
+            if (isDelivered && deliveryYM <= selectedMonthKey) return false;
+          } else {
+            if (isDelivered) return false;
+          }
         }
       }
 
       // First Installment Due Month filter
       if (selectedDueMonth !== 'all') {
-        if (c.approvalStatus !== 'approved' || c.deliveryStatus !== 'delivered') {
-          return false;
-        }
+        if (!isDelivered) return false;
         const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
-        if (dueInfo.key !== selectedDueMonth) {
-          return false;
-        }
+        if (dueInfo.key !== selectedDueMonth) return false;
       }
 
       // Status filter
-      const caseStatus = c.approvalStatus || 'pending';
-      if (statusFilter !== 'all' && caseStatus !== statusFilter) {
-        return false;
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'approved') {
+          if (!isApproved) return false;
+        } else if (statusFilter === 'pending') {
+          if (c.approvalStatus !== 'pending') return false;
+        } else if (statusFilter === 'rejected') {
+          if (c.approvalStatus !== 'rejected') return false;
+        } else if (statusFilter === 'cancelled') {
+          if (c.approvalStatus !== 'cancelled') return false;
+        }
       }
 
       // Text search query
@@ -431,20 +551,26 @@ export const SavedCasesModal: React.FC<Props> = ({
 
       return true;
     });
-  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedYear, selectedMonth, selectedDueMonth]);
+  }, [cases, searchQuery, statusFilter, deliveryFilter, selectedMonthKey, selectedDueMonth]);
 
   // Group filtered cases by Year and Month
   const groupedCases = useMemo(() => {
     const map = new Map<string, SavedCaseRecord[]>();
     filteredCases.forEach((c) => {
-      const d = new Date(c.createdAt);
-      const yr = d.getFullYear() + 543;
-      const mo = d.getMonth() + 1;
-      const key = `${yr}-${mo.toString().padStart(2, '0')}`;
-      if (!map.has(key)) {
-        map.set(key, []);
+      // Determine effective group key
+      let keyYM = getCaseCreatedYM(c);
+      if (c.approvalStatus === 'approved') {
+        if (c.deliveryStatus === 'delivered') {
+          keyYM = getCaseDeliveryYM(c) || getCaseApprovalYM(c) || keyYM;
+        } else {
+          keyYM = getCaseApprovalYM(c) || keyYM;
+        }
       }
-      map.get(key)!.push(c);
+      if (!keyYM) keyYM = getCurrentYearMonthKey();
+      if (!map.has(keyYM)) {
+        map.set(keyYM, []);
+      }
+      map.get(keyYM)!.push(c);
     });
 
     const groups: {
@@ -461,21 +587,14 @@ export const SavedCasesModal: React.FC<Props> = ({
       .sort((a, b) => b[0].localeCompare(a[0]))
       .forEach(([key, items]) => {
         const [yrStr, moStr] = key.split('-');
-        const yr = parseInt(yrStr, 10);
+        const yr = parseInt(yrStr, 10) + 543;
         const mo = parseInt(moStr, 10);
         const monthObj = THAI_MONTHS.find((m) => m.id === mo);
 
-        const monthCases = cases.filter((c) => {
-          const d = new Date(c.createdAt);
-          const cYr = d.getFullYear() + 543;
-          const cMo = d.getMonth() + 1;
-          return cYr === yr && cMo === mo;
-        });
-
-        const deliveredCount = monthCases.filter(
+        const deliveredCount = items.filter(
           (c) => c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered'
         ).length;
-        const pendingDeliveryCount = monthCases.filter(
+        const pendingDeliveryCount = items.filter(
           (c) => c.approvalStatus === 'approved' && (!c.deliveryStatus || c.deliveryStatus === 'pending_delivery')
         ).length;
 
@@ -491,7 +610,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       });
 
     return groups;
-  }, [filteredCases, cases]);
+  }, [filteredCases]);
 
   const handleSetApprovalStatus = (
     id: string,
@@ -761,7 +880,7 @@ export const SavedCasesModal: React.FC<Props> = ({
     e.target.value = '';
   };
 
-  const hasActiveAdvancedFilter = selectedYear !== 'all' || selectedMonth !== 'all' || selectedDueMonth !== 'all';
+  const hasActiveAdvancedFilter = selectedDueMonth !== 'all';
 
   if (!isOpen) return null;
 
@@ -933,6 +1052,123 @@ export const SavedCasesModal: React.FC<Props> = ({
               )}
             </div>
           </div>
+
+          {/* Primary Month Selector Bar - มีตัวเลือกเดือนชัดเจน พร้อมตัวนับยอดรับรถ/ยอดอนุมัติตามงวด */}
+          {cases.length > 0 && (
+            <div className="bg-gradient-to-r from-sky-50 via-indigo-50/40 to-sky-50/60 p-2 sm:p-2.5 rounded-2xl border border-sky-100 shadow-2xs space-y-1.5">
+              <div className="flex items-center justify-between gap-1.5 flex-wrap sm:flex-nowrap">
+                {/* Month Navigator */}
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-700 flex items-center justify-center shrink-0">
+                    <CalendarDays className="w-4 h-4 text-sky-600" />
+                  </div>
+
+                  {/* Previous Month */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSelectedMonthKey((prev) => getAdjacentMonthKey(prev, -1));
+                    }}
+                    className="p-1 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 transition-colors cursor-pointer shrink-0"
+                    title="เดือนก่อนหน้า"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {/* Dropdown */}
+                  <div className="relative min-w-0 flex-1 max-w-[210px] sm:max-w-[250px]">
+                    <select
+                      value={selectedMonthKey}
+                      onChange={(e) => {
+                        triggerHaptic('light');
+                        setSelectedMonthKey(e.target.value);
+                      }}
+                      className="w-full appearance-none pl-2.5 pr-7 py-1 rounded-xl text-xs sm:text-[13px] font-extrabold bg-white border border-sky-200 text-sky-950 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-2xs truncate"
+                    >
+                      <option value="all">ทุกช่วงเวลา (เคสทั้งหมด)</option>
+                      {availableMonthOptions.map((ym) => {
+                        const isCurrent = ym === getCurrentYearMonthKey();
+                        return (
+                          <option key={ym} value={ym}>
+                            {formatYearMonthLabel(ym)} {isCurrent ? '⭐ (เดือนปัจจุบัน)' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-sky-700 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+
+                  {/* Next Month */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSelectedMonthKey((prev) => getAdjacentMonthKey(prev, 1));
+                    }}
+                    className="p-1 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 transition-colors cursor-pointer shrink-0"
+                    title="เดือนถัดไป"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Quick Jump to Current Month Button */}
+                {selectedMonthKey !== getCurrentYearMonthKey() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('success');
+                      setSelectedMonthKey(getCurrentYearMonthKey());
+                    }}
+                    className="px-2 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 text-[11px] font-extrabold flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 transition-all active:scale-95"
+                    title="กลับมาดูข้อมูลเดือนปัจจุบัน"
+                  >
+                    <RotateCcw className="w-3 h-3 text-sky-600" />
+                    <span>เดือนปัจจุบัน</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Monthly Summary KPI Badges (แสดงแยกยอดรับรถเดือนนี้ / ยอดอนุมัติเดือนนี้ / ยกยอดมารับรถ) */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[10.5px]">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 font-extrabold">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span>รับรถงวดนี้:</span>
+                  <span className="text-emerald-950 font-black text-xs">{monthlyStats.deliveredInMonth} คัน</span>
+                </div>
+
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-sky-50 border border-sky-200/80 text-sky-800 font-bold">
+                  <span>อนุมัติงวดนี้:</span>
+                  <span className="text-sky-950 font-black text-xs">{monthlyStats.approvedInMonth} คัน</span>
+                </div>
+
+                {/* Badge: เคสที่อนุมัติเดือนก่อน แต่มารับรถเดือนนี้ */}
+                {monthlyStats.carriedOverDelivered > 0 && (
+                  <div
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-300 text-teal-800 font-bold"
+                    title="มีเคสที่อนุมัติในงวดก่อนหน้านี้ แต่มารับรถในเดือนนี้ นับเป็นยอดรับรถของเดือนนี้"
+                  >
+                    <BadgePercent className="w-3 h-3 text-teal-600 shrink-0" />
+                    <span>ยกยอดมารับรถ:</span>
+                    <span className="text-teal-950 font-black text-xs">+{monthlyStats.carriedOverDelivered} คัน</span>
+                  </div>
+                )}
+
+                {/* Badge: เคสที่อนุมัติเดือนนี้ แต่ลูกค้ารับรถเดือนถัดไป */}
+                {monthlyStats.approvedDeliveredLater > 0 && (
+                  <div
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-800 font-bold"
+                    title="เคสอนุมัติในเดือนนี้ แต่ลูกค้ารับรถในเดือนถัดไป (นับยอดอนุมัติในงวดนี้)"
+                  >
+                    <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                    <span>รับรถเดือนถัดไป:</span>
+                    <span className="text-amber-950 font-black text-xs">{monthlyStats.approvedDeliveredLater} คัน</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Status Filter Chips Bar */}
           {cases.length > 0 && (
@@ -1127,54 +1363,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                 </div>
               )}
 
-              {/* Expandable Advanced Filters (Month/Year & Payment Due Month) */}
+              {/* Expandable Advanced Filters (First Payment Due Month) */}
               {showAdvancedFilters && (
                 <div className="pt-2 mt-1 border-t border-slate-200/80 space-y-2 animate-fade-in bg-white/70 p-2.5 rounded-2xl border border-indigo-100">
-                  {/* Row 1: Month/Year */}
+                  {/* First Due Month */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-600 shrink-0">
-                      <CalendarDays className="w-3.5 h-3.5 text-sky-600" />
-                      <span>เดือน/ปี:</span>
-                    </div>
-
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => {
-                        triggerHaptic('light');
-                        setSelectedYear(e.target.value);
-                      }}
-                      className="px-2 py-1 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-800 focus:outline-none cursor-pointer shadow-2xs"
-                    >
-                      <option value="all">ทุกปี</option>
-                      {availableYears.map((yr) => (
-                        <option key={yr} value={yr.toString()}>
-                          พ.ศ. {yr}
-                        </option>
-                      ))}
-                    </select>
-
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => {
-                        triggerHaptic('light');
-                        setSelectedMonth(e.target.value);
-                      }}
-                      className="px-2 py-1 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-800 focus:outline-none cursor-pointer shadow-2xs"
-                    >
-                      <option value="all">ทุกเดือน</option>
-                      {THAI_MONTHS.map((m) => {
-                        const count = monthStats[m.id] || 0;
-                        return (
-                          <option key={m.id} value={m.id.toString()}>
-                            {m.name} {count > 0 ? `(${count})` : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-
-                  {/* Row 2: First Due Month */}
-                  <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100">
                     <div className="flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 shrink-0">
                       <CalendarClock className="w-3.5 h-3.5 text-indigo-600" />
                       <span>งวดแรกชำระ:</span>
@@ -1423,6 +1616,48 @@ export const SavedCasesModal: React.FC<Props> = ({
                                     </>
                                   )}
 
+                                  {/* Cross-month Delivery & Approval Indicators */}
+                                  {isApproved && isDelivered && (() => {
+                                    const approvalYM = getCaseApprovalYM(record);
+                                    const deliveryYM = getCaseDeliveryYM(record);
+                                    if (approvalYM && deliveryYM && approvalYM < deliveryYM) {
+                                      return (
+                                        <span
+                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-teal-100 text-teal-900 border border-teal-300 inline-flex items-center gap-0.5"
+                                          title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} และมารับรถในเดือนนี้`}
+                                        >
+                                          <span>ยกยอดรับรถ (อนุมัติ {formatThaiDateOnly(record.approvalDate)})</span>
+                                        </span>
+                                      );
+                                    }
+                                    if (approvalYM && deliveryYM && approvalYM > deliveryYM) {
+                                      return (
+                                        <span
+                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 inline-flex items-center gap-0.5"
+                                        >
+                                          <span>รับรถก่อนผล</span>
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+
+                                  {isApproved && !isDelivered && (() => {
+                                    const approvalYM = getCaseApprovalYM(record);
+                                    const deliveryYM = getCaseDeliveryYM(record);
+                                    if (approvalYM && deliveryYM && deliveryYM > approvalYM) {
+                                      return (
+                                        <span
+                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-0.5"
+                                          title={`อนุมัติในงวดนี้ แต่มีกำหนดรับรถเมื่อ ${formatThaiDateOnly(record.deliveryDate)}`}
+                                        >
+                                          <span>รับรถเดือนถัดไป ({formatThaiDateOnly(record.deliveryDate)})</span>
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+
                                   {/* Approval PDF Badge */}
                                   {record.approvalDoc && (
                                     <span
@@ -1549,6 +1784,22 @@ export const SavedCasesModal: React.FC<Props> = ({
                                     {isDelivered ? 'รับรถแล้ว ✓' : 'รอรับรถ ⏳'}
                                   </span>
                                 )}
+
+                                {isApproved && isDelivered && (() => {
+                                  const approvalYM = getCaseApprovalYM(record);
+                                  const deliveryYM = getCaseDeliveryYM(record);
+                                  if (approvalYM && deliveryYM && approvalYM < deliveryYM) {
+                                    return (
+                                      <span
+                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-300"
+                                        title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} และมารับรถในเดือนนี้`}
+                                      >
+                                        ยกยอดรับรถ
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
 
                                 {record.approvalDoc && (
                                   <span
@@ -1915,6 +2166,32 @@ export const SavedCasesModal: React.FC<Props> = ({
                           </div>
                         </div>
                       );
+                    })()}
+
+                    {/* Cross-Month Accounting Notice Banner */}
+                    {detailCase.deliveryStatus === 'delivered' && (() => {
+                      const approvalYM = getCaseApprovalYM(detailCase);
+                      const deliveryYM = getCaseDeliveryYM(detailCase);
+                      if (approvalYM && deliveryYM && approvalYM !== deliveryYM) {
+                        const isCarried = approvalYM < deliveryYM;
+                        return (
+                          <div className="p-3 rounded-2xl bg-teal-50 border border-teal-200 text-teal-950 text-xs flex items-start gap-2.5 shadow-2xs">
+                            <BadgePercent className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <div className="font-extrabold text-teal-900 flex items-center gap-1.5 flex-wrap">
+                                <span>{isCarried ? 'เคสยกยอดมารับรถข้ามเดือน' : 'การนับยอดข้ามเดือน'}</span>
+                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-teal-200/70 text-teal-900 font-bold">
+                                  อนุมัติ {formatYearMonthLabel(approvalYM)} ➔ รับรถ {formatYearMonthLabel(deliveryYM)}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-teal-800 leading-relaxed font-medium">
+                                ลูกค้ารับรถในเดือน <strong>{formatYearMonthLabel(deliveryYM)}</strong> ระบบจึงนับเป็น<strong>ยอดรับรถของเดือน {formatYearMonthLabel(deliveryYM)}</strong> แต่<strong>ผลอนุมัติยังเป็นยอดของเดือน {formatYearMonthLabel(approvalYM)}</strong> ตามเกณฑ์บันทึกข้อมูล
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
                     })()}
                   </div>
                 )}
