@@ -1237,9 +1237,6 @@ export function DailyFinanceReportCard({
                 <span className="text-xs font-bold text-slate-800">
                   ตัวอย่างข้อความรายงานที่จะส่งเข้า LINE :
                 </span>
-                <span className="text-[10px] text-violet-800 font-semibold bg-white border border-violet-200 px-2 py-0.5 rounded-full shadow-2xs">
-                  {generateReportText().length} ตัวอักษร
-                </span>
               </div>
 
               {/* Quick Copy tiny button */}

@@ -324,6 +324,7 @@ export const SavedCasesModal: React.FC<Props> = ({
     let deliveredInMonth = 0;
     let approvedInMonth = 0;
     let carriedOverDelivered = 0; // อนุมัติเดือนก่อน แต่มารับรถเดือนนี้
+    let carriedOverPendingDelivery = 0; // อนุมัติเดือนก่อน แต่ยังไม่ได้รับรถ (ยกยอดมารอรับรถในเดือนนี้)
     let approvedPendingDelivery = 0; // อนุมัติเดือนนี้ ยังไม่ได้รับรถในเดือนนี้
     let approvedDeliveredLater = 0; // อนุมัติเดือนนี้ แต่ไปรับรถเดือนหน้า
     let pendingInMonth = 0;
@@ -383,7 +384,18 @@ export const SavedCasesModal: React.FC<Props> = ({
         }
       }
 
-      // 3. Other statuses (pending, rejected, cancelled) based on createdYM
+      // 3. Check if approved in an earlier month, but still waiting for delivery (or delivered in a future month):
+      // นี่คือเคสของลูกค้าที่ยังไม่ได้รับรถจากเดือนที่แล้ว ให้นำมาแสดงในเดือนปัจจุบันด้วย
+      const carriedPendingHere =
+        isApproved &&
+        approvalYM &&
+        approvalYM < selectedMonthKey &&
+        (!isDelivered || (deliveryYM && deliveryYM > selectedMonthKey));
+      if (carriedPendingHere) {
+        carriedOverPendingDelivery++;
+      }
+
+      // 4. Other statuses (pending, rejected, cancelled) based on createdYM
       if (!isApproved) {
         if (createdYM === selectedMonthKey) {
           if (c.approvalStatus === 'rejected') rejectedInMonth++;
@@ -392,8 +404,8 @@ export const SavedCasesModal: React.FC<Props> = ({
           totalInMonth++;
         }
       } else {
-        // If approved, it is part of this month if approved here OR delivered here
-        if (deliveredHere || approvedHere) {
+        // If approved, it is part of this month if approved here, delivered here, OR carried over waiting for delivery!
+        if (deliveredHere || approvedHere || carriedPendingHere) {
           totalInMonth++;
         }
       }
@@ -403,8 +415,10 @@ export const SavedCasesModal: React.FC<Props> = ({
       deliveredInMonth,
       approvedInMonth,
       carriedOverDelivered,
+      carriedOverPendingDelivery,
       approvedPendingDelivery,
       approvedDeliveredLater,
+      totalPendingDelivery: approvedPendingDelivery + carriedOverPendingDelivery,
       pendingInMonth,
       rejectedInMonth,
       cancelledInMonth,
@@ -417,10 +431,10 @@ export const SavedCasesModal: React.FC<Props> = ({
     return {
       all: monthlyStats.totalInMonth,
       pending: monthlyStats.pendingInMonth,
-      approved: monthlyStats.approvedInMonth + monthlyStats.carriedOverDelivered,
+      approved: monthlyStats.approvedInMonth + monthlyStats.carriedOverDelivered + monthlyStats.carriedOverPendingDelivery,
       rejected: monthlyStats.rejectedInMonth,
       cancelled: monthlyStats.cancelledInMonth,
-      pendingDelivery: monthlyStats.approvedPendingDelivery,
+      pendingDelivery: monthlyStats.totalPendingDelivery,
       delivered: monthlyStats.deliveredInMonth,
     };
   }, [monthlyStats]);
@@ -478,11 +492,17 @@ export const SavedCasesModal: React.FC<Props> = ({
         const deliveredHere = isDelivered && deliveryYM === selectedMonthKey;
         const approvedHere = isApproved && approvalYM === selectedMonthKey;
         const createdHere = createdYM === selectedMonthKey;
+        const carriedPendingHere =
+          isApproved &&
+          approvalYM &&
+          approvalYM < selectedMonthKey &&
+          (!isDelivered || (deliveryYM && deliveryYM > selectedMonthKey));
 
         // If case is delivered in this month, it belongs to this month!
         // If case was approved in this month, it belongs to this month!
+        // If case was approved in earlier month and is still pending delivery, it belongs to this month!
         // If not approved yet (pending, rejected, cancelled), it belongs if created in this month.
-        if (!deliveredHere && !approvedHere && !(!isApproved && createdHere)) {
+        if (!deliveredHere && !approvedHere && !carriedPendingHere && !(!isApproved && createdHere)) {
           return false;
         }
       }
@@ -557,9 +577,10 @@ export const SavedCasesModal: React.FC<Props> = ({
   const groupedCases = useMemo(() => {
     const map = new Map<string, SavedCaseRecord[]>();
     filteredCases.forEach((c) => {
-      // Determine effective group key
-      let keyYM = getCaseCreatedYM(c);
-      if (c.approvalStatus === 'approved') {
+      // If a specific month is selected, all filtered cases belong to that selected month's view
+      // If 'all' is selected, group by effective month of delivery / approval / creation
+      let keyYM = selectedMonthKey !== 'all' ? selectedMonthKey : getCaseCreatedYM(c);
+      if (selectedMonthKey === 'all' && c.approvalStatus === 'approved') {
         if (c.deliveryStatus === 'delivered') {
           keyYM = getCaseDeliveryYM(c) || getCaseApprovalYM(c) || keyYM;
         } else {
@@ -610,7 +631,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       });
 
     return groups;
-  }, [filteredCases]);
+  }, [filteredCases, selectedMonthKey]);
 
   const handleSetApprovalStatus = (
     id: string,
@@ -1151,15 +1172,27 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </div>
                 )}
 
+                {/* Badge: เคสที่อนุมัติจากเดือนก่อน แต่ยังรอรับรถ (ยกยอดมารอรับรถในเดือนนี้) */}
+                {monthlyStats.carriedOverPendingDelivery > 0 && (
+                  <div
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-950 font-bold"
+                    title="เคสที่อนุมัติจากเดือนก่อน แต่ยังไม่ได้รับรถ ยกยอดมารอรับรถในงวดนี้"
+                  >
+                    <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                    <span>ยกยอดรอรับรถ:</span>
+                    <span className="text-amber-950 font-black text-xs">{monthlyStats.carriedOverPendingDelivery} คัน</span>
+                  </div>
+                )}
+
                 {/* Badge: เคสที่อนุมัติเดือนนี้ แต่ลูกค้ารับรถเดือนถัดไป */}
                 {monthlyStats.approvedDeliveredLater > 0 && (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-800 font-bold"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold"
                     title="เคสอนุมัติในเดือนนี้ แต่ลูกค้ารับรถในเดือนถัดไป (นับยอดอนุมัติในงวดนี้)"
                   >
-                    <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                    <Clock className="w-3 h-3 text-indigo-600 shrink-0" />
                     <span>รับรถเดือนถัดไป:</span>
-                    <span className="text-amber-950 font-black text-xs">{monthlyStats.approvedDeliveredLater} คัน</span>
+                    <span className="text-indigo-950 font-black text-xs">{monthlyStats.approvedDeliveredLater} คัน</span>
                   </div>
                 )}
               </div>
@@ -1641,10 +1674,21 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   {isApproved && !isDelivered && (() => {
                                     const approvalYM = getCaseApprovalYM(record);
                                     const deliveryYM = getCaseDeliveryYM(record);
+                                    if (approvalYM && selectedMonthKey !== 'all' && approvalYM < selectedMonthKey) {
+                                      return (
+                                        <span
+                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-950 border border-amber-300 inline-flex items-center gap-0.5 shadow-2xs"
+                                          title={`อนุมัติตั้งแต่งวด ${formatYearMonthLabel(approvalYM)} (${formatThaiDateOnly(record.approvalDate)}) แต่ยังไม่ได้รับรถ (ยกยอดมารอรับรถในงวดนี้)`}
+                                        >
+                                          <Clock className="w-2.5 h-2.5 text-amber-700" />
+                                          <span>ยกยอดรอรับรถ (อนุมัติ {formatThaiDateOnly(record.approvalDate)})</span>
+                                        </span>
+                                      );
+                                    }
                                     if (approvalYM && deliveryYM && deliveryYM > approvalYM) {
                                       return (
                                         <span
-                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-0.5"
+                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 inline-flex items-center gap-0.5"
                                           title={`อนุมัติในงวดนี้ แต่มีกำหนดรับรถเมื่อ ${formatThaiDateOnly(record.deliveryDate)}`}
                                         >
                                           <span>รับรถเดือนถัดไป ({formatThaiDateOnly(record.deliveryDate)})</span>
@@ -1791,6 +1835,21 @@ export const SavedCasesModal: React.FC<Props> = ({
                                         title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} และมารับรถในเดือนนี้`}
                                       >
                                         ยกยอดรับรถ
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+
+                                {isApproved && !isDelivered && (() => {
+                                  const approvalYM = getCaseApprovalYM(record);
+                                  if (approvalYM && selectedMonthKey !== 'all' && approvalYM < selectedMonthKey) {
+                                    return (
+                                      <span
+                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300"
+                                        title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} (ยกยอดมารอรับรถ)`}
+                                      >
+                                        ยกยอดรอรับรถ
                                       </span>
                                     );
                                   }
@@ -2182,6 +2241,32 @@ export const SavedCasesModal: React.FC<Props> = ({
                               </div>
                               <p className="text-[11px] text-teal-800 leading-relaxed font-medium">
                                 ลูกค้ารับรถในเดือน <strong>{formatYearMonthLabel(deliveryYM)}</strong> ระบบจึงนับเป็น<strong>ยอดรับรถของเดือน {formatYearMonthLabel(deliveryYM)}</strong> แต่<strong>ผลอนุมัติยังเป็นยอดของเดือน {formatYearMonthLabel(approvalYM)}</strong> ตามเกณฑ์บันทึกข้อมูล
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Notice Banner: เคสที่อนุมัติเดือนก่อนและยังรอรับรถ */}
+                    {detailCase.approvalStatus === 'approved' && detailCase.deliveryStatus !== 'delivered' && (() => {
+                      const approvalYM = getCaseApprovalYM(detailCase);
+                      const currentYM = getCurrentYearMonthKey();
+                      const targetYM = selectedMonthKey !== 'all' ? selectedMonthKey : currentYM;
+                      if (approvalYM && approvalYM < targetYM) {
+                        return (
+                          <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 text-xs flex items-start gap-2.5 shadow-2xs">
+                            <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <div className="font-extrabold text-amber-900 flex items-center gap-1.5 flex-wrap">
+                                <span>เคสยกยอดรอรับรถจากเดือนก่อน</span>
+                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-amber-200/80 text-amber-950 font-bold">
+                                  อนุมัติ {formatYearMonthLabel(approvalYM)} ({formatThaiDateOnly(detailCase.approvalDate)})
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                                เคสนี้ผ่านการอนุมัติตั้งแต่เดือน <strong>{formatYearMonthLabel(approvalYM)}</strong> แต่ยังไม่ได้รับรถ ระบบจึงยกยอดมารอรับรถในงวดปัจจุบัน เมื่อลูกค้ามารับรถแล้วสามารถกดเลือก <strong>"รับรถแล้ว ✓"</strong> และระบุวันรับรถได้ทันที
                               </p>
                             </div>
                           </div>
