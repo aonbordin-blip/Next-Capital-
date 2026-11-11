@@ -43,6 +43,7 @@ import {
   BookmarkPlus,
   Save,
   X,
+  FileCheck,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -60,6 +61,7 @@ import { ProposalInfoModal } from './components/ProposalInfoModal';
 import { ProposalSelectModal } from './components/ProposalSelectModal';
 import { BikePresetsModal } from './components/BikePresetsModal';
 import { QuotationModal } from './components/QuotationModal';
+import { ProvisionalApprovalModal } from './components/ProvisionalApprovalModal';
 import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { DvApprovalCard } from './components/DvApprovalCard';
@@ -224,6 +226,7 @@ export default function App() {
   const [showProposalInfo, setShowProposalInfo] = useState<boolean>(false);
   const [showBikePresets, setShowBikePresets] = useState<boolean>(false);
   const [showQuotation, setShowQuotation] = useState<boolean>(false);
+  const [showProvisionalApproval, setShowProvisionalApproval] = useState<boolean>(false);
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
@@ -2407,8 +2410,8 @@ ${
               </span>
             </div>
 
-            {/* Action Buttons: 2 beautiful, modern primary action buttons (ตามรูปที่ 4) */}
-            <div data-card-id="actions" className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Action Buttons: 3 primary action buttons (แผนความคุ้มครอง, ใบเสนอราคา, ใบอนุมัติผลชั่วคราว) */}
+            <div data-card-id="actions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {/* 1. Coverage Plan Button */}
               <button
                 type="button"
@@ -2459,6 +2462,32 @@ ${
                   </div>
                 </div>
                 <Printer className="w-4 h-4 text-slate-300 group-hover:scale-110 transition-transform shrink-0" />
+              </button>
+
+              {/* 3. Provisional Approval Certificate Button */}
+              <button
+                type="button"
+                onClick={() => setShowProvisionalApproval(true)}
+                className="group relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-emerald-950/20 transition-all flex items-center justify-between cursor-pointer border border-emerald-400/30 sm:col-span-2 lg:col-span-1"
+                title="ออกใบแจ้งผลการอนุมัติสินเชื่อเช่าซื้อชั่วคราว (Provisional Approval Certificate)"
+              >
+                <div className="flex items-center gap-2.5 text-left">
+                  <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <FileCheck className="w-4.5 h-4.5 text-emerald-300" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
+                      ใบอนุมัติผลชั่วคราว
+                      <span className="text-[10px] bg-emerald-400/30 text-emerald-200 px-2 py-0.2 rounded-full font-semibold">
+                        อนุมัติ
+                      </span>
+                    </div>
+                    <div className="text-[10.5px] text-emerald-200/90 font-normal leading-tight mt-0.5">
+                      {customerName ? customerName : 'สำหรับเคสอนุมัติ'} • {term} งวด
+                    </div>
+                  </div>
+                </div>
+                <Award className="w-4 h-4 text-emerald-300 group-hover:scale-110 transition-transform shrink-0" />
               </button>
             </div>
 
@@ -2649,6 +2678,40 @@ ${
         officerInfo={officerDisplay}
         initialCustomerName={customerName}
         initialCustomerPhone={customerPhone}
+        onUpdateCustomer={(name, phone) => {
+          handleCustomerNameChange(name);
+          handleCustomerPhoneChange(phone);
+        }}
+      />
+
+      <ProvisionalApprovalModal
+        isOpen={showProvisionalApproval}
+        onClose={() => setShowProvisionalApproval(false)}
+        data={{
+          customerName: customerName || 'คุณลูกค้า',
+          customerPhone: customerPhone || '',
+          bikeModelName:
+            selectedBike?.name ||
+            (bikeModelCode
+              ? MOTORCYCLE_MODELS.find(
+                  (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+                )?.name
+              : 'รถจักรยานยนต์'),
+          bikeModelCode: bikeModelCode,
+          vehiclePrice: vehiclePrice,
+          downAmount: currentCalculation.downAmount,
+          downPercent: currentCalculation.downPercent,
+          financeAmount: currentCalculation.financeAmount,
+          term: term,
+          monthlyInstallment: currentCalculation.monthlyInstallment,
+          interestRateText: currentCalculation.rateDisplayText,
+          proposalCode: currentCalculation.proposalCode,
+          proposalName: currentCalculation.proposalName,
+          insurancePlanName: currentCalculation.insurancePlanName,
+          insuranceYears: insuranceYears,
+          insuranceTotalWithVat: currentCalculation.insuranceTotalWithVat,
+          officerInfo: officerDisplay,
+        }}
         onUpdateCustomer={(name, phone) => {
           handleCustomerNameChange(name);
           handleCustomerPhoneChange(phone);

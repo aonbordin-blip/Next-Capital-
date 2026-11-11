@@ -77,6 +77,7 @@ import {
   downloadPdfFile,
 } from '../utils/approvalDocsStorage';
 import { PdfCanvasViewer } from './PdfCanvasViewer';
+import { ProvisionalApprovalModal, ProvisionalApprovalData } from './ProvisionalApprovalModal';
 
 interface Props {
   isOpen: boolean;
@@ -234,6 +235,8 @@ export const SavedCasesModal: React.FC<Props> = ({
   // Inline PDF preview state (แสดงตัวอย่างอัตโนมัติไม่ต้องกดเปิด)
   const [inlinePdfDataUrl, setInlinePdfDataUrl] = useState<string | null>(null);
   const [isLoadingInlinePdf, setIsLoadingInlinePdf] = useState<boolean>(false);
+  // Provisional Approval Certificate Modal State
+  const [approvalModalCase, setApprovalModalCase] = useState<SavedCaseRecord | null>(null);
 
   // Load cases when modal opens - ALWAYS default to current month!
   useEffect(() => {
@@ -1744,8 +1747,22 @@ export const SavedCasesModal: React.FC<Props> = ({
                               </div>
                             </div>
 
-                            {/* Right: View Detail Indicator Button */}
+                            {/* Right: View Detail Indicator & Quick Actions */}
                             <div className="flex items-center gap-1.5 shrink-0">
+                              {isApproved && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    triggerHaptic('light');
+                                    setApprovalModalCase(record);
+                                  }}
+                                  className="p-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                  title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
+                                >
+                                  <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                </button>
+                              )}
                               <span className="hidden xs:inline text-[11px] font-bold text-sky-600 group-hover:text-sky-700">
                                 ดูข้อมูล
                               </span>
@@ -1855,6 +1872,22 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   }
                                   return null;
                                 })()}
+
+                                {record.approvalStatus === 'approved' && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      triggerHaptic('light');
+                                      setApprovalModalCase(record);
+                                    }}
+                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                                    title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
+                                  >
+                                    <FileCheck className="w-3 h-3 text-emerald-600" />
+                                    <span>ใบอนุมัติผล</span>
+                                  </button>
+                                )}
 
                                 {record.approvalDoc && (
                                   <span
@@ -2274,6 +2307,21 @@ export const SavedCasesModal: React.FC<Props> = ({
                       }
                       return null;
                     })()}
+
+                    {/* Action Button: เปิดดู / พิมพ์ / ดาวน์โหลดรูปภาพ ใบอนุมัติผลชั่วคราว */}
+                    <div className="pt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('medium');
+                          setApprovalModalCase(detailCase);
+                        }}
+                        className="w-full py-2.5 px-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm shadow-emerald-600/25 active:scale-98 transition-all cursor-pointer border border-emerald-400/30"
+                      >
+                        <FileCheck className="w-4 h-4 text-emerald-100 shrink-0" />
+                        <span className="whitespace-nowrap">ดู / พิมพ์ / โหลดภาพ ใบอนุมัติผลชั่วคราว</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2692,7 +2740,23 @@ export const SavedCasesModal: React.FC<Props> = ({
                 </button>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* ปุ่มใบอนุมัติผลชั่วคราว */}
+                {detailCase.approvalStatus === 'approved' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      setApprovalModalCase(detailCase);
+                    }}
+                    className="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
+                    title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
+                  >
+                    <FileCheck className="w-3.5 h-3.5 shrink-0" />
+                    <span className="whitespace-nowrap">ใบอนุมัติผล</span>
+                  </button>
+                )}
+
                 {/* ปุ่มแก้ไขเคส */}
                 {onEditCase && (
                   <button
@@ -2703,11 +2767,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                       setDetailCase(null);
                       onClose();
                     }}
-                    className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-amber-500/20 active:scale-95 transition-all cursor-pointer"
+                    className="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm shadow-amber-500/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
                     title="ดึงเคสนี้กลับมาแก้ไขในโปรแกรมคำนวณ"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
-                    <span>แก้ไขเคส</span>
+                    <Pencil className="w-3.5 h-3.5 shrink-0" />
+                    <span className="whitespace-nowrap">แก้ไขเคส</span>
                   </button>
                 )}
 
@@ -2720,15 +2784,60 @@ export const SavedCasesModal: React.FC<Props> = ({
                     setDetailCase(null);
                     onClose();
                   }}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 text-white font-black text-xs flex items-center gap-1.5 shadow-sm shadow-sky-500/25 active:scale-95 transition-all cursor-pointer"
+                  className="px-2.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 text-white font-black text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm shadow-sky-500/25 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
                   title="นำตัวเลขในเคสนี้มาใช้งานเป็นเคสใหม่"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>นำมาใช้งาน</span>
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  <span className="whitespace-nowrap">นำมาใช้งาน</span>
                 </button>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Provisional Approval Certificate Modal */}
+        {approvalModalCase && (
+          <ProvisionalApprovalModal
+            isOpen={Boolean(approvalModalCase)}
+            onClose={() => setApprovalModalCase(null)}
+            data={{
+              customerName: approvalModalCase.customerName || 'คุณลูกค้า',
+              customerPhone: approvalModalCase.customerPhone || '',
+              bikeModelName: approvalModalCase.bikeModelName || 'รถจักรยานยนต์',
+              bikeModelCode: approvalModalCase.bikeModelCode || '',
+              vehiclePrice: approvalModalCase.vehiclePrice || 0,
+              downAmount: approvalModalCase.snapshot?.downAmount ?? 0,
+              downPercent: approvalModalCase.snapshot?.downPercent ?? 0,
+              financeAmount: approvalModalCase.snapshot?.financeAmount ?? 0,
+              term: approvalModalCase.term,
+              monthlyInstallment: approvalModalCase.snapshot?.monthlyInstallment ?? 0,
+              interestRateText: approvalModalCase.snapshot?.rateDisplayText || '',
+              proposalCode: approvalModalCase.snapshot?.proposalCode || '',
+              proposalName: approvalModalCase.snapshot?.proposalName || '',
+              insurancePlanName: approvalModalCase.insurancePlan || 'none',
+              insuranceYears: approvalModalCase.insuranceYears || 0,
+              approvalDate: approvalModalCase.approvalDate,
+              deliveryDate: approvalModalCase.deliveryDate,
+              deliveryStatus: approvalModalCase.deliveryStatus,
+            }}
+            onUpdateCustomer={(name, phone) => {
+              if (approvalModalCase) {
+                updateCaseTitle(approvalModalCase.id, name);
+                setCases((prev) =>
+                  prev.map((c) =>
+                    c.id === approvalModalCase.id
+                      ? { ...c, customerName: name, customerPhone: phone }
+                      : c
+                  )
+                );
+                if (detailCase?.id === approvalModalCase.id) {
+                  setDetailCase((prev) =>
+                    prev ? { ...prev, customerName: name, customerPhone: phone } : null
+                  );
+                }
+              }
+            }}
+          />
         )}
       </div>
     </div>
