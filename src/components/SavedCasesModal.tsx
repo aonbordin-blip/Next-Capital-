@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { MarqueeText } from './MarqueeText';
 import {
   X,
   Search,
@@ -1740,33 +1741,35 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   )}
                                 </div>
 
-                                {/* Row 2: Phone + Bike Model */}
-                                <div className="flex items-center gap-2 text-[10.5px] text-slate-500 truncate">
-                                  {record.customerPhone && (
-                                    <span className="text-slate-600 font-medium inline-flex items-center gap-0.5">
-                                      <Phone className="w-2.5 h-2.5 text-slate-400" />
-                                      {record.customerPhone}
-                                    </span>
-                                  )}
-                                  {record.customerPhone && record.bikeModelName && (
-                                    <span className="text-slate-300">•</span>
-                                  )}
-                                  {record.bikeModelName && (
-                                    <span className="truncate text-slate-700 font-medium inline-flex items-center gap-0.5">
-                                      <Bike className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                      <span className="truncate">{record.bikeModelName}</span>
-                                    </span>
-                                  )}
-                                  {record.dealerName && (
-                                    <>
-                                      <span className="text-slate-300">•</span>
-                                      <span className="truncate text-sky-700 font-medium inline-flex items-center gap-0.5">
-                                        <Building2 className="w-2.5 h-2.5 text-sky-500 shrink-0" />
-                                        <span className="truncate">{record.dealerName}</span>
+                                {/* Row 2: Phone + Bike Model + Dealer */}
+                                <MarqueeText className="text-[10.5px] text-slate-500">
+                                  <span className="inline-flex items-center gap-2">
+                                    {record.customerPhone && (
+                                      <span className="text-slate-600 font-medium inline-flex items-center gap-0.5">
+                                        <Phone className="w-2.5 h-2.5 text-slate-400" />
+                                        {record.customerPhone}
                                       </span>
-                                    </>
-                                  )}
-                                </div>
+                                    )}
+                                    {record.customerPhone && record.bikeModelName && (
+                                      <span className="text-slate-300">•</span>
+                                    )}
+                                    {record.bikeModelName && (
+                                      <span className="text-slate-700 font-medium inline-flex items-center gap-0.5">
+                                        <Bike className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                        <span>{record.bikeModelName}</span>
+                                      </span>
+                                    )}
+                                    {record.dealerName && (
+                                      <>
+                                        <span className="text-slate-300">•</span>
+                                        <span className="text-sky-700 font-medium inline-flex items-center gap-0.5">
+                                          <Building2 className="w-2.5 h-2.5 text-sky-500 shrink-0" />
+                                          <span>{record.dealerName}</span>
+                                        </span>
+                                      </>
+                                    )}
+                                  </span>
+                                </MarqueeText>
 
                                 {/* Row 3: First Due Date badge or Installment preview */}
                                 <div className="flex items-center gap-1.5 flex-wrap text-[10px] pt-0.5">
@@ -2069,23 +2072,23 @@ export const SavedCasesModal: React.FC<Props> = ({
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">
-                      {getCustomerDisplayName(detailCase)}
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 min-w-0">
+                      <MarqueeText fitContent>{getCustomerDisplayName(detailCase)}</MarqueeText>
                     </h3>
                     <button
                       type="button"
                       onClick={() => handleStartEditTitle(detailCase)}
-                      className="p-1 text-slate-400 hover:text-sky-600 transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-sky-600 transition-colors cursor-pointer shrink-0"
                       title="แก้ไขชื่อลูกค้า"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
-                <p className="text-[11px] text-slate-500 truncate">
+                <MarqueeText className="text-[11px] text-slate-500">
                   บันทึกเมื่อ {formatThaiDateTime(detailCase.createdAt)} • {detailCase.snapshot.proposalCode}
-                </p>
+                </MarqueeText>
               </div>
             </div>
 
@@ -2620,16 +2623,13 @@ export const SavedCasesModal: React.FC<Props> = ({
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
                           <FileText className="w-5 h-5" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <span
-                            className="text-xs font-black text-slate-900 block truncate"
-                            title={detailCase.approvalDoc.name}
-                          >
+                        <div className="min-w-0 flex-1" title={detailCase.approvalDoc.name}>
+                          <MarqueeText className="text-xs font-black text-slate-900">
                             {detailCase.approvalDoc.name}
-                          </span>
-                          <span className="text-[10px] text-slate-500 block truncate">
+                          </MarqueeText>
+                          <MarqueeText className="text-[10px] text-slate-500">
                             {formatFileSize(detailCase.approvalDoc.size)} • อัปโหลดเมื่อ {formatThaiDateTime(detailCase.approvalDoc.uploadedAt)}
-                          </span>
+                          </MarqueeText>
                         </div>
                       </div>
 

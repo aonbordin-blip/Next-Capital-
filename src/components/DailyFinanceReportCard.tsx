@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
+import { MarqueeText } from './MarqueeText';
 
 export interface FinanceItem {
   id: string;
@@ -837,12 +838,12 @@ export function DailyFinanceReportCard({
 
         <div className="flex flex-col justify-between gap-2 h-full">
           <div className="flex items-center justify-between gap-1.5 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs shadow-violet-500/30 shrink-0">
                 <BarChart3 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight truncate">
-                รายงานประจำวัน
+              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight min-w-0 flex-1">
+                <MarqueeText>รายงานประจำวัน</MarqueeText>
               </h3>
             </div>
             <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
@@ -850,12 +851,14 @@ export function DailyFinanceReportCard({
             </span>
           </div>
           <div className="space-y-1 min-w-0">
-            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
-              {dealers.length} ดีลเลอร์ • {summary.totalNumericCases} เคส
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
+              <MarqueeText fitContent>
+                {dealers.length} ดีลเลอร์ • {summary.totalNumericCases} เคส
+              </MarqueeText>
             </span>
-            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+            <MarqueeText className="text-[10px] text-slate-500 font-medium">
               สรุปยอดไฟแนนซ์ราย Dealer ส่ง LINE
-            </p>
+            </MarqueeText>
           </div>
         </div>
       </div>
@@ -868,22 +871,22 @@ export function DailyFinanceReportCard({
       >
         {/* Sticky Modal Header matching QuotationModal */}
         <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-md shadow-violet-500/20 flex-shrink-0">
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                  รายงานประจำวันยอดเคสไฟแนนซ์
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                  <MarqueeText fitContent>รายงานประจำวันยอดเคสไฟแนนซ์</MarqueeText>
                 </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80 shrink-0 hidden xs:inline-block">
                   Daily Finance Report
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                 สรุปยอดแต่ละไฟแนนซ์แยกราย Dealer เพิ่ม-ลบได้ไม่จำกัด พร้อมคัดลอกส่งเข้า LINE ประจำวัน
-              </p>
+              </MarqueeText>
             </div>
           </div>
 

@@ -25,6 +25,7 @@ import {
   getCustomMotorcycleModels,
 } from '../data/motorcycleModels';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { MarqueeText } from './MarqueeText';
 
 interface Props {
   value: string;
@@ -272,7 +273,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
           <Search className="w-3.5 h-3.5 text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
 
           {value ? (
-            <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
               {matchedModel?.brand && (
                 <span
                   className={`text-[9px] font-bold px-1.5 py-0.5 rounded text-white shrink-0 ${
@@ -290,15 +291,15 @@ export const BikeModelCodeInput: React.FC<Props> = ({
               <span className="font-mono text-xs font-bold text-blue-950 uppercase tracking-wide shrink-0">
                 {value}
               </span>
-              <span className="text-slate-300">•</span>
-              <span className="text-xs font-semibold text-slate-700 truncate">
+              <span className="text-slate-300 shrink-0">•</span>
+              <MarqueeText className="text-xs font-semibold text-slate-700 flex-1">
                 {matchedModel?.name || selectedModelName || 'รหัสรุ่นที่กำหนด'}
-              </span>
+              </MarqueeText>
             </div>
           ) : (
-            <span className="text-xs text-slate-400 group-hover:text-slate-600 truncate">
+            <MarqueeText className="text-xs text-slate-400 group-hover:text-slate-600 flex-1">
               แตะเพื่อค้นหารหัสรุ่นรถ (GIORNO, WAVE, PCX, FAZZIO...)
-            </span>
+            </MarqueeText>
           )}
         </div>
 
@@ -318,11 +319,13 @@ export const BikeModelCodeInput: React.FC<Props> = ({
       {/* Confirmed Model Status Badge */}
       {matchedModel && (
         <div className="mt-1 px-2.5 py-1 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white rounded-lg border border-blue-200/70 flex items-center justify-between text-[10.5px]">
-          <div className="flex items-center gap-1.5 truncate">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-2">
             <span className="text-emerald-700 font-semibold flex items-center gap-1 shrink-0">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" /> ตรวจพบ:
             </span>
-            <span className="font-bold text-slate-800 truncate">{matchedModel.name}</span>
+            <MarqueeText fitContent className="font-bold text-slate-800">
+              {matchedModel.name}
+            </MarqueeText>
             {matchedModel.isCustom && (
               <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 shrink-0">
                 บันทึกเอง

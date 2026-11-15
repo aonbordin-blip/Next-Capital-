@@ -23,6 +23,7 @@ import { SavedCaseRecord } from '../types';
 import { getSavedCases } from '../utils/savedCasesStorage';
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
+import { MarqueeText } from './MarqueeText';
 
 type HalfPeriodType = 'first_half' | 'second_half' | 'full_month';
 
@@ -389,12 +390,12 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
           className="w-full text-left bg-gradient-to-r from-indigo-50/80 via-sky-50/40 to-white hover:bg-indigo-50/90 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
         >
           <div className="w-full flex items-center justify-between gap-1.5 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-indigo-500/25">
                 <ClipboardCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight truncate">
-                สรุปยอดปิด
+              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight min-w-0 flex-1">
+                <MarqueeText>สรุปยอดปิด</MarqueeText>
               </h3>
             </div>
             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
@@ -402,12 +403,14 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
             </div>
           </div>
           <div className="space-y-1 min-w-0 w-full">
-            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 border border-indigo-200">
-              Approve {effectiveApproveCount} • ยกยอด {effectivePendingCount}
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 border border-indigo-200">
+              <MarqueeText fitContent>
+                Approve {effectiveApproveCount} • ยกยอด {effectivePendingCount}
+              </MarqueeText>
             </span>
-            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+            <MarqueeText className="text-[10px] text-slate-500 font-medium">
               ยอดอนุมัติ รับรถ และรายชื่อรอรับ
-            </p>
+            </MarqueeText>
           </div>
         </button>
       </div>
@@ -423,22 +426,22 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
       >
         {/* Sticky Modal Header matching QuotationModal */}
         <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white rounded-2xl shadow-md shadow-indigo-500/20 flex-shrink-0">
               <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                  สรุปปิดยอด 15 / สิ้นเดือน
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                  <MarqueeText fitContent>สรุปปิดยอด 15 / สิ้นเดือน</MarqueeText>
                 </h2>
-                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 border border-indigo-200 shrink-0">
+                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 border border-indigo-200 shrink-0 hidden sm:inline-block">
                   Approve • รับรถ • ยกยอด
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                 รายงานปิดยอด 1-15 และ 16-สิ้นเดือน พร้อมรายชื่อลูกค้าที่รอรับรถ
-              </p>
+              </MarqueeText>
             </div>
           </div>
 
@@ -783,18 +786,18 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       key={c.id}
                       className="px-3 py-2 flex items-center justify-between gap-2 text-xs"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10.5px] flex items-center justify-center shrink-0">
                           {idx + 1}
                         </span>
-                        <div className="min-w-0">
-                          <div className="font-bold text-slate-900 truncate">
+                        <div className="min-w-0 flex-1">
+                          <MarqueeText className="font-bold text-slate-900">
                             {getCleanCustomerName(c)}
-                          </div>
+                          </MarqueeText>
                           {(c.bikeModelName || c.dealerName) && (
-                            <div className="text-[10px] text-slate-500 truncate">
+                            <MarqueeText className="text-[10px] text-slate-500">
                               {[c.bikeModelName, c.dealerName].filter(Boolean).join(' • ')}
-                            </div>
+                            </MarqueeText>
                           )}
                         </div>
                       </div>
@@ -822,9 +825,9 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       key={c.id}
                       className="px-3 py-1.5 flex items-center justify-between gap-2 text-[11.5px]"
                     >
-                      <span className="font-semibold text-slate-800 truncate">
+                      <MarqueeText className="font-semibold text-slate-800 flex-1">
                         {idx + 1}. {getCleanCustomerName(c)}
-                      </span>
+                      </MarqueeText>
                       <span className="text-[10px] font-semibold text-emerald-700 shrink-0">
                         รับรถแล้ว {c.deliveryDate ? c.deliveryDate.slice(8, 10) + '/' + c.deliveryDate.slice(5, 7) : ''}
                       </span>

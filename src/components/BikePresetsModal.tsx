@@ -4,6 +4,7 @@ import { BIKE_PRESETS, PROPOSALS } from '../data/proposals';
 import { BikePreset, ProposalKey } from '../types';
 import { getAllMotorcycleModels, MotorcycleModel } from '../data/motorcycleModels';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { MarqueeText } from './MarqueeText';
 
 interface Props {
   isOpen: boolean;
@@ -279,9 +280,9 @@ export const BikePresetsModal: React.FC<Props> = ({
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-xs sm:text-[13px] text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight">
+                      <MarqueeText className="font-bold text-xs sm:text-[13px] text-slate-800 group-hover:text-indigo-600 transition-colors">
                         {bike.name}
-                      </div>
+                      </MarqueeText>
                       {bike.code && (
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200/60 text-indigo-700 font-mono text-[10.5px] font-bold tracking-wider mt-1 shadow-2xs">
                           <Tag className="w-2.5 h-2.5" />
@@ -296,9 +297,9 @@ export const BikePresetsModal: React.FC<Props> = ({
                     )}
                   </div>
                   {bike.badge && (
-                    <p className="text-[10.5px] text-slate-500 line-clamp-1 mb-2">
+                    <MarqueeText className="text-[10.5px] text-slate-500 mb-2">
                       {bike.badge}
-                    </p>
+                    </MarqueeText>
                   )}
                 </div>
 

@@ -29,6 +29,7 @@ import {
 } from '../utils/checkerCommission';
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
+import { MarqueeText } from './MarqueeText';
 
 interface Props {
   officerName: string;
@@ -408,12 +409,12 @@ export const CheckerCommissionCard: React.FC<Props> = ({
           className="w-full text-left bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white hover:bg-emerald-50/90 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
         >
           <div className="w-full flex items-center justify-between gap-1.5 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-emerald-500/25">
                 <Award className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight truncate">
-                สรุปค่าคอมฯ
+              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight min-w-0 flex-1">
+                <MarqueeText>สรุปค่าคอมฯ</MarqueeText>
               </h3>
             </div>
             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
@@ -421,12 +422,14 @@ export const CheckerCommissionCard: React.FC<Props> = ({
             </div>
           </div>
           <div className="space-y-1 min-w-0 w-full">
-            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200">
-              ฿{summary.totalCommissionBaht.toLocaleString()} • Tier {summary.tier}
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200">
+              <MarqueeText fitContent>
+                ฿{summary.totalCommissionBaht.toLocaleString()} • Tier {summary.tier}
+              </MarqueeText>
             </span>
-            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+            <MarqueeText className="text-[10px] text-slate-500 font-medium">
               คำนวณค่าแนะนำ PA & PA PLUS
-            </p>
+            </MarqueeText>
           </div>
         </button>
       </div>
@@ -442,22 +445,22 @@ export const CheckerCommissionCard: React.FC<Props> = ({
       >
         {/* Sticky Modal Header matching QuotationModal */}
         <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl shadow-md shadow-emerald-500/20 flex-shrink-0">
               <Award className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                  สรุปค่าคอมมิชชั่นค่าแนะนำขายประกัน
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                  <MarqueeText fitContent>สรุปค่าคอมมิชชั่นค่าแนะนำขายประกัน</MarqueeText>
                 </h2>
-                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200 shrink-0">
+                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200 shrink-0 hidden sm:inline-block">
                   Checker Commission
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                 คำนวณจากเคสที่อนุมัติและรับรถแล้ว ตามเกณฑ์ PA & PA PLUS
-              </p>
+              </MarqueeText>
             </div>
           </div>
 
@@ -652,10 +655,10 @@ export const CheckerCommissionCard: React.FC<Props> = ({
           {/* 4 Main KPI Dashboard Cards (ปรับปรุงไม่ให้ข้อความตกบรรทัด) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             {/* Card 1: สัญญารับรถทั้งหมด */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-2xs">
-              <div className="text-[10.5px] sm:text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-2xs min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 min-w-0">
                 <Car className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                <span className="whitespace-nowrap truncate">รับรถแล้วทั้งหมด</span>
+                <MarqueeText>รับรถแล้วทั้งหมด</MarqueeText>
               </div>
               <div className="mt-1 flex items-baseline gap-1.5">
                 <span className="text-xl sm:text-2xl font-black text-slate-900">
@@ -663,16 +666,16 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                 </span>
                 <span className="text-xs font-semibold text-slate-500">คัน</span>
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap truncate">
+              <MarqueeText className="text-[10px] text-slate-400 mt-0.5">
                 อนุมัติ & รับรถแล้ว
-              </div>
+              </MarqueeText>
             </div>
 
             {/* Card 2: สัญญาที่ซื้อประกัน */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 to-white border border-blue-200/80 shadow-2xs">
-              <div className="text-[10.5px] sm:text-[11px] font-semibold text-blue-800 flex items-center gap-1.5">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 to-white border border-blue-200/80 shadow-2xs min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-semibold text-blue-800 flex items-center gap-1.5 min-w-0">
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span className="whitespace-nowrap truncate">ซื้อประกัน (PA+PA+)</span>
+                <MarqueeText>ซื้อประกัน (PA+PA+)</MarqueeText>
               </div>
               <div className="mt-1 flex items-baseline gap-1.5">
                 <span className="text-xl sm:text-2xl font-black text-blue-900">
@@ -680,17 +683,17 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                 </span>
                 <span className="text-xs font-semibold text-blue-700">คัน</span>
               </div>
-              <div className="text-[10px] text-blue-600/90 font-medium mt-0.5 whitespace-nowrap truncate">
+              <MarqueeText className="text-[10px] text-blue-600/90 font-medium mt-0.5">
                 PA: {summary.paCount} | PA+: {summary.paPlusCount}
-              </div>
+              </MarqueeText>
             </div>
 
-            {/* Card 3: Target Achievement % (แก้ไขไม่ให้คำว่า Achievement และ % หลุดตกบรรทัด) */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/70 to-white border border-teal-200/80 shadow-2xs">
-              <div className="text-[10.5px] sm:text-[11px] font-semibold text-teal-800 flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1 min-w-0">
+            {/* Card 3: Target Achievement % */}
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/70 to-white border border-teal-200/80 shadow-2xs min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-semibold text-teal-800 flex items-center justify-between gap-1 min-w-0">
+                <div className="flex items-center gap-1 min-w-0 flex-1">
                   <Target className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                  <span className="whitespace-nowrap truncate">Achievement</span>
+                  <MarqueeText>Achievement</MarqueeText>
                 </div>
                 <span
                   className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold whitespace-nowrap shrink-0 ${
@@ -709,16 +712,16 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   {summary.achievementPercent.toFixed(1)}%
                 </span>
               </div>
-              <div className="text-[10px] text-teal-700 font-medium mt-0.5 whitespace-nowrap truncate">
+              <MarqueeText className="text-[10px] text-teal-700 font-medium mt-0.5">
                 {summary.tierRule.label}
-              </div>
+              </MarqueeText>
             </div>
 
             {/* Card 4: ยอดรวมค่าคอมมิชชั่น */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-600/20 border border-emerald-400/40">
-              <div className="text-[10.5px] sm:text-[11px] font-medium text-emerald-100 flex items-center gap-1.5">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-600/20 border border-emerald-400/40 min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-medium text-emerald-100 flex items-center gap-1.5 min-w-0">
                 <Award className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
-                <span className="whitespace-nowrap truncate">ค่าแนะนำสุทธิ</span>
+                <MarqueeText>ค่าแนะนำสุทธิ</MarqueeText>
               </div>
               <div className="mt-1 flex items-baseline gap-1">
                 <span className="text-xl sm:text-2xl font-black text-white tracking-tight whitespace-nowrap">
@@ -726,18 +729,18 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                 </span>
                 <span className="text-xs font-semibold text-emerald-100 ml-0.5 whitespace-nowrap">บาท</span>
               </div>
-              <div className="text-[10px] text-emerald-100/90 mt-0.5 font-medium whitespace-nowrap truncate">
+              <MarqueeText className="text-[10px] text-emerald-100/90 mt-0.5 font-medium">
                 งวด {periodLabel}
-              </div>
+              </MarqueeText>
             </div>
           </div>
 
-          {/* Tier Progress Bar & Incentive Badge (แก้ไข Title ไม่ให้ซ้อนสองแถวและตัดตกบรรทัด) */}
+          {/* Tier Progress Bar & Incentive Badge */}
           <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 space-y-2.5">
             <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-xs">
-              <div className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0">
+              <div className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0 flex-1">
                 <TrendingUp className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="truncate">ระดับผลงานเป้าหมาย (Tier Achievement)</span>
+                <MarqueeText>ระดับผลงานเป้าหมาย (Tier Achievement)</MarqueeText>
               </div>
               <div className="text-[11px] sm:text-xs font-extrabold text-emerald-700 whitespace-nowrap self-start xs:self-auto bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0">
                 ปัจจุบัน: Tier {summary.tier} ({summary.achievementPercent.toFixed(2)}%)
@@ -988,19 +991,19 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                     >
                       {/* Left: Customer name & Bike info & Date without overflowing or cutting off */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-slate-900 truncate max-w-[130px] xs:max-w-[190px]">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <MarqueeText fitContent className="font-bold text-slate-900">
                             {record.customerName || 'คุณลูกค้า'}
-                          </span>
+                          </MarqueeText>
                           <span className="text-[9px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.2 rounded-full border border-emerald-200 shrink-0 whitespace-nowrap">
                             รับรถแล้ว
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span className="truncate max-w-[120px] xs:max-w-[170px] text-slate-600">
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5 min-w-0">
+                          <MarqueeText fitContent className="text-slate-600">
                             {record.bikeModelName || record.bikeModelCode || 'รถจักรยานยนต์'}
-                          </span>
-                          <span className="text-slate-300">•</span>
+                          </MarqueeText>
+                          <span className="text-slate-300 shrink-0">•</span>
                           <span className="text-slate-400 shrink-0 whitespace-nowrap text-[10.5px]">
                             {shortDate}
                           </span>

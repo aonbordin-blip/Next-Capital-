@@ -3,6 +3,7 @@ import { Download, X, Smartphone, Check, Share, ArrowUpRight, PlusSquare } from 
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { MarqueeText } from './MarqueeText';
 
 export const InstallAppBanner: React.FC = () => {
   const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
@@ -41,22 +42,24 @@ export const InstallAppBanner: React.FC = () => {
     <>
       {/* Sleek Floating Glassmorphic Install Bar */}
       <div className="no-print mx-4 mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-blue-700/90 via-indigo-700/90 to-blue-800/90 text-white backdrop-blur-xl border border-white/30 shadow-lg shadow-blue-900/20 flex items-center justify-between gap-3 animate-fade-in z-20">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs flex-shrink-0 overflow-hidden">
-            <NextCapitalLogo size={22} className="flex items-center justify-center" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-xs truncate">ติดตั้งแอป Next Capital</span>
-              <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider">
-                PWA
-              </span>
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs flex-shrink-0 overflow-hidden">
+              <NextCapitalLogo size={22} className="flex items-center justify-center" />
             </div>
-            <p className="text-[10px] text-blue-100 truncate">
-              เปิดใช้งานได้ทันทีจากหน้าจอโฮม ไม่ต้องผ่านสโตร์
-            </p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <MarqueeText fitContent className="font-bold text-xs">
+                  ติดตั้งแอป Next Capital
+                </MarqueeText>
+                <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider shrink-0">
+                  PWA
+                </span>
+              </div>
+              <MarqueeText className="text-[10px] text-blue-100">
+                เปิดใช้งานได้ทันทีจากหน้าจอโฮม ไม่ต้องผ่านสโตร์
+              </MarqueeText>
+            </div>
           </div>
-        </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button

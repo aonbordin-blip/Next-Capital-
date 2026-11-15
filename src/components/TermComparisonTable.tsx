@@ -3,6 +3,7 @@ import { Layers, CheckCircle2, ShieldCheck, HelpCircle, ChevronDown, ChevronUp }
 import { TermComparisonItem } from '../types';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
+import { MarqueeText } from './MarqueeText';
 
 interface Props {
   comparisons: TermComparisonItem[];
@@ -60,9 +61,9 @@ export const TermComparisonTable: React.FC<Props> = ({
           <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs shrink-0 mt-0.5">
             <Layers className="w-3.5 h-3.5" />
           </div>
-          <div className="min-w-0">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-1.5">
-              <span>ตารางเปรียบเทียบระยะเวลางวดผ่อน</span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight min-w-0">
+              <MarqueeText>ตารางเปรียบเทียบระยะเวลางวดผ่อน</MarqueeText>
             </h3>
             <div className="flex items-center gap-1.5 flex-wrap mt-1">
               {hasAnyInsurance ? (

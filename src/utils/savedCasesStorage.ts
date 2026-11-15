@@ -1,7 +1,40 @@
-import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
+import {
+  SavedCaseRecord,
+  CaseApprovalStatus,
+  VehicleDeliveryStatus,
+  ApprovalDocInfo,
+  InstallmentPaymentStatus,
+} from '../types';
 import { deleteApprovalDocFile } from './approvalDocsStorage';
+import { findModelByCode } from '../data/motorcycleModels';
 
 const STORAGE_KEY = 'ncap_saved_cases_v1';
+
+export function getLocalTodayDateStr(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+export function isCaseDeliveredAndApproved(record: SavedCaseRecord): boolean {
+  return record.approvalStatus === 'approved' && record.deliveryStatus === 'delivered';
+}
+
+export function getCustomerDisplayName(record: SavedCaseRecord): string {
+  if (record.customerName && record.customerName.trim()) {
+    return record.customerName.trim();
+  }
+  if (record.caseTitle) {
+    const parts = record.caseTitle.split(' - ');
+    if (parts.length > 0 && parts[0].trim()) {
+      return parts[0].trim();
+    }
+    return record.caseTitle.trim();
+  }
+  return 'คุณลูกค้า';
+}
 
 export function getSavedCases(): SavedCaseRecord[] {
   try {
@@ -39,6 +72,9 @@ export function saveCaseRecord(
         deliveryDate: data.deliveryDate !== undefined ? data.deliveryDate : existing.deliveryDate,
         paymentDueDay: data.paymentDueDay !== undefined ? data.paymentDueDay : existing.paymentDueDay,
         googleMapsLocation: data.googleMapsLocation !== undefined ? data.googleMapsLocation : existing.googleMapsLocation,
+        bikeBrand: data.bikeBrand !== undefined ? data.bikeBrand : existing.bikeBrand,
+        installmentPayments:
+          data.installmentPayments !== undefined ? data.installmentPayments : existing.installmentPayments,
         approvalDoc: data.approvalDoc !== undefined ? data.approvalDoc : existing.approvalDoc,
         updatedAt: now,
       };
@@ -57,7 +93,7 @@ export function saveCaseRecord(
   const initialDeliveryStatus: VehicleDeliveryStatus | undefined =
     initialApprovalStatus === 'approved' ? (data.deliveryStatus || 'pending_delivery') : data.deliveryStatus;
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalTodayDateStr();
   const initialApprovalDate =
     initialApprovalStatus === 'approved' ? (data.approvalDate || todayStr) : data.approvalDate;
   const initialDeliveryDate =
@@ -71,6 +107,8 @@ export function saveCaseRecord(
     deliveryDate: initialDeliveryDate,
     paymentDueDay: data.paymentDueDay,
     googleMapsLocation: data.googleMapsLocation,
+    bikeBrand: data.bikeBrand,
+    installmentPayments: data.installmentPayments,
     approvalDoc: data.approvalDoc,
     id: `case-${now}-${Math.random().toString(36).substring(2, 7)}`,
     createdAt: now,
@@ -166,7 +204,7 @@ export function updateCaseDeliveryStatus(
   deliveryStatus: VehicleDeliveryStatus
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalTodayDateStr();
   const updated = cases.map((c) => {
     if (c.id !== id) return c;
     const resolvedDeliveryDate =
@@ -442,4 +480,183 @@ export function calculateFirstPaymentDueDate(deliveryDateInput?: string | number
     key: `${thaiYear}-${isoMonthStr}`,
   };
 }
+
+export function updateCaseInstallmentPayment(
+  id: string,
+  installmentNo: number,
+  status?: InstallmentPaymentStatus
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    const nextPayments: Record<number, InstallmentPaymentStatus> = {
+      ...(c.installmentPayments || {}),
+    };
+    if (status) {
+      nextPayments[installmentNo] = status;
+    } else {
+      delete nextPayments[installmentNo];
+    }
+    return {
+      ...c,
+      installmentPayments: nextPayments,
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update installment payment status in localStorage:', err);
+  }
+  return updated;
+}
+
+export function updateCaseTrackingDetails(
+  id: string,
+  updates: {
+    customerName?: string;
+    customerPhone?: string;
+    bikeBrand?: string;
+    bikeModelName?: string;
+    bikeModelCode?: string;
+    deliveryDate?: string;
+    paymentDueDay?: number;
+    monthlyInstallment?: number;
+  }
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    const cleanName = updates.customerName !== undefined ? updates.customerName.trim() : undefined;
+    return {
+      ...c,
+      ...(cleanName ? { customerName: cleanName, caseTitle: cleanName } : {}),
+      ...(updates.customerPhone !== undefined ? { customerPhone: updates.customerPhone.trim() || undefined } : {}),
+      ...(updates.bikeBrand !== undefined ? { bikeBrand: updates.bikeBrand.trim() || undefined } : {}),
+      ...(updates.bikeModelName !== undefined ? { bikeModelName: updates.bikeModelName.trim() || undefined } : {}),
+      ...(updates.bikeModelCode !== undefined ? { bikeModelCode: updates.bikeModelCode.trim().toUpperCase() || undefined } : {}),
+      ...(updates.deliveryDate !== undefined ? { deliveryDate: updates.deliveryDate || undefined } : {}),
+      ...(updates.paymentDueDay !== undefined ? { paymentDueDay: updates.paymentDueDay } : {}),
+      ...(updates.monthlyInstallment !== undefined && updates.monthlyInstallment > 0
+        ? {
+            snapshot: {
+              ...c.snapshot,
+              monthlyInstallment: updates.monthlyInstallment,
+            },
+          }
+        : {}),
+      updatedAt: Date.now(),
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update tracking details in localStorage:', err);
+  }
+  return updated;
+}
+
+export function resolveBikeBrand(record: {
+  bikeBrand?: string;
+  bikeModelCode?: string;
+  bikeModelName?: string;
+  proposalKey?: string;
+}): string {
+  if (record.bikeBrand && record.bikeBrand.trim()) {
+    return record.bikeBrand.trim().toUpperCase();
+  }
+  if (record.bikeModelCode) {
+    const matched = findModelByCode(record.bikeModelCode);
+    if (matched?.brand) {
+      return matched.brand.trim().toUpperCase();
+    }
+  }
+  const nameUpper = (record.bikeModelName || '').toUpperCase();
+  const knownBrands = ['HONDA', 'YAMAHA', 'VESPA', 'LAMBRETTA', 'SUZUKI', 'KAWASAKI', 'GPX'];
+  for (const b of knownBrands) {
+    if (nameUpper.includes(b)) return b;
+  }
+  if (record.proposalKey === 'fazzio') return 'YAMAHA';
+  if (record.proposalKey === 'vespa') return 'VESPA/LAMBRETTA';
+  return '-';
+}
+
+export interface InstallmentDueSlot {
+  installmentNo: number;
+  dueDate: Date;
+  isoDate: string;
+  monthKey: string; // e.g. "2026-10"
+  monthLabelShort: string; // e.g. "ต.ค. 69"
+  monthLabelLong: string; // e.g. "ตุลาคม 2569"
+  formattedShort: string; // e.g. "2 พ.ย. 69"
+  formattedFull: string; // e.g. "2 พ.ย. 2569"
+  status?: InstallmentPaymentStatus;
+}
+
+export function formatThaiMonthYearLabel(monthKey: string): { short: string; long: string } {
+  const [yStr, mStr] = monthKey.split('-');
+  const y = Number(yStr) || new Date().getFullYear();
+  const m = Math.min(12, Math.max(1, Number(mStr) || 1));
+  const thaiYear = y + 543;
+  const thaiShortYear = (thaiYear % 100).toString().padStart(2, '0');
+  const monthShort = THAI_MONTH_SHORTS_LIST[m - 1] || `${m}`;
+  const monthName = THAI_MONTH_NAMES_LIST[m - 1] || `เดือน ${m}`;
+  return {
+    short: `${monthShort} ${thaiShortYear}`,
+    long: `${monthName} ${thaiYear}`,
+  };
+}
+
+export function shiftMonthKey(monthKey: string, deltaMonths: number): string {
+  const [yStr, mStr] = monthKey.split('-');
+  const y = Number(yStr) || new Date().getFullYear();
+  const m = (Number(mStr) || 1) - 1;
+  const d = new Date(y, m + deltaMonths, 1);
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+}
+
+export function getNineInstallmentSchedule(record: SavedCaseRecord): InstallmentDueSlot[] {
+  const firstDue = calculateFirstPaymentDueDate(
+    record.deliveryDate || record.createdAt
+  );
+  const targetDay = record.paymentDueDay && record.paymentDueDay >= 1 && record.paymentDueDay <= 31
+    ? record.paymentDueDay
+    : firstDue.day;
+
+  const baseYear = firstDue.year;
+  const baseMonthIndex = firstDue.month - 1;
+  const payments = record.installmentPayments || {};
+
+  const slots: InstallmentDueSlot[] = [];
+  for (let i = 1; i <= 9; i++) {
+    const refMonthStart = new Date(baseYear, baseMonthIndex + (i - 1), 1);
+    const y = refMonthStart.getFullYear();
+    const m = refMonthStart.getMonth();
+    const maxDay = new Date(y, m + 1, 0).getDate();
+    const clampedDay = Math.min(targetDay, maxDay);
+    const dueDate = new Date(y, m, clampedDay);
+
+    const monthShort = THAI_MONTH_SHORTS_LIST[m] || `${m + 1}`;
+    const monthName = THAI_MONTH_NAMES_LIST[m] || `เดือน ${m + 1}`;
+    const thaiYear = y + 543;
+    const thaiShortYear = (thaiYear % 100).toString().padStart(2, '0');
+    const isoMonth = (m + 1).toString().padStart(2, '0');
+    const isoDay = clampedDay.toString().padStart(2, '0');
+
+    slots.push({
+      installmentNo: i,
+      dueDate,
+      isoDate: `${y}-${isoMonth}-${isoDay}`,
+      monthKey: `${y}-${isoMonth}`,
+      monthLabelShort: `${monthShort} ${thaiShortYear}`,
+      monthLabelLong: `${monthName} ${thaiYear}`,
+      formattedShort: `${clampedDay} ${monthShort} ${thaiShortYear}`,
+      formattedFull: `${clampedDay} ${monthShort} ${thaiYear}`,
+      status: payments[i],
+    });
+  }
+  return slots;
+}
+
+
 

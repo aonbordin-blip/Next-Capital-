@@ -31,6 +31,7 @@ import {
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { MarqueeText } from './MarqueeText';
 
 export interface DvTopicItem {
   code: string;
@@ -386,12 +387,12 @@ export function DvApprovalCard({
 
         <div className="flex flex-col justify-between gap-2 h-full">
           <div className="flex items-center justify-between gap-1.5 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs shadow-emerald-500/30 shrink-0">
                 <FileCheck2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight truncate">
-                ขออนุมัติ DV
+              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight min-w-0 flex-1">
+                <MarqueeText>ขออนุมัติ DV</MarqueeText>
               </h3>
             </div>
             <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
@@ -399,12 +400,12 @@ export function DvApprovalCard({
             </span>
           </div>
           <div className="space-y-1 min-w-0">
-            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
-              Dealer Verification
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
+              <MarqueeText fitContent>Dealer Verification</MarqueeText>
             </span>
-            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+            <MarqueeText className="text-[10px] text-slate-500 font-medium">
               กรอกฟอร์มส่งขออนุมัติ LINE อัตโนมัติ
-            </p>
+            </MarqueeText>
           </div>
         </div>
       </div>
@@ -417,22 +418,22 @@ export function DvApprovalCard({
       >
         {/* Sticky Modal Header matching QuotationModal */}
         <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 text-white rounded-2xl shadow-md shadow-emerald-500/20 flex-shrink-0">
               <FileCheck2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                  ขออนุมัติเคส DV
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                  <MarqueeText fitContent>ขออนุมัติเคส DV</MarqueeText>
                 </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 shrink-0">
                   Dealer Verification
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                 ดึงชื่อลูกค้า, รุ่นรถ, และชื่อเจ้าหน้าที่ (CK) อัตโนมัติ พร้อมส่งออกเข้า LINE ทันที
-              </p>
+              </MarqueeText>
             </div>
           </div>
 
@@ -1055,7 +1056,7 @@ export function DvApprovalCard({
                               : 'bg-slate-50/70 hover:bg-white hover:border-indigo-200 text-slate-700 border-slate-200/80 font-medium'
                           }`}
                         >
-                          <div className="flex items-center gap-2 overflow-hidden">
+                          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                             <span
                               className={`text-[11px] font-mono px-2 py-0.5 rounded-md font-bold shrink-0 ${
                                 isSelected
@@ -1065,7 +1066,7 @@ export function DvApprovalCard({
                             >
                               {item.code}
                             </span>
-                            <span className="text-xs truncate">{item.label}</span>
+                            <MarqueeText className="text-xs">{item.label}</MarqueeText>
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0">

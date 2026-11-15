@@ -3,6 +3,7 @@ import { X, Layers, CheckCircle2 } from 'lucide-react';
 import { PROPOSALS } from '../data/proposals';
 import { ProposalKey } from '../types';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { MarqueeText } from './MarqueeText';
 
 interface Props {
   isOpen: boolean;
@@ -92,7 +93,7 @@ export const ProposalSelectModal: React.FC<Props> = ({
                 }`}
               >
                 {/* Left: Radio Indicator + Name (Single Row, Small Font) */}
-                <div className="flex items-center gap-2 min-w-0 pr-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                   <div
                     className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                       isSelected
@@ -104,9 +105,9 @@ export const ProposalSelectModal: React.FC<Props> = ({
                       <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     )}
                   </div>
-                  <span className="text-xs font-semibold truncate whitespace-nowrap">
+                  <MarqueeText className="text-xs font-semibold flex-1">
                     {prop.name}
-                  </span>
+                  </MarqueeText>
                 </div>
 
                 {/* Right: Code Badge (Single Row) */}

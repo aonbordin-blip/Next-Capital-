@@ -48,6 +48,7 @@ import {
   Copy,
   Image as ImageIcon,
   Building2,
+  CalendarDays,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -82,6 +83,8 @@ import { getSavedCases, saveCaseRecord } from './utils/savedCasesStorage';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { BikeModelCodeInput } from './components/BikeModelCodeInput';
 import { MotorcycleModel, MOTORCYCLE_MODELS, findModelByCode } from './data/motorcycleModels';
+import { MarqueeText } from './components/MarqueeText';
+import { InstallmentTrackingPage } from './components/InstallmentTrackingPage';
 
 export default function App() {
   // Form states
@@ -270,8 +273,8 @@ export default function App() {
     setTimeout(() => setToastNotice(null), 3500);
   };
 
-  // 4-Page Navigation Tab State (โฮมเพจ, เงินดาวน์, ค่างวด, เอกสาร/เคส)
-  type ActivePageTab = 'home' | 'financing' | 'calculation' | 'documents';
+  // 5-Page Navigation Tab State (โฮมเพจ, เงินดาวน์, ค่างวด, เอกสาร/เคส, เช็คค่างวด)
+  type ActivePageTab = 'home' | 'financing' | 'calculation' | 'documents' | 'installments';
   const [activeTab, setActiveTab] = useState<ActivePageTab>('home');
   const mainRef = useRef<HTMLElement>(null);
 
@@ -296,6 +299,11 @@ export default function App() {
       label: 'เอกสาร/เคส',
       icon: FileText,
     },
+    {
+      id: 'installments' as const,
+      label: 'กำหนดชำระ',
+      icon: CalendarDays,
+    },
   ];
 
   const handleTabChange = (newTab: ActivePageTab) => {
@@ -305,7 +313,7 @@ export default function App() {
       setExpandedCard('financing');
     } else if (newTab === 'calculation') {
       setExpandedCard('comparison');
-    } else if (newTab === 'documents') {
+    } else if (newTab === 'documents' || newTab === 'installments') {
       setExpandedCard(null);
     }
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -957,6 +965,10 @@ export default function App() {
       dealerName: dealerName.trim() || undefined,
       proposalKey,
       vehiclePrice,
+      bikeBrand:
+        selectedBike?.brand ||
+        (bikeModelCode ? findModelByCode(bikeModelCode)?.brand : undefined) ||
+        undefined,
       bikeModelName: selectedBike?.name || (bikeModelCode ? `รุ่นรหัส ${bikeModelCode}` : undefined),
       bikeModelCode: bikeModelCode || selectedBike?.code,
       downMode,
@@ -1188,13 +1200,13 @@ export default function App() {
               onClick={() => setShowBikePresets(true)}
               className="w-full bg-white/25 hover:bg-white/35 text-white backdrop-blur-md rounded-full py-1.5 sm:py-2 px-3 sm:px-3.5 shadow-sm shadow-sky-950/20 border border-white/40 hover:border-white/60 flex items-center justify-between text-xs transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-2 truncate">
+              <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                 <div className="w-5 h-5 rounded-full bg-white/25 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
                   <Bike className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-white/95 font-medium truncate drop-shadow-2xs text-[11px] sm:text-xs">
+                <MarqueeText className="text-white/95 font-medium drop-shadow-2xs text-[11px] sm:text-xs">
                   {selectedBike ? `รุ่น: ${selectedBike.name}` : bikeModelCode ? `รหัสรุ่น: ${bikeModelCode}` : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
-                </span>
+                </MarqueeText>
               </div>
               <span className="text-[10px] font-bold text-sky-900 bg-white/95 hover:bg-white px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs transition-all group-hover:scale-105">
                 เลือกรุ่นรถ
@@ -1214,14 +1226,14 @@ export default function App() {
           {/* Selected Bike Banner if active */}
           {(selectedBike || bikeModelCode) && (
             <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-sky-50 via-white to-cyan-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs shadow-2xs">
-              <div className="flex items-center gap-1.5 truncate">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
-                <span className="text-slate-500 font-medium">รุ่นที่เลือก:</span>
-                <span className="font-bold text-sky-950 truncate">
+                <span className="text-slate-500 font-medium shrink-0">รุ่นที่เลือก:</span>
+                <MarqueeText fitContent className="font-bold text-sky-950">
                   {selectedBike?.name || 'รถจักรยานยนต์'}
-                </span>
+                </MarqueeText>
                 {bikeModelCode && (
-                  <span className="font-mono text-[10px] font-bold text-sky-800 bg-white px-2 py-0.5 rounded-full border border-sky-200 ml-1">
+                  <span className="font-mono text-[10px] font-bold text-sky-800 bg-white px-2 py-0.5 rounded-full border border-sky-200 ml-1 shrink-0">
                     {bikeModelCode}
                   </span>
                 )}
@@ -1242,22 +1254,22 @@ export default function App() {
           {editingCaseId && (
             <div className="mx-0 sm:mx-1 mt-1.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-300/80 animate-fade-in space-y-2.5">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
                     <Pencil className="w-4 h-4 text-white" />
                   </span>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full border border-white/30 text-white">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full border border-white/30 text-white shrink-0">
                         โหมดแก้ไขเคส
                       </span>
-                      <span className="text-xs font-black truncate drop-shadow-2xs text-white">
+                      <MarqueeText fitContent className="text-xs font-black drop-shadow-2xs text-white">
                         {editingCaseTitle}
-                      </span>
+                      </MarqueeText>
                     </div>
-                    <p className="text-[10.5px] text-amber-50/90 leading-tight mt-0.5">
+                    <MarqueeText className="text-[10.5px] text-amber-50/90 mt-0.5">
                       กำลังแก้ไขข้อมูลเคสนี้ คุณสามารถปรับเปลี่ยนราคา เงินดาวน์ หรือข้อเสนอ แล้วกดบันทึกการแก้ไข
-                    </p>
+                    </MarqueeText>
                   </div>
                 </div>
 
@@ -1476,11 +1488,11 @@ export default function App() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-                  <span className="text-slate-400">แสดงในเอกสาร:</span>
-                  <span className="font-semibold text-emerald-950 truncate">
+                <div className="flex items-center justify-between gap-2 text-[10px] text-slate-500 pt-0.5">
+                  <span className="text-slate-400 shrink-0">แสดงในเอกสาร:</span>
+                  <MarqueeText fitContent className="font-semibold text-emerald-950 text-right">
                     {customerDisplay}
-                  </span>
+                  </MarqueeText>
                 </div>
               </div>
 
@@ -1583,10 +1595,10 @@ export default function App() {
                       onClick={() => setShowProposalSelector(true)}
                       className="w-full glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-semibold outline-none flex items-center justify-between cursor-pointer hover:border-blue-400 transition-colors text-left"
                     >
-                      <div className="flex items-center gap-2 min-w-0 pr-2">
-                        <span className="truncate text-xs font-bold text-slate-900">
+                      <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                        <MarqueeText fitContent className="text-xs font-bold text-slate-900">
                           {currentProposal.name}
-                        </span>
+                        </MarqueeText>
                         <span className="font-mono text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 whitespace-nowrap flex-shrink-0">
                           ({currentProposal.code})
                         </span>
@@ -1955,14 +1967,14 @@ export default function App() {
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/50 text-[10px]">
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-slate-400 block">ยอดจัดเฉพาะตัวรถ:</span>
                       <span className="font-bold text-slate-800">
                         {formatBaht(currentCalculation.vehicleFinanceAmount)}
                       </span>
-                      <span className="text-[9px] text-slate-400 block truncate">
+                      <MarqueeText className="text-[9px] text-slate-400">
                         (ราคารถ - เงินดาวน์ {formatBaht(currentCalculation.downAmount)})
-                      </span>
+                      </MarqueeText>
                     </div>
                     <div className="text-right">
                       <span className="text-slate-400 block">ยอดจัดไฟแนนซ์รวม:</span>
@@ -2078,17 +2090,17 @@ export default function App() {
                   {isCustomRateEnabled && (
                     <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/90 to-amber-100/60 border-2 border-amber-400/90 shadow-sm space-y-2.5 animate-fade-in elevated-data-box elevated-box-amber">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
                             %
                           </div>
-                          <div>
-                            <div className="text-[11.5px] font-bold text-amber-950 flex items-center gap-1">
+                          <div className="min-w-0 flex-1">
+                            <MarqueeText className="text-[11.5px] font-bold text-amber-950">
                               แก้ไขดอกเบี้ยให้ตรงระบบบริษัท
-                            </div>
-                            <div className="text-[9.5px] text-amber-800 leading-tight">
+                            </MarqueeText>
+                            <MarqueeText className="text-[9.5px] text-amber-800">
                               ปรับเรทดอกเบี้ยสำหรับเคสพิเศษหรือระบบบริษัทที่ตัวเลขไม่ตรง
-                            </div>
+                            </MarqueeText>
                           </div>
                         </div>
 
@@ -2526,21 +2538,21 @@ export default function App() {
                 )}
               </div>
 
-              <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto truncate">
+              <MarqueeText className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto text-center">
                 {currentCalculation.remarkText}
-              </p>
+              </MarqueeText>
 
               {/* Summary Grid - Translucent Glass Mini Cards */}
               <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-sky-100/80 text-left text-[11px]">
-                <div className="glass-mini-card p-2.5 rounded-2xl">
+                <div className="glass-mini-card p-2.5 rounded-2xl min-w-0">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์รวม:</div>
                   <span className="font-bold text-slate-900 text-xs">
                     {formatBaht(currentCalculation.financeAmount, true)}
                   </span>
                   {currentCalculation.insuranceTotalWithVat > 0 ? (
-                    <div className="text-[9px] text-sky-700 font-semibold truncate">
+                    <MarqueeText className="text-[9px] text-sky-700 font-semibold">
                       (รถ {formatBaht(currentCalculation.vehicleFinanceAmount)} + PA+VAT {formatBaht(currentCalculation.insuranceTotalWithVat, true)})
-                    </div>
+                    </MarqueeText>
                   ) : (
                     <div className="text-[9px] text-slate-500">
                       (ยอดจัดตัวรถ)
@@ -2799,20 +2811,20 @@ export default function App() {
                 className="group relative overflow-hidden btn-fluid-primary py-3 px-4 rounded-2xl font-bold transition-all flex items-center justify-between cursor-pointer border border-white/30"
                 title="ดาวน์โหลดแผนความคุ้มครองประกันภัย (Group PA)"
               >
-                <div className="flex items-center gap-2.5 text-left">
+                <div className="flex items-center gap-2.5 text-left min-w-0 flex-1 pr-2">
                   <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <ShieldCheck className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <div>
-                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
-                      แผนความคุ้มครอง
-                      <span className="text-[10px] bg-white/25 text-white px-2 py-0.2 rounded-full font-semibold">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white min-w-0">
+                      <MarqueeText fitContent>แผนความคุ้มครอง</MarqueeText>
+                      <span className="text-[10px] bg-white/25 text-white px-2 py-0.2 rounded-full font-semibold shrink-0">
                         รูปภาพ
                       </span>
                     </div>
-                    <div className="text-[10.5px] text-white/90 font-normal leading-tight mt-0.5">
+                    <MarqueeText className="text-[10.5px] text-white/90 font-normal mt-0.5">
                       {cleanPlanNameForLine(currentCalculation.insurancePlanName)} ({insuranceYears} ปี)
-                    </div>
+                    </MarqueeText>
                   </div>
                 </div>
                 <Download className="w-4 h-4 text-white group-hover:translate-y-0.5 transition-transform shrink-0" />
@@ -2825,20 +2837,20 @@ export default function App() {
                 className="group relative overflow-hidden bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-slate-900/20 transition-all flex items-center justify-between cursor-pointer border border-white/10"
                 title="ดูและดาวน์โหลดใบเสนอราคาเช่าซื้อ (Quotation)"
               >
-                <div className="flex items-center gap-2.5 text-left">
+                <div className="flex items-center gap-2.5 text-left min-w-0 flex-1 pr-2">
                   <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <FileText className="w-4.5 h-4.5 text-cyan-300" />
                   </div>
-                  <div>
-                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
-                      ใบเสนอราคา
-                      <span className="text-[10px] bg-cyan-400/25 text-cyan-200 px-2 py-0.2 rounded-full font-semibold">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white min-w-0">
+                      <MarqueeText fitContent>ใบเสนอราคา</MarqueeText>
+                      <span className="text-[10px] bg-cyan-400/25 text-cyan-200 px-2 py-0.2 rounded-full font-semibold shrink-0">
                         รูปภาพ
                       </span>
                     </div>
-                    <div className="text-[10.5px] text-slate-300 font-normal leading-tight mt-0.5">
+                    <MarqueeText className="text-[10.5px] text-slate-300 font-normal mt-0.5">
                       งวดละ {formatBaht(currentCalculation.monthlyInstallment)} บ.
-                    </div>
+                    </MarqueeText>
                   </div>
                 </div>
                 <Printer className="w-4 h-4 text-slate-300 group-hover:scale-110 transition-transform shrink-0" />
@@ -2851,20 +2863,20 @@ export default function App() {
                 className="group relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-emerald-950/20 transition-all flex items-center justify-between cursor-pointer border border-emerald-400/30 sm:col-span-2 lg:col-span-1"
                 title="ออกใบแจ้งผลการอนุมัติสินเชื่อเช่าซื้อชั่วคราว (Provisional Approval Certificate)"
               >
-                <div className="flex items-center gap-2.5 text-left">
+                <div className="flex items-center gap-2.5 text-left min-w-0 flex-1 pr-2">
                   <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <FileCheck className="w-4.5 h-4.5 text-emerald-300" />
                   </div>
-                  <div>
-                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white">
-                      ใบอนุมัติผลชั่วคราว
-                      <span className="text-[10px] bg-emerald-400/30 text-emerald-200 px-2 py-0.2 rounded-full font-semibold">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold leading-tight flex items-center gap-1.5 text-white min-w-0">
+                      <MarqueeText fitContent>ใบอนุมัติผลชั่วคราว</MarqueeText>
+                      <span className="text-[10px] bg-emerald-400/30 text-emerald-200 px-2 py-0.2 rounded-full font-semibold shrink-0">
                         อนุมัติ
                       </span>
                     </div>
-                    <div className="text-[10.5px] text-emerald-200/90 font-normal leading-tight mt-0.5">
+                    <MarqueeText className="text-[10.5px] text-emerald-200/90 font-normal mt-0.5">
                       {customerName ? customerName : 'สำหรับเคสอนุมัติ'} • {term} งวด
-                    </div>
+                    </MarqueeText>
                   </div>
                 </div>
                 <Award className="w-4 h-4 text-emerald-300 group-hover:scale-110 transition-transform shrink-0" />
@@ -2972,21 +2984,39 @@ export default function App() {
             </div>
           </div>
         )}
+
+            {/* ========================================================
+                หน้าที่ 5: ติดตามการชำระค่างวด งวดที่ 1 - 9 (รายชื่อ, ยี่ห้อ, รุ่น, รหัสรถ, ติ๊ก ✓/✗)
+                ======================================================== */}
+            {activeTab === 'installments' && (
+              <InstallmentTrackingPage
+                refreshTrigger={casesRevision}
+                officerName={officerName}
+                officerCode={officerCode}
+                officerDisplay={officerDisplay}
+                onDataChanged={() => {
+                  setSavedCasesCount(getSavedCases().length);
+                  setCasesRevision((v) => v + 1);
+                }}
+                onOpenSavedCases={() => setShowSavedCases(true)}
+                onNotify={triggerToast}
+              />
+            )}
       </div>
     </main>
 
         {/* Bottom Docked Glassmorphic Navigation Bar: ติดขอบล่างสุด โปร่งใสแบบแก้วใสเห็นเนื้อหาเบลออยู่ด้านหลัง พร้อมขอบบนโค้งมน */}
-        <div className="absolute bottom-0 inset-x-0 z-30 w-full bg-white/5 hover:bg-white/15 backdrop-blur-sm border-t border-white/40 hover:border-white/60 rounded-t-[30px] sm:rounded-t-[32px] shadow-[0_-4px_20px_-6px_rgba(2,132,199,0.12)] px-2 sm:px-4 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.375rem)] transition-all duration-200">
+        <div className="absolute bottom-0 inset-x-0 z-30 w-full bg-white/5 hover:bg-white/15 backdrop-blur-sm border-t border-white/40 hover:border-white/60 rounded-t-[30px] sm:rounded-t-[32px] shadow-[0_-4px_20px_-6px_rgba(2,132,199,0.12)] px-1.5 sm:px-3 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.375rem)] transition-all duration-200">
           <nav
             aria-label="แถบนำทางหลัก"
-            className="relative mx-auto w-full max-w-[540px] flex items-center justify-between overflow-hidden"
+            className="relative mx-auto w-full max-w-[580px] flex items-center justify-between overflow-hidden"
           >
             {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
             <div
               className="absolute top-0.5 bottom-0.5 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/30 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
               style={{
-                width: 'calc(25% - 6px)',
-                left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 3px)`,
+                width: `calc(${100 / NAV_TABS.length}% - 4px)`,
+                left: `calc(${Math.max(0, NAV_TABS.findIndex((t) => t.id === activeTab)) * (100 / NAV_TABS.length)}% + 2px)`,
               }}
             >
               {/* Subtle liquid shimmer light across the active pill */}
@@ -3001,21 +3031,21 @@ export default function App() {
                   key={tab.id}
                   type="button"
                   onClick={() => handleTabChange(tab.id)}
-                  className={`relative z-10 flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
+                  className={`relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-3 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
                     isActive
                       ? 'text-white font-bold'
                       : 'text-slate-800 hover:text-sky-900 hover:bg-white/20 font-semibold'
                   }`}
                 >
                   <Icon
-                    className={`w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0 transition-transform duration-300 ${
+                    className={`w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
                       isActive
                         ? 'text-white animate-tab-icon'
                         : 'text-slate-800'
                     }`}
                   />
                   <span
-                    className={`text-[11.5px] sm:text-sm leading-tight whitespace-nowrap transition-transform duration-200 ${
+                    className={`text-[10px] sm:text-xs leading-tight whitespace-nowrap transition-transform duration-200 ${
                       isActive ? 'scale-105' : ''
                     }`}
                   >
@@ -3212,7 +3242,7 @@ export default function App() {
       {toastNotice && (
         <div className="fixed top-5 inset-x-4 mx-auto max-w-md z-[70] p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-semibold text-center shadow-2xl border border-white/20 backdrop-blur-xl animate-fade-in flex items-center justify-center gap-2">
           <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span className="leading-tight">{toastNotice}</span>
+          <MarqueeText fitContent>{toastNotice}</MarqueeText>
         </div>
       )}
     </div>

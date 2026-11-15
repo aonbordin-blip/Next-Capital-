@@ -205,6 +205,10 @@ export interface SavedCaseRecord {
   paymentDueDay?: number; // กำหนดวันชำระค่างวด (เช่น วันที่ 1-31 ของทุกเดือน)
   googleMapsLocation?: string; // ลิงก์ พิกัด หรือที่อยู่ปัจจุบันที่คัดลอกมาจาก Google Maps
 
+  // Vehicle Brand & 9-Installment Payment Tracking (ติดตามชำระงวด 1-9)
+  bikeBrand?: string;
+  installmentPayments?: Record<number, InstallmentPaymentStatus>;
+
   // Approval Document (เอกสารการอนุมัติ PDF)
   approvalDoc?: ApprovalDocInfo;
 }
@@ -217,6 +221,7 @@ export interface ApprovalDocInfo {
   dataUrl?: string; // data URL สำรอง (ถ้ามี)
 }
 
+export type InstallmentPaymentStatus = 'paid' | 'unpaid';
 export type CaseApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 export type VehicleDeliveryStatus = 'pending_delivery' | 'delivered';
 

@@ -587,6 +587,45 @@
   animation: nav-ripple-burst 0.45s ease-out forwards;
 }
 
+/* Continuous Right-to-Left Marquee for Long / Overflowing Text */
+@keyframes marquee-rtl {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-rtl {
+  display: inline-flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-rtl var(--marquee-duration, 10s) linear infinite;
+}
+
+.marquee-container:hover .animate-marquee-rtl,
+.marquee-container:focus-within .animate-marquee-rtl {
+  animation-play-state: paused;
+}
+
+.marquee-edge-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 5%,
+    #000 95%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 5%,
+    #000 95%,
+    transparent 100%
+  );
+}
+
 /* Print specific styles */
 @media print {
   body {
