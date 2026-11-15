@@ -522,6 +522,7 @@ export function updateCaseTrackingDetails(
     deliveryDate?: string;
     paymentDueDay?: number;
     monthlyInstallment?: number;
+    googleMapsLocation?: string;
   }
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
@@ -537,6 +538,9 @@ export function updateCaseTrackingDetails(
       ...(updates.bikeModelCode !== undefined ? { bikeModelCode: updates.bikeModelCode.trim().toUpperCase() || undefined } : {}),
       ...(updates.deliveryDate !== undefined ? { deliveryDate: updates.deliveryDate || undefined } : {}),
       ...(updates.paymentDueDay !== undefined ? { paymentDueDay: updates.paymentDueDay } : {}),
+      ...(updates.googleMapsLocation !== undefined
+        ? { googleMapsLocation: updates.googleMapsLocation.trim() || undefined }
+        : {}),
       ...(updates.monthlyInstallment !== undefined && updates.monthlyInstallment > 0
         ? {
             snapshot: {

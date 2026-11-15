@@ -23,6 +23,9 @@ import {
   ChevronUp,
   Info,
   Banknote,
+  MapPin,
+  ExternalLink,
+  ClipboardCopy,
 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
 import {
@@ -36,6 +39,7 @@ import {
   getCustomerDisplayName,
   isCaseDeliveredAndApproved,
   getLocalTodayDateStr,
+  getGoogleMapsNavigationUrl,
   InstallmentDueSlot,
 } from '../utils/savedCasesStorage';
 import { findModelByCode, getAllMotorcycleModels } from '../data/motorcycleModels';
@@ -130,6 +134,7 @@ interface EnrichedCustomerItem {
   firstDueLabelLong: string;
   cycleRangeText: string;
   schedule: InstallmentDueSlot[];
+  mapsUrl: string;
 }
 
 interface FirstDueMonthGroup {
@@ -171,6 +176,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
   const [formDeliveryDate, setFormDeliveryDate] = useState(() => getLocalTodayDateStr());
   const [formDueDay, setFormDueDay] = useState('2');
   const [formMonthlyInstallment, setFormMonthlyInstallment] = useState('');
+  const [formGoogleMapsLocation, setFormGoogleMapsLocation] = useState('');
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
@@ -238,6 +244,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           firstDueLabelLong,
           cycleRangeText: firstDue.cycleRangeText,
           schedule,
+          mapsUrl: getGoogleMapsNavigationUrl(record.googleMapsLocation),
         };
       })
       .sort((a, b) => {
@@ -329,6 +336,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           item.firstDueLabelLong,
           item.cycleRangeText,
           item.record.dealerName,
+          item.record.googleMapsLocation,
         ]
           .filter(Boolean)
           .join(' ')
@@ -429,6 +437,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     setFormDeliveryDate(getLocalTodayDateStr());
     setFormDueDay('2');
     setFormMonthlyInstallment('');
+    setFormGoogleMapsLocation('');
     setFormError('');
     setIsFormModalOpen(true);
   };
@@ -447,8 +456,26 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     setFormMonthlyInstallment(
       r.snapshot?.monthlyInstallment ? String(r.snapshot.monthlyInstallment) : ''
     );
+    setFormGoogleMapsLocation(r.googleMapsLocation || '');
     setFormError('');
     setIsFormModalOpen(true);
+  };
+
+  const handlePasteFormLocation = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          triggerHaptic('success');
+          setFormGoogleMapsLocation(text.trim());
+          onNotify('✓ วางที่อยู่/ลิงก์ตำแหน่งเรียบร้อยแล้ว');
+          return;
+        }
+      }
+    } catch {
+      // Clipboard API might require permission
+    }
+    onNotify('💡 แตะค้างที่ช่องแล้วเลือก "วาง" (Paste) ได้เลย');
   };
 
   const handleFormModelCodeChange = (rawVal: string) => {
@@ -475,6 +502,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     const cleanBrand = formBrand.trim().toUpperCase() || 'HONDA';
     const cleanModel = formModelName.trim();
     const cleanCode = formModelCode.trim().toUpperCase();
+    const cleanLocation = formGoogleMapsLocation.trim();
     const parsedDueDay = Math.min(31, Math.max(1, parseInt(formDueDay, 10) || 2));
     const parsedInstallment = parseFloat(formMonthlyInstallment.replace(/[^0-9.]/g, '')) || 0;
 
@@ -487,6 +515,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         bikeModelCode: cleanCode || undefined,
         deliveryDate: formDeliveryDate || undefined,
         paymentDueDay: parsedDueDay,
+        googleMapsLocation: cleanLocation,
         ...(parsedInstallment > 0 ? { monthlyInstallment: parsedInstallment } : {}),
       });
       setCases(updated);
@@ -535,6 +564,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         approvalDate: formDeliveryDate,
         deliveryDate: formDeliveryDate,
         paymentDueDay: parsedDueDay,
+        googleMapsLocation: cleanLocation || undefined,
         snapshot: {
           monthlyInstallment: monthlyInst,
           financeAmount: vehiclePrice,
@@ -1116,12 +1146,53 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                   {formatBaht(record.snapshot.monthlyInstallment)} บ./ด.
                                 </span>
                               )}
+
+                              {/* Open Saved Customer Location Link Button */}
+                              {item.mapsUrl ? (
+                                <a
+                                  href={item.mapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => triggerHaptic('selection')}
+                                  className="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200/90 shadow-2xs transition-all active:scale-95"
+                                  title={`เปิดดูตำแหน่งที่อยู่: ${record.googleMapsLocation}`}
+                                >
+                                  <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
+                                  <span>ดูตำแหน่งที่อยู่</span>
+                                  <ExternalLink className="w-2.5 h-2.5 opacity-75 shrink-0" />
+                                </a>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    handleOpenEditModal(item);
+                                  }}
+                                  className="inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-sky-700 bg-slate-100/90 hover:bg-sky-50 px-2 py-0.5 rounded-md border border-slate-200/90 transition-all cursor-pointer"
+                                  title="ยังไม่มีลิงก์ตำแหน่งที่อยู่ แตะเพื่อเพิ่มลิงก์"
+                                >
+                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <span>เพิ่มตำแหน่งที่อยู่</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
 
                         {/* Quick Card Actions */}
                         <div className="flex items-center gap-1 shrink-0">
+                          {item.mapsUrl && (
+                            <a
+                              href={item.mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => triggerHaptic('selection')}
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-800 border border-rose-200 transition-all cursor-pointer flex items-center justify-center"
+                              title={`เปิดดูตำแหน่งที่อยู่: ${record.googleMapsLocation}`}
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                            </a>
+                          )}
                           <button
                             type="button"
                             onClick={() => handleCopyCustomerSummary(item)}
@@ -1142,7 +1213,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                             type="button"
                             onClick={() => handleOpenEditModal(item)}
                             className="p-1.5 rounded-xl bg-white/90 hover:bg-amber-50 text-slate-600 hover:text-amber-700 border border-slate-200 transition-all cursor-pointer"
-                            title="แก้ไขข้อมูลลูกค้า / วันรับรถ / วันกำหนดชำระ"
+                            title="แก้ไขข้อมูลลูกค้า / วันรับรถ / วันกำหนดชำระ / ตำแหน่งที่อยู่"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -1347,6 +1418,31 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
                           <td className="py-2 px-2 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1">
+                              {item.mapsUrl ? (
+                                <a
+                                  href={item.mapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => triggerHaptic('selection')}
+                                  className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-800 border border-rose-200/80 inline-flex items-center justify-center"
+                                  title={`ดูตำแหน่งที่อยู่: ${record.googleMapsLocation}`}
+                                >
+                                  <MapPin className="w-3.5 h-3.5" />
+                                </a>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    onNotify('ยังไม่ได้บันทึกลิงก์ตำแหน่งที่อยู่ของลูกค้ารายนี้ สามารถเพิ่มได้ที่ช่องด้านล่าง');
+                                    handleOpenEditModal(item);
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 cursor-pointer inline-flex items-center justify-center"
+                                  title="ยังไม่มีลิงก์ตำแหน่งที่อยู่ (กดเพื่อเพิ่ม)"
+                                >
+                                  <MapPin className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(item)}
@@ -1545,6 +1641,55 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 placeholder="2500"
                 className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-2.5 py-2 font-bold text-slate-900 text-center outline-none"
               />
+            </div>
+          </div>
+
+          {/* Customer Location Link (Google Maps) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                <span>ลิงก์ตำแหน่งที่อยู่ลูกค้า (Google Maps)</span>
+              </label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handlePasteFormLocation}
+                  className="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-md border border-sky-200 flex items-center gap-1 cursor-pointer"
+                >
+                  <ClipboardCopy className="w-3 h-3" />
+                  <span>วางลิงก์</span>
+                </button>
+                {formGoogleMapsLocation.trim() && (
+                  <a
+                    href={getGoogleMapsNavigationUrl(formGoogleMapsLocation)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1"
+                  >
+                    <span>เปิดดู</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={formGoogleMapsLocation}
+                onChange={(e) => setFormGoogleMapsLocation(e.target.value)}
+                placeholder="วางลิงก์ Google Maps, พิกัด GPS หรือที่อยู่ลูกค้า..."
+                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 pl-3 pr-8 py-2 font-medium text-slate-800 outline-none text-xs"
+              />
+              {formGoogleMapsLocation && (
+                <button
+                  type="button"
+                  onClick={() => setFormGoogleMapsLocation('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-0.5"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
 
