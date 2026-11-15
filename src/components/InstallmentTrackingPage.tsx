@@ -183,6 +183,16 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     setCases(getSavedCases());
   }, [refreshTrigger]);
 
+  useEffect(() => {
+    const syncCases = () => setCases(getSavedCases());
+    window.addEventListener('focus', syncCases);
+    window.addEventListener('storage', syncCases);
+    return () => {
+      window.removeEventListener('focus', syncCases);
+      window.removeEventListener('storage', syncCases);
+    };
+  }, []);
+
   const allDbModels = useMemo(() => getAllMotorcycleModels(), []);
 
   // Split saved cases strictly: ONLY approved + delivered cases have a confirmed กำหนดชำระงวดแรก
@@ -1147,32 +1157,33 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                 </span>
                               )}
 
-                              {/* Open Saved Customer Location Link Button */}
+                              {/* Open Saved Customer Location Link Button (ดูที่อยู่ -> เปิด Google Maps ทันที) */}
                               {item.mapsUrl ? (
                                 <a
                                   href={item.mapsUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={() => triggerHaptic('selection')}
-                                  className="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200/90 shadow-2xs transition-all active:scale-95"
-                                  title={`เปิดดูตำแหน่งที่อยู่: ${record.googleMapsLocation}`}
+                                  className="inline-flex items-center gap-1 font-extrabold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 px-2.5 py-0.5 rounded-md border border-rose-400/50 shadow-xs transition-all active:scale-95"
+                                  title={`เปิดดูที่อยู่บน Google Maps: ${record.googleMapsLocation}`}
                                 >
-                                  <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
-                                  <span>ดูตำแหน่งที่อยู่</span>
-                                  <ExternalLink className="w-2.5 h-2.5 opacity-75 shrink-0" />
+                                  <MapPin className="w-3 h-3 shrink-0" />
+                                  <span>ดูที่อยู่</span>
+                                  <ExternalLink className="w-2.5 h-2.5 opacity-90 shrink-0" />
                                 </a>
                               ) : (
                                 <button
                                   type="button"
                                   onClick={() => {
                                     triggerHaptic('light');
+                                    onNotify('ยังไม่มีลิงก์ที่อยู่ในเคสที่บันทึก กรุณาวางลิงก์ในช่องด้านล่าง');
                                     handleOpenEditModal(item);
                                   }}
                                   className="inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-sky-700 bg-slate-100/90 hover:bg-sky-50 px-2 py-0.5 rounded-md border border-slate-200/90 transition-all cursor-pointer"
-                                  title="ยังไม่มีลิงก์ตำแหน่งที่อยู่ แตะเพื่อเพิ่มลิงก์"
+                                  title="ยังไม่มีลิงก์ที่อยู่ แตะเพื่อเพิ่มลิงก์ Google Maps"
                                 >
                                   <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                  <span>เพิ่มตำแหน่งที่อยู่</span>
+                                  <span>เพิ่มที่อยู่</span>
                                 </button>
                               )}
                             </div>
@@ -1181,18 +1192,6 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
                         {/* Quick Card Actions */}
                         <div className="flex items-center gap-1 shrink-0">
-                          {item.mapsUrl && (
-                            <a
-                              href={item.mapsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => triggerHaptic('selection')}
-                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-800 border border-rose-200 transition-all cursor-pointer flex items-center justify-center"
-                              title={`เปิดดูตำแหน่งที่อยู่: ${record.googleMapsLocation}`}
-                            >
-                              <MapPin className="w-3.5 h-3.5" />
-                            </a>
-                          )}
                           <button
                             type="button"
                             onClick={() => handleCopyCustomerSummary(item)}
@@ -1424,23 +1423,25 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={() => triggerHaptic('selection')}
-                                  className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-800 border border-rose-200/80 inline-flex items-center justify-center"
-                                  title={`ดูตำแหน่งที่อยู่: ${record.googleMapsLocation}`}
+                                  className="px-2 py-1 rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-[10px] shadow-2xs inline-flex items-center justify-center gap-1"
+                                  title={`เปิดดูที่อยู่บน Google Maps: ${record.googleMapsLocation}`}
                                 >
-                                  <MapPin className="w-3.5 h-3.5" />
+                                  <MapPin className="w-3 h-3 shrink-0" />
+                                  <span>ดูที่อยู่</span>
                                 </a>
                               ) : (
                                 <button
                                   type="button"
                                   onClick={() => {
                                     triggerHaptic('light');
-                                    onNotify('ยังไม่ได้บันทึกลิงก์ตำแหน่งที่อยู่ของลูกค้ารายนี้ สามารถเพิ่มได้ที่ช่องด้านล่าง');
+                                    onNotify('ยังไม่ได้บันทึกลิงก์ที่อยู่ของลูกค้ารายนี้ สามารถเพิ่มได้ที่ช่องด้านล่าง');
                                     handleOpenEditModal(item);
                                   }}
-                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 cursor-pointer inline-flex items-center justify-center"
-                                  title="ยังไม่มีลิงก์ตำแหน่งที่อยู่ (กดเพื่อเพิ่ม)"
+                                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 font-semibold text-[10px] cursor-pointer inline-flex items-center justify-center gap-1"
+                                  title="ยังไม่มีลิงก์ที่อยู่ (กดเพื่อเพิ่ม)"
                                 >
-                                  <MapPin className="w-3.5 h-3.5" />
+                                  <MapPin className="w-3 h-3 shrink-0" />
+                                  <span>เพิ่มที่อยู่</span>
                                 </button>
                               )}
                               <button

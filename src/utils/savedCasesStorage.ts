@@ -316,11 +316,19 @@ export function updateCaseApprovalDoc(
 export function getGoogleMapsNavigationUrl(input?: string): string {
   if (!input || !input.trim()) return '';
   const trimmed = input.trim();
-  // If already a web link (https://maps.app.goo.gl/..., https://goo.gl/maps/..., https://www.google.com/maps...)
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
+
+  // Extract an embedded http/https URL if user pasted share text from Google Maps app
+  const urlMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+  if (urlMatch) {
+    return urlMatch[0];
   }
-  // Otherwise format as Google Maps search / navigation query
+
+  // Handle schemeless Google Maps links like "maps.app.goo.gl/..." or "www.google.com/maps/..."
+  if (/^(maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.|maps\.)?google\.com\/maps)\//i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+
+  // Otherwise format coordinates or address text as Google Maps search / navigation query
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmed)}`;
 }
 
