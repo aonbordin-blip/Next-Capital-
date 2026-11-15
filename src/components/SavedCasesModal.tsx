@@ -1150,52 +1150,58 @@ export const SavedCasesModal: React.FC<Props> = ({
                 )}
               </div>
 
-              {/* Monthly Summary KPI Badges (แสดงแยกยอดรับรถเดือนนี้ / ยอดอนุมัติเดือนนี้ / ยกยอดมารับรถ) */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[10.5px]">
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 font-extrabold">
+              {/* Monthly Summary KPI Badges (แถวเดียวกระชับ: รับรถ / อนุมัติ / ยกยอดรับรถ / ยกยอดรอรับ) */}
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none pt-0.5 text-[10px] sm:text-[11px]">
+                <div
+                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 font-extrabold whitespace-nowrap shrink-0"
+                  title="จำนวนเคสที่รับรถในงวดเดือนนี้"
+                >
                   <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                  <span>รับรถงวดนี้:</span>
-                  <span className="text-emerald-950 font-black text-xs">{monthlyStats.deliveredInMonth} คัน</span>
+                  <span>รับรถ</span>
+                  <span className="text-emerald-950 font-black">{monthlyStats.deliveredInMonth}</span>
                 </div>
 
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-sky-50 border border-sky-200/80 text-sky-800 font-bold">
-                  <span>อนุมัติงวดนี้:</span>
-                  <span className="text-sky-950 font-black text-xs">{monthlyStats.approvedInMonth} คัน</span>
+                <div
+                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-sky-50 border border-sky-200/80 text-sky-800 font-bold whitespace-nowrap shrink-0"
+                  title="จำนวนเคสที่อนุมัติในงวดเดือนนี้"
+                >
+                  <span>อนุมัติ</span>
+                  <span className="text-sky-950 font-black">{monthlyStats.approvedInMonth}</span>
                 </div>
 
                 {/* Badge: เคสที่อนุมัติเดือนก่อน แต่มารับรถเดือนนี้ */}
                 {monthlyStats.carriedOverDelivered > 0 && (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-300 text-teal-800 font-bold"
+                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-300 text-teal-800 font-bold whitespace-nowrap shrink-0"
                     title="มีเคสที่อนุมัติในงวดก่อนหน้านี้ แต่มารับรถในเดือนนี้ นับเป็นยอดรับรถของเดือนนี้"
                   >
                     <BadgePercent className="w-3 h-3 text-teal-600 shrink-0" />
-                    <span>ยกยอดมารับรถ:</span>
-                    <span className="text-teal-950 font-black text-xs">+{monthlyStats.carriedOverDelivered} คัน</span>
+                    <span>ยกยอดรับรถ</span>
+                    <span className="text-teal-950 font-black">+{monthlyStats.carriedOverDelivered}</span>
                   </div>
                 )}
 
                 {/* Badge: เคสที่อนุมัติจากเดือนก่อน แต่ยังรอรับรถ (ยกยอดมารอรับรถในเดือนนี้) */}
                 {monthlyStats.carriedOverPendingDelivery > 0 && (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-950 font-bold"
+                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-950 font-bold whitespace-nowrap shrink-0"
                     title="เคสที่อนุมัติจากเดือนก่อน แต่ยังไม่ได้รับรถ ยกยอดมารอรับรถในงวดนี้"
                   >
                     <Clock className="w-3 h-3 text-amber-600 shrink-0" />
-                    <span>ยกยอดรอรับรถ:</span>
-                    <span className="text-amber-950 font-black text-xs">{monthlyStats.carriedOverPendingDelivery} คัน</span>
+                    <span>ยกยอดรอรับ</span>
+                    <span className="text-amber-950 font-black">{monthlyStats.carriedOverPendingDelivery}</span>
                   </div>
                 )}
 
                 {/* Badge: เคสที่อนุมัติเดือนนี้ แต่ลูกค้ารับรถเดือนถัดไป */}
                 {monthlyStats.approvedDeliveredLater > 0 && (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold"
+                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold whitespace-nowrap shrink-0"
                     title="เคสอนุมัติในเดือนนี้ แต่ลูกค้ารับรถในเดือนถัดไป (นับยอดอนุมัติในงวดนี้)"
                   >
                     <Clock className="w-3 h-3 text-indigo-600 shrink-0" />
-                    <span>รับรถเดือนถัดไป:</span>
-                    <span className="text-indigo-950 font-black text-xs">{monthlyStats.approvedDeliveredLater} คัน</span>
+                    <span>รับเดือนหน้า</span>
+                    <span className="text-indigo-950 font-black">{monthlyStats.approvedDeliveredLater}</span>
                   </div>
                 )}
               </div>
