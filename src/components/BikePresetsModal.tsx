@@ -3,6 +3,7 @@ import { X, Search, Sparkles, Bike, Tag, Check, Layers } from 'lucide-react';
 import { BIKE_PRESETS, PROPOSALS } from '../data/proposals';
 import { BikePreset, ProposalKey } from '../types';
 import { getAllMotorcycleModels, MotorcycleModel } from '../data/motorcycleModels';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   isOpen: boolean;
@@ -106,7 +107,12 @@ export const BikePresetsModal: React.FC<Props> = ({
     return getAllMotorcycleModels();
   }, []);
 
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   const brands = ['all', 'Honda', 'Yamaha', 'Vespa', 'Lambretta', 'Other'];
 
@@ -131,8 +137,20 @@ export const BikePresetsModal: React.FC<Props> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 animate-fade-in">
-      <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isClosing) {
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 ${backdropAnimClass}`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 ${sheetAnimClass}`}
+      >
         {/* iOS Top Pull Indicator */}
         <div className="pt-2.5 pb-1 flex justify-center shrink-0">
           <div className="w-10 h-1 bg-slate-400/40 rounded-full" />

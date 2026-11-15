@@ -2,6 +2,7 @@ import React from 'react';
 import { X, ShieldCheck, Check, Sparkles, AlertCircle } from 'lucide-react';
 import { InsurancePlan, InsuranceYears } from '../types';
 import { INSURANCE_PLANS, formatBaht } from '../data/proposals';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   isOpen: boolean;
@@ -20,14 +21,31 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
   onSelectPlan,
   onOpenDoc,
 }) => {
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   const planA = INSURANCE_PLANS.plan_a;
   const planB = INSURANCE_PLANS.plan_b;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white/95 backdrop-blur-2xl border border-white/80 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isClosing) {
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto ${backdropAnimClass}`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white/95 backdrop-blur-2xl border border-white/80 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto ${sheetAnimClass}`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/60">
           <div className="flex items-center gap-3">

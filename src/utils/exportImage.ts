@@ -2,11 +2,24 @@ import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 import { PROMPT_FONT_EMBED_CSS } from '../data/promptFontBase64';
 
-export async function downloadElementAsImage(
+function dataUrlToBlob(dataUrl: string): Blob {
+  const arr = dataUrl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
+export async function generateElementPngBlob(
   element: HTMLElement,
-  fileName: string,
-  targetWidth = 780
-): Promise<void> {
+  targetWidth = 780,
+  backgroundColor = '#ffffff'
+): Promise<Blob> {
   // 1. Ensure fonts in document are fully ready
   if (document.fonts) {
     try {
@@ -23,19 +36,16 @@ export async function downloadElementAsImage(
   // Slight delay to allow DOM calculations to settle
   await new Promise((r) => setTimeout(r, 80));
 
-  let success = false;
-
   // METHOD 1: html-to-image (Native browser SVG foreignObject rendering with embedded Prompt font)
-  // This renders 100% identical to the browser screen preview with perfect Thai glyphs & tone marks (วรรณยุกต์)
   try {
     const dataUrl = await toPng(element, {
       quality: 1.0,
       pixelRatio: 2, // 2x high resolution retina quality
       width: targetWidth,
-      skipFonts: true, // IMPORTANT: Avoids CORS failures on Google Fonts links; uses fontEmbedCSS instead
+      skipFonts: true,
       fontEmbedCSS: PROMPT_FONT_EMBED_CSS,
       cacheBust: false,
-      backgroundColor: '#ffffff',
+      backgroundColor,
       style: {
         opacity: '1',
         visibility: 'visible',
@@ -49,21 +59,18 @@ export async function downloadElementAsImage(
     });
 
     if (dataUrl && dataUrl.length > 500) {
-      triggerFileDownload(dataUrl, fileName);
-      success = true;
+      return dataUrlToBlob(dataUrl);
     }
   } catch (err) {
     console.warn('html-to-image capture failed, falling back to html2canvas:', err);
   }
-
-  if (success) return;
 
   // METHOD 2: html2canvas fallback with base64 embedded Prompt font
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
     logging: false,
-    backgroundColor: '#ffffff',
+    backgroundColor,
     width: targetWidth,
     windowWidth: targetWidth,
     x: 0,
@@ -71,7 +78,6 @@ export async function downloadElementAsImage(
     scrollX: 0,
     scrollY: 0,
     onclone: (clonedDoc, clonedElement) => {
-      // 1. Remove stylesheets that could trigger parse errors
       clonedDoc.querySelectorAll('style').forEach((st) => {
         if (
           st.textContent &&
@@ -87,7 +93,6 @@ export async function downloadElementAsImage(
         }
       });
 
-      // 2. Inject Prompt font base64 stylesheet directly into clone
       const cleanStyle = clonedDoc.createElement('style');
       cleanStyle.textContent = `
         ${PROMPT_FONT_EMBED_CSS}
@@ -97,7 +102,7 @@ export async function downloadElementAsImage(
           -webkit-font-smoothing: antialiased !important;
         }
         body {
-          background-color: #ffffff !important;
+          background-color: ${backgroundColor} !important;
           margin: 0 !important;
           padding: 0 !important;
           width: ${targetWidth}px !important;
@@ -113,7 +118,6 @@ export async function downloadElementAsImage(
       `;
       clonedDoc.head.appendChild(cleanStyle);
 
-      // 3. Clear body and mount ONLY the cloned target
       if (clonedElement) {
         clonedDoc.body.innerHTML = '';
         clonedDoc.body.appendChild(clonedElement);
@@ -127,7 +131,7 @@ export async function downloadElementAsImage(
         clonedElement.style.top = '0';
         clonedElement.style.margin = '0 auto';
         clonedElement.style.width = `${targetWidth}px`;
-        clonedElement.style.backgroundColor = '#ffffff';
+        clonedElement.style.backgroundColor = backgroundColor;
       }
     },
   });
@@ -136,26 +140,39 @@ export async function downloadElementAsImage(
     throw new Error('ไม่สามารถประมวลผลรูปภาพเอกสารได้');
   }
 
-  if (canvas.toBlob) {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        const dataUrl = canvas.toDataURL('image/png', 1.0);
-        triggerFileDownload(dataUrl, fileName);
-        return;
+  return new Promise<Blob>((resolve, reject) => {
+    if (canvas.toBlob) {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            resolve(dataUrlToBlob(canvas.toDataURL('image/png', 1.0)));
+          }
+        },
+        'image/png',
+        1.0
+      );
+    } else {
+      try {
+        resolve(dataUrlToBlob(canvas.toDataURL('image/png', 1.0)));
+      } catch (e) {
+        reject(e);
       }
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-    }, 'image/png', 1.0);
-  } else {
-    const dataUrl = canvas.toDataURL('image/png', 1.0);
-    triggerFileDownload(dataUrl, fileName);
-  }
+    }
+  });
+}
+
+export async function downloadElementAsImage(
+  element: HTMLElement,
+  fileName: string,
+  targetWidth = 780,
+  backgroundColor = '#ffffff'
+): Promise<void> {
+  const blob = await generateElementPngBlob(element, targetWidth, backgroundColor);
+  const blobUrl = URL.createObjectURL(blob);
+  triggerFileDownload(blobUrl, fileName);
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 }
 
 function triggerFileDownload(url: string, fileName: string) {

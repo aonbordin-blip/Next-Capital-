@@ -3,6 +3,7 @@ import { X, ShieldCheck, AlertTriangle, Scale, Lock, Info, CheckCircle2 } from '
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { CalculationResult } from '../types';
 import { formatBaht } from '../data/proposals';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   isOpen: boolean;
@@ -22,7 +23,12 @@ const EIR_CEILING_TABLE = [
 ];
 
 export const EirInfoModal: React.FC<Props> = ({ isOpen, onClose, calculation }) => {
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   const {
     term,
@@ -40,8 +46,20 @@ export const EirInfoModal: React.FC<Props> = ({ isOpen, onClose, calculation }) 
   const effectivePctStr = (effectiveMonthlyRate * 100).toFixed(3);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white/95 backdrop-blur-xl border border-white/80 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isClosing) {
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm ${backdropAnimClass}`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white/95 backdrop-blur-xl border border-white/80 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden ${sheetAnimClass}`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white">
           <div className="flex items-center gap-3">

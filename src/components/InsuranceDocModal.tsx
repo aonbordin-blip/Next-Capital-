@@ -15,6 +15,7 @@ import { CalculationResult, InsurancePlan, InsuranceYears } from '../types';
 import { INSURANCE_PLANS, formatBaht, cleanPlanNameForLine } from '../data/proposals';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   isOpen: boolean;
@@ -221,7 +222,12 @@ export const InsuranceDocModal: React.FC<Props> = ({
     };
   }, [isOpen, activePlan, activeYears]);
 
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   const planKey = (activePlan === 'plan_a' ? 'plan_a' : 'plan_b') as 'plan_a' | 'plan_b';
   const planDetail = INSURANCE_PLANS[planKey];
@@ -1247,8 +1253,20 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
         Modern, executive modal for previewing and downloading the document
         ================================================================
       */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-        <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isClosing) {
+            onClose();
+          }
+        }}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto ${backdropAnimClass}`}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className={`bg-white rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200 ${sheetAnimClass}`}
+        >
           {/* Header Action Bar */}
           <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/70">
             <div className="flex items-center justify-between gap-3">

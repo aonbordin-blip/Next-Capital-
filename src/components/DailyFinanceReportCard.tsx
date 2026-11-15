@@ -25,8 +25,11 @@ import {
   Code,
   Network,
   AlignJustify,
+  X,
+  ArrowUpRight,
 } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
+import { CardModalOverlay } from './CardModalOverlay';
 
 export interface FinanceItem {
   id: string;
@@ -367,6 +370,7 @@ interface DailyFinanceReportCardProps {
   officerName?: string;
   officerCode?: string;
   officerDisplay?: string;
+  activeDealerName?: string;
   className?: string;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
@@ -376,6 +380,7 @@ export function DailyFinanceReportCard({
   officerName,
   officerCode,
   officerDisplay,
+  activeDealerName,
   className = '',
   isExpanded = false,
   onToggleExpand,
@@ -815,50 +820,81 @@ export function DailyFinanceReportCard({
   };
 
   return (
-    <div
-      id="daily-finance-report-section"
-      data-card-id="daily_report"
-      className={`glass-card-primary rounded-[26px] p-4 sm:p-5 relative overflow-hidden elevated-data-box border border-violet-200/80 shadow-md ${className}`}
-    >
-      {/* Top Gradient Header Accent Bar */}
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 opacity-95" />
-
-      {/* Header Row */}
+    <>
       <div
+        id="daily-finance-report-section"
+        data-card-id="daily_report"
         data-card-toggle="true"
         onClick={handleToggle}
-        className={`flex items-center justify-between gap-2 cursor-pointer select-none transition-all ${
-          isExpanded ? 'pb-3 border-b border-violet-100/80' : 'pb-0 border-b-0'
-        }`}
+        className={`glass-card-primary rounded-[24px] p-3 sm:p-4 h-full flex flex-col justify-between relative overflow-hidden elevated-data-box border shadow-md cursor-pointer select-none transition-all ${
+          isExpanded
+            ? 'border-violet-400 ring-2 ring-violet-400/40'
+            : 'border-violet-200/80 hover:border-violet-300'
+        } ${className}`}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs shadow-violet-500/30 shrink-0">
-            <BarChart3 className="w-5 h-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight">
-                รายงานประจำวันยอดเคสไฟแนนซ์
+        {/* Top Gradient Header Accent Bar */}
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 opacity-95" />
+
+        <div className="flex flex-col justify-between gap-2 h-full">
+          <div className="flex items-center justify-between gap-1.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs shadow-violet-500/30 shrink-0">
+                <BarChart3 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
+              </div>
+              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight truncate">
+                รายงานประจำวัน
               </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
-                Daily Finance Report
-              </span>
             </div>
-            <p className="text-[10.5px] text-slate-500 font-medium truncate">
-              สรุปยอดแต่ละไฟแนนซ์แยกราย Dealer เพิ่ม-ลบได้ไม่จำกัด พร้อมคัดลอกส่งเข้า LINE ประจำวัน
+            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+          <div className="space-y-1 min-w-0">
+            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
+              {dealers.length} ดีลเลอร์ • {summary.totalNumericCases} เคส
+            </span>
+            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+              สรุปยอดไฟแนนซ์ราย Dealer ส่ง LINE
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-          {isExpanded && (
+      {/* Popup Modal for Daily Finance Report */}
+      <CardModalOverlay
+        isOpen={isExpanded}
+        onClose={handleToggle}
+        accentBarClass="bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500"
+      >
+        {/* Sticky Modal Header matching QuotationModal */}
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="p-2 sm:p-2.5 bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-md shadow-violet-500/20 flex-shrink-0">
+              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                  รายงานประจำวันยอดเคสไฟแนนซ์
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
+                  Daily Finance Report
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                สรุปยอดแต่ละไฟแนนซ์แยกราย Dealer เพิ่ม-ลบได้ไม่จำกัด พร้อมคัดลอกส่งเข้า LINE ประจำวัน
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={handleCopyText}
-              className={`p-1.5 rounded-xl border text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer shadow-2xs ${
+              className={`p-1.5 sm:px-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer shadow-2xs ${
                 isCopied
                   ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white/90 hover:bg-violet-50 text-slate-700 hover:text-violet-700 border-slate-200/80'
+                  : 'bg-white hover:bg-violet-50 text-slate-700 hover:text-violet-700 border-slate-200'
               }`}
               title="คัดลอกข้อความรายงาน"
             >
@@ -867,22 +903,21 @@ export function DailyFinanceReportCard({
                 {isCopied ? 'คัดลอกแล้ว' : 'คัดลอก'}
               </span>
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={handleToggle}
-            className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
-            title={isExpanded ? 'ย่อกล่อง' : 'ขยายกล่อง'}
-          >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+            <button
+              type="button"
+              onClick={handleToggle}
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              title="ปิดหน้าต่าง"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="mt-4 space-y-4">
+        {/* Scrollable Modal Body */}
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
           {/* Quick Date and Officer Subheader Bar */}
           <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-50/70 via-indigo-50/50 to-white border border-violet-100 flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex items-center gap-2 flex-wrap">
@@ -988,6 +1023,24 @@ export function DailyFinanceReportCard({
                   {/* Dealer Suggestions Quick Pills */}
                   <div className="flex items-center gap-1 flex-wrap">
                     <span className="text-[9px] text-slate-400 font-medium">ชื่อแนะนำ:</span>
+                    {activeDealerName?.trim() &&
+                      !COMMON_DEALER_SUGGESTIONS.slice(0, 4).includes(activeDealerName.trim()) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('light');
+                            handleUpdateDealerName(dealer.id, activeDealerName.trim());
+                          }}
+                          className={`text-[9px] px-1.5 py-0.5 rounded-md border transition-all ${
+                            dealer.dealerName === activeDealerName.trim()
+                              ? 'bg-sky-600 text-white border-sky-600 font-bold'
+                              : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300 font-semibold'
+                          }`}
+                          title="ใช้ชื่อดีลเลอร์จากหน้าโฮม"
+                        >
+                          {activeDealerName.trim()}
+                        </button>
+                      )}
                     {COMMON_DEALER_SUGGESTIONS.slice(0, 4).map((sug) => (
                       <button
                         key={sug}
@@ -1469,7 +1522,7 @@ export function DailyFinanceReportCard({
             </button>
           </div>
         </div>
-      )}
-    </div>
+      </CardModalOverlay>
+    </>
   );
 }

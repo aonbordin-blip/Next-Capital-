@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useModalTransition } from '../hooks/useModalTransition';
 import {
   X,
   Search,
@@ -48,6 +49,7 @@ import {
   UploadCloud,
   FileCheck,
   Maximize2,
+  Building2,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -56,6 +58,7 @@ import {
   getSavedCases,
   deleteCaseRecord,
   updateCaseTitle,
+  updateCaseDealerName,
   updateCaseApprovalStatus,
   updateCaseDeliveryStatus,
   updateCaseDates,
@@ -556,6 +559,7 @@ export const SavedCasesModal: React.FC<Props> = ({
         const titleMatch = c.caseTitle.toLowerCase().includes(q);
         const custMatch = c.customerName.toLowerCase().includes(q);
         const phoneMatch = c.customerPhone?.toLowerCase().includes(q);
+        const dealerMatch = c.dealerName?.toLowerCase().includes(q);
         const bikeMatch = c.bikeModelName?.toLowerCase().includes(q);
         const codeMatch = c.bikeModelCode?.toLowerCase().includes(q);
         const proposalMatch = c.snapshot.proposalCode.toLowerCase().includes(q);
@@ -569,7 +573,7 @@ export const SavedCasesModal: React.FC<Props> = ({
             dueInfo.cycleRangeText.toLowerCase().includes(q) ||
             `ชำระ 2 ${dueInfo.monthName}`.toLowerCase().includes(q);
         }
-        return titleMatch || custMatch || phoneMatch || bikeMatch || codeMatch || proposalMatch || Boolean(locationMatch) || dueMatch;
+        return titleMatch || custMatch || phoneMatch || Boolean(dealerMatch) || bikeMatch || codeMatch || proposalMatch || Boolean(locationMatch) || dueMatch;
       }
 
       return true;
@@ -906,11 +910,28 @@ export const SavedCasesModal: React.FC<Props> = ({
 
   const hasActiveAdvancedFilter = selectedDueMonth !== 'all';
 
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 animate-fade-in">
-      <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-2xl max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isClosing) {
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 ${backdropAnimClass}`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-2xl max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative ${sheetAnimClass}`}
+      >
         {/* Top Specular Accent Sheen */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-600 opacity-95" />
 
@@ -1736,6 +1757,15 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       <span className="truncate">{record.bikeModelName}</span>
                                     </span>
                                   )}
+                                  {record.dealerName && (
+                                    <>
+                                      <span className="text-slate-300">•</span>
+                                      <span className="truncate text-sky-700 font-medium inline-flex items-center gap-0.5">
+                                        <Building2 className="w-2.5 h-2.5 text-sky-500 shrink-0" />
+                                        <span className="truncate">{record.dealerName}</span>
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
 
                                 {/* Row 3: First Due Date badge or Installment preview */}
@@ -2443,6 +2473,18 @@ export const SavedCasesModal: React.FC<Props> = ({
                       </span>
                     </div>
                   </div>
+
+                  {detailCase.dealerName && (
+                    <div className="p-2 rounded-xl bg-white border border-slate-200/70 sm:col-span-2 flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">ร้านตัวแทนจำหน่าย (Dealer):</span>
+                        <span className="font-extrabold text-sky-900 text-xs sm:text-sm flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                          <span>{detailCase.dealerName}</span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2825,6 +2867,10 @@ export const SavedCasesModal: React.FC<Props> = ({
               approvalDate: approvalModalCase.approvalDate,
               deliveryDate: approvalModalCase.deliveryDate,
               deliveryStatus: approvalModalCase.deliveryStatus,
+              dealerName: approvalModalCase.dealerName,
+              officerInfo: approvalModalCase.officerName && approvalModalCase.officerCode
+                ? `${approvalModalCase.officerName} (${approvalModalCase.officerCode})`
+                : approvalModalCase.officerName || undefined,
             }}
             onUpdateCustomer={(name, phone) => {
               if (approvalModalCase) {
@@ -2839,6 +2885,17 @@ export const SavedCasesModal: React.FC<Props> = ({
                 if (detailCase?.id === approvalModalCase.id) {
                   setDetailCase((prev) =>
                     prev ? { ...prev, customerName: name, customerPhone: phone } : null
+                  );
+                }
+              }
+            }}
+            onUpdateDealer={(dealer) => {
+              if (approvalModalCase) {
+                const updatedList = updateCaseDealerName(approvalModalCase.id, dealer);
+                setCases(updatedList);
+                if (detailCase?.id === approvalModalCase.id) {
+                  setDetailCase((prev) =>
+                    prev ? { ...prev, dealerName: dealer.trim() || undefined } : null
                   );
                 }
               }

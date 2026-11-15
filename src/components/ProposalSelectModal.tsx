@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Layers, CheckCircle2 } from 'lucide-react';
 import { PROPOSALS } from '../data/proposals';
 import { ProposalKey } from '../types';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   isOpen: boolean;
@@ -26,15 +27,24 @@ export const ProposalSelectModal: React.FC<Props> = ({
   selectedKey,
   onSelectProposal,
 }) => {
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
-      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs ${backdropAnimClass}`}
+      onClick={() => {
+        if (!isClosing) onClose();
+      }}
     >
       <div
-        className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden my-auto"
+        className={`bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden my-auto ${sheetAnimClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

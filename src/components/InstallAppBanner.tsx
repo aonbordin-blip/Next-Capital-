@@ -2,11 +2,18 @@ import React, { useState } from 'react';
 import { Download, X, Smartphone, Check, Share, ArrowUpRight, PlusSquare } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NextCapitalLogo } from './NextCapitalLogo';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 export const InstallAppBanner: React.FC = () => {
   const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const {
+    shouldRender: shouldRenderGuide,
+    isClosing: isClosingGuide,
+    backdropAnimClass: guideBackdropAnimClass,
+    sheetAnimClass: guideSheetAnimClass,
+  } = useModalTransition(showGuideModal, () => setShowGuideModal(false));
 
   // If already running as installed standalone PWA, hide banner
   if (isInstalled || isDismissed) {
@@ -72,9 +79,21 @@ export const InstallAppBanner: React.FC = () => {
       </div>
 
       {/* Guide Modal for Manual Install (Android / iOS) */}
-      {showGuideModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl border border-slate-200 text-slate-800">
+      {shouldRenderGuide && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isClosingGuide) {
+              setShowGuideModal(false);
+            }
+          }}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm ${guideBackdropAnimClass}`}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`bg-white rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl border border-slate-200 text-slate-800 ${guideSheetAnimClass}`}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-blue-700" />

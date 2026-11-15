@@ -112,6 +112,19 @@ export function updateCaseTitle(id: string, newTitle: string): SavedCaseRecord[]
   return updated;
 }
 
+export function updateCaseDealerName(id: string, dealerName: string): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) =>
+    c.id === id ? { ...c, dealerName: dealerName.trim() || undefined, updatedAt: Date.now() } : c
+  );
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update dealerName in localStorage:', err);
+  }
+  return updated;
+}
+
 export function updateCaseApprovalStatus(
   id: string,
   approvalStatus: CaseApprovalStatus,

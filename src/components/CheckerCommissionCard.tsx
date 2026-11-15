@@ -17,6 +17,8 @@ import {
   ExternalLink,
   Target,
   ArrowRight,
+  X,
+  ArrowUpRight,
 } from 'lucide-react';
 import { SavedCaseRecord, InsuranceYears } from '../types';
 import { getSavedCases, saveCaseRecord } from '../utils/savedCasesStorage';
@@ -26,6 +28,7 @@ import {
   getCaseEffectiveDate,
 } from '../utils/checkerCommission';
 import { triggerHaptic } from '../utils/haptics';
+import { CardModalOverlay } from './CardModalOverlay';
 
 interface Props {
   officerName: string;
@@ -388,54 +391,102 @@ export const CheckerCommissionCard: React.FC<Props> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-emerald-100 shadow-md shadow-emerald-950/5 overflow-hidden transition-all duration-300 hover:border-emerald-200">
-      {/* Accordion Header */}
-      <button
-        type="button"
-        onClick={() => {
+    <>
+      <div
+        className={`bg-white rounded-[24px] border shadow-md shadow-emerald-950/5 overflow-hidden transition-all duration-300 h-full flex flex-col ${
+          isExpanded
+            ? 'border-emerald-400 ring-2 ring-emerald-400/40'
+            : 'border-emerald-100 hover:border-emerald-200'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic('light');
+            onToggleExpand();
+          }}
+          className="w-full text-left bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white hover:bg-emerald-50/90 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
+        >
+          <div className="w-full flex items-center justify-between gap-1.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-emerald-500/25">
+                <Award className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
+              </div>
+              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight truncate">
+                สรุปค่าคอมฯ
+              </h3>
+            </div>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="space-y-1 min-w-0 w-full">
+            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200">
+              ฿{summary.totalCommissionBaht.toLocaleString()} • Tier {summary.tier}
+            </span>
+            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+              คำนวณค่าแนะนำ PA & PA PLUS
+            </p>
+          </div>
+        </button>
+      </div>
+
+      {/* Popup Modal for Checker Commission */}
+      <CardModalOverlay
+        isOpen={isExpanded}
+        onClose={() => {
           triggerHaptic('light');
           onToggleExpand();
         }}
-        className="w-full p-3.5 sm:p-5 flex items-center justify-between gap-2.5 sm:gap-3 text-left bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white hover:bg-emerald-50/90 transition-colors cursor-pointer select-none"
+        accentBarClass="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500"
       >
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/25">
-            <Award className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <h3 className="text-xs sm:text-base font-bold text-slate-900 leading-tight">
-                สรุปค่าคอมมิชชั่นค่าแนะนำขายประกัน
-              </h3>
-              <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.2 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200 shrink-0">
-                Checker Commission
-              </span>
+        {/* Sticky Modal Header matching QuotationModal */}
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl shadow-md shadow-emerald-500/20 flex-shrink-0">
+              <Award className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <p className="text-[10.5px] sm:text-xs text-slate-500 mt-0.5 truncate">
-              คำนวณจากเคสที่อนุมัติและรับรถแล้ว ตามเกณฑ์ PA & PA PLUS
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                  สรุปค่าคอมมิชชั่นค่าแนะนำขายประกัน
+                </h2>
+                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200 shrink-0">
+                  Checker Commission
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                คำนวณจากเคสที่อนุมัติและรับรถแล้ว ตามเกณฑ์ PA & PA PLUS
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="text-right hidden xs:block">
+              <div className="text-xs sm:text-sm font-extrabold text-emerald-700 whitespace-nowrap">
+                ฿{summary.totalCommissionBaht.toLocaleString()} บ.
+              </div>
+              <div className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">
+                Tier {summary.tier} ({summary.achievementPercent.toFixed(1)}%)
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                onToggleExpand();
+              }}
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              title="ปิดหน้าต่าง"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        {/* Right side summary preview & toggle icon */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="text-right hidden xs:block">
-            <div className="text-xs sm:text-sm font-extrabold text-emerald-700 whitespace-nowrap">
-              ฿{summary.totalCommissionBaht.toLocaleString()} บ.
-            </div>
-            <div className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">
-              Tier {summary.tier} ({summary.achievementPercent.toFixed(1)}%)
-            </div>
-          </div>
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 border border-slate-200/80 flex items-center justify-center text-slate-600 shrink-0">
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </div>
-        </div>
-      </button>
-
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="p-3.5 sm:p-5 border-t border-slate-100 bg-gradient-to-b from-white to-slate-50/40 space-y-4">
+        {/* Scrollable Modal Body */}
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
           {/* Controls Bar: Period selector, criteria toggle, copy line */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100">
             {/* Period Selector */}
@@ -990,7 +1041,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
             )}
           </div>
         </div>
-      )}
-    </div>
+      </CardModalOverlay>
+    </>
   );
 };

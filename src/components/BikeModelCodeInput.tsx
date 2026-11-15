@@ -24,6 +24,7 @@ import {
   deleteCustomMotorcycleModel,
   getCustomMotorcycleModels,
 } from '../data/motorcycleModels';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   value: string;
@@ -53,6 +54,12 @@ export const BikeModelCodeInput: React.FC<Props> = ({
   selectedModelName,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const {
+    shouldRender: shouldRenderModelModal,
+    isClosing: isClosingModelModal,
+    backdropAnimClass: modelBackdropAnimClass,
+    sheetAnimClass: modelSheetAnimClass,
+  } = useModalTransition(isModalOpen);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeBrand, setActiveBrand] = useState<'all' | 'HONDA' | 'YAMAHA' | 'with_price' | 'custom'>('all');
   const [customVersion, setCustomVersion] = useState<number>(0);
@@ -340,11 +347,24 @@ export const BikeModelCodeInput: React.FC<Props> = ({
       {/* ========================================================================= */}
       {/* POP-UP MODAL - MOUNTED DIRECTLY TO document.body VIA createPortal        */}
       {/* ========================================================================= */}
-      {isModalOpen &&
+      {shouldRenderModelModal &&
         typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 animate-fade-in">
-            <div className="bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-portal="true"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isClosingModelModal) {
+                setIsModalOpen(false);
+              }
+            }}
+            className={`fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 ${modelBackdropAnimClass}`}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 ${modelSheetAnimClass}`}
+            >
               {/* iOS Top Pull Indicator */}
               <div className="pt-2.5 pb-1 flex justify-center shrink-0">
                 <div className="w-10 h-1 bg-slate-400/40 rounded-full" />

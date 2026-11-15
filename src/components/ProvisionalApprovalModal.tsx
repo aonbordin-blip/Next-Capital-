@@ -26,6 +26,7 @@ import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
 import { calculateFirstPaymentDueDate } from '../utils/savedCasesStorage';
 import { triggerHaptic } from '../utils/haptics';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 export interface ProvisionalApprovalData {
   customerName?: string;
@@ -58,6 +59,7 @@ interface Props {
   onClose: () => void;
   data: ProvisionalApprovalData;
   onUpdateCustomer?: (name: string, phone: string) => void;
+  onUpdateDealer?: (dealer: string) => void;
 }
 
 const THAI_MONTHS_NAMES = [
@@ -130,9 +132,10 @@ export const ProvisionalApprovalModal: React.FC<Props> = ({
   onClose,
   data,
   onUpdateCustomer,
+  onUpdateDealer,
 }) => {
   const [dealerName, setDealerName] = useState<string>(
-    data.dealerName || 'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
+    data.dealerName?.trim() || 'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
   );
   const [officerNameAndCode, setOfficerNameAndCode] = useState<string>(
     data.officerInfo || 'บดินทร์ (6683)'
@@ -164,7 +167,7 @@ export const ProvisionalApprovalModal: React.FC<Props> = ({
 
   // Sync state when props change
   useEffect(() => {
-    if (data.dealerName) setDealerName(data.dealerName);
+    setDealerName(data.dealerName?.trim() || 'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)');
     if (data.officerInfo) setOfficerNameAndCode(data.officerInfo);
     if (data.customerName) setCustomerName(data.customerName);
     if (data.customerPhone !== undefined) setCustomerPhone(data.customerPhone);
@@ -227,7 +230,12 @@ export const ProvisionalApprovalModal: React.FC<Props> = ({
     data,
   ]);
 
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   const vehiclePrice = data.vehiclePrice || 0;
   const downAmount = data.downAmount || 0;
@@ -871,8 +879,20 @@ ${
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xs animate-fade-in overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto">
-      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative print:border-none print:shadow-none print:max-w-none print:max-h-none print:w-full">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isClosing) {
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xs overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto ${backdropAnimClass}`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative print:border-none print:shadow-none print:max-w-none print:max-h-none print:w-full ${sheetAnimClass}`}
+      >
         {/* Top Specular Accent Sheen */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-600 opacity-95 print:hidden" />
 
@@ -969,7 +989,11 @@ ${
               <input
                 type="text"
                 value={dealerName}
-                onChange={(e) => setDealerName(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDealerName(val);
+                  onUpdateDealer?.(val);
+                }}
                 placeholder="ชื่อตัวแทนจำหน่าย"
                 className="w-36 sm:w-48 font-medium text-slate-800 text-xs focus:outline-none"
               />

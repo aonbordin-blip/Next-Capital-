@@ -15,6 +15,7 @@ import { formatBaht, cleanPlanNameForLine, formatTermYearMonth } from '../data/p
 import { findModelByCode } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface Props {
   isOpen: boolean;
@@ -25,7 +26,9 @@ interface Props {
   officerInfo?: string;
   initialCustomerName?: string;
   initialCustomerPhone?: string;
+  initialDealerName?: string;
   onUpdateCustomer?: (name: string, phone: string) => void;
+  onUpdateDealer?: (dealer: string) => void;
 }
 
 export const QuotationModal: React.FC<Props> = ({
@@ -37,10 +40,12 @@ export const QuotationModal: React.FC<Props> = ({
   officerInfo = 'บดินทร์ (6683)',
   initialCustomerName = 'คุณลูกค้า',
   initialCustomerPhone = '',
+  initialDealerName = '',
   onUpdateCustomer,
+  onUpdateDealer,
 }) => {
   const [dealerName, setDealerName] = useState<string>(
-    'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
+    initialDealerName?.trim() || 'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
   );
   const [officerNameAndCode, setOfficerNameAndCode] = useState<string>(officerInfo);
 
@@ -101,6 +106,12 @@ export const QuotationModal: React.FC<Props> = ({
       setCustomerPhone(initialCustomerPhone);
     }
   }, [initialCustomerPhone]);
+
+  useEffect(() => {
+    if (initialDealerName !== undefined) {
+      setDealerName(initialDealerName.trim() || 'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)');
+    }
+  }, [initialDealerName]);
 
 /**
  * สร้างเลขที่เอกสารจากวันเดือนปีเวลาที่ทำรายการ ไม่เอาวินาที
@@ -174,7 +185,12 @@ const generateQuotationDocNumber = (date: Date = new Date()): string => {
     };
   }, [isOpen, customerName, customerPhone, officerNameAndCode, dealerName, modelName, result]);
 
-  if (!isOpen) return null;
+  const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
+    isOpen,
+    onClose
+  );
+
+  if (!shouldRender) return null;
 
   // Direct In-Browser High-Quality Image (PNG) Generation matching the displayed preview 100%
   const handleDownloadImage = async () => {
@@ -1186,8 +1202,20 @@ ${
         SCREEN MODAL VIEW - Matching Image 1 (InsuranceDocModal layout)
         ================================================================
       */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-        <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 relative my-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isClosing) {
+            onClose();
+          }
+        }}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto ${backdropAnimClass}`}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className={`bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 relative my-auto ${sheetAnimClass}`}
+        >
           {/* Header Bar matching Image 1 */}
           <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50">
             <div className="flex items-center justify-between gap-3">
@@ -1285,7 +1313,7 @@ ${
                   (สามารถแก้ไขเพื่ออัปเดตบนเอกสารได้ทันที)
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
                 <div>
                   <label className="block text-[10px] text-slate-500 mb-0.5">ชื่อลูกค้า</label>
                   <input
@@ -1328,6 +1356,20 @@ ${
                     onChange={(e) => setOfficerNameAndCode(e.target.value)}
                     placeholder="ชื่อและโค้ดเจ้าหน้าที่"
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-blue-900 font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">ร้านตัวแทนจำหน่าย (Dealer)</label>
+                  <input
+                    type="text"
+                    value={dealerName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDealerName(val);
+                      onUpdateDealer?.(val);
+                    }}
+                    placeholder="ชื่อร้านตัวแทนจำหน่าย"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sky-900 font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
                   />
                 </div>
               </div>

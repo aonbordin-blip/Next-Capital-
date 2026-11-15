@@ -44,6 +44,10 @@ import {
   Save,
   X,
   FileCheck,
+  Eye,
+  Copy,
+  Image as ImageIcon,
+  Building2,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -62,11 +66,13 @@ import { ProposalSelectModal } from './components/ProposalSelectModal';
 import { BikePresetsModal } from './components/BikePresetsModal';
 import { QuotationModal } from './components/QuotationModal';
 import { ProvisionalApprovalModal } from './components/ProvisionalApprovalModal';
+import { InstallmentShareCardModal } from './components/InstallmentShareCardModal';
 import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { DvApprovalCard } from './components/DvApprovalCard';
-import { DailyFinanceReportCard } from './components/DailyFinanceReportCard';
+import { DailyFinanceReportCard, COMMON_DEALER_SUGGESTIONS } from './components/DailyFinanceReportCard';
 import { CheckerCommissionCard } from './components/CheckerCommissionCard';
+import { PeriodClosingReportCard } from './components/PeriodClosingReportCard';
 import { NextCapitalLogo } from './components/NextCapitalLogo';
 import { InsuranceComparisonModal } from './components/InsuranceComparisonModal';
 import { InsuranceDocModal } from './components/InsuranceDocModal';
@@ -221,12 +227,32 @@ export default function App() {
       : customerName
     : customerPhone ? `โทร. ${customerPhone}` : 'คุณลูกค้า';
 
+  // Dealer Information (ชื่อร้านตัวแทนจำหน่าย ลิงก์ไปยังใบเสนอราคา ใบอนุมัติ DV และส่วนอื่นๆ)
+  const [dealerName, setDealerName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_dealer_name') ?? localStorage.getItem('ncap_dv_dealer') ?? '';
+    } catch {
+      return '';
+    }
+  });
+
+  const handleDealerNameChange = (val: string) => {
+    setDealerName(val);
+    try {
+      localStorage.setItem('ncap_dealer_name', val);
+      localStorage.setItem('ncap_dv_dealer', val);
+    } catch {
+      // ignore
+    }
+  };
+
   // Modals
   const [showProposalSelector, setShowProposalSelector] = useState<boolean>(false);
   const [showProposalInfo, setShowProposalInfo] = useState<boolean>(false);
   const [showBikePresets, setShowBikePresets] = useState<boolean>(false);
   const [showQuotation, setShowQuotation] = useState<boolean>(false);
   const [showProvisionalApproval, setShowProvisionalApproval] = useState<boolean>(false);
+  const [showShareCardModal, setShowShareCardModal] = useState<boolean>(false);
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
@@ -234,6 +260,7 @@ export default function App() {
   const [savedCasesCount, setSavedCasesCount] = useState<number>(() => {
     return getSavedCases().length;
   });
+  const [casesRevision, setCasesRevision] = useState<number>(0);
   const [editingCaseId, setEditingCaseId] = useState<string | null>(null);
   const [editingCaseTitle, setEditingCaseTitle] = useState<string | null>(null);
   const [toastNotice, setToastNotice] = useState<string | null>(null);
@@ -278,12 +305,14 @@ export default function App() {
       setExpandedCard('financing');
     } else if (newTab === 'calculation') {
       setExpandedCard('comparison');
+    } else if (newTab === 'documents') {
+      setExpandedCard(null);
     }
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Collapsible cards state: cards can be expanded or collapsed by clicking their header/toggle
-  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | 'daily_report' | 'checker_commission' | null>('financing');
+  const [expandedCard, setExpandedCard] = useState<'financing' | 'comparison' | 'dv' | 'daily_report' | 'checker_commission' | 'period_closing' | null>('financing');
 
   // Auto-collapse when clicking or interacting with another data box (ถ้ายังกดในกล่องเดิมไม่ยุบปิด)
   useEffect(() => {
@@ -358,6 +387,26 @@ export default function App() {
   // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
+  const [shareTextStyle, setShareTextStyle] = useState<'card' | 'compare' | 'compact'>(() => {
+    try {
+      const saved = localStorage.getItem('ncap_share_style');
+      if (saved === 'card' || saved === 'compare' || saved === 'compact') return saved;
+    } catch {
+      // ignore
+    }
+    return 'card';
+  });
+  const [showSharePreview, setShowSharePreview] = useState<boolean>(false);
+
+  const handleShareStyleChange = (style: 'card' | 'compare' | 'compact') => {
+    triggerHaptic('light');
+    setShareTextStyle(style);
+    try {
+      localStorage.setItem('ncap_share_style', style);
+    } catch {
+      // ignore
+    }
+  };
 
   // When proposal changes, adjust valid terms and default down mode
   const handleProposalChange = (newKey: ProposalKey) => {
@@ -612,37 +661,151 @@ export default function App() {
     customRateConfig
   );
 
+  // Build formatted installment summary text for LINE / Native Share
+  const buildInstallmentSummaryText = (styleOverride?: 'card' | 'compare' | 'compact') => {
+    const activeStyle = styleOverride || shareTextStyle;
+    const currentComp = comparisons.find((c) => c.term === currentCalculation.term);
+    const cleanRate = currentCalculation.rateDisplayText
+      .replace(/\s*\[\s*กำหนดเอง\s*\]/gi, '')
+      .replace(/\s*\(\s*กำหนดเอง\s*\)/gi, '')
+      .trim();
+
+    const bikeLabel = selectedBike
+      ? `${selectedBike.name}${bikeModelCode ? ` (${bikeModelCode})` : ''}`
+      : bikeModelCode
+      ? `รหัสรุ่น ${bikeModelCode}`
+      : 'รถจักรยานยนต์';
+
+    const insuranceLabel =
+      currentCalculation.insuranceTotalWithVat > 0
+        ? cleanPlanNameForLine(currentCalculation.insurancePlanName)
+        : 'ไม่รับความคุ้มครอง PA';
+
+    const downText = `${formatBaht(currentCalculation.downAmount)} บ. (${currentCalculation.downPercent.toFixed(1)}%)`;
+
+    if (activeStyle === 'compact') {
+      const lines: string[] = [
+        `🛵 สรุปค่างวด Next Capital`,
+        `━━━━━━━━━━━━━━━`,
+      ];
+      if (customerName || customerPhone) {
+        lines.push(`👤 คุณลูกค้า : ${customerDisplay}`);
+      }
+      if (dealerName.trim()) {
+        lines.push(`🏪 ร้านผู้จำหน่าย : ${dealerName.trim()}`);
+      }
+      lines.push(
+        `🏍️ รุ่นรถ : ${bikeLabel}`,
+        `💰 ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ. | ดาวน์ : ${formatBaht(currentCalculation.downAmount)} บ.`,
+        `💳 ยอดจัด : ${formatBaht(currentCalculation.financeAmount, true)} บ.`,
+        `🛡️ ประกัน : ${insuranceLabel}`,
+        `━━━━━━━━━━━━━━━`,
+        `🔥 ผ่อนเพียง : ${formatBaht(currentCalculation.monthlyInstallment)} บ./เดือน`,
+        `⏱️ ระยะเวลา : ${currentCalculation.term} งวด (${formatTermYearMonth(currentCalculation.term)})`,
+        `✅ รวม VAT 7% แล้ว`
+      );
+      if (includeDeliveryFees && currentCalculation.totalDriveAwayCost) {
+        lines.push(`🏁 วันรับรถรวม : ${formatBaht(currentCalculation.totalDriveAwayCost)} บ.`);
+      }
+      lines.push(`━━━━━━━━━━━━━━━`, `👨‍💼 ติดต่อ : ${officerDisplay}`);
+      return lines.join('\n');
+    }
+
+    if (activeStyle === 'compare') {
+      const termLines = comparisons.map((c) => {
+        const isCurrent = c.term === currentCalculation.term;
+        const termText = `${c.term} งวด (${formatTermYearMonth(c.term)})`;
+        if (isCurrent) {
+          return `👉 ${termText} ➔ ${formatBaht(c.monthlyInstallment)} บ./ด. ★`;
+        }
+        return `• ${termText} ➔ ${formatBaht(c.monthlyInstallment)} บ./ด.`;
+      });
+
+      const lines: string[] = [
+        `📊 ตารางเทียบค่างวดรถจักรยานยนต์`,
+        `🏢 บมจ. เน็กซ์ แคปปิตอล (Next Capital)`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+      ];
+      if (customerName || customerPhone) {
+        lines.push(`👤 ลูกค้า : ${customerDisplay}`);
+      }
+      if (dealerName.trim()) {
+        lines.push(`🏪 ร้านผู้จำหน่าย : ${dealerName.trim()}`);
+      }
+      lines.push(
+        `🏍️ รุ่นรถ : ${bikeLabel}`,
+        `📋 แผน : ${currentCalculation.proposalName} (${currentCalculation.proposalCode})`,
+        `▸ ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ.`,
+        `▸ เงินดาวน์ : ${downText}`,
+        `▸ ยอดจัด : ${formatBaht(currentCalculation.financeAmount, true)} บ.`,
+        `▸ ประกัน : ${insuranceLabel}`,
+        ``,
+        `📌 เลือกงวดผ่อนสบายๆ (รวม VAT 7%)`,
+        ...termLines,
+      );
+      if (includeDeliveryFees && currentCalculation.totalDriveAwayCost) {
+        lines.push(``, `🏁 เงินพร้อมออกรถ : ${formatBaht(currentCalculation.totalDriveAwayCost)} บาท`);
+      }
+      lines.push(
+        ``,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `👨‍💼 ดูแลโดย : ${officerDisplay}`,
+        `*เงื่อนไขเบื้องต้น อาจปรับตามผลอนุมัติจริง`
+      );
+      return lines.join('\n');
+    }
+
+    // Default 'card': การ์ดไฮไลต์สวยอ่านง่าย
+    const lines: string[] = [
+      `✨ ใบเสนอค่างวดรถจักรยานยนต์ ✨`,
+      `🏢 บมจ. เน็กซ์ แคปปิตอล (Next Capital)`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+    ];
+    if (customerName || customerPhone) {
+      lines.push(`👤 ลูกค้า : ${customerDisplay}`);
+    }
+    if (dealerName.trim()) {
+      lines.push(`🏪 ร้านผู้จำหน่าย : ${dealerName.trim()}`);
+    }
+    lines.push(
+      `🏍️ รุ่นรถ : ${bikeLabel}`,
+      `📋 ข้อเสนอ : ${currentCalculation.proposalName}`,
+      ``,
+      `┏━━━━━━━━━━━━━━━━━━┓`,
+      `  🔥 ผ่อนเพียง : ${formatBaht(currentCalculation.monthlyInstallment)} บ./เดือน`,
+      `  ⏱️ ระยะเวลา : ${currentCalculation.term} งวด (${formatTermYearMonth(currentCalculation.term)})`,
+      `  ✅ ราคานี้รวม VAT 7% แล้ว`,
+      `┗━━━━━━━━━━━━━━━━━━┛`,
+      ``,
+      `📌 รายละเอียดเงื่อนไขสินเชื่อ`,
+      `▸ ราคารถเงินสด : ${formatBaht(currentCalculation.baseVehiclePrice)} บาท`,
+      `▸ เงินดาวน์ : ${downText}`,
+      `▸ ยอดจัดสินเชื่อ : ${formatBaht(currentCalculation.financeAmount, true)} บาท`,
+      `▸ ประกันคุ้มครอง : ${insuranceLabel}`,
+      `▸ อัตราดอกเบี้ย : ${cleanRate}`,
+    );
+    if (currentComp && currentComp.hasInsurance && currentComp.insuranceMonthlyDiff > 0) {
+      lines.push(`▸ ค่างวดไม่รวมประกัน : ${formatBaht(currentComp.monthlyInstallmentWithoutInsurance)} บ./ด.`);
+    }
+    if (includeDeliveryFees && currentCalculation.totalDriveAwayCost) {
+      lines.push(`▸ เงินพร้อมออกรถ : ${formatBaht(currentCalculation.totalDriveAwayCost)} บาท`);
+    }
+    if (currentCalculation.isCappedByEir) {
+      lines.push(`⚖️ คุมเพดานดอกเบี้ยตามเกณฑ์ สคบ. (≤ 23%/ปี)`);
+    }
+    lines.push(
+      ``,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `👨‍💼 ผู้ดูแลเคส : ${officerDisplay}`,
+      `*เงื่อนไขเบื้องต้น อาจเปลี่ยนแปลงตามผลอนุมัติ`
+    );
+
+    return lines.join('\n');
+  };
+
   // Copy quick summary to clipboard
   const handleQuickCopy = async () => {
-    const currentComp = comparisons.find((c) => c.term === currentCalculation.term);
-    const summary = `🛵 Next Capital MotoLease เสนอราคาค่างวด
-บริษัท: บมจ. เน็กซ์ แคปปิตอล (NCAP)
-👨‍💼 ผู้เสนอราคา: ${officerDisplay}
-👤 ลูกค้า: ${customerDisplay}
-${selectedBike || bikeModelCode ? `🏍️ รุ่นรถ: ${selectedBike ? selectedBike.name : ''}${bikeModelCode ? ` (รหัสรุ่น: ${bikeModelCode})` : ''}\n` : ''}ข้อเสนอ: ${currentCalculation.proposalName} (${currentCalculation.proposalCode})
-ราคารถตัวเปล่า: ${formatBaht(currentCalculation.baseVehiclePrice)}
-เงินดาวน์: ${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)
-ยอดจัดเฉพาะตัวรถ: ${formatBaht(currentCalculation.vehicleFinanceAmount)}
-${
-  currentCalculation.insuranceTotalWithVat > 0
-    ? `🛡️ ประกันภัย: ${cleanPlanNameForLine(currentCalculation.insurancePlanName)}
-   • ค่าเบี้ยประกัน: ${formatBaht(currentCalculation.insuranceBasePremium)}
-   • ภาษี VAT 7%: ${formatBaht(currentCalculation.insuranceVat, true)}
-   • เบี้ยรวมภาษี 7%: ${formatBaht(currentCalculation.insuranceTotalWithVat, true)}\n`
-    : ''
-}💳 ยอดจัดไฟแนนซ์รวม: ${formatBaht(currentCalculation.financeAmount, true)}
-⏱️ ผ่อน: ${currentCalculation.term} งวด (${formatTermYearMonth(currentCalculation.term)}) | ดอกเบี้ย: ${currentCalculation.rateDisplayText}
-${currentCalculation.isCappedByEir ? `⚖️ ควบคุมดอกเบี้ย: ${currentCalculation.eirMaxMessage} (ตามเกณฑ์ สคบ. EIR ไม่เกิน 23% ต่อปี)\n` : ''}💵 ดอกเบี้ยต่อเดือน: ${formatBaht(currentCalculation.monthlyInterest, true)} /เดือน
-💵 ดอกเบี้ยรวมทั้งสัญญา: ${formatBaht(currentCalculation.totalInterest, true)}
-⭐ ค่างวดต่อเดือน: ${formatBaht(currentCalculation.monthlyInstallment)} /เดือน (รวม VAT 7%)
-${
-  currentComp && currentComp.hasInsurance && currentComp.insuranceMonthlyDiff > 0
-    ? `   • ค่างวดไม่รวมประกัน: ${formatBaht(currentComp.monthlyInstallmentWithoutInsurance)} /เดือน
-   • ประกันบวกเพิ่ม: +${formatBaht(currentComp.insuranceMonthlyDiff)} /เดือน\n`
-    : ''
-}รวมทั้งสัญญา: ${formatBaht(currentCalculation.totalWithVat, true)}
-* ยอดจริงอาจมีการเปลี่ยนแปลงตามผลการอนุมัติสินเชื่อ Next Capital`;
-
+    const summary = buildInstallmentSummaryText();
     try {
       await navigator.clipboard.writeText(summary);
       triggerHaptic('success');
@@ -650,6 +813,53 @@ ${
       setTimeout(() => setCopyFeedback(false), 2400);
     } catch {
       // ignore
+    }
+  };
+
+  // Native Share Sheet (ส่งข้อมูลสรุปค่างวดผ่าน LINE หรือแอปอื่นๆ บนอุปกรณ์)
+  const handleNativeShare = async () => {
+    triggerHaptic('medium');
+    const summary = buildInstallmentSummaryText();
+    const modelTitle = selectedBike?.name || (bikeModelCode ? `รหัส ${bikeModelCode}` : 'รถจักรยานยนต์');
+    const shareTitle = `สรุปค่างวด ${modelTitle} • ${formatBaht(currentCalculation.monthlyInstallment)}/ด. (${currentCalculation.term} งวด)`;
+
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: summary,
+        });
+        triggerHaptic('success');
+        triggerToast('แชร์ข้อมูลสรุปค่างวดเรียบร้อยแล้ว');
+        return;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        // Fallback to clipboard below if share failed (e.g., restricted context)
+      }
+    }
+
+    // Fallback: copy to clipboard when Native Share Sheet is unavailable
+    try {
+      await navigator.clipboard.writeText(summary);
+      triggerHaptic('success');
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2400);
+      triggerToast('คัดลอกข้อความสรุปค่างวดแล้ว (พร้อมส่งใน LINE)');
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = summary;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      triggerHaptic('success');
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2400);
+      triggerToast('คัดลอกข้อความสรุปค่างวดแล้ว (พร้อมส่งใน LINE)');
     }
   };
 
@@ -680,6 +890,7 @@ ${
     setTerm(record.term);
     setCustomerName(record.customerName || 'คุณลูกค้า');
     if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    if (record.dealerName !== undefined) handleDealerNameChange(record.dealerName);
     if (record.officerName) setOfficerName(record.officerName);
     if (record.officerCode) setOfficerCode(record.officerCode);
     if (record.officerLicense) setOfficerLicense(record.officerLicense);
@@ -743,6 +954,7 @@ ${
       customerName,
       customerPhone,
       customerNote: '',
+      dealerName: dealerName.trim() || undefined,
       proposalKey,
       vehiclePrice,
       bikeModelName: selectedBike?.name || (bikeModelCode ? `รุ่นรหัส ${bikeModelCode}` : undefined),
@@ -777,6 +989,7 @@ ${
     });
 
     setSavedCasesCount(getSavedCases().length);
+    setCasesRevision((v) => v + 1);
 
     if (isUpdating) {
       setEditingCaseTitle(savedRecord.caseTitle);
@@ -800,6 +1013,7 @@ ${
     setTerm(record.term);
     setCustomerName(record.customerName || 'คุณลูกค้า');
     if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    if (record.dealerName !== undefined) handleDealerNameChange(record.dealerName);
     if (record.officerName) setOfficerName(record.officerName);
     if (record.officerCode) setOfficerCode(record.officerCode);
     if (record.officerLicense) setOfficerLicense(record.officerLicense);
@@ -1267,6 +1481,68 @@ ${
                   <span className="font-semibold text-emerald-950 truncate">
                     {customerDisplay}
                   </span>
+                </div>
+              </div>
+
+              {/* Dealer Information Card (กล่องใส่ชื่อร้านตัวแทนจำหน่าย ลิงก์ไปยังเอกสารและทุกส่วน) */}
+              <div
+                data-card-id="dealer"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
+              >
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-sky-700 flex-shrink-0" />
+                    <span>ร้านตัวแทนจำหน่าย (Dealer)</span>
+                  </label>
+                  <span className="text-[9.5px] font-bold text-sky-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-sky-200/80 shadow-2xs shrink-0">
+                    ลิงก์ใบเสนอราคา / อนุมัติ / DV
+                  </span>
+                </div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={dealerName}
+                    onChange={(e) => handleDealerNameChange(e.target.value)}
+                    placeholder="ใส่ชื่อ Dealer (เช่น ป.ยานยนต์(สนญ.), แสงชัยพาณิชย์...)"
+                    className="w-full glass-input-field rounded-xl pl-3 pr-8 py-2 text-xs text-slate-900 font-bold outline-none"
+                  />
+                  {dealerName && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        handleDealerNameChange('');
+                      }}
+                      className="absolute right-2 w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                      title="ล้างชื่อ Dealer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                  <span className="text-[10px] text-slate-500 font-medium shrink-0">เลือกด่วน:</span>
+                  {COMMON_DEALER_SUGGESTIONS.slice(0, 5).map((preset) => {
+                    const isSelected = dealerName.trim() === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          handleDealerNameChange(isSelected ? '' : preset);
+                        }}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold whitespace-nowrap border transition-all cursor-pointer shrink-0 ${
+                          isSelected
+                            ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
+                            : 'bg-white/80 hover:bg-sky-50 text-slate-700 border-sky-200/80'
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -2317,42 +2593,159 @@ ${
                 </div>
               )}
 
-              {/* Save Case Action inside Hero card */}
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-sky-100/80">
-                <button
-                  type="button"
-                  onClick={() => handleSaveCurrentCase(false)}
-                  className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all cursor-pointer ${
-                    editingCaseId
-                      ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/25'
-                      : 'bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white shadow-sky-500/25'
-                  }`}
-                  title={editingCaseId ? 'บันทึกการแก้ไขเคสนี้' : 'บันทึกผลคำนวณเคสนี้ลงในอุปกรณ์'}
-                >
-                  {editingCaseId ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>บันทึกการแก้ไขเคส</span>
-                    </>
-                  ) : (
-                    <>
-                      <BookmarkPlus className="w-3.5 h-3.5" />
-                      <span>บันทึกผลคำนวณเคสนี้</span>
-                    </>
+              {/* Save Case & Native Share Actions inside Hero card */}
+              <div className="mt-3 pt-3 border-t border-sky-100/80 space-y-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSaveCurrentCase(false)}
+                    className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all cursor-pointer ${
+                      editingCaseId
+                        ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/25'
+                        : 'bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white shadow-sky-500/25'
+                    }`}
+                    title={editingCaseId ? 'บันทึกการแก้ไขเคสนี้' : 'บันทึกผลคำนวณเคสนี้ลงในอุปกรณ์'}
+                  >
+                    {editingCaseId ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>บันทึกการแก้ไขเคส</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookmarkPlus className="w-3.5 h-3.5" />
+                        <span>บันทึกผลคำนวณเคสนี้</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('selection');
+                      setShowSavedCases(true);
+                    }}
+                    className="py-2 px-3 rounded-xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs active:scale-98 transition-all cursor-pointer"
+                    title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
+                  >
+                    <FolderArchive className="w-3.5 h-3.5 text-slate-500" />
+                    <span>ดูเคสทั้งหมด ({savedCasesCount})</span>
+                  </button>
+                </div>
+
+                {/* Share Format Selector & Preview Toggle */}
+                <div className="pt-1 space-y-2">
+                  <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleShareStyleChange('card')}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
+                          shareTextStyle === 'card'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        ✨ การ์ดเด่น
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleShareStyleChange('compare')}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
+                          shareTextStyle === 'compare'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        📊 เทียบงวด
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleShareStyleChange('compact')}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
+                          shareTextStyle === 'compact'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        ⚡ กระชับ
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setShowSharePreview((prev) => !prev);
+                        }}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 border transition-colors cursor-pointer ${
+                          showSharePreview
+                            ? 'bg-sky-50 text-sky-800 border-sky-300'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                        title="ดูตัวอย่างข้อความก่อนแชร์"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>{showSharePreview ? 'ซ่อน' : 'ดูตัวอย่าง'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleQuickCopy}
+                        className="px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+                        title="คัดลอกข้อความลงคลิปบอร์ด"
+                      >
+                        {copyFeedback ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-slate-500" />
+                        )}
+                        <span>{copyFeedback ? 'แล้ว' : 'คัดลอก'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Optional Collapsible Preview Box */}
+                  {showSharePreview && (
+                    <pre className="text-left font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-slate-800 bg-white/95 border border-emerald-200 rounded-xl p-3 shadow-inner max-h-56 overflow-y-auto select-text">
+                      {buildInstallmentSummaryText()}
+                    </pre>
                   )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setShowSavedCases(true);
-                  }}
-                  className="py-2 px-3 rounded-xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs active:scale-98 transition-all cursor-pointer"
-                  title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
-                >
-                  <FolderArchive className="w-3.5 h-3.5 text-slate-500" />
-                  <span>ดูเคสทั้งหมด ({savedCasesCount})</span>
-                </button>
+
+                  {/* Action Row: Share Text & Create Share Card Image */}
+                  <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleNativeShare}
+                      className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 via-[#06c755] to-teal-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/25 active:scale-98 transition-all cursor-pointer border border-white/25 whitespace-nowrap"
+                      title="แชร์ข้อความสรุปค่างวดผ่าน LINE หรือช่องทางอื่นบนอุปกรณ์"
+                    >
+                      {copyFeedback ? (
+                        <>
+                          <Check className="w-4 h-4 text-white shrink-0" />
+                          <span>คัดลอกแล้ว!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="w-4 h-4 text-white shrink-0" />
+                          <span>แชร์ข้อความ</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        setShowShareCardModal(true);
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 hover:opacity-95 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-blue-600/25 active:scale-98 transition-all cursor-pointer border border-white/25 whitespace-nowrap"
+                      title="สร้างรูปภาพการ์ดสรุปค่างวดตกแต่งสวยงามสำหรับแชร์หรือบันทึก"
+                    >
+                      <ImageIcon className="w-4 h-4 text-white shrink-0" />
+                      <span>สร้างรูปภาพการ์ด</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -2397,19 +2790,6 @@ ${
             ======================================================== */}
         {activeTab === 'documents' && (
           <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
-            {/* Step Header Badge */}
-            <div className="flex items-center justify-between px-1 text-xs">
-              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
-                  4
-                </span>
-                เอกสารเสนอราคา, ขออนุมัติ DV & รายงานยอด
-              </span>
-              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
-                ขั้นตอน 4 / 4
-              </span>
-            </div>
-
             {/* Action Buttons: 3 primary action buttons (แผนความคุ้มครอง, ใบเสนอราคา, ใบอนุมัติผลชั่วคราว) */}
             <div data-card-id="actions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {/* 1. Coverage Plan Button */}
@@ -2491,63 +2871,84 @@ ${
               </button>
             </div>
 
-            {/* DV Case Approval Box (ตามรูปที่ 5) */}
-            <div data-card-id="dv">
-              <DvApprovalCard
-                customerName={customerName}
-                bikeModelName={
-                  selectedBike?.name ||
-                  (bikeModelCode
-                    ? MOTORCYCLE_MODELS.find(
-                        (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
-                      )?.name || ''
-                    : '')
-                }
-                bikeModelCode={bikeModelCode}
-                downPaymentDisplay={
-                  currentCalculation.downAmount === 0
-                    ? '0 บาท (ฟรีดาวน์ 0%)'
-                    : `${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)`
-                }
-                financeAmount={currentCalculation.financeAmount}
-                monthlyInstallment={currentCalculation.monthlyInstallment}
-                term={term}
-                officerName={officerName}
-                officerCode={officerCode}
-                officerDisplay={officerDisplay}
-                onUpdateCustomerName={handleCustomerNameChange}
-                isExpanded={expandedCard === 'dv'}
-                onToggleExpand={() => {
-                  setExpandedCard((prev) => (prev === 'dv' ? null : 'dv'));
-                }}
-              />
-            </div>
+            {/* Page 4 Tool & Report Cards: 2 Boxes Per Row (opens as popup modal on click) */}
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 items-stretch">
+              {/* DV Case Approval Box */}
+              <div data-card-id="dv" className="h-full">
+                <DvApprovalCard
+                  customerName={customerName}
+                  bikeModelName={
+                    selectedBike?.name ||
+                    (bikeModelCode
+                      ? MOTORCYCLE_MODELS.find(
+                          (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+                        )?.name || ''
+                      : '')
+                  }
+                  bikeModelCode={bikeModelCode}
+                  downPaymentDisplay={
+                    currentCalculation.downAmount === 0
+                      ? '0 บาท (ฟรีดาวน์ 0%)'
+                      : `${formatBaht(currentCalculation.downAmount)} (${currentCalculation.downPercent.toFixed(1)}%)`
+                  }
+                  financeAmount={currentCalculation.financeAmount}
+                  monthlyInstallment={currentCalculation.monthlyInstallment}
+                  term={term}
+                  officerName={officerName}
+                  officerCode={officerCode}
+                  officerDisplay={officerDisplay}
+                  dealerName={dealerName}
+                  onUpdateCustomerName={handleCustomerNameChange}
+                  onUpdateDealerName={handleDealerNameChange}
+                  isExpanded={expandedCard === 'dv'}
+                  onToggleExpand={() => {
+                    setExpandedCard((prev) => (prev === 'dv' ? null : 'dv'));
+                  }}
+                />
+              </div>
 
-            {/* Daily Dealer Finance Report Box (ตามรูปที่ 5) */}
-            <div data-card-id="daily_report">
-              <DailyFinanceReportCard
-                officerName={officerName}
-                officerCode={officerCode}
-                officerDisplay={officerDisplay}
-                isExpanded={expandedCard === 'daily_report'}
-                onToggleExpand={() => {
-                  setExpandedCard((prev) => (prev === 'daily_report' ? null : 'daily_report'));
-                }}
-              />
-            </div>
+              {/* Daily Dealer Finance Report Box */}
+              <div data-card-id="daily_report" className="h-full">
+                <DailyFinanceReportCard
+                  officerName={officerName}
+                  officerCode={officerCode}
+                  officerDisplay={officerDisplay}
+                  activeDealerName={dealerName}
+                  isExpanded={expandedCard === 'daily_report'}
+                  onToggleExpand={() => {
+                    setExpandedCard((prev) => (prev === 'daily_report' ? null : 'daily_report'));
+                  }}
+                />
+              </div>
 
-            {/* Checker Insurance Commission Report Box */}
-            <div data-card-id="checker_commission">
-              <CheckerCommissionCard
-                officerName={officerName}
-                officerCode={officerCode}
-                officerDisplay={officerDisplay}
-                isExpanded={expandedCard === 'checker_commission'}
-                onToggleExpand={() => {
-                  setExpandedCard((prev) => (prev === 'checker_commission' ? null : 'checker_commission'));
-                }}
-                onOpenSavedCases={() => setShowSavedCases(true)}
-              />
+              {/* Checker Insurance Commission Report Box */}
+              <div data-card-id="checker_commission" className="h-full">
+                <CheckerCommissionCard
+                  officerName={officerName}
+                  officerCode={officerCode}
+                  officerDisplay={officerDisplay}
+                  isExpanded={expandedCard === 'checker_commission'}
+                  onToggleExpand={() => {
+                    setExpandedCard((prev) => (prev === 'checker_commission' ? null : 'checker_commission'));
+                  }}
+                  onOpenSavedCases={() => setShowSavedCases(true)}
+                />
+              </div>
+
+              {/* Period Closing Report Box (ปิดยอด 1-15 / สิ้นเดือน: Approve, รับรถ, ยกยอด) */}
+              <div data-card-id="period_closing" className="h-full">
+                <PeriodClosingReportCard
+                  officerName={officerName}
+                  officerCode={officerCode}
+                  officerDisplay={officerDisplay}
+                  isExpanded={expandedCard === 'period_closing'}
+                  onToggleExpand={() => {
+                    setExpandedCard((prev) => (prev === 'period_closing' ? null : 'period_closing'));
+                  }}
+                  onOpenSavedCases={() => setShowSavedCases(true)}
+                  refreshTrigger={casesRevision}
+                />
+              </div>
             </div>
 
             {/* Navigation Buttons for Page 4 */}
@@ -2574,18 +2975,18 @@ ${
       </div>
     </main>
 
-        {/* Floating Glassmorphic Bottom Navigation Bar: ลอยอยู่เหนือเนื้อหา ไม่มีพื้นหลังสีขาวมารองรับ */}
-        <div className="absolute bottom-[38px] sm:bottom-[44px] inset-x-0 z-30 px-2.5 sm:px-4 pointer-events-none">
+        {/* Bottom Docked Glassmorphic Navigation Bar: ติดขอบล่างสุด โปร่งใสแบบแก้วใสเห็นเนื้อหาเบลออยู่ด้านหลัง พร้อมขอบบนโค้งมน */}
+        <div className="absolute bottom-0 inset-x-0 z-30 w-full bg-white/5 hover:bg-white/15 backdrop-blur-sm border-t border-white/40 hover:border-white/60 rounded-t-[30px] sm:rounded-t-[32px] shadow-[0_-4px_20px_-6px_rgba(2,132,199,0.12)] px-2 sm:px-4 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.375rem)] transition-all duration-200">
           <nav
             aria-label="แถบนำทางหลัก"
-            className="pointer-events-auto relative mx-auto w-full max-w-[500px] bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/40 hover:border-white/60 shadow-sm shadow-sky-950/20 rounded-full p-1 flex items-center justify-between overflow-hidden transition-all duration-200"
+            className="relative mx-auto w-full max-w-[540px] flex items-center justify-between overflow-hidden"
           >
             {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
             <div
-              className="absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/25 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+              className="absolute top-0.5 bottom-0.5 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/30 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
               style={{
-                width: 'calc(25% - 4px)',
-                left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 2px)`,
+                width: 'calc(25% - 6px)',
+                left: `calc(${NAV_TABS.findIndex((t) => t.id === activeTab) * 25}% + 3px)`,
               }}
             >
               {/* Subtle liquid shimmer light across the active pill */}
@@ -2600,21 +3001,21 @@ ${
                   key={tab.id}
                   type="button"
                   onClick={() => handleTabChange(tab.id)}
-                  className={`relative z-10 flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
+                  className={`relative z-10 flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
                     isActive
                       ? 'text-white font-bold'
-                      : 'text-slate-700 hover:text-sky-800 hover:bg-white/15 font-semibold'
+                      : 'text-slate-800 hover:text-sky-900 hover:bg-white/20 font-semibold'
                   }`}
                 >
                   <Icon
-                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-300 ${
+                    className={`w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0 transition-transform duration-300 ${
                       isActive
                         ? 'text-white animate-tab-icon'
-                        : 'text-slate-700'
+                        : 'text-slate-800'
                     }`}
                   />
                   <span
-                    className={`text-[10.5px] sm:text-xs leading-none whitespace-nowrap transition-transform duration-200 ${
+                    className={`text-[11.5px] sm:text-sm leading-tight whitespace-nowrap transition-transform duration-200 ${
                       isActive ? 'scale-105' : ''
                     }`}
                   >
@@ -2625,19 +3026,6 @@ ${
             })}
           </nav>
         </div>
-
-        {/* Bottom Bar Info: มีพื้นหลังขาวเฉพาะแถบนี้ที่บอกชื่อแอพและผู้พัฒนา */}
-        <footer className="shrink-0 z-20 w-full px-3.5 sm:px-6 py-1.5 sm:py-2 bg-white/95 border-t border-sky-100/90 backdrop-blur-xl text-xs text-slate-500 flex items-center justify-between gap-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-sm">
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shrink-0" />
-            <span className="font-semibold text-slate-700 text-[10px] sm:text-[11px] truncate">
-              ระบบคำนวณค่างวดเช่าซื้อรถจักรยานยนต์
-            </span>
-          </div>
-          <span className="text-[9px] sm:text-[10px] text-sky-800 font-semibold px-2 sm:px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200 shrink-0 whitespace-nowrap">
-            พัฒนาระบบโดย Bordin 6683
-          </span>
-        </footer>
       </div>
 
       {/* Modals */}
@@ -2678,10 +3066,12 @@ ${
         officerInfo={officerDisplay}
         initialCustomerName={customerName}
         initialCustomerPhone={customerPhone}
+        initialDealerName={dealerName}
         onUpdateCustomer={(name, phone) => {
           handleCustomerNameChange(name);
           handleCustomerPhoneChange(phone);
         }}
+        onUpdateDealer={handleDealerNameChange}
       />
 
       <ProvisionalApprovalModal
@@ -2710,12 +3100,36 @@ ${
           insurancePlanName: currentCalculation.insurancePlanName,
           insuranceYears: insuranceYears,
           insuranceTotalWithVat: currentCalculation.insuranceTotalWithVat,
+          dealerName: dealerName.trim() || undefined,
           officerInfo: officerDisplay,
         }}
         onUpdateCustomer={(name, phone) => {
           handleCustomerNameChange(name);
           handleCustomerPhoneChange(phone);
         }}
+        onUpdateDealer={handleDealerNameChange}
+      />
+
+      <InstallmentShareCardModal
+        isOpen={showShareCardModal}
+        onClose={() => setShowShareCardModal(false)}
+        result={currentCalculation}
+        comparisons={comparisons}
+        bikeName={
+          selectedBike?.name ||
+          (bikeModelCode
+            ? MOTORCYCLE_MODELS.find(
+                (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+              )?.name
+            : undefined)
+        }
+        bikeModelCode={bikeModelCode}
+        customerDisplay={customerDisplay}
+        hasCustomerInfo={Boolean(customerName || customerPhone)}
+        officerInfo={officerDisplay}
+        dealerName={dealerName}
+        includeDeliveryFees={includeDeliveryFees}
+        onShareSuccess={(msg) => triggerToast(msg)}
       />
 
       <AmortizationModal
@@ -2778,12 +3192,14 @@ ${
         onClose={() => {
           setShowSavedCases(false);
           setSavedCasesCount(getSavedCases().length);
+          setCasesRevision((v) => v + 1);
         }}
         onLoadCase={handleLoadCase}
         onEditCase={handleEditCase}
         onSaveCurrentCase={() => handleSaveCurrentCase(false)}
         onDeleteCase={(deletedId) => {
           setSavedCasesCount(getSavedCases().length);
+          setCasesRevision((v) => v + 1);
           if (!deletedId || editingCaseId === deletedId) {
             setEditingCaseId(null);
             setEditingCaseTitle(null);
@@ -2794,7 +3210,7 @@ ${
 
       {/* Global Toast Notice */}
       {toastNotice && (
-        <div className="fixed top-5 inset-x-4 mx-auto max-w-md z-50 p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-semibold text-center shadow-2xl border border-white/20 backdrop-blur-xl animate-fade-in flex items-center justify-center gap-2">
+        <div className="fixed top-5 inset-x-4 mx-auto max-w-md z-[70] p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-semibold text-center shadow-2xl border border-white/20 backdrop-blur-xl animate-fade-in flex items-center justify-center gap-2">
           <Check className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="leading-tight">{toastNotice}</span>
         </div>

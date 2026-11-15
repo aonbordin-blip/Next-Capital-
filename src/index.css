@@ -355,6 +355,69 @@
   animation: tab-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Modal & Popup Slide-Up from Bottom Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.22s ease-out forwards;
+}
+
+@keyframes backdrop-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-backdrop-in {
+  animation: fade-in 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-out {
+  animation: backdrop-fade-out 0.22s ease-in forwards;
+}
+
+@keyframes modal-sheet-slide-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 110px, 0) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes modal-sheet-slide-down {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 90px, 0) scale(0.97);
+  }
+}
+
+.animate-modal-sheet-in {
+  animation: modal-sheet-slide-up 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-modal-sheet-out {
+  animation: modal-sheet-slide-down 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+  will-change: transform, opacity;
+}
+
 /* Fluid Water Wave Animations for Header */
 @keyframes wave-flow-slow {
   0% {

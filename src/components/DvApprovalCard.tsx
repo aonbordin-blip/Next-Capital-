@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FileCheck2,
   Share2,
@@ -24,8 +25,12 @@ import {
   HelpCircle,
   Tag,
   Shield,
+  X,
+  ArrowUpRight,
 } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
+import { CardModalOverlay } from './CardModalOverlay';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 export interface DvTopicItem {
   code: string;
@@ -79,7 +84,9 @@ interface DvApprovalCardProps {
   officerName?: string;
   officerCode?: string;
   officerDisplay?: string;
+  dealerName?: string;
   onUpdateCustomerName?: (name: string) => void;
+  onUpdateDealerName?: (dealer: string) => void;
   className?: string;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
@@ -96,7 +103,9 @@ export function DvApprovalCard({
   officerName,
   officerCode,
   officerDisplay,
+  dealerName,
   onUpdateCustomerName,
+  onUpdateDealerName,
   className = '',
   isExpanded: controlledExpanded,
   onToggleExpand,
@@ -115,6 +124,7 @@ export function DvApprovalCard({
   const [activeTopicIndexForModal, setActiveTopicIndexForModal] = useState<number | null>(null);
   const [ncb, setNcb] = useState<string>('Normal');
   const [dealer, setDealer] = useState<string>(() => {
+    if (dealerName && dealerName.trim() !== '') return dealerName;
     try {
       return localStorage.getItem('ncap_dv_dealer') ?? '';
     } catch {
@@ -146,6 +156,15 @@ export function DvApprovalCard({
   };
 
   const [showAllTopicsModal, setShowAllTopicsModal] = useState<boolean>(false);
+  const {
+    shouldRender: shouldRenderTopicsModal,
+    isClosing: isClosingTopicsModal,
+    backdropAnimClass: topicsBackdropAnimClass,
+    sheetAnimClass: topicsSheetAnimClass,
+  } = useModalTransition(showAllTopicsModal, () => {
+    setShowAllTopicsModal(false);
+    setActiveTopicIndexForModal(null);
+  });
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [lineSentFeedback, setLineSentFeedback] = useState<boolean>(false);
 
@@ -184,7 +203,14 @@ export function DvApprovalCard({
     }
   }, [resolvedOfficer]);
 
-  // Persist dealer name
+  // Sync dealer name when changed externally (e.g., from Home page)
+  useEffect(() => {
+    if (dealerName !== undefined) {
+      setDealer(dealerName);
+    }
+  }, [dealerName]);
+
+  // Persist dealer name and sync back to parent
   const handleDealerChange = (val: string) => {
     setDealer(val);
     try {
@@ -192,12 +218,14 @@ export function DvApprovalCard({
     } catch {
       // ignore
     }
+    onUpdateDealerName?.(val);
   };
 
   // Re-sync all fields from current calculation
   const handleSyncFromCurrent = () => {
     triggerHaptic('medium');
     setDvCustomerName(customerName || 'คุณลูกค้า');
+    if (dealerName !== undefined) setDealer(dealerName);
     setBikeModel(bikeModelName || 'Honda Wave 110i');
     setBikeCode(bikeModelCode || '');
     setDownPayment(downPaymentDisplay || '0 บาท (ฟรีดาวน์)');
@@ -341,66 +369,97 @@ export function DvApprovalCard({
   }, []);
 
   return (
-    <div
-      id="dv-approval-section"
-      data-card-id="dv"
-      className={`glass-card-primary rounded-[26px] p-4 sm:p-5 relative overflow-hidden elevated-data-box border border-sky-200/80 shadow-md ${className}`}
-    >
-      {/* Top Gradient Header Accent Bar */}
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-teal-400 via-emerald-500 to-sky-500 opacity-95" />
-
-      {/* Header Row */}
+    <>
       <div
+        id="dv-approval-section"
+        data-card-id="dv"
         data-card-toggle="true"
         onClick={handleToggle}
-        className={`flex items-center justify-between gap-2 cursor-pointer select-none transition-all ${
-          isExpanded ? 'pb-3 border-b border-sky-100/80' : 'pb-0 border-b-0'
-        }`}
+        className={`glass-card-primary rounded-[24px] p-3 sm:p-4 h-full flex flex-col justify-between relative overflow-hidden elevated-data-box border shadow-md cursor-pointer select-none transition-all ${
+          isExpanded
+            ? 'border-emerald-400 ring-2 ring-emerald-400/40'
+            : 'border-sky-200/80 hover:border-emerald-300'
+        } ${className}`}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs shadow-emerald-500/30 shrink-0">
-            <FileCheck2 className="w-5 h-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-extrabold text-sm sm:text-base text-slate-800 tracking-tight">
-                ขออนุมัติเคส DV
+        {/* Top Gradient Header Accent Bar */}
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-teal-400 via-emerald-500 to-sky-500 opacity-95" />
+
+        <div className="flex flex-col justify-between gap-2 h-full">
+          <div className="flex items-center justify-between gap-1.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs shadow-emerald-500/30 shrink-0">
+                <FileCheck2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
+              </div>
+              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight truncate">
+                ขออนุมัติ DV
               </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
-                Dealer Verification
-              </span>
             </div>
-            <p className="text-[10.5px] text-slate-500 font-medium truncate">
-              ดึงชื่อลูกค้า, รุ่นรถ, และชื่อเจ้าหน้าที่ (CK) อัตโนมัติ พร้อมส่งออกเข้า LINE ทันที
+            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+          <div className="space-y-1 min-w-0">
+            <span className="inline-block text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
+              Dealer Verification
+            </span>
+            <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-tight">
+              กรอกฟอร์มส่งขออนุมัติ LINE อัตโนมัติ
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-          {isExpanded && (
+      {/* Popup Modal for Expanded DV Form */}
+      <CardModalOverlay
+        isOpen={isExpanded}
+        onClose={handleToggle}
+        accentBarClass="bg-gradient-to-r from-teal-400 via-emerald-500 to-sky-500"
+      >
+        {/* Sticky Modal Header matching QuotationModal */}
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 text-white rounded-2xl shadow-md shadow-emerald-500/20 flex-shrink-0">
+              <FileCheck2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                  ขออนุมัติเคส DV
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
+                  Dealer Verification
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                ดึงชื่อลูกค้า, รุ่นรถ, และชื่อเจ้าหน้าที่ (CK) อัตโนมัติ พร้อมส่งออกเข้า LINE ทันที
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={handleSyncFromCurrent}
-              className="p-1.5 rounded-xl bg-white/90 hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200/80 text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+              className="p-1.5 sm:px-2.5 rounded-xl bg-white hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200 text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
               title="ดึงข้อมูลลูกค้า รุ่นรถ เงินดาวน์ และเจ้าหน้าที่ล่าสุด"
             >
               <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
               <span className="hidden sm:inline text-[10.5px]">ดึงข้อมูลล่าสุด</span>
             </button>
-          )}
-          <button
-            type="button"
-            onClick={handleToggle}
-            className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
-            title={isExpanded ? 'ย่อกล่อง' : 'ขยายกล่อง'}
-          >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+            <button
+              type="button"
+              onClick={handleToggle}
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              title="ปิดหน้าต่าง"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {isExpanded && (
-        <div className="mt-4 space-y-4">
+        {/* Scrollable Modal Body */}
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
           {/* Main 2-Column Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* COLUMN 1 (Left) */}
@@ -927,12 +986,28 @@ export function DvApprovalCard({
             </button>
           </div>
         </div>
-      )}
+      </CardModalOverlay>
 
       {/* Modal: View All 18 DV Topics Grid */}
-      {showAllTopicsModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-indigo-100 max-h-[85vh] flex flex-col">
+      {shouldRenderTopicsModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-portal="true"
+            className={`fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 ${topicsBackdropAnimClass}`}
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isClosingTopicsModal) {
+                setShowAllTopicsModal(false);
+                setActiveTopicIndexForModal(null);
+              }
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-indigo-100 max-h-[85vh] flex flex-col ${topicsSheetAnimClass}`}
+            >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700">
@@ -1040,9 +1115,10 @@ export function DvApprovalCard({
                 ปิดหน้าต่าง
               </button>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }

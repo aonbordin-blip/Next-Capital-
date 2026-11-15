@@ -146,10 +146,11 @@ export interface SavedCaseRecord {
   officerCode: string;
   officerLicense?: string;
 
-  // Customer info
+  // Customer & Dealer info
   customerName: string;
   customerPhone?: string;
   customerNote?: string;
+  dealerName?: string;
 
   // Bike & Proposal
   proposalKey: ProposalKey;
