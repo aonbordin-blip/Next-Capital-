@@ -215,7 +215,11 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         resetCloudSyncTracking();
         setUser(null);
         setSyncStatus('signed_out');
-        setSyncError(null);
+        setSyncError(
+          nextUser && (!nextUser.email || !nextUser.emailVerified)
+            ? 'บัญชี Google นี้ยังไม่ได้ยืนยันอีเมล จึงยังไม่สามารถเข้าสู่ระบบซิงค์ได้'
+            : null
+        );
         setCloudCaseCount(0);
         registerCloudSyncBridge(null);
         setAuthReady(true);
@@ -255,9 +259,50 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await signInWithGooglePopup();
       return true;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (!msg.includes('popup-closed-by-user') && !msg.includes('cancelled-popup-request')) {
-        setSyncError('ไม่สามารถเข้าสู่ระบบด้วย Google ได้ กรุณาลองใหม่อีกครั้ง');
+      const code =
+        typeof err === 'object' && err !== null && 'code' in err
+          ? String((err as { code?: unknown }).code || '')
+          : '';
+      const msg = err instanceof Error ? err.message : String(err || '');
+      const combined = `${code} ${msg}`.toLowerCase();
+
+      if (
+        combined.includes('popup-closed-by-user') ||
+        combined.includes('cancelled-popup-request')
+      ) {
+        return false;
+      }
+
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      const isInAppBrowser = /Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+
+      if (combined.includes('unauthorized-domain')) {
+        setSyncError(
+          `โดเมน "${host || 'นี้'}" ยังไม่ได้รับอนุญาตใน Firebase Authentication (ต้องเพิ่มในเมนู Authentication -> Settings -> Authorized domains)`
+        );
+      } else if (combined.includes('popup-blocked')) {
+        setSyncError(
+          isInAppBrowser
+            ? 'ไม่สามารถล็อกอินผ่านแอปแชทได้ กรุณากดเปิดลิงก์ด้วย Chrome หรือ Safari โดยตรง'
+            : 'เบราว์เซอร์บล็อกหน้าต่างเข้าสู่ระบบ (Pop-up) กรุณาอนุญาต Pop-up สำหรับเว็บนี้แล้วลองใหม่อีกครั้ง'
+        );
+      } else if (combined.includes('operation-not-allowed')) {
+        setSyncError(
+          'โปรเจกต์ Firebase ยังไม่ได้เปิดใช้งาน Google Sign-In (Authentication -> Sign-in method)'
+        );
+      } else if (combined.includes('network-request-failed')) {
+        setSyncError('เชื่อมต่อระบบล็อกอินของ Google ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่');
+      } else if (combined.includes('web-storage-unsupported')) {
+        setSyncError('เบราว์เซอร์หรือโหมดไม่ระบุตัวตนปิดการเก็บ Cookies/Storage จึงไม่สามารถเข้าสู่ระบบได้');
+      } else if (isInAppBrowser) {
+        setSyncError(
+          `Google ไม่อนุญาตให้ล็อกอินในเบราว์เซอร์ของแอปแชท กรุณาเปิดผ่าน Chrome หรือ Safari โดยตรง (${code || 'auth-error'})`
+        );
+      } else {
+        setSyncError(
+          `ไม่สามารถเข้าสู่ระบบด้วย Google ได้${code ? ` [${code}]` : ''} กรุณาลองใหม่อีกครั้ง`
+        );
       }
       return false;
     } finally {

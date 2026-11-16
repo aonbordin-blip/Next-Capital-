@@ -98,30 +98,38 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
   if (!user) {
     if (compact) {
       return (
-        <div className="rounded-2xl bg-gradient-to-r from-sky-50 via-indigo-50/70 to-cyan-50/80 border border-sky-200/90 px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <Cloud className="w-4 h-4" />
+        <div className="rounded-2xl bg-gradient-to-r from-sky-50 via-indigo-50/70 to-cyan-50/80 border border-sky-200/90 px-3 py-2 space-y-1.5 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <Cloud className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11.5px] font-extrabold text-sky-950 truncate">
+                  ซิงค์เคสขึ้น Cloud อัตโนมัติ
+                </div>
+                <div className="text-[10px] text-slate-600 truncate">
+                  {typeof localCount === 'number' && localCount > 0
+                    ? `มี ${localCount} เคสในเครื่อง พร้อมสำรองข้ามอุปกรณ์ทันทีที่ล็อกอิน`
+                    : 'เข้าสู่ระบบด้วย Google เพื่อสำรองและเปิดใช้งานข้อมูลข้ามเครื่อง'}
+                </div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <div className="text-[11.5px] font-extrabold text-sky-950 truncate">
-                ซิงค์เคสขึ้น Cloud อัตโนมัติ
-              </div>
-              <div className="text-[10px] text-slate-600 truncate">
-                {typeof localCount === 'number' && localCount > 0
-                  ? `มี ${localCount} เคสในเครื่อง พร้อมสำรองข้ามอุปกรณ์ทันทีที่ล็อกอิน`
-                  : 'เข้าสู่ระบบด้วย Google เพื่อสำรองและเปิดใช้งานข้อมูลข้ามเครื่อง'}
-              </div>
+            <div className="shrink-0 self-end sm:self-auto">
+              <GoogleSignInButton
+                compact
+                onClick={handleSignIn}
+                isLoading={isSigningIn}
+                label="เข้าสู่ระบบด้วย Google"
+              />
             </div>
           </div>
-          <div className="shrink-0 self-end sm:self-auto">
-            <GoogleSignInButton
-              compact
-              onClick={handleSignIn}
-              isLoading={isSigningIn}
-              label="เข้าสู่ระบบด้วย Google"
-            />
-          </div>
+          {syncError && (
+            <div className="px-2 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[10px] flex items-start gap-1.5">
+              <AlertCircle className="w-3 h-3 text-rose-600 shrink-0 mt-0.5" />
+              <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{syncError}</span>
+            </div>
+          )}
         </div>
       );
     }
