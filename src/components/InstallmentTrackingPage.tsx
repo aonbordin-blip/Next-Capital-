@@ -190,9 +190,11 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     const syncCases = () => setCases(getSavedCases());
     window.addEventListener('focus', syncCases);
     window.addEventListener('storage', syncCases);
+    window.addEventListener('ncap-cases-synced', syncCases);
     return () => {
       window.removeEventListener('focus', syncCases);
       window.removeEventListener('storage', syncCases);
+      window.removeEventListener('ncap-cases-synced', syncCases);
     };
   }, []);
 

@@ -2,24 +2,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { ErrorBoundary } from './components/ErrorBoundary';
-
-// Clean up any stale or conflicting Service Workers & caches that cause blank white screens
-if (typeof window !== 'undefined') {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (const reg of registrations) {
-        reg.unregister().catch(() => {});
-      }
-    }).catch(() => {});
-  }
-  if ('caches' in window) {
-    caches.keys().then((keys) => {
-      for (const key of keys) {
-        caches.delete(key).catch(() => {});
-      }
-    }).catch(() => {});
-  }
-}
+import { FirebaseProvider } from './contexts/FirebaseContext';
 
 // Safely mount React application
 const rootEl = document.getElementById('root');
@@ -28,7 +11,9 @@ if (rootEl) {
     const root = createRoot(rootEl);
     root.render(
       <ErrorBoundary>
-        <App />
+        <FirebaseProvider>
+          <App />
+        </FirebaseProvider>
       </ErrorBoundary>
     );
   } catch (err) {

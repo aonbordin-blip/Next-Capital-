@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Bike,
   HelpCircle,
@@ -52,6 +52,8 @@ import {
   ClipboardCheck,
   CheckCircle2,
   XCircle,
+  Cloud,
+  RefreshCw,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -82,7 +84,12 @@ import { InsuranceComparisonModal } from './components/InsuranceComparisonModal'
 import { InsuranceDocModal } from './components/InsuranceDocModal';
 import { EirInfoModal } from './components/EirInfoModal';
 import { SavedCasesModal } from './components/SavedCasesModal';
-import { getSavedCases, saveCaseRecord } from './utils/savedCasesStorage';
+import {
+  getSavedCases,
+  saveCaseRecord,
+  formatThaiShortDateWithTime,
+  formatThaiFullDocumentDate,
+} from './utils/savedCasesStorage';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { BikeModelCodeInput } from './components/BikeModelCodeInput';
 import { MotorcycleModel, MOTORCYCLE_MODELS, findModelByCode } from './data/motorcycleModels';
@@ -94,8 +101,12 @@ import {
   evaluateCustomerEligibility,
   ACE_FULL_NOTE,
 } from './data/eligibilityCriteria';
+import { useFirebase } from './contexts/FirebaseContext';
+import { CloudSyncCard } from './components/CloudSyncCard';
 
 export default function App() {
+  const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
+  const [showCloudSyncModal, setShowCloudSyncModal] = useState<boolean>(false);
   // Form states
   const [proposalKey, setProposalKey] = useState<ProposalKey>('small_bike');
   const [vehiclePrice, setVehiclePrice] = useState<number>(65000);
@@ -174,6 +185,7 @@ export default function App() {
     } catch {
       // ignore
     }
+    syncProfileSettings({ officerName: val, officerCode, officerLicense, dealerName });
   };
 
   const handleOfficerCodeChange = (val: string) => {
@@ -183,6 +195,7 @@ export default function App() {
     } catch {
       // ignore
     }
+    syncProfileSettings({ officerName, officerCode: val, officerLicense, dealerName });
   };
 
   const handleOfficerLicenseChange = (val: string) => {
@@ -192,6 +205,7 @@ export default function App() {
     } catch {
       // ignore
     }
+    syncProfileSettings({ officerName, officerCode, officerLicense: val, dealerName });
   };
 
   const officerDisplay =
@@ -337,6 +351,7 @@ export default function App() {
     } catch {
       // ignore
     }
+    syncProfileSettings({ officerName, officerCode, officerLicense, dealerName: val });
   };
 
   // Modals
@@ -351,18 +366,53 @@ export default function App() {
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
   const [showSavedCases, setShowSavedCases] = useState<boolean>(false);
+  const [savedCasesPreferAll, setSavedCasesPreferAll] = useState<boolean>(false);
   const [savedCasesCount, setSavedCasesCount] = useState<number>(() => {
     return getSavedCases().length;
   });
   const [casesRevision, setCasesRevision] = useState<number>(0);
   const [editingCaseId, setEditingCaseId] = useState<string | null>(null);
   const [editingCaseTitle, setEditingCaseTitle] = useState<string | null>(null);
+  const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [toastNotice, setToastNotice] = useState<string | null>(null);
+
+  const activeCaseRecord = useMemo<SavedCaseRecord | null>(() => {
+    if (!activeCaseId) return null;
+    return getSavedCases().find((c) => c.id === activeCaseId) ?? null;
+  }, [activeCaseId, casesRevision]);
 
   const triggerToast = (msg: string) => {
     setToastNotice(msg);
     setTimeout(() => setToastNotice(null), 3500);
   };
+
+  // Keep UI counters and officer/dealer settings updated when Cloud Sync pulls data
+  useEffect(() => {
+    const handleCasesSynced = () => {
+      setSavedCasesCount(getSavedCases().length);
+      setCasesRevision((v) => v + 1);
+    };
+    const handleProfileSynced = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        officerName?: string;
+        officerCode?: string;
+        officerLicense?: string;
+        dealerName?: string;
+      }>).detail;
+      if (!detail) return;
+      if (detail.officerName && !officerName) setOfficerName(detail.officerName);
+      if (detail.officerCode && !officerCode) setOfficerCode(detail.officerCode);
+      if (detail.officerLicense && !officerLicense) setOfficerLicense(detail.officerLicense);
+      if (detail.dealerName && !dealerName) setDealerName(detail.dealerName);
+    };
+
+    window.addEventListener('ncap-cases-synced', handleCasesSynced);
+    window.addEventListener('ncap-profile-synced', handleProfileSynced);
+    return () => {
+      window.removeEventListener('ncap-cases-synced', handleCasesSynced);
+      window.removeEventListener('ncap-profile-synced', handleProfileSynced);
+    };
+  }, [officerName, officerCode, officerLicense, dealerName]);
 
   // 5-Page Navigation Tab State (โฮมเพจ, เงินดาวน์, ค่างวด, เอกสาร/เคส, เช็คค่างวด)
   type ActivePageTab = 'home' | 'financing' | 'calculation' | 'documents' | 'installments';
@@ -1023,21 +1073,22 @@ export default function App() {
     const customerTitle = record.customerName?.trim() || record.caseTitle.split(' - ')[0]?.trim() || 'คุณลูกค้า';
     setEditingCaseId(record.id);
     setEditingCaseTitle(customerTitle);
+    setActiveCaseId(record.id);
 
     setProposalKey(record.proposalKey);
     setVehiclePrice(record.vehiclePrice);
     setDownMode(record.downMode);
     setDownValue(record.downValue);
     setTerm(record.term);
-    setCustomerName(record.customerName || 'คุณลูกค้า');
-    if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    handleCustomerNameChange(record.customerName || 'คุณลูกค้า');
+    handleCustomerPhoneChange(record.customerPhone ?? '');
     handleCustomerAgeChange(record.customerAge ?? '');
     handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
     handleCustomerIncomeChange(record.customerIncome ?? '');
     handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
     handleCustomerOccupationChange(record.customerOccupation ?? '');
     handleIsAceCustomerChange(Boolean(record.isAceCustomer));
-    if (record.dealerName !== undefined) handleDealerNameChange(record.dealerName);
+    handleDealerNameChange(record.dealerName ?? '');
     if (record.officerName) setOfficerName(record.officerName);
     if (record.officerCode) setOfficerCode(record.officerCode);
     if (record.officerLicense) setOfficerLicense(record.officerLicense);
@@ -1060,14 +1111,36 @@ export default function App() {
       if (matched) {
         setSelectedBike({
           id: matched.code,
-          name: matched.name,
-          brand: (matched.brand as any) || 'Other',
+          name: record.bikeModelName || matched.name,
+          brand: (matched.brand as any) || (record.bikeBrand as any) || 'Other',
           price: matched.price || record.vehiclePrice,
           proposalKey: record.proposalKey,
           defaultDownPercent: 15,
           code: matched.code,
         });
+      } else if (record.bikeModelName) {
+        setSelectedBike({
+          id: record.bikeModelCode,
+          name: record.bikeModelName,
+          brand: (record.bikeBrand as any) || 'Other',
+          price: record.vehiclePrice,
+          proposalKey: record.proposalKey,
+          defaultDownPercent: 15,
+          code: record.bikeModelCode,
+        });
+      } else {
+        setSelectedBike(null);
       }
+    } else if (record.bikeModelName) {
+      setBikeModelCode('');
+      setSelectedBike({
+        id: record.id,
+        name: record.bikeModelName,
+        brand: (record.bikeBrand as any) || 'Other',
+        price: record.vehiclePrice,
+        proposalKey: record.proposalKey,
+        defaultDownPercent: 15,
+      });
     } else {
       setSelectedBike(null);
       setBikeModelCode('');
@@ -1147,6 +1220,7 @@ export default function App() {
 
     setSavedCasesCount(getSavedCases().length);
     setCasesRevision((v) => v + 1);
+    setActiveCaseId(savedRecord.id);
 
     if (isUpdating) {
       setEditingCaseTitle(savedRecord.caseTitle);
@@ -1160,23 +1234,29 @@ export default function App() {
     }
   };
 
-  // Load a saved case from device
+  // Load a saved case from device (คงวันที่ทำสัญญา & วัน/เวลารับรถไว้ใช้ออกเอกสาร)
   const handleLoadCase = (record: SavedCaseRecord) => {
     triggerHaptic('success');
+    setActiveCaseId(record.id);
+    if (editingCaseId && editingCaseId !== record.id) {
+      setEditingCaseId(null);
+      setEditingCaseTitle(null);
+    }
+
     setProposalKey(record.proposalKey);
     setVehiclePrice(record.vehiclePrice);
     setDownMode(record.downMode);
     setDownValue(record.downValue);
     setTerm(record.term);
-    setCustomerName(record.customerName || 'คุณลูกค้า');
-    if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    handleCustomerNameChange(record.customerName || 'คุณลูกค้า');
+    handleCustomerPhoneChange(record.customerPhone ?? '');
     handleCustomerAgeChange(record.customerAge ?? '');
     handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
     handleCustomerIncomeChange(record.customerIncome ?? '');
     handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
     handleCustomerOccupationChange(record.customerOccupation ?? '');
     handleIsAceCustomerChange(Boolean(record.isAceCustomer));
-    if (record.dealerName !== undefined) handleDealerNameChange(record.dealerName);
+    handleDealerNameChange(record.dealerName ?? '');
     if (record.officerName) setOfficerName(record.officerName);
     if (record.officerCode) setOfficerCode(record.officerCode);
     if (record.officerLicense) setOfficerLicense(record.officerLicense);
@@ -1199,28 +1279,50 @@ export default function App() {
       if (matched) {
         setSelectedBike({
           id: matched.code,
-          name: matched.name,
-          brand: (matched.brand as any) || 'Other',
+          name: record.bikeModelName || matched.name,
+          brand: (matched.brand as any) || (record.bikeBrand as any) || 'Other',
           price: matched.price || record.vehiclePrice,
           proposalKey: record.proposalKey,
           defaultDownPercent: 15,
           code: matched.code,
         });
+      } else if (record.bikeModelName) {
+        setSelectedBike({
+          id: record.bikeModelCode,
+          name: record.bikeModelName,
+          brand: (record.bikeBrand as any) || 'Other',
+          price: record.vehiclePrice,
+          proposalKey: record.proposalKey,
+          defaultDownPercent: 15,
+          code: record.bikeModelCode,
+        });
+      } else {
+        setSelectedBike(null);
       }
+    } else if (record.bikeModelName) {
+      setBikeModelCode('');
+      setSelectedBike({
+        id: record.id,
+        name: record.bikeModelName,
+        brand: (record.bikeBrand as any) || 'Other',
+        price: record.vehiclePrice,
+        proposalKey: record.proposalKey,
+        defaultDownPercent: 15,
+      });
     } else {
       setSelectedBike(null);
       setBikeModelCode('');
     }
 
     setActiveTab('calculation');
-    triggerToast(`✓ โหลดข้อมูลเคส "${record.caseTitle}" มาใช้งานเรียบร้อยแล้ว`);
+    triggerToast(`✓ โหลดข้อมูลเคส "${record.caseTitle}" (วันที่บันทึก/สัญญา) มาใช้งานเรียบร้อยแล้ว`);
   };
 
   const currentProposal = PROPOSALS[proposalKey];
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full relative overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
       {/* Soft Ambient Background Radial Glows for Neo-Glassmorphism Depth (Zero GPU blur pass) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
@@ -1276,10 +1378,10 @@ export default function App() {
 
       {/* Main Container - Soft Neo-Morphic Glass Frame matching Reference UI */}
       <div
-        className={`w-full transition-all duration-300 z-10 ${
+        className={`w-full flex-1 sm:flex-initial min-h-0 transition-[max-width,border-radius] duration-300 z-10 ${
           viewMode === 'mobile'
-            ? 'max-w-full sm:max-w-[560px] md:max-w-[580px] h-full sm:h-[min(920px,94vh)] sm:max-h-[96vh] sm:rounded-[36px]'
-            : 'max-w-6xl xl:max-w-7xl h-full sm:h-[min(940px,96vh)] sm:max-h-[96vh] sm:rounded-[36px]'
+            ? 'max-w-full sm:max-w-[560px] md:max-w-[580px] h-full sm:h-[min(920px,calc(100%-3rem))] sm:max-h-[96%] sm:rounded-[36px]'
+            : 'max-w-6xl xl:max-w-7xl h-full sm:h-[min(940px,calc(100%-3rem))] sm:max-h-[96%] sm:rounded-[36px]'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
@@ -1331,7 +1433,44 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-[9.5px] sm:text-[10.5px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowCloudSyncModal(true);
+                }}
+                className="text-[9.5px] sm:text-[10.5px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/25 hover:bg-white/35 backdrop-blur-md text-white border border-white/35 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                title={
+                  firebaseUser
+                    ? `ซิงค์ Cloud: ${firebaseUser.email}`
+                    : 'เข้าสู่ระบบ Google เพื่อซิงค์เคสขึ้น Cloud อัตโนมัติ'
+                }
+              >
+                {firebaseUser ? (
+                  syncStatus === 'syncing' ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-sky-100 shrink-0" />
+                      <span>กำลังซิงค์</span>
+                    </>
+                  ) : syncStatus === 'error' ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-amber-300 shrink-0" />
+                      <span>ซิงค์ใหม่</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-300 shrink-0" />
+                      <span>Cloud ✓</span>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <Cloud className="w-3 h-3 text-white shrink-0" />
+                    <span>Cloud Sync</span>
+                  </>
+                )}
+              </button>
+              <span className="hidden xs:inline-block text-[9.5px] sm:text-[10.5px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none">
                 พัฒนาระบบโดย Bordin 6683
               </span>
             </div>
@@ -1409,6 +1548,63 @@ export default function App() {
             </div>
           )}
 
+          {/* Active Loaded Case Contract & Delivery Date Chip (เมื่อดึงเคสที่บันทึกไว้มาใช้งาน) */}
+          {activeCaseRecord && !editingCaseId && (
+            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-emerald-50 via-white to-sky-50 rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-2 text-xs shadow-2xs">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="w-6 h-6 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <FolderArchive className="w-3.5 h-3.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                      ข้อมูลเคสที่ดึงมาใช้
+                    </span>
+                    <MarqueeText fitContent className="font-bold text-slate-800 text-[11.5px]">
+                      {activeCaseRecord.customerName || activeCaseRecord.caseTitle}
+                    </MarqueeText>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-slate-600 mt-0.5">
+                    <span>
+                      วันทำสัญญา/บันทึก:{' '}
+                      <strong className="text-slate-800">
+                        {formatThaiShortDateWithTime(
+                          activeCaseRecord.approvalDate || activeCaseRecord.createdAt,
+                          activeCaseRecord.createdAt
+                        )}
+                      </strong>
+                    </span>
+                    {(activeCaseRecord.deliveryStatus === 'delivered' || activeCaseRecord.deliveryDate) && (
+                      <span className="text-emerald-700 font-semibold">
+                        • รับรถ:{' '}
+                        <strong>
+                          {activeCaseRecord.deliveryConfirmedAt || activeCaseRecord.deliveryDate
+                            ? formatThaiShortDateWithTime(
+                                activeCaseRecord.deliveryDate || activeCaseRecord.deliveryConfirmedAt,
+                                activeCaseRecord.deliveryConfirmedAt || activeCaseRecord.updatedAt || activeCaseRecord.createdAt
+                              )
+                            : formatThaiFullDocumentDate(activeCaseRecord.deliveryDate)}
+                        </strong>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActiveCaseId(null);
+                  triggerToast('ล้างการอ้างอิงวันที่เคสที่บันทึกแล้ว (กลับไปใช้วันที่ปัจจุบัน)');
+                }}
+                className="text-[10.5px] text-slate-500 hover:text-rose-600 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                title="ล้างการอ้างอิงวันที่จากเคสที่บันทึก"
+              >
+                ล้างเคส
+              </button>
+            </div>
+          )}
+
           {/* Editing Mode Sticky Alert Banner if active */}
           {editingCaseId && (
             <div className="mx-0 sm:mx-1 mt-1.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/25 border border-amber-300/80 animate-fade-in space-y-2.5">
@@ -1427,7 +1623,19 @@ export default function App() {
                       </MarqueeText>
                     </div>
                     <MarqueeText className="text-[10.5px] text-amber-50/90 mt-0.5">
-                      กำลังแก้ไขข้อมูลเคสนี้ คุณสามารถปรับเปลี่ยนราคา เงินดาวน์ หรือข้อเสนอ แล้วกดบันทึกการแก้ไข
+                      {activeCaseRecord
+                        ? `วันทำสัญญา/บันทึก: ${formatThaiShortDateWithTime(
+                            activeCaseRecord.approvalDate || activeCaseRecord.createdAt,
+                            activeCaseRecord.createdAt
+                          )}${
+                            activeCaseRecord.deliveryStatus === 'delivered' || activeCaseRecord.deliveryDate
+                              ? ` • วันรับรถ: ${formatThaiShortDateWithTime(
+                                  activeCaseRecord.deliveryDate || activeCaseRecord.deliveryConfirmedAt,
+                                  activeCaseRecord.deliveryConfirmedAt || activeCaseRecord.updatedAt || activeCaseRecord.createdAt
+                                )}`
+                              : ''
+                          }`
+                        : 'กำลังแก้ไขข้อมูลเคสนี้ คุณสามารถปรับเปลี่ยนราคา เงินดาวน์ หรือข้อเสนอ แล้วกดบันทึกการแก้ไข'}
                     </MarqueeText>
                   </div>
                 </div>
@@ -1514,7 +1722,7 @@ export default function App() {
                     ) : (
                       <>
                         <BookmarkPlus className="w-3.5 h-3.5 text-sky-600" />
-                        <span>บันทึกเคสนี้ลงเครื่อง</span>
+                        <span>{firebaseUser ? 'บันทึกเคส & ซิงค์ Cloud' : 'บันทึกเคสนี้ลงเครื่อง'}</span>
                       </>
                     )}
                   </button>
@@ -3353,6 +3561,15 @@ export default function App() {
               </div>
             </div>
 
+            {/* Cloud Backup & Multi-Device Sync Card */}
+            <CloudSyncCard
+              localCount={savedCasesCount}
+              onOpenSavedCases={() => {
+                setSavedCasesPreferAll(true);
+                setShowSavedCases(true);
+              }}
+            />
+
             {/* Navigation Buttons for Page 4 */}
             <div className="flex items-center gap-2 pt-1">
               <button
@@ -3396,7 +3613,10 @@ export default function App() {
     </main>
 
         {/* Bottom Docked Glassmorphic Navigation Bar: ติดขอบล่างสุด โปร่งใสแบบแก้วใสเห็นเนื้อหาเบลออยู่ด้านหลัง พร้อมขอบบนโค้งมน */}
-        <div className="absolute bottom-0 inset-x-0 z-30 w-full bg-white/5 hover:bg-white/15 backdrop-blur-sm border-t border-white/40 hover:border-white/60 rounded-t-[30px] sm:rounded-t-[32px] shadow-[0_-4px_20px_-6px_rgba(2,132,199,0.12)] px-1.5 sm:px-3 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.375rem)] transition-all duration-200">
+        <div
+          className="absolute bottom-0 inset-x-0 z-40 w-full bg-white/10 hover:bg-white/20 backdrop-blur-md border-t border-white/45 hover:border-white/65 rounded-t-[30px] sm:rounded-t-[32px] shadow-[0_-4px_20px_-6px_rgba(2,132,199,0.14)] px-1.5 sm:px-3 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.375rem)] transition-colors duration-200 transform-gpu will-change-transform"
+          style={{ transform: 'translate3d(0, 0, 0)' }}
+        >
           <nav
             aria-label="แถบนำทางหลัก"
             className="relative mx-auto w-full max-w-[580px] flex items-center justify-between overflow-hidden"
@@ -3497,6 +3717,7 @@ export default function App() {
         initialCustomerName={customerName}
         initialCustomerPhone={customerPhone}
         initialDealerName={dealerName}
+        caseRecord={activeCaseRecord}
         onUpdateCustomer={(name, phone) => {
           handleCustomerNameChange(name);
           handleCustomerPhoneChange(phone);
@@ -3530,6 +3751,9 @@ export default function App() {
           insurancePlanName: currentCalculation.insurancePlanName,
           insuranceYears: insuranceYears,
           insuranceTotalWithVat: currentCalculation.insuranceTotalWithVat,
+          approvalDate: activeCaseRecord?.approvalDate,
+          deliveryDate: activeCaseRecord?.deliveryDate,
+          deliveryStatus: activeCaseRecord?.deliveryStatus,
           dealerName: dealerName.trim() || undefined,
           officerInfo: officerDisplay,
         }}
@@ -3600,6 +3824,7 @@ export default function App() {
         customerInfo={customerDisplay}
         customerName={customerName}
         customerPhone={customerPhone}
+        caseRecord={activeCaseRecord}
         onUpdateCustomer={(name, phone) => {
           handleCustomerNameChange(name);
           handleCustomerPhoneChange(phone);
@@ -3621,6 +3846,7 @@ export default function App() {
         isOpen={showSavedCases}
         onClose={() => {
           setShowSavedCases(false);
+          setSavedCasesPreferAll(false);
           setSavedCasesCount(getSavedCases().length);
           setCasesRevision((v) => v + 1);
         }}
@@ -3634,9 +3860,69 @@ export default function App() {
             setEditingCaseId(null);
             setEditingCaseTitle(null);
           }
+          if (!deletedId || activeCaseId === deletedId) {
+            setActiveCaseId(null);
+          }
         }}
         activeEditingId={editingCaseId}
+        initialShowAllMonths={savedCasesPreferAll}
       />
+
+      {/* Cloud Sync & Google Account Modal */}
+      {showCloudSyncModal && (
+        <div
+          className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowCloudSyncModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white shadow-2xl border border-sky-100 p-4 sm:p-5 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                  <Cloud className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    ซิงค์ข้อมูล Cloud อัตโนมัติ
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    เชื่อมต่อบัญชี Google เพื่อซิงค์ข้อมูลข้ามอุปกรณ์แบบเรียลไทม์
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCloudSyncModal(false)}
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer"
+                aria-label="ปิดหน้าต่าง Cloud Sync"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <CloudSyncCard
+              localCount={savedCasesCount}
+              onOpenSavedCases={() => {
+                setShowCloudSyncModal(false);
+                setSavedCasesPreferAll(true);
+                setShowSavedCases(true);
+              }}
+            />
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowCloudSyncModal(false)}
+                className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Global Toast Notice */}
       {toastNotice && (

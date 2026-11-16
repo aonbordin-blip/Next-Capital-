@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useModalTransition } from '../hooks/useModalTransition';
 import { MarqueeText } from './MarqueeText';
+import { CloudSyncCard } from './CloudSyncCard';
 import {
   X,
   Search,
@@ -93,6 +94,7 @@ interface Props {
   onSaveCurrentCase?: () => void;
   onDeleteCase?: (deletedId?: string) => void;
   activeEditingId?: string | null;
+  initialShowAllMonths?: boolean;
 }
 
 const THAI_MONTHS = [
@@ -208,6 +210,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   onSaveCurrentCase,
   onDeleteCase,
   activeEditingId,
+  initialShowAllMonths = false,
 }) => {
   const [cases, setCases] = useState<SavedCaseRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -244,14 +247,26 @@ export const SavedCasesModal: React.FC<Props> = ({
   // Provisional Approval Certificate Modal State
   const [approvalModalCase, setApprovalModalCase] = useState<SavedCaseRecord | null>(null);
 
-  // Load cases when modal opens - ALWAYS default to current month!
+  // Load cases when modal opens
   useEffect(() => {
     if (isOpen) {
-      setCases(getSavedCases());
+      const loadedCases = getSavedCases();
+      setCases(loadedCases);
       setSearchQuery('');
       setStatusFilter('all');
       setDeliveryFilter('all');
-      setSelectedMonthKey(getCurrentYearMonthKey()); // Default to current month as requested
+      const currentYM = getCurrentYearMonthKey();
+      const hasCurrentMonthCase = loadedCases.some(
+        (c) =>
+          getCaseCreatedYM(c) === currentYM ||
+          getCaseApprovalYM(c) === currentYM ||
+          getCaseDeliveryYM(c) === currentYM
+      );
+      setSelectedMonthKey(
+        initialShowAllMonths || (loadedCases.length > 0 && !hasCurrentMonthCase)
+          ? 'all'
+          : currentYM
+      );
       setSelectedDueMonth('all');
       setEditingId(null);
       setDetailCase(null);
@@ -264,6 +279,18 @@ export const SavedCasesModal: React.FC<Props> = ({
       setInlinePdfDataUrl(null);
       setIsLoadingInlinePdf(false);
     }
+  }, [isOpen, initialShowAllMonths]);
+
+  // Live refresh when Cloud Sync updates local cases
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleCloudSync = () => {
+      setCases(getSavedCases());
+    };
+    window.addEventListener('ncap-cases-synced', handleCloudSync);
+    return () => {
+      window.removeEventListener('ncap-cases-synced', handleCloudSync);
+    };
   }, [isOpen]);
 
   // Keep detailCase in sync when cases state changes
@@ -915,8 +942,21 @@ export const SavedCasesModal: React.FC<Props> = ({
         const res = importCasesFromJson(content);
         if (res.success) {
           triggerHaptic('success');
-          setCases(getSavedCases());
-          showToast(`นำเข้าข้อมูลสำเร็จ ${res.count} รายการ`);
+          const allCases = getSavedCases();
+          setCases(allCases);
+          setSelectedMonthKey('all');
+          setStatusFilter('all');
+          setDeliveryFilter('all');
+          setSelectedDueMonth('all');
+          setSearchQuery('');
+          const parts: string[] = [`นำเข้าข้อมูลสำเร็จ ${res.count} รายการ`];
+          if ((res.updatedCount || 0) > 0 && (res.addedCount || 0) > 0) {
+            parts[0] = `นำเข้าสำเร็จ ${res.count} รายการ (เพิ่มใหม่ ${res.addedCount}, อัปเดต ${res.updatedCount})`;
+          } else if ((res.updatedCount || 0) > 0 && (res.addedCount || 0) === 0) {
+            parts[0] = `ซิงค์ข้อมูลจากไฟล์สำรองเรียบร้อย ${res.updatedCount} รายการ`;
+          }
+          parts.push(`รวม ${allCases.length} เคส (แสดงทุกช่วงเวลาแล้ว)`);
+          showToast(parts.join(' • '));
         } else {
           triggerHaptic('warning');
           showToast(res.error || 'เกิดข้อผิดพลาดในการนำเข้าไฟล์');
@@ -1128,6 +1168,9 @@ export const SavedCasesModal: React.FC<Props> = ({
               )}
             </div>
           </div>
+
+          {/* Cloud Sync / Google Sign-In Status Bar */}
+          <CloudSyncCard compact localCount={cases.length} />
 
           {/* Primary Month Selector Bar - มีตัวเลือกเดือนชัดเจน พร้อมตัวนับยอดรับรถ/ยอดอนุมัติตามงวด */}
           {cases.length > 0 && (

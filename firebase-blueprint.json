@@ -1,0 +1,290 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account and MotoLease officer preferences synced across devices.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Authentication user UID"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 320,
+          "description": "Verified Google account email (PII - owner only)"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "User display name"
+        },
+        "officerName": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Default officer name for quotations and contracts"
+        },
+        "officerCode": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Officer code"
+        },
+        "officerLicense": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Non-life insurance broker license number"
+        },
+        "dealerName": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Default dealer shop name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp"
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "SavedCase": {
+      "title": "SavedCase",
+      "description": "Motorcycle lease case calculation, customer profile, approval status, delivery tracking, and 9-month installment payments.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Case record identifier"
+        },
+        "caseTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "description": "Display title of the saved case"
+        },
+        "officerName": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "officerCode": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "officerLicense": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "customerName": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "customerPhone": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "customerNote": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "customerAge": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "customerWorkMonths": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "customerIncome": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "customerResidenceMonths": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "customerOccupation": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "isAceCustomer": {
+          "type": "boolean"
+        },
+        "dealerName": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "proposalKey": {
+          "type": "string",
+          "enum": ["small_bike", "fazzio", "top_small", "aec", "vespa", "honda_yamaha", "second_hand"]
+        },
+        "vehiclePrice": {
+          "type": "number"
+        },
+        "bikeModelName": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "bikeModelCode": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "bikeBrand": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "downMode": {
+          "type": "string",
+          "enum": ["amount", "percent"]
+        },
+        "downValue": {
+          "type": "number"
+        },
+        "term": {
+          "type": "number"
+        },
+        "includeDeliveryFees": {
+          "type": "boolean"
+        },
+        "registrationFee": {
+          "type": "number"
+        },
+        "theftInsuranceFee": {
+          "type": "number"
+        },
+        "isCustomRateEnabled": {
+          "type": "boolean"
+        },
+        "customRateInput": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "customRateType": {
+          "type": "string",
+          "enum": ["monthly", "annual"]
+        },
+        "enforceEirCap": {
+          "type": "boolean"
+        },
+        "insurancePlan": {
+          "type": "string",
+          "enum": ["none", "plan_a", "plan_b"]
+        },
+        "insuranceYears": {
+          "type": "number"
+        },
+        "snapshot": {
+          "type": "object"
+        },
+        "approvalStatus": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected", "cancelled"]
+        },
+        "deliveryStatus": {
+          "type": "string",
+          "enum": ["pending_delivery", "delivered"]
+        },
+        "approvalDate": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "deliveryDate": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "deliveryConfirmedAt": {
+          "type": "number"
+        },
+        "approvalNote": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "approvalUpdatedAt": {
+          "type": "number"
+        },
+        "paymentDueDay": {
+          "type": "number"
+        },
+        "googleMapsLocation": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "installmentPayments": {
+          "type": "object"
+        },
+        "approvalDoc": {
+          "type": "object"
+        },
+        "recordCreatedAt": {
+          "type": "number"
+        },
+        "recordUpdatedAt": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "id",
+        "caseTitle",
+        "officerName",
+        "officerCode",
+        "customerName",
+        "proposalKey",
+        "vehiclePrice",
+        "downMode",
+        "downValue",
+        "term",
+        "includeDeliveryFees",
+        "registrationFee",
+        "theftInsuranceFee",
+        "isCustomRateEnabled",
+        "customRateInput",
+        "customRateType",
+        "enforceEirCap",
+        "insurancePlan",
+        "insuranceYears",
+        "snapshot",
+        "recordCreatedAt",
+        "recordUpdatedAt",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile and MotoLease officer settings owned exclusively by userId."
+    },
+    "/users/{userId}/cases/{caseId}": {
+      "schema": { "$ref": "#/entities/SavedCase" },
+      "description": "Saved MotoLease customer cases owned exclusively by userId, synced in real time across devices."
+    }
+  }
+}

@@ -1,0 +1,96 @@
+/**
+ * Firestore Security Rules Verification Matrix ("Dirty Dozen" Payloads)
+ * Reference specification for /users/{userId} and /users/{userId}/cases/{caseId}.
+ */
+export const DIRTY_DOZEN_CASES = [
+  {
+    name: '1. Unauthenticated read on /users/u1/cases/case-1',
+    operation: 'get',
+    path: '/users/u1/cases/case-1',
+    auth: null,
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '2. Unverified email write on /users/u1/cases/case-1',
+    operation: 'create',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'test@example.com', email_verified: false } },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '3. Cross-tenant get by user u2 on u1 case',
+    operation: 'get',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u2', token: { email: 'u2@example.com', email_verified: true } },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '4. Cross-tenant list by user u2 on /users/u1/cases',
+    operation: 'list',
+    path: '/users/u1/cases',
+    auth: { uid: 'u2', token: { email: 'u2@example.com', email_verified: true } },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '5. Directory enumeration list on /users',
+    operation: 'list',
+    path: '/users',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '6. Identity spoofing ownerUid mismatch on create',
+    operation: 'create',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { ownerUid: 'u2', id: 'case-1' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '7. ID poisoning with invalid characters',
+    operation: 'create',
+    path: '/users/u1/cases/bad$id..hack',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '8. Shadow field injection (isAdmin: true)',
+    operation: 'create',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { isAdmin: true },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '9. Immutable field tampering (ownerUid/createdAt/recordCreatedAt) on update',
+    operation: 'update',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { ownerUid: 'u2' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '10. Forged client timestamp instead of request.time',
+    operation: 'create',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { createdAt: new Date(0), updatedAt: new Date(0) },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '11. Resource poisoning (oversized googleMapsLocation > 1500 chars)',
+    operation: 'update',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { googleMapsLocation: 'x'.repeat(2000) },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '12. Type poisoning (vehiclePrice as string)',
+    operation: 'create',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { vehiclePrice: 'free' },
+    expected: 'PERMISSION_DENIED',
+  },
+];

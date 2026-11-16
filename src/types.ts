@@ -204,6 +204,7 @@ export interface SavedCaseRecord {
   deliveryStatus?: VehicleDeliveryStatus; // 'pending_delivery' (รอรับรถ) | 'delivered' (รับรถแล้ว)
   approvalDate?: string; // วันที่อนุมัติ รูปแบบ YYYY-MM-DD
   deliveryDate?: string; // วันที่รับรถ รูปแบบ YYYY-MM-DD
+  deliveryConfirmedAt?: number; // เวลา (timestamp) ณ ตอนที่กดรับรถแล้ว
   approvalNote?: string;
   approvalUpdatedAt?: number;
 

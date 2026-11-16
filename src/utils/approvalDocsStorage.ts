@@ -105,6 +105,55 @@ export async function saveApprovalDocFile(caseId: string, file: File): Promise<A
 }
 
 /**
+ * Persist an existing Base64 Data URL PDF (e.g. from backup JSON import) into IndexedDB
+ */
+export async function saveApprovalDocDataUrl(
+  caseId: string,
+  docInfo: {
+    name: string;
+    size?: number;
+    type?: string;
+    uploadedAt?: number;
+    dataUrl: string;
+  }
+): Promise<ApprovalDocInfo> {
+  const uploadedAt = docInfo.uploadedAt && Number.isFinite(docInfo.uploadedAt) ? docInfo.uploadedAt : Date.now();
+  const type = docInfo.type || 'application/pdf';
+  const size = typeof docInfo.size === 'number' && docInfo.size >= 0 ? docInfo.size : docInfo.dataUrl.length;
+  const docRecord: StoredDocRecord = {
+    caseId,
+    name: docInfo.name,
+    size,
+    type,
+    dataUrl: docInfo.dataUrl,
+    uploadedAt,
+  };
+
+  try {
+    const db = await openDatabase();
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put(docRecord);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => {
+        memoryStore.set(caseId, docRecord);
+        resolve();
+      };
+    });
+  } catch {
+    memoryStore.set(caseId, docRecord);
+  }
+
+  return {
+    name: docInfo.name,
+    size,
+    uploadedAt,
+    type,
+  };
+}
+
+/**
  * Retrieve the PDF document data (including Base64 Data URL) for viewing
  */
 export async function getApprovalDocData(caseId: string): Promise<StoredDocRecord | null> {

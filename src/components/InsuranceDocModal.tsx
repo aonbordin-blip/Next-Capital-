@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   X,
   Download,
@@ -10,12 +10,14 @@ import {
   Share2,
   Loader2,
   Award,
+  Calendar,
 } from 'lucide-react';
-import { CalculationResult, InsurancePlan, InsuranceYears } from '../types';
+import { CalculationResult, InsurancePlan, InsuranceYears, SavedCaseRecord } from '../types';
 import { INSURANCE_PLANS, formatBaht, cleanPlanNameForLine } from '../data/proposals';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { resolveCaseDocumentDateAndTime } from '../utils/savedCasesStorage';
 
 interface Props {
   isOpen: boolean;
@@ -31,6 +33,7 @@ interface Props {
   customerPhone?: string;
   onUpdatePlan?: (plan: InsurancePlan, years: InsuranceYears) => void;
   onUpdateCustomer?: (name: string, phone: string) => void;
+  caseRecord?: SavedCaseRecord | null;
 }
 
 export const InsuranceDocModal: React.FC<Props> = ({
@@ -47,6 +50,7 @@ export const InsuranceDocModal: React.FC<Props> = ({
   customerPhone,
   onUpdatePlan,
   onUpdateCustomer,
+  caseRecord,
 }) => {
   // If user opened with 'none', default to 'plan_b' (the recommended plan)
   const [activePlan, setActivePlan] = useState<InsurancePlan>(
@@ -170,13 +174,12 @@ export const InsuranceDocModal: React.FC<Props> = ({
     onUpdateCustomer?.(currentCustomerName, val);
   };
 
-  const [documentDate] = useState<string>(
-    new Date().toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+  const docMeta = useMemo(
+    () => resolveCaseDocumentDateAndTime(caseRecord),
+    [caseRecord, isOpen]
   );
+  const documentDate = docMeta.formattedDateLong;
+  const docNumber = `PA-${docMeta.ddmmyyyyBE}-${docMeta.hhmm}`;
 
   const [copied, setCopied] = useState<boolean>(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
@@ -247,8 +250,6 @@ export const InsuranceDocModal: React.FC<Props> = ({
         )
       : Math.round(premiumTotalWithVat / (activeYears * 12));
 
-  const docNumber = `PA-${Math.floor(100000 + (premiumAmount % 900000))}/${new Date().getFullYear() + 543}`;
-
   // Handle plan switch inside modal
   const handleSelectPlan = (plan: InsurancePlan, years: InsuranceYears) => {
     setActivePlan(plan);
@@ -290,6 +291,8 @@ export const InsuranceDocModal: React.FC<Props> = ({
 
     const text = `📋 ตารางแผนความคุ้มครองประกันภัยอุบัติเหตุกลุ่ม (Group PA)
 🏢 บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน) ร่วมกับ LOCKTON
+🔢 เลขที่เอกสาร: ${docNumber}
+📅 วันที่: ${documentDate}
 ━━━━━━━━━━━━━━━━━━━━
 👨‍💼 ผู้เสนอขาย: ${currentOfficerInfo}${currentOfficerLicense ? `\n📜 เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย: ${currentOfficerLicense}` : ''}
 👤 ลูกค้า: ${customerDisplay}
@@ -1292,6 +1295,24 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
                   <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                     แสดงเฉพาะแผนที่เลือกเสนอขาย ({cleanPlanNameForLine(planDetail.name)} • คุ้มครอง {activeYears} ปี)
                   </p>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/90 text-slate-700 border border-slate-200/90">
+                      <span>เลขที่:</span>
+                      <span className="font-mono text-blue-800">{docNumber}</span>
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                        docMeta.sourceType === 'delivered'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : docMeta.sourceType === 'contract'
+                          ? 'bg-sky-50 text-sky-800 border-sky-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <Calendar className="w-3 h-3 shrink-0" />
+                      <span>{docMeta.sourceLabel}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 

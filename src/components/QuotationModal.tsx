@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   X,
   Check,
@@ -10,12 +10,13 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
-import { CalculationResult } from '../types';
+import { CalculationResult, SavedCaseRecord } from '../types';
 import { formatBaht, cleanPlanNameForLine, formatTermYearMonth } from '../data/proposals';
 import { findModelByCode } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
 import { downloadElementAsImage } from '../utils/exportImage';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { resolveCaseDocumentDateAndTime } from '../utils/savedCasesStorage';
 
 interface Props {
   isOpen: boolean;
@@ -29,6 +30,7 @@ interface Props {
   initialDealerName?: string;
   onUpdateCustomer?: (name: string, phone: string) => void;
   onUpdateDealer?: (dealer: string) => void;
+  caseRecord?: SavedCaseRecord | null;
 }
 
 export const QuotationModal: React.FC<Props> = ({
@@ -43,6 +45,7 @@ export const QuotationModal: React.FC<Props> = ({
   initialDealerName = '',
   onUpdateCustomer,
   onUpdateDealer,
+  caseRecord,
 }) => {
   const [dealerName, setDealerName] = useState<string>(
     initialDealerName?.trim() || 'บริษัท เน็กซ์ แคปปิตอล จำกัด (มหาชน)'
@@ -113,34 +116,16 @@ export const QuotationModal: React.FC<Props> = ({
     }
   }, [initialDealerName]);
 
-/**
- * สร้างเลขที่เอกสารจากวันเดือนปีเวลาที่ทำรายการ ไม่เอาวินาที
- * รูปแบบ: วว ดด ปป(2 หลัก) ชช(24ชม) นน เช่น 2010262026
- */
-const generateQuotationDocNumber = (date: Date = new Date()): string => {
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yy = String(date.getFullYear()).slice(-2);
-  const hh = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  return `${dd}${mm}${yy}${hh}${min}`;
-};
-
-  const [docNumber, setDocNumber] = useState<string>(() => generateQuotationDocNumber());
-
-  useEffect(() => {
-    if (isOpen) {
-      setDocNumber(generateQuotationDocNumber());
-    }
-  }, [isOpen]);
-
-  const [quotationDate] = useState<string>(
-    new Date().toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+  /**
+   * ใช้ข้อมูลวันที่ลูกค้ารับรถ + เวลาที่กดรับรถเป็นหลัก (หรือวันที่บันทึกเคส/ทำสัญญา, หรือเวลาปัจจุบันถ้ายังไม่บันทึก)
+   * รูปแบบเลขที่เอกสาร: QT-ววดดปปปป(พ.ศ.)-ชชนน
+   */
+  const docMeta = useMemo(
+    () => resolveCaseDocumentDateAndTime(caseRecord),
+    [caseRecord, isOpen]
   );
+  const docNumber = `QT-${docMeta.ddmmyyyyBE}-${docMeta.hhmm}`;
+  const quotationDate = docMeta.formattedDateLong;
   const [copied, setCopied] = useState<boolean>(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
   const [imageSuccessMessage, setImageSuccessMessage] = useState<string | null>(null);
@@ -218,6 +203,7 @@ const generateQuotationDocNumber = (date: Date = new Date()): string => {
 
     const summary = `📄 ใบเสนอราคาเช่าซื้อรถจักรยานยนต์
 🔢 เลขที่เอกสาร: ${docNumber}
+📅 วันที่: ${quotationDate}
 🏢 ${dealerName}
 ━━━━━━━━━━━━━━━━━━━━
 👨‍💼 ผู้เสนอราคา: ${officerNameAndCode}
@@ -1230,6 +1216,24 @@ ${
                   <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                     แสดงตัวอย่างใบเสนอราคา (รุ่น <span className="font-semibold text-slate-700">{modelName || 'รถจักรยานยนต์'}</span>)
                   </p>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200">
+                      <span>เลขที่:</span>
+                      <span className="font-mono text-blue-800">{docNumber}</span>
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                        docMeta.sourceType === 'delivered'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : docMeta.sourceType === 'contract'
+                          ? 'bg-sky-50 text-sky-800 border-sky-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <Calendar className="w-3 h-3 shrink-0" />
+                      <span>{docMeta.sourceLabel}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 

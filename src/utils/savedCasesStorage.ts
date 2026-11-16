@@ -4,11 +4,294 @@ import {
   VehicleDeliveryStatus,
   ApprovalDocInfo,
   InstallmentPaymentStatus,
+  ProposalKey,
 } from '../types';
-import { deleteApprovalDocFile } from './approvalDocsStorage';
+import { deleteApprovalDocFile, saveApprovalDocDataUrl } from './approvalDocsStorage';
 import { findModelByCode } from '../data/motorcycleModels';
 
 const STORAGE_KEY = 'ncap_saved_cases_v1';
+
+const VALID_PROPOSAL_KEYS: ProposalKey[] = [
+  'small_bike',
+  'fazzio',
+  'top_small',
+  'aec',
+  'vespa',
+  'honda_yamaha',
+  'second_hand',
+];
+
+export interface CloudSyncBridge {
+  upsertCases: (records: SavedCaseRecord[]) => void;
+  deleteCases: (ids: string[]) => void;
+}
+
+let activeCloudBridge: CloudSyncBridge | null = null;
+
+// Track in-flight local uploads/deletes & confirmed Cloud IDs so real-time snapshots never wipe unsynced local cases
+const pendingCloudUploadIds = new Set<string>();
+const pendingCloudDeleteIds = new Set<string>();
+const confirmedCloudIds = new Set<string>();
+
+export function markPendingCloudUploads(ids: string[]): void {
+  for (const id of ids) {
+    const safeId = sanitizeCaseId(id);
+    pendingCloudUploadIds.add(safeId);
+    pendingCloudDeleteIds.delete(safeId);
+  }
+}
+
+export function clearPendingCloudUploads(ids: string[]): void {
+  for (const id of ids) {
+    pendingCloudUploadIds.delete(sanitizeCaseId(id));
+  }
+}
+
+export function markConfirmedCloudIds(ids: string[]): void {
+  for (const id of ids) {
+    confirmedCloudIds.add(sanitizeCaseId(id));
+  }
+}
+
+export function markPendingCloudDeletes(ids: string[]): void {
+  for (const id of ids) {
+    const safeId = sanitizeCaseId(id);
+    pendingCloudDeleteIds.add(safeId);
+    pendingCloudUploadIds.delete(safeId);
+  }
+}
+
+export function clearPendingCloudDeletes(ids: string[]): void {
+  for (const id of ids) {
+    const safeId = sanitizeCaseId(id);
+    pendingCloudDeleteIds.delete(safeId);
+    confirmedCloudIds.delete(safeId);
+  }
+}
+
+export function resetCloudSyncTracking(): void {
+  pendingCloudUploadIds.clear();
+  pendingCloudDeleteIds.clear();
+  confirmedCloudIds.clear();
+}
+
+export function registerCloudSyncBridge(bridge: CloudSyncBridge | null): void {
+  activeCloudBridge = bridge;
+}
+
+export function sanitizeCaseId(rawId?: string): string {
+  const cleaned = (typeof rawId === 'string' ? rawId : '')
+    .replace(/[^a-zA-Z0-9_-]/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120);
+  if (cleaned && /^[a-zA-Z0-9_-]+$/.test(cleaned)) {
+    return cleaned;
+  }
+  return `case-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+}
+
+function emitLocalCasesChanged(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('ncap-cases-synced'));
+  }
+}
+
+function stripHeavyApprovalDocDataUrl(cases: SavedCaseRecord[]): SavedCaseRecord[] {
+  return cases.map((c) => {
+    if (!c.approvalDoc?.dataUrl) return c;
+    void saveApprovalDocDataUrl(c.id, {
+      name: c.approvalDoc.name || 'เอกสารการอนุมัติ.pdf',
+      size: c.approvalDoc.size,
+      type: c.approvalDoc.type,
+      uploadedAt: c.approvalDoc.uploadedAt,
+      dataUrl: c.approvalDoc.dataUrl,
+    });
+    const { dataUrl: _omitted, ...restDoc } = c.approvalDoc;
+    return {
+      ...c,
+      approvalDoc: restDoc,
+    };
+  });
+}
+
+function persistSavedCases(cases: SavedCaseRecord[]): boolean {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+    return true;
+  } catch (err) {
+    // Retry after offloading any inline base64 PDFs to IndexedDB
+    try {
+      const lighter = stripHeavyApprovalDocDataUrl(cases);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lighter));
+      return true;
+    } catch (retryErr) {
+      console.error('Failed to persist saved cases to localStorage:', err, retryErr);
+      return false;
+    }
+  }
+}
+
+/**
+ * Ensure all existing local cases have unique Firestore-valid IDs and valid timestamps before Cloud sync
+ */
+export function normalizeLocalCaseIdsForCloud(): SavedCaseRecord[] {
+  const current = getSavedCases();
+  if (current.length === 0) return current;
+
+  const seenIds = new Set<string>();
+  let changed = false;
+  const now = Date.now();
+
+  const normalized = current.map((c, idx) => {
+    let nextId = typeof c.id === 'string' && /^[a-zA-Z0-9_-]{1,120}$/.test(c.id)
+      ? c.id
+      : sanitizeCaseId(c.id);
+
+    if (seenIds.has(nextId)) {
+      changed = true;
+      let suffix = idx + 1;
+      const base = nextId.slice(0, 108);
+      while (seenIds.has(`${base}-${suffix}`)) {
+        suffix++;
+      }
+      nextId = `${base}-${suffix}`;
+    } else if (nextId !== c.id) {
+      changed = true;
+    }
+    seenIds.add(nextId);
+
+    const createdAt = typeof c.createdAt === 'number' && Number.isFinite(c.createdAt) && c.createdAt > 0
+      ? c.createdAt
+      : now - idx;
+    const updatedAt = typeof c.updatedAt === 'number' && Number.isFinite(c.updatedAt) && c.updatedAt > 0
+      ? c.updatedAt
+      : createdAt;
+
+    if (createdAt !== c.createdAt || updatedAt !== c.updatedAt) {
+      changed = true;
+    }
+
+    let approvalDoc = c.approvalDoc;
+    if (approvalDoc?.dataUrl) {
+      changed = true;
+      void saveApprovalDocDataUrl(nextId, {
+        name: approvalDoc.name || 'เอกสารการอนุมัติ.pdf',
+        size: approvalDoc.size,
+        type: approvalDoc.type,
+        uploadedAt: approvalDoc.uploadedAt,
+        dataUrl: approvalDoc.dataUrl,
+      });
+      const { dataUrl: _omitted, ...restDoc } = approvalDoc;
+      approvalDoc = restDoc;
+    }
+
+    return {
+      ...c,
+      id: nextId,
+      createdAt,
+      updatedAt,
+      ...(approvalDoc ? { approvalDoc } : {}),
+    };
+  });
+
+  if (changed) {
+    normalized.sort((a, b) => b.createdAt - a.createdAt);
+    persistSavedCases(normalized);
+  }
+  return normalized;
+}
+
+export interface MergeCloudCasesOptions {
+  fromCache?: boolean;
+  isServerSnapshotSettled?: boolean;
+}
+
+export function mergeCloudCasesIntoLocal(
+  cloudCases: SavedCaseRecord[],
+  options: MergeCloudCasesOptions = {}
+): SavedCaseRecord[] {
+  const { fromCache = false, isServerSnapshotSettled = false } = options;
+  const localCurrent = getSavedCases();
+
+  const localMap = new Map<string, SavedCaseRecord>();
+  for (const c of localCurrent) {
+    const safeId = sanitizeCaseId(c.id);
+    localMap.set(safeId, c.id === safeId ? c : { ...c, id: safeId });
+  }
+
+  const cloudMap = new Map<string, SavedCaseRecord>();
+  for (const c of cloudCases) {
+    const safeId = sanitizeCaseId(c.id);
+    if (pendingCloudDeleteIds.has(safeId)) continue;
+    cloudMap.set(safeId, c.id === safeId ? c : { ...c, id: safeId });
+    if (!fromCache) {
+      confirmedCloudIds.add(safeId);
+    }
+  }
+
+  const resultMap = new Map<string, SavedCaseRecord>();
+
+  // 1. Reconcile cases present in Cloud
+  for (const [id, cloudRecord] of cloudMap.entries()) {
+    const localRecord = localMap.get(id);
+    if (!localRecord) {
+      resultMap.set(id, cloudRecord);
+      continue;
+    }
+
+    const hydratedCloud: SavedCaseRecord =
+      cloudRecord.approvalDoc && localRecord.approvalDoc?.dataUrl && !cloudRecord.approvalDoc.dataUrl
+        ? {
+            ...cloudRecord,
+            approvalDoc: {
+              ...cloudRecord.approvalDoc,
+              dataUrl: localRecord.approvalDoc.dataUrl,
+            },
+          }
+        : cloudRecord;
+
+    const isPendingLocalWrite = pendingCloudUploadIds.has(id);
+    const localUpdated = Number(localRecord.updatedAt) || 0;
+    const cloudUpdated = Number(cloudRecord.updatedAt) || 0;
+
+    if (isPendingLocalWrite || localUpdated > cloudUpdated) {
+      resultMap.set(id, localRecord);
+    } else {
+      resultMap.set(id, hydratedCloud);
+    }
+  }
+
+  // 2. Preserve local-only cases that haven't been synced to Cloud yet!
+  for (const [id, localRecord] of localMap.entries()) {
+    if (resultMap.has(id)) continue;
+    if (pendingCloudDeleteIds.has(id)) continue;
+
+    const shouldDeleteFromLocal =
+      !pendingCloudUploadIds.has(id) &&
+      !fromCache &&
+      isServerSnapshotSettled &&
+      confirmedCloudIds.has(id);
+
+    if (!shouldDeleteFromLocal) {
+      resultMap.set(id, localRecord);
+    }
+  }
+
+  const merged = Array.from(resultMap.values()).sort(
+    (a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0)
+  );
+
+  persistSavedCases(merged);
+  emitLocalCasesChanged();
+  return merged;
+}
+
+export function replaceSavedCasesFromCloud(cloudCases: SavedCaseRecord[]): SavedCaseRecord[] {
+  return mergeCloudCasesIntoLocal(cloudCases, {
+    fromCache: false,
+    isServerSnapshotSettled: false,
+  });
+}
 
 export function getLocalTodayDateStr(): string {
   const d = new Date();
@@ -70,6 +353,7 @@ export function saveCaseRecord(
         deliveryStatus: data.deliveryStatus !== undefined ? data.deliveryStatus : existing.deliveryStatus,
         approvalDate: data.approvalDate !== undefined ? data.approvalDate : existing.approvalDate,
         deliveryDate: data.deliveryDate !== undefined ? data.deliveryDate : existing.deliveryDate,
+        deliveryConfirmedAt: data.deliveryConfirmedAt !== undefined ? data.deliveryConfirmedAt : existing.deliveryConfirmedAt,
         paymentDueDay: data.paymentDueDay !== undefined ? data.paymentDueDay : existing.paymentDueDay,
         googleMapsLocation: data.googleMapsLocation !== undefined ? data.googleMapsLocation : existing.googleMapsLocation,
         bikeBrand: data.bikeBrand !== undefined ? data.bikeBrand : existing.bikeBrand,
@@ -79,11 +363,9 @@ export function saveCaseRecord(
         updatedAt: now,
       };
       cases[index] = updated;
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-      } catch (err) {
-        console.error('Failed to update case in localStorage:', err);
-      }
+      persistSavedCases(cases);
+      markPendingCloudUploads([updated.id]);
+      activeCloudBridge?.upsertCases([updated]);
       return updated;
     }
   }
@@ -98,6 +380,8 @@ export function saveCaseRecord(
     initialApprovalStatus === 'approved' ? (data.approvalDate || todayStr) : data.approvalDate;
   const initialDeliveryDate =
     initialDeliveryStatus === 'delivered' ? (data.deliveryDate || todayStr) : data.deliveryDate;
+  const initialDeliveryConfirmedAt =
+    initialDeliveryStatus === 'delivered' ? (data.deliveryConfirmedAt || now) : data.deliveryConfirmedAt;
 
   const newRecord: SavedCaseRecord = {
     ...data,
@@ -105,22 +389,21 @@ export function saveCaseRecord(
     deliveryStatus: initialDeliveryStatus,
     approvalDate: initialApprovalDate,
     deliveryDate: initialDeliveryDate,
+    deliveryConfirmedAt: initialDeliveryConfirmedAt,
     paymentDueDay: data.paymentDueDay,
     googleMapsLocation: data.googleMapsLocation,
     bikeBrand: data.bikeBrand,
     installmentPayments: data.installmentPayments,
     approvalDoc: data.approvalDoc,
-    id: `case-${now}-${Math.random().toString(36).substring(2, 7)}`,
+    id: sanitizeCaseId(data.id),
     createdAt: now,
     updatedAt: now,
   };
 
   const updatedCases = [newRecord, ...cases];
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCases));
-  } catch (err) {
-    console.error('Failed to save case in localStorage:', err);
-  }
+  persistSavedCases(updatedCases);
+  markPendingCloudUploads([newRecord.id]);
+  activeCloudBridge?.upsertCases([newRecord]);
   return newRecord;
 }
 
@@ -134,7 +417,19 @@ export function deleteCaseRecord(id: string): SavedCaseRecord[] {
   } catch (err) {
     console.error('Failed to delete case from localStorage:', err);
   }
+  markPendingCloudDeletes([id]);
+  activeCloudBridge?.deleteCases([id]);
   return filtered;
+}
+
+function finalizeUpdatedCase(updated: SavedCaseRecord[], id: string): SavedCaseRecord[] {
+  persistSavedCases(updated);
+  const changed = updated.find((c) => c.id === id);
+  if (changed) {
+    markPendingCloudUploads([changed.id]);
+    activeCloudBridge?.upsertCases([changed]);
+  }
+  return updated;
 }
 
 export function updateCaseTitle(id: string, newTitle: string): SavedCaseRecord[] {
@@ -142,12 +437,7 @@ export function updateCaseTitle(id: string, newTitle: string): SavedCaseRecord[]
   const updated = cases.map((c) =>
     c.id === id ? { ...c, caseTitle: newTitle, customerName: newTitle, updatedAt: Date.now() } : c
   );
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update title in localStorage:', err);
-  }
-  return updated;
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseDealerName(id: string, dealerName: string): SavedCaseRecord[] {
@@ -155,12 +445,7 @@ export function updateCaseDealerName(id: string, dealerName: string): SavedCaseR
   const updated = cases.map((c) =>
     c.id === id ? { ...c, dealerName: dealerName.trim() || undefined, updatedAt: Date.now() } : c
   );
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update dealerName in localStorage:', err);
-  }
-  return updated;
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseApprovalStatus(
@@ -191,12 +476,7 @@ export function updateCaseApprovalStatus(
       approvalUpdatedAt: Date.now(),
     };
   });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update approval status in localStorage:', err);
-  }
-  return updated;
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseDeliveryStatus(
@@ -205,6 +485,7 @@ export function updateCaseDeliveryStatus(
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
   const todayStr = getLocalTodayDateStr();
+  const now = Date.now();
   const updated = cases.map((c) => {
     if (c.id !== id) return c;
     const resolvedDeliveryDate =
@@ -216,16 +497,12 @@ export function updateCaseDeliveryStatus(
       ...c,
       deliveryStatus,
       deliveryDate: resolvedDeliveryDate,
+      deliveryConfirmedAt: deliveryStatus === 'delivered' ? now : undefined,
       paymentDueDay: deliveryStatus === 'delivered' ? (c.paymentDueDay || 2) : c.paymentDueDay,
-      updatedAt: Date.now(),
+      updatedAt: now,
     };
   });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update delivery status in localStorage:', err);
-  }
-  return updated;
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseDates(
@@ -233,21 +510,17 @@ export function updateCaseDates(
   dates: { approvalDate?: string; deliveryDate?: string }
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const updated = cases.map((c) => {
-    if (c.id !== id) return c;
-    return {
-      ...c,
-      approvalDate: dates.approvalDate !== undefined ? dates.approvalDate : c.approvalDate,
-      deliveryDate: dates.deliveryDate !== undefined ? dates.deliveryDate : c.deliveryDate,
-      updatedAt: Date.now(),
-    };
-  });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update case dates in localStorage:', err);
-  }
-  return updated;
+  const updated = cases.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          approvalDate: dates.approvalDate !== undefined ? dates.approvalDate : c.approvalDate,
+          deliveryDate: dates.deliveryDate !== undefined ? dates.deliveryDate : c.deliveryDate,
+          updatedAt: Date.now(),
+        }
+      : c
+  );
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCasePaymentDueDay(
@@ -255,20 +528,16 @@ export function updateCasePaymentDueDay(
   paymentDueDay: number | undefined
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const updated = cases.map((c) => {
-    if (c.id !== id) return c;
-    return {
-      ...c,
-      paymentDueDay,
-      updatedAt: Date.now(),
-    };
-  });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update payment due day in localStorage:', err);
-  }
-  return updated;
+  const updated = cases.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          paymentDueDay,
+          updatedAt: Date.now(),
+        }
+      : c
+  );
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseGoogleMapsLocation(
@@ -276,20 +545,16 @@ export function updateCaseGoogleMapsLocation(
   googleMapsLocation: string
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const updated = cases.map((c) => {
-    if (c.id !== id) return c;
-    return {
-      ...c,
-      googleMapsLocation,
-      updatedAt: Date.now(),
-    };
-  });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update Google Maps location in localStorage:', err);
-  }
-  return updated;
+  const updated = cases.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          googleMapsLocation,
+          updatedAt: Date.now(),
+        }
+      : c
+  );
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseApprovalDoc(
@@ -297,20 +562,16 @@ export function updateCaseApprovalDoc(
   approvalDoc?: ApprovalDocInfo
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const updated = cases.map((c) => {
-    if (c.id !== id) return c;
-    return {
-      ...c,
-      approvalDoc,
-      updatedAt: Date.now(),
-    };
-  });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update approval doc in localStorage:', err);
-  }
-  return updated;
+  const updated = cases.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          approvalDoc,
+          updatedAt: Date.now(),
+        }
+      : c
+  );
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function getGoogleMapsNavigationUrl(input?: string): string {
@@ -333,10 +594,15 @@ export function getGoogleMapsNavigationUrl(input?: string): string {
 }
 
 export function clearAllCaseRecords(): void {
+  const existingIds = getSavedCases().map((c) => c.id);
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (err) {
     console.error('Failed to clear cases in localStorage:', err);
+  }
+  if (existingIds.length > 0) {
+    markPendingCloudDeletes(existingIds);
+    activeCloudBridge?.deleteCases(existingIds);
   }
 }
 
@@ -354,43 +620,399 @@ export function exportCasesAsJson(): string {
   );
 }
 
-export function importCasesFromJson(jsonStr: string): { success: boolean; count: number; error?: string } {
+function parseFlexNumber(val: unknown, fallback = 0): number {
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? val : fallback;
+  }
+  if (typeof val === 'string') {
+    const cleaned = val.replace(/,/g, '').trim();
+    if (!cleaned) return fallback;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  return fallback;
+}
+
+function parseFlexTimestamp(val: unknown, fallback: number): number {
+  if (typeof val === 'number' && Number.isFinite(val) && val > 0) {
+    return Math.round(val);
+  }
+  if (typeof val === 'string' && val.trim()) {
+    const asNum = Number(val.trim());
+    if (Number.isFinite(asNum) && asNum > 0) return Math.round(asNum);
+    const parsed = Date.parse(val.trim());
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return fallback;
+}
+
+function isLikelyCaseObject(raw: unknown): raw is Record<string, unknown> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false;
+  const obj = raw as Record<string, unknown>;
+  return (
+    obj.vehiclePrice !== undefined ||
+    obj.snapshot !== undefined ||
+    obj.customerName !== undefined ||
+    obj.caseTitle !== undefined ||
+    obj.proposalKey !== undefined ||
+    obj.bikeModelName !== undefined ||
+    obj.term !== undefined ||
+    obj.downValue !== undefined
+  );
+}
+
+function normalizeImportedRecord(
+  raw: Record<string, unknown>,
+  finalId: string,
+  fallbackNow: number
+): SavedCaseRecord {
+  const rawSnap =
+    raw.snapshot && typeof raw.snapshot === 'object' && !Array.isArray(raw.snapshot)
+      ? (raw.snapshot as Record<string, unknown>)
+      : {};
+
+  const proposalKeyRaw = typeof raw.proposalKey === 'string' ? raw.proposalKey.trim() : '';
+  const proposalKey: ProposalKey = VALID_PROPOSAL_KEYS.includes(proposalKeyRaw as ProposalKey)
+    ? (proposalKeyRaw as ProposalKey)
+    : 'small_bike';
+
+  const vehiclePrice = Math.max(0, Math.min(10000000, parseFlexNumber(raw.vehiclePrice, 0)));
+  const downMode: 'amount' | 'percent' = raw.downMode === 'percent' ? 'percent' : 'amount';
+  const downValue = Math.max(0, Math.min(10000000, parseFlexNumber(raw.downValue, 0)));
+  const term = Math.max(1, Math.min(120, Math.round(parseFlexNumber(raw.term, 36)) || 36));
+  const registrationFee = Math.max(0, Math.min(1000000, parseFlexNumber(raw.registrationFee, 0)));
+  const theftInsuranceFee = Math.max(0, Math.min(1000000, parseFlexNumber(raw.theftInsuranceFee, 0)));
+  const customRateType: 'monthly' | 'annual' = raw.customRateType === 'annual' ? 'annual' : 'monthly';
+  const insurancePlan: 'none' | 'plan_a' | 'plan_b' =
+    raw.insurancePlan === 'plan_a' || raw.insurancePlan === 'plan_b' ? raw.insurancePlan : 'none';
+  const parsedInsYears = parseFlexNumber(raw.insuranceYears, 1);
+  const insuranceYears: 1 | 2 | 3 = parsedInsYears === 2 ? 2 : parsedInsYears === 3 ? 3 : 1;
+
+  const customerName =
+    typeof raw.customerName === 'string' && raw.customerName.trim()
+      ? raw.customerName.trim()
+      : typeof raw.caseTitle === 'string' && raw.caseTitle.trim()
+      ? raw.caseTitle.trim()
+      : 'คุณลูกค้า';
+  const caseTitle =
+    typeof raw.caseTitle === 'string' && raw.caseTitle.trim()
+      ? raw.caseTitle.trim()
+      : customerName;
+
+  const createdAt = parseFlexTimestamp(raw.createdAt ?? raw.recordCreatedAt, fallbackNow);
+  const updatedAt = parseFlexTimestamp(raw.updatedAt ?? raw.recordUpdatedAt, createdAt);
+
+  const downAmount = parseFlexNumber(
+    rawSnap.downAmount,
+    downMode === 'percent' ? Math.round((vehiclePrice * downValue) / 100) : downValue
+  );
+  const financeAmount = parseFlexNumber(rawSnap.financeAmount, Math.max(0, vehiclePrice - downAmount));
+  const downPercent = parseFlexNumber(
+    rawSnap.downPercent,
+    vehiclePrice > 0 ? Number(((downAmount / vehiclePrice) * 100).toFixed(2)) : 0
+  );
+
+  const snapshot: SavedCaseRecord['snapshot'] = {
+    monthlyInstallment: parseFlexNumber(rawSnap.monthlyInstallment, 0),
+    financeAmount,
+    downAmount,
+    downPercent,
+    totalInterest: parseFlexNumber(rawSnap.totalInterest, 0),
+    totalWithVat: parseFlexNumber(rawSnap.totalWithVat, financeAmount),
+    effectiveMonthlyRate: parseFlexNumber(rawSnap.effectiveMonthlyRate, 0),
+    eirAnnualPercent: parseFlexNumber(rawSnap.eirAnnualPercent, 0),
+    proposalCode: typeof rawSnap.proposalCode === 'string' ? rawSnap.proposalCode : '',
+    proposalName: typeof rawSnap.proposalName === 'string' ? rawSnap.proposalName : '',
+    rateDisplayText: typeof rawSnap.rateDisplayText === 'string' ? rawSnap.rateDisplayText : '',
+    ...(rawSnap.rawMonthlyInstallment !== undefined
+      ? { rawMonthlyInstallment: parseFlexNumber(rawSnap.rawMonthlyInstallment, 0) }
+      : {}),
+    ...(rawSnap.totalDriveAwayCost !== undefined
+      ? { totalDriveAwayCost: parseFlexNumber(rawSnap.totalDriveAwayCost, 0) }
+      : {}),
+  };
+
+  let approvalDoc: ApprovalDocInfo | undefined;
+  if (raw.approvalDoc && typeof raw.approvalDoc === 'object' && !Array.isArray(raw.approvalDoc)) {
+    const docObj = raw.approvalDoc as Record<string, unknown>;
+    const docName = typeof docObj.name === 'string' ? docObj.name.trim() : '';
+    if (docName) {
+      const uploadedAt = parseFlexTimestamp(docObj.uploadedAt, createdAt);
+      const size = Math.max(0, parseFlexNumber(docObj.size, 0));
+      const type = typeof docObj.type === 'string' && docObj.type ? docObj.type : undefined;
+      if (typeof docObj.dataUrl === 'string' && docObj.dataUrl) {
+        void saveApprovalDocDataUrl(finalId, {
+          name: docName,
+          size,
+          type,
+          uploadedAt,
+          dataUrl: docObj.dataUrl,
+        });
+      }
+      approvalDoc = {
+        name: docName,
+        size,
+        uploadedAt,
+        ...(type ? { type } : {}),
+      };
+    }
+  }
+
+  let installmentPayments: Record<number, InstallmentPaymentStatus> | undefined;
+  if (raw.installmentPayments && typeof raw.installmentPayments === 'object' && !Array.isArray(raw.installmentPayments)) {
+    const clean: Record<number, InstallmentPaymentStatus> = {};
+    let count = 0;
+    for (const [k, v] of Object.entries(raw.installmentPayments as Record<string, unknown>)) {
+      if (count >= 12) break;
+      const idx = Number(k);
+      if (Number.isFinite(idx) && (v === 'paid' || v === 'unpaid')) {
+        clean[idx] = v;
+        count++;
+      }
+    }
+    if (count > 0) installmentPayments = clean;
+  }
+
+  const approvalStatusRaw = raw.approvalStatus;
+  const approvalStatus: CaseApprovalStatus | undefined =
+    approvalStatusRaw === 'pending' ||
+    approvalStatusRaw === 'approved' ||
+    approvalStatusRaw === 'rejected' ||
+    approvalStatusRaw === 'cancelled'
+      ? approvalStatusRaw
+      : undefined;
+
+  const deliveryStatusRaw = raw.deliveryStatus;
+  const deliveryStatus: VehicleDeliveryStatus | undefined =
+    deliveryStatusRaw === 'pending_delivery' || deliveryStatusRaw === 'delivered'
+      ? deliveryStatusRaw
+      : undefined;
+
+  const paymentDueDayRaw = raw.paymentDueDay !== undefined ? parseFlexNumber(raw.paymentDueDay, 0) : 0;
+  const paymentDueDay =
+    paymentDueDayRaw >= 1 && paymentDueDayRaw <= 31 ? Math.round(paymentDueDayRaw) : undefined;
+
+  return {
+    id: finalId,
+    createdAt,
+    updatedAt,
+    caseTitle,
+    officerName: typeof raw.officerName === 'string' ? raw.officerName : '',
+    officerCode: typeof raw.officerCode === 'string' ? raw.officerCode : '',
+    ...(typeof raw.officerLicense === 'string' && raw.officerLicense ? { officerLicense: raw.officerLicense } : {}),
+    customerName,
+    ...(typeof raw.customerPhone === 'string' && raw.customerPhone ? { customerPhone: raw.customerPhone } : {}),
+    ...(typeof raw.customerNote === 'string' && raw.customerNote ? { customerNote: raw.customerNote } : {}),
+    ...(typeof raw.customerAge === 'string' && raw.customerAge ? { customerAge: raw.customerAge } : {}),
+    ...(typeof raw.customerWorkMonths === 'string' && raw.customerWorkMonths
+      ? { customerWorkMonths: raw.customerWorkMonths }
+      : {}),
+    ...(typeof raw.customerIncome === 'string' && raw.customerIncome
+      ? { customerIncome: raw.customerIncome }
+      : {}),
+    ...(typeof raw.customerResidenceMonths === 'string' && raw.customerResidenceMonths
+      ? { customerResidenceMonths: raw.customerResidenceMonths }
+      : {}),
+    ...(typeof raw.customerOccupation === 'string' && raw.customerOccupation
+      ? { customerOccupation: raw.customerOccupation }
+      : {}),
+    ...(raw.isAceCustomer !== undefined ? { isAceCustomer: Boolean(raw.isAceCustomer) } : {}),
+    ...(typeof raw.dealerName === 'string' && raw.dealerName ? { dealerName: raw.dealerName } : {}),
+    proposalKey,
+    vehiclePrice,
+    ...(typeof raw.bikeModelName === 'string' && raw.bikeModelName ? { bikeModelName: raw.bikeModelName } : {}),
+    ...(typeof raw.bikeModelCode === 'string' && raw.bikeModelCode ? { bikeModelCode: raw.bikeModelCode } : {}),
+    ...(typeof raw.bikeBrand === 'string' && raw.bikeBrand ? { bikeBrand: raw.bikeBrand } : {}),
+    downMode,
+    downValue,
+    term,
+    includeDeliveryFees: Boolean(raw.includeDeliveryFees),
+    registrationFee,
+    theftInsuranceFee,
+    isCustomRateEnabled: Boolean(raw.isCustomRateEnabled),
+    customRateInput: typeof raw.customRateInput === 'string' ? raw.customRateInput : '',
+    customRateType,
+    enforceEirCap: Boolean(raw.enforceEirCap),
+    insurancePlan,
+    insuranceYears,
+    snapshot,
+    ...(approvalStatus ? { approvalStatus } : {}),
+    ...(deliveryStatus ? { deliveryStatus } : {}),
+    ...(typeof raw.approvalDate === 'string' && raw.approvalDate ? { approvalDate: raw.approvalDate } : {}),
+    ...(typeof raw.deliveryDate === 'string' && raw.deliveryDate ? { deliveryDate: raw.deliveryDate } : {}),
+    ...(raw.deliveryConfirmedAt !== undefined
+      ? { deliveryConfirmedAt: parseFlexTimestamp(raw.deliveryConfirmedAt, updatedAt) }
+      : {}),
+    ...(typeof raw.approvalNote === 'string' && raw.approvalNote ? { approvalNote: raw.approvalNote } : {}),
+    ...(raw.approvalUpdatedAt !== undefined
+      ? { approvalUpdatedAt: parseFlexTimestamp(raw.approvalUpdatedAt, updatedAt) }
+      : {}),
+    ...(paymentDueDay !== undefined ? { paymentDueDay } : {}),
+    ...(typeof raw.googleMapsLocation === 'string' && raw.googleMapsLocation
+      ? { googleMapsLocation: raw.googleMapsLocation }
+      : {}),
+    ...(installmentPayments ? { installmentPayments } : {}),
+    ...(approvalDoc ? { approvalDoc } : {}),
+  };
+}
+
+export interface ImportCasesResult {
+  success: boolean;
+  count: number;
+  addedCount?: number;
+  updatedCount?: number;
+  skippedCount?: number;
+  totalCount?: number;
+  records?: SavedCaseRecord[];
+  error?: string;
+}
+
+export function mergeBackupJsonIntoLocal(
+  jsonStr: string,
+  options: { triggerCloudBridge?: boolean } = { triggerCloudBridge: true }
+): ImportCasesResult {
   try {
-    const data = JSON.parse(jsonStr);
-    const incoming: SavedCaseRecord[] = Array.isArray(data) ? data : data.cases;
-    if (!Array.isArray(incoming)) {
-      return { success: false, count: 0, error: 'รูปแบบไฟล์ไม่ถูกต้อง (ต้องเป็นรายการเคส)' };
+    const cleanJson = jsonStr.replace(/^\uFEFF/, '').trim();
+    const data = JSON.parse(cleanJson);
+
+    let incoming: unknown[] | null = null;
+    if (Array.isArray(data)) {
+      incoming = data;
+    } else if (data && typeof data === 'object') {
+      const obj = data as Record<string, unknown>;
+      if (Array.isArray(obj.cases)) incoming = obj.cases;
+      else if (Array.isArray(obj.records)) incoming = obj.records;
+      else if (Array.isArray(obj.data)) incoming = obj.data;
+      else if (Array.isArray(obj.items)) incoming = obj.items;
+      else if (isLikelyCaseObject(obj)) incoming = [obj];
     }
 
-    const current = getSavedCases();
-    const currentIds = new Set(current.map((c) => c.id));
-    let addedCount = 0;
+    if (!Array.isArray(incoming)) {
+      return { success: false, count: 0, error: 'รูปแบบไฟล์ไม่ถูกต้อง (ต้องเป็นรายการเคส .json)' };
+    }
 
-    const merged = [...current];
-    incoming.forEach((item) => {
-      if (item && item.vehiclePrice && item.proposalKey) {
-        // Ensure id is unique
-        let finalId = item.id || `case-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-        if (currentIds.has(finalId)) {
-          finalId = `case-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-        }
-        merged.push({
-          ...item,
-          id: finalId,
-          createdAt: item.createdAt || Date.now(),
-          updatedAt: item.updatedAt || Date.now(),
-        });
-        currentIds.add(finalId);
-        addedCount++;
+    const current = normalizeLocalCaseIdsForCloud();
+    const existingIndexMap = new Map<string, number>();
+    const usedIds = new Set<string>();
+    const merged: SavedCaseRecord[] = [...current];
+    merged.forEach((c, idx) => {
+      existingIndexMap.set(c.id, idx);
+      usedIds.add(c.id);
+    });
+
+    const seenInImportFile = new Set<string>();
+    const toSyncRecords: SavedCaseRecord[] = [];
+    let addedCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+    const baseNow = Date.now();
+
+    incoming.forEach((rawItem, idx) => {
+      if (!isLikelyCaseObject(rawItem)) {
+        skippedCount++;
+        return;
       }
+
+      const rawIdStr = typeof rawItem.id === 'string' && rawItem.id.trim() ? rawItem.id.trim() : '';
+      const cleanedBaseId = rawIdStr
+        ? rawIdStr.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 120)
+        : '';
+
+      const fallbackTime = baseNow - idx;
+
+      // If this item has an explicit valid ID matching an existing local case (and not seen twice in this file),
+      // merge/update in place without duplicating or losing fields
+      if (
+        cleanedBaseId &&
+        /^[a-zA-Z0-9_-]+$/.test(cleanedBaseId) &&
+        existingIndexMap.has(cleanedBaseId) &&
+        !seenInImportFile.has(cleanedBaseId)
+      ) {
+        seenInImportFile.add(cleanedBaseId);
+        const existingIdx = existingIndexMap.get(cleanedBaseId)!;
+        const existingRec = merged[existingIdx];
+        const normalizedIncoming = normalizeImportedRecord(rawItem, cleanedBaseId, fallbackTime);
+        const mergedRec: SavedCaseRecord =
+          normalizedIncoming.updatedAt >= (existingRec.updatedAt || 0)
+            ? {
+                ...existingRec,
+                ...normalizedIncoming,
+                id: cleanedBaseId,
+                createdAt: existingRec.createdAt || normalizedIncoming.createdAt,
+                updatedAt: Math.max(normalizedIncoming.updatedAt, existingRec.updatedAt || 0),
+                approvalDoc: normalizedIncoming.approvalDoc || existingRec.approvalDoc,
+              }
+            : {
+                ...normalizedIncoming,
+                ...existingRec,
+                id: cleanedBaseId,
+                approvalDoc: existingRec.approvalDoc || normalizedIncoming.approvalDoc,
+              };
+
+        merged[existingIdx] = mergedRec;
+        toSyncRecords.push(mergedRec);
+        updatedCount++;
+        return;
+      }
+
+      // Otherwise allocate a guaranteed unique Firestore-safe ID
+      let finalId =
+        cleanedBaseId && /^[a-zA-Z0-9_-]+$/.test(cleanedBaseId)
+          ? cleanedBaseId
+          : `case-${baseNow}-${idx + 1}`;
+
+      if (usedIds.has(finalId)) {
+        const prefix = finalId.slice(0, 108);
+        let counter = 1;
+        while (usedIds.has(`${prefix}-${counter}`)) {
+          counter++;
+        }
+        finalId = `${prefix}-${counter}`;
+      }
+
+      seenInImportFile.add(finalId);
+      usedIds.add(finalId);
+
+      const normalizedRecord = normalizeImportedRecord(rawItem, finalId, fallbackTime);
+      merged.push(normalizedRecord);
+      toSyncRecords.push(normalizedRecord);
+      addedCount++;
     });
 
     merged.sort((a, b) => b.createdAt - a.createdAt);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-    return { success: true, count: addedCount };
-  } catch (err) {
+    const persisted = persistSavedCases(merged);
+    if (!persisted) {
+      return {
+        success: false,
+        count: 0,
+        error: 'หน่วยความจำในเบราว์เซอร์เต็ม ไม่สามารถบันทึกเคสทั้งหมดได้',
+      };
+    }
+
+    if (toSyncRecords.length > 0) {
+      markPendingCloudUploads(toSyncRecords.map((r) => r.id));
+      if (options.triggerCloudBridge !== false) {
+        activeCloudBridge?.upsertCases(toSyncRecords);
+      }
+    }
+
+    emitLocalCasesChanged();
+    return {
+      success: true,
+      count: addedCount + updatedCount,
+      addedCount,
+      updatedCount,
+      skippedCount,
+      totalCount: merged.length,
+      records: toSyncRecords,
+    };
+  } catch {
     return { success: false, count: 0, error: 'ไม่สามารถอ่านไฟล์ JSON ได้ หรือไฟล์เสียหาย' };
   }
+}
+
+export function importCasesFromJson(jsonStr: string): ImportCasesResult {
+  return mergeBackupJsonIntoLocal(jsonStr, { triggerCloudBridge: true });
 }
 
 export interface FirstPaymentDueDateInfo {
@@ -511,12 +1133,7 @@ export function updateCaseInstallmentPayment(
       updatedAt: Date.now(),
     };
   });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update installment payment status in localStorage:', err);
-  }
-  return updated;
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function updateCaseTrackingDetails(
@@ -560,12 +1177,7 @@ export function updateCaseTrackingDetails(
       updatedAt: Date.now(),
     };
   });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.error('Failed to update tracking details in localStorage:', err);
-  }
-  return updated;
+  return finalizeUpdatedCase(updated, id);
 }
 
 export function resolveBikeBrand(record: {
@@ -668,6 +1280,131 @@ export function getNineInstallmentSchedule(record: SavedCaseRecord): Installment
     });
   }
   return slots;
+}
+
+function parseFlexibleLocalDate(input?: string | number | Date): Date {
+  if (!input) return new Date();
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? new Date() : input;
+  }
+  if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input.trim())) {
+    const [y, m, d] = input.trim().split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return isNaN(dt.getTime()) ? new Date() : dt;
+  }
+  const dt = new Date(input);
+  return isNaN(dt.getTime()) ? new Date() : dt;
+}
+
+export function formatThaiFullDocumentDate(input?: string | number | Date): string {
+  const d = parseFlexibleLocalDate(input);
+  const day = d.getDate();
+  const monthName = THAI_MONTH_NAMES_LIST[d.getMonth()] || '';
+  const thaiYear = d.getFullYear() + 543;
+  return `${day} ${monthName} ${thaiYear}`;
+}
+
+export function formatThaiShortDateWithTime(
+  dateInput?: string | number | Date,
+  timeInput?: string | number | Date
+): string {
+  const d = parseFlexibleLocalDate(dateInput);
+  const t = parseFlexibleLocalDate(timeInput || dateInput);
+  const day = d.getDate();
+  const monthShort = THAI_MONTH_SHORTS_LIST[d.getMonth()] || '';
+  const thaiShortYear = ((d.getFullYear() + 543) % 100).toString().padStart(2, '0');
+  const hh = String(t.getHours()).padStart(2, '0');
+  const min = String(t.getMinutes()).padStart(2, '0');
+  return `${day} ${monthShort} ${thaiShortYear} เวลา ${hh}:${min} น.`;
+}
+
+export function formatBuddhistDDMMYYYY(input?: string | number | Date): string {
+  const d = parseFlexibleLocalDate(input);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const thaiYear = String(d.getFullYear() + 543);
+  return `${dd}${mm}${thaiYear}`;
+}
+
+export function formatTimeHHMM(input?: string | number | Date): string {
+  const d = parseFlexibleLocalDate(input);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}${min}`;
+}
+
+export interface ResolvedCaseDocumentMeta {
+  docDate: Date;
+  timeDate: Date;
+  ddmmyyyyBE: string;
+  hhmm: string;
+  hhmmColon: string;
+  formattedDateLong: string;
+  sourceType: 'delivered' | 'contract' | 'now';
+  sourceLabel: string;
+}
+
+export function resolveCaseDocumentDateAndTime(
+  caseRecord?: SavedCaseRecord | null
+): ResolvedCaseDocumentMeta {
+  if (!caseRecord) {
+    const now = new Date();
+    const ddmmyyyyBE = formatBuddhistDDMMYYYY(now);
+    const hhmm = formatTimeHHMM(now);
+    const hhmmColon = `${hhmm.slice(0, 2)}:${hhmm.slice(2, 4)}`;
+    return {
+      docDate: now,
+      timeDate: now,
+      ddmmyyyyBE,
+      hhmm,
+      hhmmColon,
+      formattedDateLong: formatThaiFullDocumentDate(now),
+      sourceType: 'now',
+      sourceLabel: `วันที่ปัจจุบัน ${formatThaiFullDocumentDate(now)} (${hhmmColon} น.)`,
+    };
+  }
+
+  const hasDeliveryInfo =
+    caseRecord.deliveryStatus === 'delivered' || Boolean(caseRecord.deliveryDate);
+
+  const dateSource: string | number = hasDeliveryInfo
+    ? caseRecord.deliveryDate || caseRecord.deliveryConfirmedAt || caseRecord.createdAt
+    : caseRecord.approvalDate || caseRecord.createdAt;
+
+  const timeSource: number = hasDeliveryInfo
+    ? caseRecord.deliveryConfirmedAt ||
+      (caseRecord.deliveryStatus === 'delivered'
+        ? caseRecord.updatedAt || caseRecord.createdAt
+        : caseRecord.createdAt)
+    : caseRecord.createdAt;
+
+  const docDate = parseFlexibleLocalDate(dateSource);
+  const timeDate = parseFlexibleLocalDate(timeSource);
+  const ddmmyyyyBE = formatBuddhistDDMMYYYY(docDate);
+  const hhmm = formatTimeHHMM(timeDate);
+  const hhmmColon = `${hhmm.slice(0, 2)}:${hhmm.slice(2, 4)}`;
+  const formattedDateLong = formatThaiFullDocumentDate(docDate);
+
+  return {
+    docDate,
+    timeDate,
+    ddmmyyyyBE,
+    hhmm,
+    hhmmColon,
+    formattedDateLong,
+    sourceType: hasDeliveryInfo ? 'delivered' : 'contract',
+    sourceLabel: hasDeliveryInfo
+      ? `วันรับรถ ${formattedDateLong} (เวลา ${hhmmColon} น.)`
+      : `วันทำสัญญา/บันทึกเคส ${formattedDateLong} (เวลา ${hhmmColon} น.)`,
+  };
+}
+
+export function buildDeliveryBasedDocNumber(
+  prefix: string,
+  caseRecord?: SavedCaseRecord | null
+): string {
+  const meta = resolveCaseDocumentDateAndTime(caseRecord);
+  return `${prefix}-${meta.ddmmyyyyBE}-${meta.hhmm}`;
 }
 
 

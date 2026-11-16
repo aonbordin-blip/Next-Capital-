@@ -1,0 +1,404 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default deny all unless explicitly allowed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Hardened Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Entity Validators
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'uid',
+          'email',
+          'displayName',
+          'officerName',
+          'officerCode',
+          'officerLicense',
+          'dealerName',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && isValidId(data.uid)
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 320
+        && data.email.lower() == request.auth.token.email.lower()
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150))
+        && (!('officerName' in data) || (data.officerName is string && data.officerName.size() <= 150))
+        && (!('officerCode' in data) || (data.officerCode is string && data.officerCode.size() <= 50))
+        && (!('officerLicense' in data) || (data.officerLicense is string && data.officerLicense.size() <= 100))
+        && (!('dealerName' in data) || (data.dealerName is string && data.dealerName.size() <= 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProposalKey(key) {
+      return key in ['small_bike', 'fazzio', 'top_small', 'aec', 'vespa', 'honda_yamaha', 'second_hand'];
+    }
+
+    function isValidSnapshot(snap) {
+      return snap is map
+        && snap.keys().hasAll([
+          'monthlyInstallment',
+          'financeAmount',
+          'downAmount',
+          'downPercent',
+          'totalInterest',
+          'totalWithVat',
+          'effectiveMonthlyRate',
+          'eirAnnualPercent',
+          'proposalCode',
+          'proposalName',
+          'rateDisplayText'
+        ])
+        && snap.keys().hasOnly([
+          'monthlyInstallment',
+          'rawMonthlyInstallment',
+          'financeAmount',
+          'downAmount',
+          'downPercent',
+          'totalInterest',
+          'totalWithVat',
+          'effectiveMonthlyRate',
+          'eirAnnualPercent',
+          'proposalCode',
+          'proposalName',
+          'rateDisplayText',
+          'totalDriveAwayCost'
+        ])
+        && snap.monthlyInstallment is number
+        && snap.financeAmount is number
+        && snap.downAmount is number
+        && snap.downPercent is number
+        && snap.totalInterest is number
+        && snap.totalWithVat is number
+        && snap.effectiveMonthlyRate is number
+        && snap.eirAnnualPercent is number
+        && snap.proposalCode is string && snap.proposalCode.size() <= 60
+        && snap.proposalName is string && snap.proposalName.size() <= 160
+        && snap.rateDisplayText is string && snap.rateDisplayText.size() <= 160
+        && (!('rawMonthlyInstallment' in snap) || snap.rawMonthlyInstallment is number)
+        && (!('totalDriveAwayCost' in snap) || snap.totalDriveAwayCost is number);
+    }
+
+    function isValidApprovalDoc(docMap) {
+      return docMap is map
+        && docMap.keys().hasAll(['name', 'size', 'uploadedAt'])
+        && docMap.keys().hasOnly(['name', 'size', 'uploadedAt', 'type'])
+        && docMap.name is string && docMap.name.size() >= 1 && docMap.name.size() <= 300
+        && docMap.size is number && docMap.size >= 0
+        && docMap.uploadedAt is number
+        && (!('type' in docMap) || (docMap.type is string && docMap.type.size() <= 120));
+    }
+
+    function isValidSavedCase(data, userId, caseId) {
+      return data.keys().hasAll([
+          'ownerUid',
+          'id',
+          'caseTitle',
+          'officerName',
+          'officerCode',
+          'customerName',
+          'proposalKey',
+          'vehiclePrice',
+          'downMode',
+          'downValue',
+          'term',
+          'includeDeliveryFees',
+          'registrationFee',
+          'theftInsuranceFee',
+          'isCustomRateEnabled',
+          'customRateInput',
+          'customRateType',
+          'enforceEirCap',
+          'insurancePlan',
+          'insuranceYears',
+          'snapshot',
+          'recordCreatedAt',
+          'recordUpdatedAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid',
+          'id',
+          'caseTitle',
+          'officerName',
+          'officerCode',
+          'officerLicense',
+          'customerName',
+          'customerPhone',
+          'customerNote',
+          'customerAge',
+          'customerWorkMonths',
+          'customerIncome',
+          'customerResidenceMonths',
+          'customerOccupation',
+          'isAceCustomer',
+          'dealerName',
+          'proposalKey',
+          'vehiclePrice',
+          'bikeModelName',
+          'bikeModelCode',
+          'bikeBrand',
+          'downMode',
+          'downValue',
+          'term',
+          'includeDeliveryFees',
+          'registrationFee',
+          'theftInsuranceFee',
+          'isCustomRateEnabled',
+          'customRateInput',
+          'customRateType',
+          'enforceEirCap',
+          'insurancePlan',
+          'insuranceYears',
+          'snapshot',
+          'approvalStatus',
+          'deliveryStatus',
+          'approvalDate',
+          'deliveryDate',
+          'deliveryConfirmedAt',
+          'approvalNote',
+          'approvalUpdatedAt',
+          'paymentDueDay',
+          'googleMapsLocation',
+          'installmentPayments',
+          'approvalDoc',
+          'recordCreatedAt',
+          'recordUpdatedAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.ownerUid is string
+        && data.ownerUid == userId
+        && data.ownerUid == request.auth.uid
+        && isValidId(data.ownerUid)
+        && data.id is string
+        && data.id == caseId
+        && isValidId(data.id)
+        && data.caseTitle is string && data.caseTitle.size() >= 1 && data.caseTitle.size() <= 300
+        && data.officerName is string && data.officerName.size() <= 150
+        && data.officerCode is string && data.officerCode.size() <= 50
+        && data.customerName is string && data.customerName.size() <= 200
+        && data.proposalKey is string && isValidProposalKey(data.proposalKey)
+        && data.vehiclePrice is number && data.vehiclePrice >= 0 && data.vehiclePrice <= 10000000
+        && data.downMode is string && (data.downMode in ['amount', 'percent'])
+        && data.downValue is number && data.downValue >= 0 && data.downValue <= 10000000
+        && data.term is number && data.term >= 1 && data.term <= 120
+        && data.includeDeliveryFees is bool
+        && data.registrationFee is number && data.registrationFee >= 0 && data.registrationFee <= 1000000
+        && data.theftInsuranceFee is number && data.theftInsuranceFee >= 0 && data.theftInsuranceFee <= 1000000
+        && data.isCustomRateEnabled is bool
+        && data.customRateInput is string && data.customRateInput.size() <= 30
+        && data.customRateType is string && (data.customRateType in ['monthly', 'annual'])
+        && data.enforceEirCap is bool
+        && data.insurancePlan is string && (data.insurancePlan in ['none', 'plan_a', 'plan_b'])
+        && data.insuranceYears is number && (data.insuranceYears in [1, 2, 3])
+        && isValidSnapshot(data.snapshot)
+        && data.recordCreatedAt is number && data.recordCreatedAt > 0
+        && data.recordUpdatedAt is number && data.recordUpdatedAt > 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        // Optional field type & size guards
+        && (!('officerLicense' in data) || (data.officerLicense is string && data.officerLicense.size() <= 100))
+        && (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() <= 50))
+        && (!('customerNote' in data) || (data.customerNote is string && data.customerNote.size() <= 1000))
+        && (!('customerAge' in data) || (data.customerAge is string && data.customerAge.size() <= 20))
+        && (!('customerWorkMonths' in data) || (data.customerWorkMonths is string && data.customerWorkMonths.size() <= 20))
+        && (!('customerIncome' in data) || (data.customerIncome is string && data.customerIncome.size() <= 30))
+        && (!('customerResidenceMonths' in data) || (data.customerResidenceMonths is string && data.customerResidenceMonths.size() <= 20))
+        && (!('customerOccupation' in data) || (data.customerOccupation is string && data.customerOccupation.size() <= 150))
+        && (!('isAceCustomer' in data) || data.isAceCustomer is bool)
+        && (!('dealerName' in data) || (data.dealerName is string && data.dealerName.size() <= 200))
+        && (!('bikeModelName' in data) || (data.bikeModelName is string && data.bikeModelName.size() <= 200))
+        && (!('bikeModelCode' in data) || (data.bikeModelCode is string && data.bikeModelCode.size() <= 80))
+        && (!('bikeBrand' in data) || (data.bikeBrand is string && data.bikeBrand.size() <= 80))
+        && (!('approvalStatus' in data) || (data.approvalStatus is string && data.approvalStatus in ['pending', 'approved', 'rejected', 'cancelled']))
+        && (!('deliveryStatus' in data) || (data.deliveryStatus is string && data.deliveryStatus in ['pending_delivery', 'delivered']))
+        && (!('approvalDate' in data) || (data.approvalDate is string && data.approvalDate.size() <= 20))
+        && (!('deliveryDate' in data) || (data.deliveryDate is string && data.deliveryDate.size() <= 20))
+        && (!('deliveryConfirmedAt' in data) || data.deliveryConfirmedAt is number)
+        && (!('approvalNote' in data) || (data.approvalNote is string && data.approvalNote.size() <= 1000))
+        && (!('approvalUpdatedAt' in data) || data.approvalUpdatedAt is number)
+        && (!('paymentDueDay' in data) || (data.paymentDueDay is number && data.paymentDueDay >= 1 && data.paymentDueDay <= 31))
+        && (!('googleMapsLocation' in data) || (data.googleMapsLocation is string && data.googleMapsLocation.size() <= 1500))
+        && (!('installmentPayments' in data) || (data.installmentPayments is map && data.installmentPayments.size() <= 12))
+        && (!('approvalDoc' in data) || isValidApprovalDoc(data.approvalDoc));
+    }
+
+    // Action-Based Update Helpers for SavedCase
+    function isStatusOrDeliveryAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly([
+        'approvalStatus',
+        'deliveryStatus',
+        'approvalDate',
+        'deliveryDate',
+        'deliveryConfirmedAt',
+        'approvalNote',
+        'approvalUpdatedAt',
+        'paymentDueDay',
+        'recordUpdatedAt',
+        'updatedAt'
+      ]);
+    }
+
+    function isTrackingOrDocAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly([
+        'caseTitle',
+        'customerName',
+        'customerPhone',
+        'dealerName',
+        'bikeBrand',
+        'bikeModelName',
+        'bikeModelCode',
+        'deliveryDate',
+        'paymentDueDay',
+        'googleMapsLocation',
+        'installmentPayments',
+        'approvalDoc',
+        'snapshot',
+        'recordUpdatedAt',
+        'updatedAt'
+      ]);
+    }
+
+    function isFullCaseEditAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly([
+        'caseTitle',
+        'officerName',
+        'officerCode',
+        'officerLicense',
+        'customerName',
+        'customerPhone',
+        'customerNote',
+        'customerAge',
+        'customerWorkMonths',
+        'customerIncome',
+        'customerResidenceMonths',
+        'customerOccupation',
+        'isAceCustomer',
+        'dealerName',
+        'proposalKey',
+        'vehiclePrice',
+        'bikeModelName',
+        'bikeModelCode',
+        'bikeBrand',
+        'downMode',
+        'downValue',
+        'term',
+        'includeDeliveryFees',
+        'registrationFee',
+        'theftInsuranceFee',
+        'isCustomRateEnabled',
+        'customRateInput',
+        'customRateType',
+        'enforceEirCap',
+        'insurancePlan',
+        'insuranceYears',
+        'snapshot',
+        'approvalStatus',
+        'deliveryStatus',
+        'approvalDate',
+        'deliveryDate',
+        'deliveryConfirmedAt',
+        'approvalNote',
+        'approvalUpdatedAt',
+        'paymentDueDay',
+        'googleMapsLocation',
+        'installmentPayments',
+        'approvalDoc',
+        'recordUpdatedAt',
+        'updatedAt'
+      ]);
+    }
+
+    // /users/{userId} - Private PII & Settings Profile
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'officerName',
+          'officerCode',
+          'officerLicense',
+          'dealerName',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+
+      // /users/{userId}/cases/{caseId} - User's Private Saved Cases Subcollection
+      match /cases/{caseId} {
+        allow get: if isValidId(userId)
+          && isValidId(caseId)
+          && isOwner(userId)
+          && (resource == null || existing().ownerUid == request.auth.uid);
+        allow list: if isOwner(userId)
+          && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(caseId)
+          && isOwner(userId)
+          && isValidSavedCase(incoming(), userId, caseId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isValidId(caseId)
+          && isOwner(userId)
+          && isValidSavedCase(incoming(), userId, caseId)
+          && existing().ownerUid == request.auth.uid
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().id == existing().id
+          && incoming().recordCreatedAt == existing().recordCreatedAt
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            isStatusOrDeliveryAction()
+            || isTrackingOrDocAction()
+            || isFullCaseEditAction()
+          );
+        allow delete: if isValidId(userId)
+          && isValidId(caseId)
+          && isOwner(userId)
+          && existing().ownerUid == request.auth.uid;
+      }
+    }
+  }
+}

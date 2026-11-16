@@ -171,7 +171,7 @@ export const ProvisionalApprovalModal: React.FC<Props> = ({
     if (data.officerInfo) setOfficerNameAndCode(data.officerInfo);
     if (data.customerName) setCustomerName(data.customerName);
     if (data.customerPhone !== undefined) setCustomerPhone(data.customerPhone);
-    if (data.approvalDate) setApprovalDate(data.approvalDate);
+    setApprovalDate(data.approvalDate || new Date().toISOString().slice(0, 10));
     if (data.bikeModelCode) setModelCodeState(data.bikeModelCode.toUpperCase());
     if (data.bikeModelName) setModelName(data.bikeModelName);
     if (data.docNumber) setDocNumber(data.docNumber);
