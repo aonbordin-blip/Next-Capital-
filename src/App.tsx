@@ -3562,13 +3562,7 @@ export default function App() {
             </div>
 
             {/* Cloud Backup & Multi-Device Sync Card */}
-            <CloudSyncCard
-              localCount={savedCasesCount}
-              onOpenSavedCases={() => {
-                setSavedCasesPreferAll(true);
-                setShowSavedCases(true);
-              }}
-            />
+            <CloudSyncCard localCount={savedCasesCount} />
 
             {/* Navigation Buttons for Page 4 */}
             <div className="flex items-center gap-2 pt-1">
@@ -3902,14 +3896,7 @@ export default function App() {
               </button>
             </div>
 
-            <CloudSyncCard
-              localCount={savedCasesCount}
-              onOpenSavedCases={() => {
-                setShowCloudSyncModal(false);
-                setSavedCasesPreferAll(true);
-                setShowSavedCases(true);
-              }}
-            />
+            <CloudSyncCard localCount={savedCasesCount} />
 
             <div className="flex justify-end">
               <button

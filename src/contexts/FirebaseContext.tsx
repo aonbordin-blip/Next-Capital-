@@ -10,7 +10,6 @@ import {
 import {
   deleteCloudCases,
   ensureUserProfileDoc,
-  fetchAllCloudCasesToLocal,
   pushAllLocalCasesToCloud,
   subscribeUserCases,
   updateUserProfilePrefs,
@@ -18,23 +17,12 @@ import {
   UserProfilePrefs,
 } from '../utils/cloudSync';
 import {
-  mergeBackupJsonIntoLocal,
   registerCloudSyncBridge,
   resetCloudSyncTracking,
 } from '../utils/savedCasesStorage';
 import { SavedCaseRecord as CaseRecord } from '../types';
 
 export type CloudSyncStatus = 'signed_out' | 'syncing' | 'synced' | 'error';
-
-export interface BackupCloudUploadResult {
-  success: boolean;
-  totalParsed: number;
-  uploadedCount: number;
-  failedCount: number;
-  cloudCount: number;
-  appTotalCount: number;
-  error?: string;
-}
 
 interface FirebaseContextValue {
   user: User | null;
@@ -48,10 +36,6 @@ interface FirebaseContextValue {
   signOut: () => Promise<void>;
   syncNow: () => Promise<void>;
   syncProfileSettings: (prefs: UserProfilePrefs) => void;
-  uploadBackupJsonToCloud: (
-    jsonStr: string,
-    onProgress?: (done: number, total: number) => void
-  ) => Promise<BackupCloudUploadResult>;
 }
 
 const FirebaseContext = createContext<FirebaseContextValue | null>(null);
@@ -322,130 +306,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 800);
   }, []);
 
-  const uploadBackupJsonToCloud = useCallback(
-    async (
-      jsonStr: string,
-      onProgress?: (done: number, total: number) => void
-    ): Promise<BackupCloudUploadResult> => {
-      const parsed = mergeBackupJsonIntoLocal(jsonStr, { triggerCloudBridge: false });
-      if (!parsed.success) {
-        return {
-          success: false,
-          totalParsed: 0,
-          uploadedCount: 0,
-          failedCount: 0,
-          cloudCount: cloudCaseCount,
-          appTotalCount: parsed.totalCount || 0,
-          error: parsed.error || 'ไม่สามารถอ่านไฟล์สำรองได้',
-        };
-      }
-
-      const recordsToUpload = parsed.records || [];
-      if (recordsToUpload.length === 0) {
-        return {
-          success: false,
-          totalParsed: 0,
-          uploadedCount: 0,
-          failedCount: 0,
-          cloudCount: cloudCaseCount,
-          appTotalCount: parsed.totalCount || 0,
-          error: 'ไม่พบรายการเคสในไฟล์สำรองนี้',
-        };
-      }
-
-      const currentUser = activeUserRef.current || auth.currentUser;
-      if (!currentUser) {
-        return {
-          success: true,
-          totalParsed: recordsToUpload.length,
-          uploadedCount: 0,
-          failedCount: 0,
-          cloudCount: 0,
-          appTotalCount: parsed.totalCount || recordsToUpload.length,
-          error: 'นำเข้าข้อมูลลงเครื่องแล้ว กรุณาเข้าสู่ระบบด้วย Google เพื่ออัปโหลดขึ้น Cloud',
-        };
-      }
-
-      setSyncStatus('syncing');
-      setSyncError(null);
-      onProgress?.(0, recordsToUpload.length);
-
-      try {
-        try {
-          await currentUser.getIdToken(true);
-        } catch {
-          // proceed with cached auth token
-        }
-
-        const uploadStats = await upsertCloudCases(
-          currentUser.uid,
-          recordsToUpload,
-          cloudCreatedAtMapRef.current,
-          cloudRecordCreatedAtMapRef.current,
-          undefined,
-          { onProgress, throwOnError: false }
-        );
-
-        let refreshedCloudCount = cloudCaseCount;
-        let refreshedAppTotal = parsed.totalCount || recordsToUpload.length;
-
-        try {
-          const refreshed = await fetchAllCloudCasesToLocal(
-            currentUser.uid,
-            cloudCreatedAtMapRef.current,
-            cloudRecordCreatedAtMapRef.current
-          );
-          refreshedCloudCount = refreshed.cloudCount;
-          refreshedAppTotal = refreshed.cases.length;
-          setCloudCaseCount(refreshed.cloudCount);
-        } catch {
-          // keep local records intact if fetch fails temporarily
-        }
-
-        if (uploadStats.failedCount > 0 && uploadStats.firstError) {
-          const readableErr = formatReadableFirebaseError(uploadStats.firstError);
-          setSyncStatus('error');
-          setSyncError(readableErr);
-          return {
-            success: uploadStats.uploadedCount > 0,
-            totalParsed: uploadStats.totalCount,
-            uploadedCount: uploadStats.uploadedCount,
-            failedCount: uploadStats.failedCount,
-            cloudCount: refreshedCloudCount,
-            appTotalCount: refreshedAppTotal,
-            error: readableErr,
-          };
-        }
-
-        setSyncStatus('synced');
-        setLastSyncedAt(Date.now());
-        setSyncError(null);
-        return {
-          success: true,
-          totalParsed: uploadStats.totalCount,
-          uploadedCount: uploadStats.uploadedCount,
-          failedCount: 0,
-          cloudCount: refreshedCloudCount,
-          appTotalCount: refreshedAppTotal,
-        };
-      } catch (err) {
-        const readableErr = formatReadableFirebaseError(err);
-        setSyncStatus('error');
-        setSyncError(readableErr);
-        return {
-          success: false,
-          totalParsed: recordsToUpload.length,
-          uploadedCount: 0,
-          failedCount: recordsToUpload.length,
-          cloudCount: cloudCaseCount,
-          appTotalCount: parsed.totalCount || recordsToUpload.length,
-          error: readableErr,
-        };
-      }
-    },
-    [cloudCaseCount]
-  );
-
   return (
     <FirebaseContext.Provider
       value={{
@@ -460,7 +320,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         signOut: handleSignOut,
         syncNow,
         syncProfileSettings,
-        uploadBackupJsonToCloud,
       }}
     >
       {children}
