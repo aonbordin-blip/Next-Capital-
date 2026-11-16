@@ -1,8 +1,10 @@
-import React from 'react';
-import { X, Table, HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Table, HelpCircle, FileSpreadsheet, Check } from 'lucide-react';
 import { CalculationResult } from '../types';
 import { formatBaht, formatTermYearMonth } from '../data/proposals';
 import { useModalTransition } from '../hooks/useModalTransition';
+import { triggerHaptic } from '../utils/haptics';
+import { exportAmortizationToExcel } from '../utils/excelExport';
 
 interface Props {
   isOpen: boolean;
@@ -15,12 +17,20 @@ export const AmortizationModal: React.FC<Props> = ({
   onClose,
   result,
 }) => {
+  const [exportedExcel, setExportedExcel] = useState(false);
   const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } = useModalTransition(
     isOpen,
     onClose
   );
 
   if (!shouldRender) return null;
+
+  const handleExportExcel = () => {
+    triggerHaptic('success');
+    exportAmortizationToExcel(result);
+    setExportedExcel(true);
+    setTimeout(() => setExportedExcel(false), 2000);
+  };
 
   const term = result.term;
   const principalPerMonth = term > 0 ? result.financeAmount / term : 0;
@@ -133,17 +143,37 @@ export const AmortizationModal: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center gap-2 text-xs">
           <div className="text-slate-500">
             รวม {term} งวด ({formatTermYearMonth(term)}):{' '}
             <span className="font-bold text-slate-800">{formatBaht(result.totalWithVat)}</span>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium rounded-xl text-xs transition-colors"
-          >
-            ปิด
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
+                exportedExcel
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+              }`}
+              title="ส่งออกตารางผ่อนรายงวดเป็นไฟล์ Excel (.xlsx)"
+            >
+              {exportedExcel ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              )}
+              <span>{exportedExcel ? 'ส่งออกแล้ว' : 'ส่งออก Excel'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium rounded-xl text-xs transition-colors cursor-pointer"
+            >
+              ปิด
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -27,11 +27,20 @@ import {
   Shield,
   X,
   ArrowUpRight,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
 import { useModalTransition } from '../hooks/useModalTransition';
 import { MarqueeText } from './MarqueeText';
+import { ProposalKey } from '../types';
+import {
+  resolveEligibilityTierKey,
+  evaluateCustomerEligibility,
+  ACE_FULL_NOTE,
+} from '../data/eligibilityCriteria';
 
 export interface DvTopicItem {
   code: string;
@@ -86,6 +95,15 @@ interface DvApprovalCardProps {
   officerCode?: string;
   officerDisplay?: string;
   dealerName?: string;
+  proposalKey?: ProposalKey;
+  downPercent?: number;
+  hasPaInsurance?: boolean;
+  customerAge?: string;
+  customerWorkMonths?: string;
+  customerIncome?: string;
+  customerResidenceMonths?: string;
+  customerOccupation?: string;
+  isAceCustomer?: boolean;
   onUpdateCustomerName?: (name: string) => void;
   onUpdateDealerName?: (dealer: string) => void;
   className?: string;
@@ -98,13 +116,22 @@ export function DvApprovalCard({
   bikeModelName,
   bikeModelCode,
   downPaymentDisplay,
-  financeAmount,
-  monthlyInstallment,
-  term,
+  financeAmount: _financeAmount,
+  monthlyInstallment: _monthlyInstallment,
+  term: _term,
   officerName,
   officerCode,
   officerDisplay,
   dealerName,
+  proposalKey,
+  downPercent,
+  hasPaInsurance,
+  customerAge,
+  customerWorkMonths,
+  customerIncome,
+  customerResidenceMonths,
+  customerOccupation,
+  isAceCustomer,
   onUpdateCustomerName,
   onUpdateDealerName,
   className = '',
@@ -119,9 +146,68 @@ export function DvApprovalCard({
     return officerName || officerDisplay || 'บดินทร์ (6683)';
   }, [officerName, officerCode, officerDisplay]);
 
+  const activeTierKey = useMemo(
+    () => resolveEligibilityTierKey(proposalKey, bikeModelName, bikeModelCode),
+    [proposalKey, bikeModelName, bikeModelCode]
+  );
+
+  const eligibilityEval = useMemo(
+    () =>
+      evaluateCustomerEligibility(
+        activeTierKey,
+        {
+          age: customerAge,
+          workMonths: customerWorkMonths,
+          income: customerIncome,
+          residenceMonths: customerResidenceMonths,
+          occupation: customerOccupation,
+          isAce: isAceCustomer,
+        },
+        {
+          downPercent,
+          hasPaInsurance,
+          proposalKey,
+        }
+      ),
+    [
+      activeTierKey,
+      customerAge,
+      customerWorkMonths,
+      customerIncome,
+      customerResidenceMonths,
+      customerOccupation,
+      isAceCustomer,
+      downPercent,
+      hasPaInsurance,
+      proposalKey,
+    ]
+  );
+
+  const formattedLinkedIncome = useMemo(() => {
+    const raw = customerIncome?.replace(/,/g, '').trim() || '';
+    if (!raw) return '';
+    const num = Number(raw);
+    if (Number.isFinite(num) && num > 0) {
+      return `${num.toLocaleString('th-TH')} บาท/เดือน`;
+    }
+    return customerIncome?.trim() || '';
+  }, [customerIncome]);
+
+  const linkedRemarkLine = useMemo(() => {
+    const parts: string[] = [];
+    if (customerAge?.trim()) parts.push(`อายุ ${customerAge.trim()} ปี`);
+    if (customerWorkMonths?.trim()) parts.push(`อายุงาน ${customerWorkMonths.trim()} เดือน`);
+    if (customerResidenceMonths?.trim()) parts.push(`พักอาศัย ${customerResidenceMonths.trim()} เดือน`);
+    if (isAceCustomer) parts.push('ACE (เขียน NCB / ห้ามขาย PA / ดาวน์ 10% ขึ้น / ≤150CC)');
+    return parts.join(' | ');
+  }, [customerAge, customerWorkMonths, customerResidenceMonths, isAceCustomer]);
+
   // Form states
   const [dvCustomerName, setDvCustomerName] = useState<string>(customerName || 'คุณลูกค้า');
   const [topics, setTopics] = useState<string[]>(['A1 : อายุตัว']);
+  const hasUserEditedTopicsRef = React.useRef<boolean>(false);
+  const prevAutoTopicCodesRef = React.useRef<string[]>([]);
+  const prevAutoRemarkRef = React.useRef<string>('');
   const [activeTopicIndexForModal, setActiveTopicIndexForModal] = useState<number | null>(null);
   const [ncb, setNcb] = useState<string>('Normal');
   const [dealer, setDealer] = useState<string>(() => {
@@ -135,11 +221,13 @@ export function DvApprovalCard({
 
   const [bikeModel, setBikeModel] = useState<string>(bikeModelName || 'Honda Wave 110i');
   const [bikeCode, setBikeCode] = useState<string>(bikeModelCode || '');
-  const [occupation, setOccupation] = useState<string>('พนักงานประจำ / โรงงาน');
-  const [income, setIncome] = useState<string>('18,000 บาท/เดือน');
+  const [occupation, setOccupation] = useState<string>(
+    customerOccupation?.trim() || 'พนักงานประจำ / โรงงาน'
+  );
+  const [income, setIncome] = useState<string>(formattedLinkedIncome || '18,000 บาท/เดือน');
   const [financialDocs, setFinancialDocs] = useState<string>('สลิปเงินเดือน');
   const [downPayment, setDownPayment] = useState<string>(downPaymentDisplay || '0 บาท (ฟรีดาวน์)');
-  const [remark, setRemark] = useState<string>('');
+  const [remark, setRemark] = useState<string>(linkedRemarkLine || '');
   const [ck, setCk] = useState<string>(resolvedOfficer);
   const [yodRate, setYodRate] = useState<string>('หัก 3%');
 
@@ -211,6 +299,75 @@ export function DvApprovalCard({
     }
   }, [dealerName]);
 
+  // Sync customer income from Customer Info card
+  useEffect(() => {
+    if (formattedLinkedIncome) {
+      setIncome(formattedLinkedIncome);
+    }
+  }, [formattedLinkedIncome]);
+
+  // Sync customer occupation from Customer Info card
+  useEffect(() => {
+    if (customerOccupation && customerOccupation.trim() !== '') {
+      setOccupation(customerOccupation.trim());
+    }
+  }, [customerOccupation]);
+
+  // Auto-sync linked customer profile (อายุ, อายุงาน, พักอาศัย, ACE) into DV remark without wiping manual text
+  useEffect(() => {
+    const prevAuto = prevAutoRemarkRef.current;
+    if (linkedRemarkLine === prevAuto) return;
+
+    setRemark((currentRemark) => {
+      let cleaned = currentRemark;
+      if (prevAuto) {
+        cleaned = cleaned
+          .split('\n')
+          .filter((line) => line.trim() !== prevAuto.trim())
+          .join('\n')
+          .trim();
+      }
+      if (!linkedRemarkLine) return cleaned;
+      return cleaned ? `${linkedRemarkLine}\n${cleaned}` : linkedRemarkLine;
+    });
+    prevAutoRemarkRef.current = linkedRemarkLine;
+  }, [linkedRemarkLine]);
+
+  // Auto-sync failing criteria (A1/A2/A4/A6) into DV topics
+  useEffect(() => {
+    const failedList = eligibilityEval.failedTopics;
+    const failedCodes = failedList.map((f) => f.code);
+    const prevCodes = prevAutoTopicCodesRef.current;
+
+    const codesKey = failedCodes.join(',');
+    const prevKey = prevCodes.join(',');
+    if (codesKey === prevKey) return;
+
+    setTopics((prevTopics) => {
+      if (!hasUserEditedTopicsRef.current && failedList.length > 0) {
+        return failedList.map((f) => f.dvTopic);
+      }
+
+      // Remove topics that were auto-added previously and are no longer failing
+      const removedCodes = prevCodes.filter((c) => !failedCodes.includes(c as 'A1' | 'A2' | 'A4' | 'A6'));
+      let next = prevTopics.filter(
+        (t) => !removedCodes.some((code) => t.trim().startsWith(code))
+      );
+
+      // Add newly failed topics if not already selected
+      failedList.forEach((f) => {
+        if (!next.some((t) => t.trim().startsWith(f.code))) {
+          next.push(f.dvTopic);
+        }
+      });
+
+      next = next.filter((t) => t.trim() !== '');
+      return next.length > 0 ? next : ['A1 : อายุตัว'];
+    });
+
+    prevAutoTopicCodesRef.current = failedCodes;
+  }, [eligibilityEval.failedTopics]);
+
   // Persist dealer name and sync back to parent
   const handleDealerChange = (val: string) => {
     setDealer(val);
@@ -222,7 +379,7 @@ export function DvApprovalCard({
     onUpdateDealerName?.(val);
   };
 
-  // Re-sync all fields from current calculation
+  // Re-sync all fields from current calculation & customer eligibility info
   const handleSyncFromCurrent = () => {
     triggerHaptic('medium');
     setDvCustomerName(customerName || 'คุณลูกค้า');
@@ -231,11 +388,34 @@ export function DvApprovalCard({
     setBikeCode(bikeModelCode || '');
     setDownPayment(downPaymentDisplay || '0 บาท (ฟรีดาวน์)');
     setCk(resolvedOfficer);
+    if (formattedLinkedIncome) setIncome(formattedLinkedIncome);
+    if (customerOccupation?.trim()) setOccupation(customerOccupation.trim());
+
+    if (eligibilityEval.failedTopics.length > 0) {
+      const autoTopics = eligibilityEval.failedTopics.map((f) => f.dvTopic);
+      setTopics(autoTopics);
+      prevAutoTopicCodesRef.current = eligibilityEval.failedTopics.map((f) => f.code);
+    }
+    if (linkedRemarkLine) {
+      setRemark((curr) => {
+        const prevAuto = prevAutoRemarkRef.current;
+        const rest = prevAuto
+          ? curr
+              .split('\n')
+              .filter((line) => line.trim() !== prevAuto.trim())
+              .join('\n')
+              .trim()
+          : curr.trim();
+        prevAutoRemarkRef.current = linkedRemarkLine;
+        return rest && rest !== linkedRemarkLine ? `${linkedRemarkLine}\n${rest}` : linkedRemarkLine;
+      });
+    }
   };
 
   // Topic handlers
   const handleAddTopic = (initialValue?: string) => {
     triggerHaptic('light');
+    hasUserEditedTopicsRef.current = true;
     const unused = DV_TOPICS.find((t) => !topics.some((item) => item.startsWith(t.code)));
     const newTopicVal = initialValue || (unused ? `${unused.code} : ${unused.label}` : '');
     setTopics((prev) => [...prev, newTopicVal]);
@@ -243,6 +423,7 @@ export function DvApprovalCard({
 
   const handleRemoveTopic = (index: number) => {
     triggerHaptic('medium');
+    hasUserEditedTopicsRef.current = true;
     setTopics((prev) => {
       if (prev.length <= 1) return [''];
       return prev.filter((_, i) => i !== index);
@@ -250,6 +431,7 @@ export function DvApprovalCard({
   };
 
   const handleTopicChange = (index: number, value: string) => {
+    hasUserEditedTopicsRef.current = true;
     setTopics((prev) => {
       const copy = [...prev];
       copy[index] = value;
@@ -259,6 +441,7 @@ export function DvApprovalCard({
 
   const handleSelectTopic = (item: DvTopicItem, index?: number) => {
     triggerHaptic('light');
+    hasUserEditedTopicsRef.current = true;
     const topicString = `${item.code} : ${item.label}`;
     if (typeof index === 'number' && index >= 0 && index < topics.length) {
       handleTopicChange(index, topicString);
@@ -400,11 +583,20 @@ export function DvApprovalCard({
             </span>
           </div>
           <div className="space-y-1 min-w-0">
-            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
-              <MarqueeText fitContent>Dealer Verification</MarqueeText>
-            </span>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
+                <MarqueeText fitContent>Dealer Verification</MarqueeText>
+              </span>
+              {eligibilityEval.failedTopics.length > 0 && (
+                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                  {eligibilityEval.failedTopics.map((f) => f.code).join(', ')}
+                </span>
+              )}
+            </div>
             <MarqueeText className="text-[10px] text-slate-500 font-medium">
-              กรอกฟอร์มส่งขออนุมัติ LINE อัตโนมัติ
+              {eligibilityEval.failedTopics.length > 0
+                ? `ดึงเงื่อนไขขอ DV อัตโนมัติ (${eligibilityEval.failedTopics.length} หัวข้อ)`
+                : 'กรอกฟอร์มส่งขออนุมัติ LINE อัตโนมัติ'}
             </MarqueeText>
           </div>
         </div>
@@ -461,6 +653,123 @@ export function DvApprovalCard({
 
         {/* Scrollable Modal Body */}
         <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
+          {/* Linked Customer Eligibility Status Banner */}
+          <div
+            className={`p-3 rounded-2xl border shadow-2xs space-y-2 ${
+              eligibilityEval.failedTopics.length > 0 || eligibilityEval.aceWarnings.length > 0
+                ? 'bg-gradient-to-r from-rose-50/90 via-amber-50/70 to-white border-rose-200'
+                : eligibilityEval.hasAnyInput
+                ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border-emerald-200'
+                : 'bg-gradient-to-r from-sky-50/80 to-white border-sky-200/80'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Sparkles className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                <span className="text-[11px] font-extrabold text-slate-800">
+                  ลิงก์ข้อมูลลูกค้า & เกณฑ์: {eligibilityEval.tier.shortTitle}
+                </span>
+                <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white shrink-0">
+                  {eligibilityEval.tier.salesChannel}
+                </span>
+                {isAceCustomer && (
+                  <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
+                    ACE
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSyncFromCurrent}
+                className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 shadow-2xs flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>ซิงค์ข้อมูลลูกค้าเข้า DV</span>
+              </button>
+            </div>
+
+            {eligibilityEval.hasAnyInput ? (
+              <div className="flex flex-wrap gap-1.5 text-[10px]">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                    eligibilityEval.fieldStatus.age === 'fail'
+                      ? 'bg-rose-100 text-rose-800 border-rose-300'
+                      : eligibilityEval.fieldStatus.age === 'pass'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-white text-slate-500 border-slate-200'
+                  }`}
+                >
+                  {eligibilityEval.fieldStatus.age === 'fail' ? (
+                    <XCircle className="w-3 h-3" />
+                  ) : eligibilityEval.fieldStatus.age === 'pass' ? (
+                    <CheckCircle2 className="w-3 h-3" />
+                  ) : null}
+                  อายุ: {customerAge?.trim() ? `${customerAge} ปี` : '-'} (เกณฑ์ {eligibilityEval.tier.ageLabel})
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                    eligibilityEval.fieldStatus.workMonths === 'fail'
+                      ? 'bg-rose-100 text-rose-800 border-rose-300'
+                      : eligibilityEval.fieldStatus.workMonths === 'pass'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-white text-slate-500 border-slate-200'
+                  }`}
+                >
+                  {eligibilityEval.fieldStatus.workMonths === 'fail' ? (
+                    <XCircle className="w-3 h-3" />
+                  ) : eligibilityEval.fieldStatus.workMonths === 'pass' ? (
+                    <CheckCircle2 className="w-3 h-3" />
+                  ) : null}
+                  อายุงาน: {customerWorkMonths?.trim() ? `${customerWorkMonths} ด.` : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                    eligibilityEval.fieldStatus.income === 'fail'
+                      ? 'bg-rose-100 text-rose-800 border-rose-300'
+                      : eligibilityEval.fieldStatus.income === 'pass'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-white text-slate-500 border-slate-200'
+                  }`}
+                >
+                  {eligibilityEval.fieldStatus.income === 'fail' ? (
+                    <XCircle className="w-3 h-3" />
+                  ) : eligibilityEval.fieldStatus.income === 'pass' ? (
+                    <CheckCircle2 className="w-3 h-3" />
+                  ) : null}
+                  รายได้: {customerIncome?.trim() ? Number(customerIncome).toLocaleString('th-TH') : '-'} (≥{eligibilityEval.tier.incomeLabel})
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                    eligibilityEval.fieldStatus.residenceMonths === 'fail'
+                      ? 'bg-rose-100 text-rose-800 border-rose-300'
+                      : eligibilityEval.fieldStatus.residenceMonths === 'pass'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-white text-slate-500 border-slate-200'
+                  }`}
+                >
+                  {eligibilityEval.fieldStatus.residenceMonths === 'fail' ? (
+                    <XCircle className="w-3 h-3" />
+                  ) : eligibilityEval.fieldStatus.residenceMonths === 'pass' ? (
+                    <CheckCircle2 className="w-3 h-3" />
+                  ) : null}
+                  พักอาศัย: {customerResidenceMonths?.trim() ? `${customerResidenceMonths} ด.` : '-'} (≥{eligibilityEval.tier.residenceLabel})
+                </span>
+              </div>
+            ) : (
+              <p className="text-[10.5px] text-slate-500">
+                สามารถกรอก อายุ / อายุงาน / รายได้ / ระยะเวลาพักอาศัย ในกล่อง "ข้อมูลลูกค้า" หน้าโฮมเพจ เพื่อดึงและเทียบเกณฑ์ขอ DV อัตโนมัติ
+              </p>
+            )}
+
+            {(isAceCustomer || proposalKey === 'aec') && (
+              <div className="text-[10px] font-bold text-amber-900 bg-amber-100/70 border border-amber-300 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span>{ACE_FULL_NOTE}</span>
+              </div>
+            )}
+          </div>
+
           {/* Main 2-Column Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* COLUMN 1 (Left) */}

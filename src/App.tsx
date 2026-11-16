@@ -49,6 +49,9 @@ import {
   Image as ImageIcon,
   Building2,
   CalendarDays,
+  ClipboardCheck,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -85,6 +88,12 @@ import { BikeModelCodeInput } from './components/BikeModelCodeInput';
 import { MotorcycleModel, MOTORCYCLE_MODELS, findModelByCode } from './data/motorcycleModels';
 import { MarqueeText } from './components/MarqueeText';
 import { InstallmentTrackingPage } from './components/InstallmentTrackingPage';
+import { EligibilityCriteriaModal } from './components/EligibilityCriteriaModal';
+import {
+  resolveEligibilityTierKey,
+  evaluateCustomerEligibility,
+  ACE_FULL_NOTE,
+} from './data/eligibilityCriteria';
 
 export default function App() {
   // Form states
@@ -224,6 +233,87 @@ export default function App() {
     }
   };
 
+  // Customer Eligibility Information (อายุ, อายุงาน, รายได้, ระยะเวลาพักอาศัย, อาชีพ, ลูกค้า ACE)
+  const [customerAge, setCustomerAge] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_age') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [customerWorkMonths, setCustomerWorkMonths] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_work_months') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [customerIncome, setCustomerIncome] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_income') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [customerResidenceMonths, setCustomerResidenceMonths] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_residence_months') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [customerOccupation, setCustomerOccupation] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_occupation') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [isAceCustomer, setIsAceCustomer] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_is_ace') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleCustomerAgeChange = (val: string) => {
+    setCustomerAge(val);
+    try {
+      localStorage.setItem('ncap_customer_age', val);
+    } catch {}
+  };
+  const handleCustomerWorkMonthsChange = (val: string) => {
+    setCustomerWorkMonths(val);
+    try {
+      localStorage.setItem('ncap_customer_work_months', val);
+    } catch {}
+  };
+  const handleCustomerIncomeChange = (val: string) => {
+    setCustomerIncome(val);
+    try {
+      localStorage.setItem('ncap_customer_income', val);
+    } catch {}
+  };
+  const handleCustomerResidenceMonthsChange = (val: string) => {
+    setCustomerResidenceMonths(val);
+    try {
+      localStorage.setItem('ncap_customer_residence_months', val);
+    } catch {}
+  };
+  const handleCustomerOccupationChange = (val: string) => {
+    setCustomerOccupation(val);
+    try {
+      localStorage.setItem('ncap_customer_occupation', val);
+    } catch {}
+  };
+  const handleIsAceCustomerChange = (nextVal: boolean) => {
+    setIsAceCustomer(nextVal);
+    try {
+      localStorage.setItem('ncap_customer_is_ace', String(nextVal));
+    } catch {}
+  };
+
   const customerDisplay = customerName
     ? customerPhone
       ? `${customerName} (${customerPhone})`
@@ -252,6 +342,7 @@ export default function App() {
   // Modals
   const [showProposalSelector, setShowProposalSelector] = useState<boolean>(false);
   const [showProposalInfo, setShowProposalInfo] = useState<boolean>(false);
+  const [showEligibilityCriteriaModal, setShowEligibilityCriteriaModal] = useState<boolean>(false);
   const [showBikePresets, setShowBikePresets] = useState<boolean>(false);
   const [showQuotation, setShowQuotation] = useState<boolean>(false);
   const [showProvisionalApproval, setShowProvisionalApproval] = useState<boolean>(false);
@@ -434,6 +525,10 @@ export default function App() {
     } else {
       setDownMode('amount');
       setDownValue(newProposal.defaultDownValue);
+    }
+
+    if (newKey === 'aec') {
+      handleIsAceCustomerChange(true);
     }
   };
 
@@ -669,6 +764,44 @@ export default function App() {
     customRateConfig
   );
 
+  const resolvedBikeModelName =
+    selectedBike?.name ||
+    (bikeModelCode
+      ? MOTORCYCLE_MODELS.find(
+          (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
+        )?.name || ''
+      : '');
+
+  const activeEligibilityTierKey = resolveEligibilityTierKey(
+    proposalKey,
+    resolvedBikeModelName,
+    bikeModelCode
+  );
+
+  const customerEligibilityEval = evaluateCustomerEligibility(
+    activeEligibilityTierKey,
+    {
+      age: customerAge,
+      workMonths: customerWorkMonths,
+      income: customerIncome,
+      residenceMonths: customerResidenceMonths,
+      occupation: customerOccupation,
+      isAce: isAceCustomer,
+    },
+    {
+      downPercent: currentCalculation.downPercent,
+      hasPaInsurance: insurancePlan !== 'none',
+      proposalKey,
+    }
+  );
+
+  const handleOpenDvWithLinkedData = () => {
+    triggerHaptic('medium');
+    setActiveTab('documents');
+    setExpandedCard('dv');
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Build formatted installment summary text for LINE / Native Share
   const buildInstallmentSummaryText = (styleOverride?: 'card' | 'compare' | 'compact') => {
     const activeStyle = styleOverride || shareTextStyle;
@@ -898,6 +1031,12 @@ export default function App() {
     setTerm(record.term);
     setCustomerName(record.customerName || 'คุณลูกค้า');
     if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    handleCustomerAgeChange(record.customerAge ?? '');
+    handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
+    handleCustomerIncomeChange(record.customerIncome ?? '');
+    handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
+    handleCustomerOccupationChange(record.customerOccupation ?? '');
+    handleIsAceCustomerChange(Boolean(record.isAceCustomer));
     if (record.dealerName !== undefined) handleDealerNameChange(record.dealerName);
     if (record.officerName) setOfficerName(record.officerName);
     if (record.officerCode) setOfficerCode(record.officerCode);
@@ -962,6 +1101,12 @@ export default function App() {
       customerName,
       customerPhone,
       customerNote: '',
+      customerAge: customerAge.trim() || undefined,
+      customerWorkMonths: customerWorkMonths.trim() || undefined,
+      customerIncome: customerIncome.trim() || undefined,
+      customerResidenceMonths: customerResidenceMonths.trim() || undefined,
+      customerOccupation: customerOccupation.trim() || undefined,
+      isAceCustomer: isAceCustomer || undefined,
       dealerName: dealerName.trim() || undefined,
       proposalKey,
       vehiclePrice,
@@ -1025,6 +1170,12 @@ export default function App() {
     setTerm(record.term);
     setCustomerName(record.customerName || 'คุณลูกค้า');
     if (record.customerPhone !== undefined) setCustomerPhone(record.customerPhone);
+    handleCustomerAgeChange(record.customerAge ?? '');
+    handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
+    handleCustomerIncomeChange(record.customerIncome ?? '');
+    handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
+    handleCustomerOccupationChange(record.customerOccupation ?? '');
+    handleIsAceCustomerChange(Boolean(record.isAceCustomer));
     if (record.dealerName !== undefined) handleDealerNameChange(record.dealerName);
     if (record.officerName) setOfficerName(record.officerName);
     if (record.officerCode) setOfficerCode(record.officerCode);
@@ -1494,6 +1645,214 @@ export default function App() {
                     {customerDisplay}
                   </MarqueeText>
                 </div>
+
+                {/* Extra Customer Eligibility Inputs (เชื่อมเกณฑ์คุณสมบัติ & ลิงก์ไปขอ DV) */}
+                <div className="pt-2.5 border-t border-emerald-200/70 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[10.5px] font-bold text-emerald-950 flex items-center gap-1">
+                      <ClipboardCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                      <span>คุณสมบัติลูกค้า (เช็คเกณฑ์ & ลิงก์ไปขอ DV)</span>
+                    </span>
+                    {customerEligibilityEval.failedTopics.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={handleOpenDvWithLinkedData}
+                        className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 hover:bg-rose-200/80 text-rose-800 border border-rose-300 flex items-center gap-1 cursor-pointer transition-colors"
+                        title="คลิกเพื่อเปิดหน้าขออนุมัติ DV พร้อมดึงหัวข้อที่ไม่ผ่านอัตโนมัติ"
+                      >
+                        <XCircle className="w-3 h-3 text-rose-600" />
+                        <span>ขอ DV: {customerEligibilityEval.failedTopics.map((f) => f.code).join(', ')}</span>
+                      </button>
+                    ) : customerEligibilityEval.checkedCount > 0 && customerEligibilityEval.aceWarnings.length === 0 ? (
+                      <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>ผ่านเกณฑ์ {customerEligibilityEval.tier.salesChannel} ✓</span>
+                      </span>
+                    ) : (
+                      <span className="text-[9.5px] font-semibold text-slate-500 bg-white/70 px-2 py-0.5 rounded-full border border-slate-200/80">
+                        เกณฑ์: {customerEligibilityEval.tier.salesChannel}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 4 Criteria Inputs: อายุ, อายุงาน, รายได้, ระยะเวลาพักอาศัย */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        อายุ (ปี){' '}
+                        <span className="text-[9px] text-slate-400">
+                          ({customerEligibilityEval.tier.ageLabel})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={customerAge}
+                        onChange={(e) => handleCustomerAgeChange(e.target.value)}
+                        placeholder={`เช่น ${customerEligibilityEval.tier.minAge}`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.age === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.age === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        อายุงาน (เดือน){' '}
+                        <span className="text-[9px] text-slate-400">
+                          (≥{customerEligibilityEval.tier.minWorkMonths})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={customerWorkMonths}
+                        onChange={(e) => handleCustomerWorkMonthsChange(e.target.value)}
+                        placeholder={`≥ ${customerEligibilityEval.tier.minWorkMonths} ด.`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.workMonths === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.workMonths === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        รายได้/เดือน{' '}
+                        <span className="text-[9px] text-slate-400">
+                          (≥{customerEligibilityEval.tier.incomeLabel})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="500"
+                        value={customerIncome}
+                        onChange={(e) => handleCustomerIncomeChange(e.target.value)}
+                        placeholder={`≥ ${customerEligibilityEval.tier.incomeLabel}`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.income === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.income === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        พักอาศัย (เดือน){' '}
+                        <span className="text-[9px] text-slate-400">
+                          (≥{customerEligibilityEval.tier.minResidenceMonths})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={customerResidenceMonths}
+                        onChange={(e) => handleCustomerResidenceMonthsChange(e.target.value)}
+                        placeholder={`≥ ${customerEligibilityEval.tier.minResidenceMonths} ด.`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.residenceMonths === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.residenceMonths === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Occupation + ACE Toggle Row */}
+                  <div className="grid grid-cols-12 gap-2 items-end">
+                    <div className="col-span-7 sm:col-span-8">
+                      <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                        อาชีพ (ซิงก์ไปหน้า DV)
+                      </label>
+                      <input
+                        type="text"
+                        value={customerOccupation}
+                        onChange={(e) => handleCustomerOccupationChange(e.target.value)}
+                        placeholder="เช่น พนักงานประจำ, ค้าขาย, ไรเดอร์"
+                        className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-semibold outline-none"
+                      />
+                    </div>
+                    <div className="col-span-5 sm:col-span-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('selection');
+                          handleIsAceCustomerChange(!isAceCustomer);
+                        }}
+                        className={`w-full py-1.5 px-2.5 rounded-xl text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isAceCustomer
+                            ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                            : 'bg-white/85 hover:bg-amber-50 text-slate-700 border-slate-200/90'
+                        }`}
+                      >
+                        <ShieldAlert
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            isAceCustomer ? 'text-white' : 'text-amber-600'
+                          }`}
+                        />
+                        <span>ลูกค้า ACE</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ACE Warning Strip */}
+                  {(isAceCustomer || proposalKey === 'aec') && (
+                    <div className="p-2 rounded-xl bg-amber-50/90 border border-amber-300/90 text-[10px] text-amber-950 space-y-1">
+                      <div className="font-bold flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>{ACE_FULL_NOTE}</span>
+                      </div>
+                      {customerEligibilityEval.aceWarnings.map((warn) => (
+                        <div key={warn} className="text-rose-700 font-extrabold pl-4">
+                          • {warn}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Failed Criteria -> Quick Link to DV */}
+                  {customerEligibilityEval.failedTopics.length > 0 && (
+                    <div className="p-2 rounded-xl bg-rose-50/90 border border-rose-200 flex items-center justify-between gap-2 flex-wrap">
+                      <div className="text-[10px] font-bold text-rose-800 space-y-0.5">
+                        <div>
+                          ไม่ผ่านเกณฑ์ {customerEligibilityEval.tier.shortTitle}:
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {customerEligibilityEval.failedTopics.map((f) => (
+                            <span
+                              key={f.code}
+                              className="px-1.5 py-0.5 rounded bg-white border border-rose-200 text-rose-800 font-bold"
+                            >
+                              {f.dvTopic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenDvWithLinkedData}
+                        className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer shrink-0"
+                      >
+                        <span>ส่งขออนุมัติ DV</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Dealer Information Card (กล่องใส่ชื่อร้านตัวแทนจำหน่าย ลิงก์ไปยังเอกสารและทุกส่วน) */}
@@ -1564,29 +1923,50 @@ export default function App() {
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
                     <Bike className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
                     <span>ข้อมูลรถและเงื่อนไขข้อเสนอ</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-blue-200/80 shadow-2xs">
-                    รุ่นรถ & ราคารถตัวเปล่า
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setShowEligibilityCriteriaModal(true);
+                    }}
+                    className="text-[10px] font-extrabold text-sky-800 bg-white/95 hover:bg-sky-50 px-2.5 py-1 rounded-full border border-sky-300/90 shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                    title="เปิดดูตารางเกณฑ์คุณสมบัติ ช่องทางการขาย และเงื่อนไข ACE"
+                  >
+                    <ClipboardCheck className="w-3 h-3 text-sky-600" />
+                    <span>เกณฑ์คุณสมบัติ ({customerEligibilityEval.tier.salesChannel})</span>
+                  </button>
                 </div>
 
                 {/* Proposal Select */}
                 <div>
-                  <div className="flex justify-between items-center mb-1">
+                  <div className="flex justify-between items-center mb-1 gap-2">
                     <label className="text-[11px] text-slate-600 font-semibold flex items-center gap-1">
                       เลือกประเภทข้อเสนอ (Proposal) *
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowProposalInfo(true)}
-                      className="text-[10px] text-blue-700 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
-                    >
-                      <Info className="w-3 h-3" /> ดูเงื่อนไข
-                    </button>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setShowEligibilityCriteriaModal(true);
+                        }}
+                        className="text-[10px] text-sky-700 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
+                      >
+                        <Table className="w-3 h-3" /> ตารางเกณฑ์
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowProposalInfo(true)}
+                        className="text-[10px] text-blue-700 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
+                      >
+                        <Info className="w-3 h-3" /> ดูเงื่อนไข
+                      </button>
+                    </div>
                   </div>
                   <div className="relative">
                     <button
@@ -2889,14 +3269,7 @@ export default function App() {
               <div data-card-id="dv" className="h-full">
                 <DvApprovalCard
                   customerName={customerName}
-                  bikeModelName={
-                    selectedBike?.name ||
-                    (bikeModelCode
-                      ? MOTORCYCLE_MODELS.find(
-                          (m) => m.code.toUpperCase() === bikeModelCode.trim().toUpperCase()
-                        )?.name || ''
-                      : '')
-                  }
+                  bikeModelName={resolvedBikeModelName}
                   bikeModelCode={bikeModelCode}
                   downPaymentDisplay={
                     currentCalculation.downAmount === 0
@@ -2910,6 +3283,15 @@ export default function App() {
                   officerCode={officerCode}
                   officerDisplay={officerDisplay}
                   dealerName={dealerName}
+                  proposalKey={proposalKey}
+                  downPercent={currentCalculation.downPercent}
+                  hasPaInsurance={insurancePlan !== 'none'}
+                  customerAge={customerAge}
+                  customerWorkMonths={customerWorkMonths}
+                  customerIncome={customerIncome}
+                  customerResidenceMonths={customerResidenceMonths}
+                  customerOccupation={customerOccupation}
+                  isAceCustomer={isAceCustomer}
                   onUpdateCustomerName={handleCustomerNameChange}
                   onUpdateDealerName={handleDealerNameChange}
                   isExpanded={expandedCard === 'dv'}
@@ -3071,6 +3453,16 @@ export default function App() {
         onClose={() => setShowProposalInfo(false)}
         selectedKey={proposalKey}
         onSelectProposal={(key) => handleProposalChange(key)}
+      />
+
+      <EligibilityCriteriaModal
+        isOpen={showEligibilityCriteriaModal}
+        onClose={() => setShowEligibilityCriteriaModal(false)}
+        activeTierKey={activeEligibilityTierKey}
+        evaluation={customerEligibilityEval}
+        bikeLabel={resolvedBikeModelName || currentProposal.name}
+        isAceCustomer={isAceCustomer}
+        onJumpToDv={handleOpenDvWithLinkedData}
       />
 
       <BikePresetsModal

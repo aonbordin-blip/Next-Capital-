@@ -150,6 +150,12 @@ export interface SavedCaseRecord {
   customerName: string;
   customerPhone?: string;
   customerNote?: string;
+  customerAge?: string;
+  customerWorkMonths?: string;
+  customerIncome?: string;
+  customerResidenceMonths?: string;
+  customerOccupation?: string;
+  isAceCustomer?: boolean;
   dealerName?: string;
 
   // Bike & Proposal
