@@ -344,10 +344,10 @@ export function buildFirestoreCasePayload(
     payload.deliveryStatus = record.deliveryStatus;
   }
   if (typeof record.approvalDate === 'string' && record.approvalDate) {
-    payload.approvalDate = safeStr(record.approvalDate, 20);
+    payload.approvalDate = safeStr(record.approvalDate, 40);
   }
   if (typeof record.deliveryDate === 'string' && record.deliveryDate) {
-    payload.deliveryDate = safeStr(record.deliveryDate, 20);
+    payload.deliveryDate = safeStr(record.deliveryDate, 40);
   }
   if (typeof record.deliveryConfirmedAt === 'number' && Number.isFinite(record.deliveryConfirmedAt)) {
     payload.deliveryConfirmedAt = record.deliveryConfirmedAt;
@@ -601,22 +601,114 @@ export async function upsertCloudCases(
         };
       });
 
-      if (prepared.length === 1) {
-        const item = prepared[0];
+      const commitSingleWithReconcile = async (
+        item: (typeof prepared)[number],
+        rec: SavedCaseRecord
+      ): Promise<void> => {
         try {
           await setDoc(item.docRef, item.payload);
           if (typeof item.payload.recordCreatedAt === 'number') {
             cloudRecordCreatedAtMap?.set(item.safeId, item.payload.recordCreatedAt);
           }
           succeededIds.push(item.safeId);
-        } catch (error) {
+          return;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          const code = typeof err === 'object' && err !== null && 'code' in err ? String((err as { code?: unknown }).code) : '';
+          const isPermDenied =
+            code.includes('permission-denied') || msg.toLowerCase().includes('permission');
+
+          if (isPermDenied) {
+            try {
+              const prevCreatedAt = cloudCreatedAtMap.get(item.safeId);
+              const prevRecordCreatedAt = cloudRecordCreatedAtMap?.get(item.safeId);
+              const serverSnap = await getDocFromServer(item.docRef);
+              if (serverSnap.exists()) {
+                const serverData = serverSnap.data();
+                const serverCreatedAt =
+                  serverData.createdAt instanceof Timestamp ? serverData.createdAt : undefined;
+                const serverRecordCreatedAt =
+                  typeof serverData.recordCreatedAt === 'number' && serverData.recordCreatedAt > 0
+                    ? serverData.recordCreatedAt
+                    : undefined;
+
+                if (serverCreatedAt) {
+                  cloudCreatedAtMap.set(item.safeId, serverCreatedAt);
+                }
+                if (serverRecordCreatedAt) {
+                  cloudRecordCreatedAtMap?.set(item.safeId, serverRecordCreatedAt);
+                }
+
+                const createdAtChanged =
+                  !prevCreatedAt ||
+                  Boolean(serverCreatedAt && !serverCreatedAt.isEqual(prevCreatedAt));
+                const recordCreatedAtChanged =
+                  Boolean(serverRecordCreatedAt && serverRecordCreatedAt !== prevRecordCreatedAt);
+
+                if (!item.isUpdate || createdAtChanged || recordCreatedAtChanged) {
+                  const retryPayload = buildFirestoreCasePayload(
+                    rec,
+                    uid,
+                    serverCreatedAt,
+                    serverRecordCreatedAt,
+                    item.safeId
+                  );
+                  await setDoc(item.docRef, retryPayload);
+                  if (typeof retryPayload.recordCreatedAt === 'number') {
+                    cloudRecordCreatedAtMap?.set(item.safeId, retryPayload.recordCreatedAt);
+                  }
+                  succeededIds.push(item.safeId);
+                  return;
+                }
+              } else if (item.isUpdate) {
+                // Local map held stale createdAt for a doc that does not exist on server -> retry as fresh create
+                cloudCreatedAtMap.delete(item.safeId);
+                cloudRecordCreatedAtMap?.delete(item.safeId);
+                const retryPayload = buildFirestoreCasePayload(
+                  rec,
+                  uid,
+                  undefined,
+                  undefined,
+                  item.safeId
+                );
+                await setDoc(item.docRef, retryPayload);
+                if (typeof retryPayload.recordCreatedAt === 'number') {
+                  cloudRecordCreatedAtMap?.set(item.safeId, retryPayload.recordCreatedAt);
+                }
+                succeededIds.push(item.safeId);
+                return;
+              }
+            } catch (reconcileErr) {
+              failedCount++;
+              const existedOnServer = cloudCreatedAtMap.has(item.safeId);
+              try {
+                handleFirestoreError(
+                  reconcileErr,
+                  existedOnServer ? OperationType.UPDATE : OperationType.CREATE,
+                  item.path
+                );
+              } catch (wrapped) {
+                if (!firstError) firstError = wrapped;
+              }
+              return;
+            }
+          }
+
           failedCount++;
           try {
-            handleFirestoreError(error, item.isUpdate ? OperationType.UPDATE : OperationType.CREATE, item.path);
+            handleFirestoreError(
+              err,
+              item.isUpdate ? OperationType.UPDATE : OperationType.CREATE,
+              item.path
+            );
           } catch (wrapped) {
             if (!firstError) firstError = wrapped;
           }
         }
+      };
+
+      if (prepared.length === 1) {
+        await commitSingleWithReconcile(prepared[0], chunk[0].record);
         processedCount += 1;
         options?.onProgress?.(processedCount, totalCount);
         continue;
@@ -638,21 +730,8 @@ export async function upsertCloudCases(
         options?.onProgress?.(processedCount, totalCount);
       } catch {
         // Fallback: commit individually so 1 problematic doc doesn't block all remaining valid docs
-        for (const item of prepared) {
-          try {
-            await setDoc(item.docRef, item.payload);
-            if (typeof item.payload.recordCreatedAt === 'number') {
-              cloudRecordCreatedAtMap?.set(item.safeId, item.payload.recordCreatedAt);
-            }
-            succeededIds.push(item.safeId);
-          } catch (singleErr) {
-            failedCount++;
-            try {
-              handleFirestoreError(singleErr, item.isUpdate ? OperationType.UPDATE : OperationType.CREATE, item.path);
-            } catch (wrapped) {
-              if (!firstError) firstError = wrapped;
-            }
-          }
+        for (let idx = 0; idx < prepared.length; idx++) {
+          await commitSingleWithReconcile(prepared[idx], chunk[idx].record);
           processedCount += 1;
           options?.onProgress?.(processedCount, totalCount);
         }

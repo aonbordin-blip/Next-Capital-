@@ -218,9 +218,9 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
         </div>
 
         {syncError && (
-          <div className="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-            <span className="break-words">{syncError}</span>
+          <div className="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-start gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{syncError}</span>
           </div>
         )}
 
@@ -356,14 +356,14 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
             ) : (
               <AlertCircle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
             )}
-            <span className="break-words">{backupUploadFeedback.message}</span>
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{backupUploadFeedback.message}</span>
           </div>
         )}
 
         {isError && (
           <div className="px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-start gap-1.5">
             <AlertCircle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
-            <span className="break-words">{errorMessage}</span>
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{errorMessage}</span>
           </div>
         )}
       </div>
@@ -447,7 +447,7 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
       {/* Upload JSON Backup Feedback Banner */}
       {backupUploadFeedback && (
         <div
-          className={`px-3 py-2 rounded-xl text-[11px] flex items-start justify-between gap-2 border ${
+          className={`px-3 py-2.5 rounded-xl text-[11px] flex flex-col gap-2 border ${
             backupUploadFeedback.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
               : backupUploadFeedback.type === 'warning'
@@ -465,31 +465,33 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
                 }`}
               />
             )}
-            <span className="break-words font-medium leading-relaxed">
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] font-medium leading-relaxed">
               {backupUploadFeedback.message}
             </span>
           </div>
           {onOpenSavedCases && backupUploadFeedback.type !== 'error' && (
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                onOpenSavedCases();
-              }}
-              className="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10.5px] font-extrabold inline-flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs active:scale-95 transition-all"
-            >
-              <FolderOpen className="w-3 h-3" />
-              <span>ดูเคสในแอป</span>
-            </button>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenSavedCases();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10.5px] font-extrabold inline-flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs active:scale-95 transition-all"
+              >
+                <FolderOpen className="w-3 h-3" />
+                <span>ดูเคสในแอป</span>
+              </button>
+            </div>
           )}
         </div>
       )}
 
       {isError && (
-        <div className="px-2.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1.5">
-          <div className="flex items-start gap-1.5">
+        <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1.5">
+          <div className="flex items-start gap-1.5 min-w-0">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-            <span className="break-words">{errorMessage}</span>
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] leading-relaxed">{errorMessage}</span>
           </div>
           <div className="flex justify-end">
             <button
