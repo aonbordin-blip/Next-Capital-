@@ -51,12 +51,10 @@ import {
   FileCheck,
   Maximize2,
   Building2,
-  FileSpreadsheet,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
-import { exportSavedCasesToExcel } from '../utils/excelExport';
 import {
   getSavedCases,
   deleteCaseRecord,
@@ -889,22 +887,6 @@ export const SavedCasesModal: React.FC<Props> = ({
     showToast('ดาวน์โหลดไฟล์สำรองข้อมูล (JSON) แล้ว');
   };
 
-  const handleExportExcel = () => {
-    const targetCases = filteredCases.length > 0 ? filteredCases : cases;
-    if (targetCases.length === 0) {
-      triggerHaptic('warning');
-      showToast('⚠️ ไม่มีรายการเคสสำหรับส่งออก Excel');
-      return;
-    }
-    triggerHaptic('success');
-    const label =
-      selectedMonthKey === 'all'
-        ? 'ทั้งหมด'
-        : formatYearMonthLabel(selectedMonthKey);
-    const fileName = exportSavedCasesToExcel(targetCases, label);
-    showToast(`✓ ส่งออกไฟล์ Excel "${fileName}" (${targetCases.length} รายการ) แล้ว`);
-  };
-
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1060,25 +1042,13 @@ export const SavedCasesModal: React.FC<Props> = ({
                 </button>
               )}
 
-              {/* ส่งออก Excel */}
-              <button
-                type="button"
-                onClick={handleExportExcel}
-                disabled={cases.length === 0}
-                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 text-emerald-800 font-bold text-xs flex items-center gap-1 border border-emerald-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
-                title="ส่งออกรายการเคสที่แสดงอยู่เป็นไฟล์ Excel (.xlsx)"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-[11px]">Excel</span>
-              </button>
-
-              {/* ส่งออก JSON */}
+              {/* ส่งออก */}
               <button
                 type="button"
                 onClick={handleExport}
                 disabled={cases.length === 0}
                 className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-sky-50 disabled:opacity-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
-                title="ส่งออก / แชร์ไฟล์สำรองข้อมูล (JSON)"
+                title="ส่งออก / แชร์ไฟล์เคส"
               >
                 <Share2 className="w-3.5 h-3.5 text-sky-600" />
                 <span className="hidden sm:inline text-[11px]">ส่งออก</span>
