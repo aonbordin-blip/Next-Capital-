@@ -26,8 +26,10 @@ import {
   MapPin,
   ExternalLink,
   ClipboardCopy,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
+import { exportInstallmentTrackingToExcel } from '../utils/excelExport';
 import {
   getSavedCases,
   saveCaseRecord,
@@ -163,6 +165,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
   const [viewStyle, setViewStyle] = useState<ViewStyle>('cards');
   const [copiedCaseId, setCopiedCaseId] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [exportedExcel, setExportedExcel] = useState(false);
   const [expandedScheduleIds, setExpandedScheduleIds] = useState<Record<string, boolean>>({});
 
   // Add / Edit Customer Info Modal state
@@ -672,6 +675,19 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     }
   };
 
+  // Export filtered customer installment schedule to Excel (.xlsx)
+  const handleExportExcel = () => {
+    if (filteredList.length === 0) return;
+    triggerHaptic('success');
+    const filterParts: string[] = [];
+    if (activeMonthMeta) filterParts.push(activeMonthMeta.short);
+    if (brandFilter !== 'ALL') filterParts.push(brandFilter);
+    const fileName = exportInstallmentTrackingToExcel(filteredList, filterParts.join('_'));
+    setExportedExcel(true);
+    setTimeout(() => setExportedExcel(false), 2000);
+    onNotify(`✓ ส่งออกไฟล์ Excel "${fileName}" (${filteredList.length} ราย) เรียบร้อยแล้ว`);
+  };
+
   return (
     <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
       {/* Step Header Badge */}
@@ -941,23 +957,43 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
           <div className="flex items-center gap-1.5 shrink-0">
             {filteredList.length > 0 && (
-              <button
-                type="button"
-                onClick={handleCopyAllSummary}
-                className={`px-2.5 py-1 rounded-xl border text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
-                  copiedAll
-                    ? 'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-white hover:bg-sky-50 text-slate-700 border-slate-200'
-                }`}
-                title="คัดลอกสรุปกลุ่มงวดแรกส่ง LINE"
-              >
-                {copiedAll ? (
-                  <Check className="w-3 h-3" />
-                ) : (
-                  <Copy className="w-3 h-3 text-sky-600" />
-                )}
-                <span>{copiedAll ? 'คัดลอกแล้ว' : 'คัดลอกสรุป'}</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleExportExcel}
+                  className={`px-2.5 py-1 rounded-xl border text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+                    exportedExcel
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200/90'
+                  }`}
+                  title="ส่งออกรายชื่อกำหนดชำระเป็นไฟล์ Excel (.xlsx)"
+                >
+                  {exportedExcel ? (
+                    <Check className="w-3 h-3" />
+                  ) : (
+                    <FileSpreadsheet className="w-3 h-3 text-emerald-600" />
+                  )}
+                  <span>{exportedExcel ? 'ส่งออกแล้ว' : 'Excel'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyAllSummary}
+                  className={`px-2.5 py-1 rounded-xl border text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                    copiedAll
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white hover:bg-sky-50 text-slate-700 border-slate-200'
+                  }`}
+                  title="คัดลอกสรุปกลุ่มงวดแรกส่ง LINE"
+                >
+                  {copiedAll ? (
+                    <Check className="w-3 h-3" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-sky-600" />
+                  )}
+                  <span>{copiedAll ? 'คัดลอกแล้ว' : 'คัดลอกสรุป'}</span>
+                </button>
+              </>
             )}
 
             <div className="flex items-center p-0.5 rounded-xl bg-slate-200/70 border border-slate-200">
