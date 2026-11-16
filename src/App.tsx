@@ -1221,16 +1221,24 @@ export default function App() {
 
   return (
     <div className="h-[100dvh] max-h-[100dvh] w-full relative overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
-      {/* Dynamic Ambient Background Glowing Blobs for Soft Neo-Glassmorphism Depth */}
+      {/* Soft Ambient Background Radial Glows for Neo-Glassmorphism Depth (Zero GPU blur pass) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Soft Cyan Ambient Glow */}
-        <div className="absolute -top-24 -left-20 w-96 h-96 rounded-full bg-cyan-400/35 blur-[100px] animate-blob-1" />
-        {/* Pastel Teal Accent Glow */}
-        <div className="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-teal-300/40 blur-[90px] animate-blob-2" />
-        {/* Sky Blue Ambient Glow */}
-        <div className="absolute -bottom-28 left-1/4 w-96 h-96 rounded-full bg-sky-400/35 blur-[110px] animate-blob-3" />
-        {/* Violet / Indigo Refraction Accent Glow */}
-        <div className="absolute top-2/3 -left-10 w-72 h-72 rounded-full bg-indigo-300/25 blur-[95px] animate-blob-2" />
+        <div
+          className="absolute -top-24 -left-20 w-[420px] h-[420px] rounded-full opacity-55"
+          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.45) 0%, rgba(34,211,238,0) 70%)' }}
+        />
+        <div
+          className="absolute top-1/3 -right-24 w-[380px] h-[380px] rounded-full opacity-55"
+          style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.45) 0%, rgba(94,234,212,0) 70%)' }}
+        />
+        <div
+          className="absolute -bottom-28 left-1/4 w-[440px] h-[440px] rounded-full opacity-55"
+          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.4) 0%, rgba(56,189,248,0) 70%)' }}
+        />
+        <div
+          className="absolute top-2/3 -left-16 w-[360px] h-[360px] rounded-full opacity-45"
+          style={{ background: 'radial-gradient(circle, rgba(165,180,252,0.35) 0%, rgba(165,180,252,0) 70%)' }}
+        />
         {/* Subtle geometric dot grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.03]"

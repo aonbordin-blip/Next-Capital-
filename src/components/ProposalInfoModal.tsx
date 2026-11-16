@@ -34,11 +34,11 @@ export const ProposalInfoModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white/95 backdrop-blur-xl border border-white/80 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden ${sheetAnimClass}`}
+        className={`bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden ${sheetAnimClass}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-slate-50/70">

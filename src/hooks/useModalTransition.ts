@@ -3,24 +3,24 @@ import { useEffect, useState } from 'react';
 export function useModalTransition(
   isOpen: boolean,
   onClose?: () => void,
-  durationMs: number = 220
+  durationMs: number = 160
 ) {
-  const [shouldRender, setShouldRender] = useState<boolean>(isOpen);
+  const [isRendered, setIsRendered] = useState<boolean>(isOpen);
   const [isClosing, setIsClosing] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
-      setShouldRender(true);
+      setIsRendered(true);
       setIsClosing(false);
-    } else if (shouldRender) {
+    } else if (isRendered) {
       setIsClosing(true);
       const timer = window.setTimeout(() => {
-        setShouldRender(false);
+        setIsRendered(false);
         setIsClosing(false);
       }, durationMs);
       return () => window.clearTimeout(timer);
     }
-  }, [isOpen, shouldRender, durationMs]);
+  }, [isOpen, isRendered, durationMs]);
 
   useEffect(() => {
     if (!isOpen || !onClose) return;
@@ -32,6 +32,8 @@ export function useModalTransition(
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  const shouldRender = isOpen || isRendered;
 
   return {
     shouldRender,

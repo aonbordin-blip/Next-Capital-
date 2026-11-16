@@ -91,7 +91,7 @@ export const InstallAppBanner: React.FC = () => {
               setShowGuideModal(false);
             }
           }}
-          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm ${guideBackdropAnimClass}`}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 ${guideBackdropAnimClass}`}
         >
           <div
             onClick={(e) => e.stopPropagation()}

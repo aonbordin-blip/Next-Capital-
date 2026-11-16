@@ -40,11 +40,11 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 overflow-y-auto ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white/95 backdrop-blur-2xl border border-white/80 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto ${sheetAnimClass}`}
+        className={`bg-white border border-slate-200 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto ${sheetAnimClass}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/60">

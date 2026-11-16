@@ -1210,7 +1210,7 @@ ${
             onClose();
           }
         }}
-        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto ${backdropAnimClass}`}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/65 overflow-y-auto ${backdropAnimClass}`}
       >
         <div
           onClick={(e) => e.stopPropagation()}

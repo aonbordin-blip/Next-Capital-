@@ -887,7 +887,7 @@ ${
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xs overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}

@@ -1306,7 +1306,7 @@ export function DvApprovalCard({
             role="dialog"
             aria-modal="true"
             data-modal-portal="true"
-            className={`fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 ${topicsBackdropAnimClass}`}
+            className={`fixed inset-0 z-[60] bg-slate-950/65 flex items-center justify-center p-3 sm:p-4 ${topicsBackdropAnimClass}`}
             onClick={(e) => {
               if (e.target === e.currentTarget && !isClosingTopicsModal) {
                 setShowAllTopicsModal(false);

@@ -39,7 +39,7 @@ export const ProposalSelectModal: React.FC<Props> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 ${backdropAnimClass}`}
       onClick={() => {
         if (!isClosing) onClose();
       }}
