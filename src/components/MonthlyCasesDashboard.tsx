@@ -1,0 +1,727 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LabelList,
+} from 'recharts';
+import { BarChart3, FolderOpen } from 'lucide-react';
+import { SavedCaseRecord } from '../types';
+import { getSavedCases } from '../utils/savedCasesStorage';
+import { formatBaht } from '../data/proposals';
+import { triggerHaptic } from '../utils/haptics';
+
+interface MonthlyCasesDashboardProps {
+  refreshTrigger?: number;
+  onOpenSavedCases?: () => void;
+  onGoToCalculate?: () => void;
+}
+
+type ChartMode = 'total' | 'status';
+type MonthScope = 'all_12' | 'active_only';
+
+interface MonthlyBucketDatum {
+  key: string; // YYYY-MM
+  year: number;
+  thaiYear: number;
+  monthIndex: number; // 1..12
+  shortLabel: string; // ม.ค. or ต.ค. 69
+  fullLabel: string; // ตุลาคม 2569
+  total: number;
+  delivered: number;
+  approvedPendingDelivery: number;
+  pending: number;
+  closedOther: number;
+  totalFinance: number;
+}
+
+const THAI_MONTH_SHORTS = [
+  'ม.ค.',
+  'ก.พ.',
+  'มี.ค.',
+  'เม.ย.',
+  'พ.ค.',
+  'มิ.ย.',
+  'ก.ค.',
+  'ส.ค.',
+  'ก.ย.',
+  'ต.ค.',
+  'พ.ย.',
+  'ธ.ค.',
+];
+
+const THAI_MONTH_NAMES = [
+  'มกราคม',
+  'กุมภาพันธ์',
+  'มีนาคม',
+  'เมษายน',
+  'พฤษภาคม',
+  'มิถุนายน',
+  'กรกฎาคม',
+  'สิงหาคม',
+  'กันยายน',
+  'ตุลาคม',
+  'พฤศจิกายน',
+  'ธันวาคม',
+];
+
+function extractBangkokYearMonth(createdAtMs: number): { year: number; month: number } {
+  const ts = Number.isFinite(createdAtMs) && createdAtMs > 0 ? createdAtMs : Date.now();
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+    }).formatToParts(new Date(ts));
+    const y = Number(parts.find((p) => p.type === 'year')?.value);
+    const m = Number(parts.find((p) => p.type === 'month')?.value);
+    if (Number.isFinite(y) && y > 1900 && Number.isFinite(m) && m >= 1 && m <= 12) {
+      return { year: y, month: m };
+    }
+  } catch {
+    // Fallback to UTC+7 offset calculation
+  }
+  const bkk = new Date(ts + 7 * 60 * 60 * 1000);
+  return {
+    year: bkk.getUTCFullYear(),
+    month: bkk.getUTCMonth() + 1,
+  };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: ReadonlyArray<{ payload?: MonthlyBucketDatum }>;
+}
+
+const MonthlyChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const datum = payload[0]?.payload;
+  if (!datum) return null;
+
+  return (
+    <div className="rounded-xl bg-white border border-slate-200 shadow-lg px-3 py-2.5 text-xs text-slate-800 min-w-[190px]">
+      <div className="font-bold text-slate-900 pb-1.5 border-b border-slate-100 flex items-center justify-between gap-3">
+        <span>{datum.fullLabel}</span>
+        <span className="font-mono tabular-nums text-sky-700 font-extrabold">
+          {datum.total} เคส
+        </span>
+      </div>
+      <div className="pt-1.5 space-y-1 text-[11px]">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-emerald-700 font-medium">รับรถแล้ว</span>
+          <span className="font-mono tabular-nums font-semibold text-slate-900">
+            {datum.delivered}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sky-700 font-medium">อนุมัติ (รอรับรถ)</span>
+          <span className="font-mono tabular-nums font-semibold text-slate-900">
+            {datum.approvedPendingDelivery}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-amber-700 font-medium">รอผล / บันทึกไว้</span>
+          <span className="font-mono tabular-nums font-semibold text-slate-900">
+            {datum.pending}
+          </span>
+        </div>
+        {datum.closedOther > 0 && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-slate-500 font-medium">ไม่อนุมัติ / ยกเลิก</span>
+            <span className="font-mono tabular-nums font-semibold text-slate-700">
+              {datum.closedOther}
+            </span>
+          </div>
+        )}
+        <div className="pt-1 mt-1 border-t border-slate-100 flex items-center justify-between gap-3">
+          <span className="text-slate-500">ยอดจัดรวม</span>
+          <span className="font-mono tabular-nums font-bold text-slate-900">
+            {formatBaht(Math.round(datum.totalFinance))} บ.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
+  refreshTrigger,
+  onOpenSavedCases,
+  onGoToCalculate,
+}) => {
+  const [savedCases, setSavedCases] = useState<SavedCaseRecord[]>(() => getSavedCases());
+  const [chartMode, setChartMode] = useState<ChartMode>('total');
+  const [monthScope, setMonthScope] = useState<MonthScope>('all_12');
+  const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSavedCases(getSavedCases());
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      setSavedCases(getSavedCases());
+    };
+    window.addEventListener('ncap-cases-synced', handleSync);
+    return () => window.removeEventListener('ncap-cases-synced', handleSync);
+  }, []);
+
+  // Aggregate cases by (year, month) in Asia/Bangkok
+  const { availableYears, monthlyMap } = useMemo(() => {
+    const map = new Map<string, MonthlyBucketDatum>();
+    const yearsSet = new Set<number>();
+
+    for (const c of savedCases) {
+      const { year, month } = extractBangkokYearMonth(c.createdAt);
+      yearsSet.add(year);
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      const thaiYear = year + 543;
+      const thaiYearShort = String(thaiYear).slice(-2);
+
+      let bucket = map.get(key);
+      if (!bucket) {
+        bucket = {
+          key,
+          year,
+          thaiYear,
+          monthIndex: month,
+          shortLabel: `${THAI_MONTH_SHORTS[month - 1]} ${thaiYearShort}`,
+          fullLabel: `${THAI_MONTH_NAMES[month - 1]} ${thaiYear}`,
+          total: 0,
+          delivered: 0,
+          approvedPendingDelivery: 0,
+          pending: 0,
+          closedOther: 0,
+          totalFinance: 0,
+        };
+        map.set(key, bucket);
+      }
+
+      bucket.total += 1;
+      bucket.totalFinance += Number(c.snapshot?.financeAmount) || 0;
+
+      if (c.approvalStatus === 'approved') {
+        if (c.deliveryStatus === 'delivered') {
+          bucket.delivered += 1;
+        } else {
+          bucket.approvedPendingDelivery += 1;
+        }
+      } else if (c.approvalStatus === 'rejected' || c.approvalStatus === 'cancelled') {
+        bucket.closedOther += 1;
+      } else {
+        bucket.pending += 1;
+      }
+    }
+
+    const years = Array.from(yearsSet).sort((a, b) => b - a);
+    return { availableYears: years, monthlyMap: map };
+  }, [savedCases]);
+
+  // Auto-select the most recent year when available
+  const activeYear: number | 'all' = useMemo(() => {
+    if (availableYears.length === 0) return 'all';
+    if (selectedYear === 'all') {
+      return availableYears[0];
+    }
+    if (availableYears.includes(selectedYear)) {
+      return selectedYear;
+    }
+    return availableYears[0];
+  }, [availableYears, selectedYear]);
+
+  const isMultiYearAll = selectedYear === 'all' && availableYears.length > 1;
+  const effectiveYearFilter: number | 'all' =
+    selectedYear === 'all' && availableYears.length <= 1
+      ? availableYears[0] ?? 'all'
+      : selectedYear === 'all'
+      ? availableYears[0]
+      : activeYear;
+
+  const chartData = useMemo<MonthlyBucketDatum[]>(() => {
+    if (savedCases.length === 0) return [];
+
+    if (isMultiYearAll || effectiveYearFilter === 'all') {
+      return Array.from(monthlyMap.values()).sort((a, b) => a.key.localeCompare(b.key));
+    }
+
+    const year = effectiveYearFilter;
+    const thaiYear = year + 543;
+    const result: MonthlyBucketDatum[] = [];
+
+    for (let m = 1; m <= 12; m++) {
+      const key = `${year}-${String(m).padStart(2, '0')}`;
+      const existing = monthlyMap.get(key);
+      if (existing) {
+        result.push({
+          ...existing,
+          shortLabel: THAI_MONTH_SHORTS[m - 1],
+        });
+      } else if (monthScope === 'all_12') {
+        result.push({
+          key,
+          year,
+          thaiYear,
+          monthIndex: m,
+          shortLabel: THAI_MONTH_SHORTS[m - 1],
+          fullLabel: `${THAI_MONTH_NAMES[m - 1]} ${thaiYear}`,
+          total: 0,
+          delivered: 0,
+          approvedPendingDelivery: 0,
+          pending: 0,
+          closedOther: 0,
+          totalFinance: 0,
+        });
+      }
+    }
+
+    return result;
+  }, [savedCases.length, isMultiYearAll, effectiveYearFilter, monthlyMap, monthScope]);
+
+  // Summary KPIs for the currently displayed scope
+  const summaryStats = useMemo(() => {
+    const activeMonths = chartData.filter((d) => d.total > 0);
+    const totalCases = chartData.reduce((sum, d) => sum + d.total, 0);
+    const totalDelivered = chartData.reduce((sum, d) => sum + d.delivered, 0);
+    const totalApproved = chartData.reduce(
+      (sum, d) => sum + d.delivered + d.approvedPendingDelivery,
+      0
+    );
+    const totalFinance = chartData.reduce((sum, d) => sum + d.totalFinance, 0);
+    const avgPerActiveMonth =
+      activeMonths.length > 0 ? totalCases / activeMonths.length : 0;
+
+    let peakBucket: MonthlyBucketDatum | null = null;
+    for (const d of activeMonths) {
+      if (!peakBucket || d.total > peakBucket.total) {
+        peakBucket = d;
+      }
+    }
+
+    return {
+      totalCases,
+      activeMonthCount: activeMonths.length,
+      avgPerActiveMonth,
+      peakBucket,
+      totalApproved,
+      totalDelivered,
+      totalFinance,
+    };
+  }, [chartData]);
+
+  const selectedBucket = useMemo(() => {
+    if (!selectedMonthKey) return null;
+    return chartData.find((d) => d.key === selectedMonthKey) ?? null;
+  }, [chartData, selectedMonthKey]);
+
+  const handleBarClick = (_data: unknown, index: number) => {
+    const clicked = chartData[index];
+    if (!clicked) return;
+    triggerHaptic('light');
+    setSelectedMonthKey((prev) => (prev === clicked.key ? null : clicked.key));
+  };
+
+  return (
+    <section
+      data-card-id="monthly_dashboard"
+      className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sm:p-5 space-y-4"
+    >
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4.5 h-4.5 text-sky-700 shrink-0" />
+            <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight truncate">
+              Dashboard สรุปจำนวนเคสรายเดือน
+            </h2>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-1.5">
+            <span>สถิติเคสที่บันทึกไว้แยกตามเดือน</span>
+            {typeof effectiveYearFilter === 'number' && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="tabular-nums">
+                  ปี พ.ศ. {effectiveYearFilter + 543}
+                </span>
+              </>
+            )}
+            <span aria-hidden="true">·</span>
+            <span className="tabular-nums">ทั้งหมดในเครื่อง {savedCases.length} เคส</span>
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {availableYears.length > 1 && (
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+              {availableYears.map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedYear(y);
+                    setSelectedMonthKey(null);
+                  }}
+                  className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
+                    effectiveYearFilter === y
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {y + 543}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {onOpenSavedCases && (
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenSavedCases();
+              }}
+              className="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200/80 text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+            >
+              <FolderOpen className="w-3.5 h-3.5 shrink-0" />
+              <span>เปิดคลังเคส</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Empty State */}
+      {savedCases.length === 0 ? (
+        <div className="border-t border-slate-100 pt-6 pb-4 text-center space-y-3">
+          <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div className="space-y-1 max-w-sm mx-auto">
+            <div className="text-sm font-bold text-slate-800">ยังไม่มีข้อมูลเคสสำหรับแสดงกราฟ</div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              เมื่อบันทึกเคสลูกค้าหรือซิงค์ข้อมูลจาก Cloud กราฟสรุปจำนวนเคสรายเดือนและยอดอนุมัติจะแสดงที่นี่โดยอัตโนมัติ
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2 pt-1">
+            {onGoToCalculate && (
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onGoToCalculate();
+                }}
+                className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold whitespace-nowrap cursor-pointer transition-colors"
+              >
+                คำนวณและบันทึกเคสแรก
+              </button>
+            )}
+            {onOpenSavedCases && (
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenSavedCases();
+                }}
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold whitespace-nowrap cursor-pointer transition-colors"
+              >
+                ดูรายการเคส
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* KPI Summary Strip (Unboxed, Hairline Separated, Tabular Numerals) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+            <div className="space-y-0.5">
+              <div className="text-[11px] font-medium text-slate-500">จำนวนเคสช่วงนี้</div>
+              <div className="text-lg sm:text-xl font-extrabold text-slate-900 font-mono tabular-nums">
+                {summaryStats.totalCases}
+                <span className="text-xs font-semibold text-slate-500 ml-1 font-sans">เคส</span>
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="text-[11px] font-medium text-slate-500">เฉลี่ยต่อเดือนที่มีเคส</div>
+              <div className="text-lg sm:text-xl font-extrabold text-slate-900 font-mono tabular-nums">
+                {summaryStats.avgPerActiveMonth.toFixed(1)}
+                <span className="text-xs font-semibold text-slate-500 ml-1 font-sans">
+                  / เดือน ({summaryStats.activeMonthCount})
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="text-[11px] font-medium text-slate-500">เดือนที่บันทึกสูงสุด</div>
+              <div className="text-lg sm:text-xl font-extrabold text-sky-700 font-mono tabular-nums">
+                {summaryStats.peakBucket ? (
+                  <>
+                    <span className="font-sans text-sm sm:text-base font-extrabold mr-1">
+                      {summaryStats.peakBucket.shortLabel}
+                    </span>
+                    ({summaryStats.peakBucket.total})
+                  </>
+                ) : (
+                  '—'
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="text-[11px] font-medium text-slate-500">อนุมัติ / รับรถแล้ว</div>
+              <div className="text-lg sm:text-xl font-extrabold text-emerald-700 font-mono tabular-nums">
+                {summaryStats.totalApproved}
+                <span className="text-slate-400 mx-1">/</span>
+                {summaryStats.totalDelivered}
+                <span className="text-xs font-semibold text-slate-500 ml-1 font-sans">คัน</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Filter Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setChartMode('total');
+                }}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  chartMode === 'total'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                จำนวนเคสรวม
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setChartMode('status');
+                }}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  chartMode === 'status'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                แยกตามสถานะ
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setMonthScope('all_12');
+                }}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  monthScope === 'all_12'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                ครบ 12 เดือน
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setMonthScope('active_only');
+                }}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  monthScope === 'active_only'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                เฉพาะเดือนที่มีเคส
+              </button>
+            </div>
+          </div>
+
+          {/* Inline Legend for Status Breakdown Mode */}
+          {chartMode === 'status' && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-xs bg-emerald-600 inline-block" />
+                <span>รับรถแล้ว</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-xs bg-sky-600 inline-block" />
+                <span>อนุมัติ (รอรับรถ)</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-xs bg-amber-500 inline-block" />
+                <span>รอผล / บันทึกไว้</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-xs bg-slate-400 inline-block" />
+                <span>ไม่อนุมัติ / ยกเลิก</span>
+              </span>
+            </div>
+          )}
+
+          {/* Recharts BarChart Viewport */}
+          <div className="w-full min-w-0 h-[230px] sm:h-[250px] pt-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={chartData}
+                margin={{ top: 18, right: 8, left: -18, bottom: 0 }}
+                barCategoryGap={monthScope === 'active_only' ? '26%' : '18%'}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="shortLabel"
+                  tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }}
+                  axisLine={{ stroke: '#cbd5e1' }}
+                  tickLine={false}
+                  interval={0}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgba(14, 165, 233, 0.08)' }}
+                  content={<MonthlyChartTooltip />}
+                />
+
+                {chartMode === 'total' ? (
+                  <Bar
+                    dataKey="total"
+                    name="จำนวนเคส"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={42}
+                    onClick={handleBarClick}
+                    className="cursor-pointer"
+                  >
+                    {chartData.map((entry) => {
+                      const isSelected = selectedMonthKey === entry.key;
+                      const isPeak =
+                        summaryStats.peakBucket?.key === entry.key && entry.total > 0;
+                      const fillColor = isSelected
+                        ? '#0369a1'
+                        : isPeak
+                        ? '#0284c7'
+                        : '#38bdf8';
+                      return (
+                        <Cell
+                          key={entry.key}
+                          fill={entry.total === 0 ? '#e2e8f0' : fillColor}
+                        />
+                      );
+                    })}
+                    <LabelList
+                      dataKey="total"
+                      position="top"
+                      formatter={(val: unknown) => (Number(val) > 0 ? String(val) : '')}
+                      style={{
+                        fill: '#0f172a',
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                    />
+                  </Bar>
+                ) : (
+                  <>
+                    <Bar
+                      dataKey="delivered"
+                      stackId="cases"
+                      name="รับรถแล้ว"
+                      fill="#059669"
+                      maxBarSize={42}
+                      onClick={handleBarClick}
+                      className="cursor-pointer"
+                    />
+                    <Bar
+                      dataKey="approvedPendingDelivery"
+                      stackId="cases"
+                      name="อนุมัติ (รอรับรถ)"
+                      fill="#0284c7"
+                      maxBarSize={42}
+                      onClick={handleBarClick}
+                      className="cursor-pointer"
+                    />
+                    <Bar
+                      dataKey="pending"
+                      stackId="cases"
+                      name="รอผล / บันทึกไว้"
+                      fill="#f59e0b"
+                      maxBarSize={42}
+                      onClick={handleBarClick}
+                      className="cursor-pointer"
+                    />
+                    <Bar
+                      dataKey="closedOther"
+                      stackId="cases"
+                      name="ไม่อนุมัติ / ยกเลิก"
+                      fill="#94a3b8"
+                      radius={[5, 5, 0, 0]}
+                      maxBarSize={42}
+                      onClick={handleBarClick}
+                      className="cursor-pointer"
+                    />
+                  </>
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Selected Month Detail Line or Quiet Interactive Hint */}
+          <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+            {selectedBucket ? (
+              <>
+                <div className="text-slate-700 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="font-bold text-slate-900">{selectedBucket.fullLabel}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-mono tabular-nums font-bold text-sky-700">
+                    {selectedBucket.total} เคส
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span className="tabular-nums">
+                    รับรถ {selectedBucket.delivered} · อนุมัติรอรับ{' '}
+                    {selectedBucket.approvedPendingDelivery} · รอผล {selectedBucket.pending}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-mono tabular-nums text-slate-600">
+                    ยอดจัด {formatBaht(Math.round(selectedBucket.totalFinance))} บ.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedMonthKey(null);
+                  }}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-900 underline cursor-pointer whitespace-nowrap"
+                >
+                  ล้างการเลือก
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-slate-500">
+                  แตะที่แท่งกราฟเพื่อดูสรุปยอดจัดและสถานะรายเดือน · ยอดจัดรวมช่วงนี้{' '}
+                  <strong className="font-mono tabular-nums text-slate-800">
+                    {formatBaht(Math.round(summaryStats.totalFinance))} บ.
+                  </strong>
+                </span>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+};

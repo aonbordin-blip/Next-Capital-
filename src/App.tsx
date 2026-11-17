@@ -103,6 +103,7 @@ import {
 } from './data/eligibilityCriteria';
 import { useFirebase } from './contexts/FirebaseContext';
 import { CloudSyncCard } from './components/CloudSyncCard';
+import { MonthlyCasesDashboard } from './components/MonthlyCasesDashboard';
 
 export default function App() {
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
@@ -3591,6 +3592,13 @@ export default function App() {
                 />
               </div>
             </div>
+
+            {/* Monthly Saved Cases Dashboard (Recharts) */}
+            <MonthlyCasesDashboard
+              refreshTrigger={casesRevision}
+              onOpenSavedCases={() => setShowSavedCases(true)}
+              onGoToCalculate={() => handleTabChange('calculation')}
+            />
 
             {/* Cloud Backup & Multi-Device Sync Card */}
             <CloudSyncCard localCount={savedCasesCount} />
