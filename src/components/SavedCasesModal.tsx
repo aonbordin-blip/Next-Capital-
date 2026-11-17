@@ -39,7 +39,6 @@ import {
   ChevronUp,
   LayoutList,
   LayoutGrid,
-  Table2,
   Phone,
   ShieldCheck,
   Percent,
@@ -203,65 +202,6 @@ function formatThaiDateTime(timestamp: number): string {
   }
 }
 
-type DealStatusKey = 'pending' | 'approved_pending' | 'delivered' | 'rejected' | 'cancelled';
-
-function getDealStatusMeta(record: SavedCaseRecord): {
-  key: DealStatusKey;
-  label: string;
-  subLabel?: string;
-  badgeClass: string;
-  selectClass: string;
-  iconColorClass: string;
-} {
-  if (record.approvalStatus === 'approved') {
-    if (record.deliveryStatus === 'delivered') {
-      const dateText = record.deliveryDate ? formatThaiDateOnly(record.deliveryDate) : '';
-      return {
-        key: 'delivered',
-        label: 'รับรถแล้ว',
-        subLabel: dateText ? `รับ ${dateText}` : undefined,
-        badgeClass: 'bg-teal-50 text-teal-800 border-teal-300',
-        selectClass: 'bg-teal-50 text-teal-900 border-teal-300 hover:bg-teal-100/80',
-        iconColorClass: 'text-teal-600',
-      };
-    }
-    const dateText = record.approvalDate ? formatThaiDateOnly(record.approvalDate) : '';
-    return {
-      key: 'approved_pending',
-      label: 'อนุมัติแล้ว',
-      subLabel: dateText ? `รอรับรถ · ${dateText}` : 'รอรับรถ',
-      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300',
-      selectClass: 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100/80',
-      iconColorClass: 'text-emerald-600',
-    };
-  }
-  if (record.approvalStatus === 'rejected') {
-    return {
-      key: 'rejected',
-      label: 'ไม่อนุมัติ',
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-300',
-      selectClass: 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100/80',
-      iconColorClass: 'text-rose-600',
-    };
-  }
-  if (record.approvalStatus === 'cancelled') {
-    return {
-      key: 'cancelled',
-      label: 'ยกเลิก',
-      badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
-      selectClass: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200/80',
-      iconColorClass: 'text-slate-500',
-    };
-  }
-  return {
-    key: 'pending',
-    label: 'รออนุมัติ',
-    badgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
-    selectClass: 'bg-sky-50 text-sky-900 border-sky-200 hover:bg-sky-100/80',
-    iconColorClass: 'text-sky-600',
-  };
-}
-
 export const SavedCasesModal: React.FC<Props> = ({
   isOpen,
   onClose,
@@ -279,7 +219,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   // Monthly filter key: 'YYYY-MM' (e.g. '2026-11') or 'all' - Defaults to current month on open!
   const [selectedMonthKey, setSelectedMonthKey] = useState<string>(() => getCurrentYearMonthKey());
   const [selectedDueMonth, setSelectedDueMonth] = useState<string>('all'); // 'all' or '2569-11'
-  const [viewMode, setViewMode] = useState<'table' | 'list' | 'cards'>('table'); // 'table' = ตารางพร้อมคอลัมน์สถานะ
+  const [viewMode, setViewMode] = useState<'list' | 'cards'>('list'); // 'list' = รายการชื่อลูกค้า (แนะนำ), 'cards' = การ์ดเต็ม
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
 
   // Detail Popup Modal state for selected customer
@@ -760,30 +700,6 @@ export const SavedCasesModal: React.FC<Props> = ({
     );
   };
 
-  const handleQuickDealStatusChange = (id: string, nextStatus: DealStatusKey) => {
-    if (nextStatus === 'pending') {
-      handleSetApprovalStatus(id, 'pending');
-      return;
-    }
-    if (nextStatus === 'approved_pending') {
-      handleSetApprovalStatus(id, 'approved', 'pending_delivery');
-      return;
-    }
-    if (nextStatus === 'delivered') {
-      triggerHaptic('success');
-      updateCaseApprovalStatus(id, 'approved', 'delivered');
-      const updated = updateCaseDeliveryStatus(id, 'delivered');
-      setCases(updated);
-      showToast('✓ อัปเดตสถานะเป็น "รับรถแล้ว" เรียบร้อย');
-      return;
-    }
-    if (nextStatus === 'rejected') {
-      handleSetApprovalStatus(id, 'rejected');
-      return;
-    }
-    handleSetApprovalStatus(id, 'cancelled');
-  };
-
   const handleSetDates = (
     id: string,
     dates: { approvalDate?: string; deliveryDate?: string }
@@ -1073,9 +989,7 @@ export const SavedCasesModal: React.FC<Props> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white rounded-[28px] sm:rounded-[32px] w-full ${
-          viewMode === 'table' && !detailCase ? 'max-w-5xl' : 'max-w-2xl'
-        } max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative transition-all duration-150 ${sheetAnimClass}`}
+        className={`bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-2xl max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative ${sheetAnimClass}`}
       >
         {/* Top Specular Accent Sheen */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-600 opacity-95" />
@@ -1103,25 +1017,12 @@ export const SavedCasesModal: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* View Mode Switcher: ตาราง vs รายชื่อ vs การ์ด */}
+            {/* View Mode Switcher: รายชื่อ (แนะนำ) vs การ์ด */}
             <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs">
               <button
                 type="button"
-                onClick={() => setViewMode('table')}
-                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation whitespace-nowrap shrink-0 ${
-                  viewMode === 'table'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-                title="มุมมองตาราง (แสดงคอลัมน์สถานะชัดเจน)"
-              >
-                <Table2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">ตาราง</span>
-              </button>
-              <button
-                type="button"
                 onClick={() => setViewMode('list')}
-                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation whitespace-nowrap shrink-0 ${
+                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation ${
                   viewMode === 'list'
                     ? 'bg-white text-sky-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
@@ -1134,7 +1035,7 @@ export const SavedCasesModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('cards')}
-                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation whitespace-nowrap shrink-0 ${
+                className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation ${
                   viewMode === 'cards'
                     ? 'bg-white text-sky-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
@@ -1752,219 +1653,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                     </div>
                   </div>
 
-                  {/* Customer Records: TABLE VIEW (ตารางรายการเคสพร้อมคอลัมน์สถานะ) */}
-                  <div className={viewMode === 'table' ? 'block' : 'hidden'}>
-                    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-                      <div className="overflow-x-auto scrollbar-thin">
-                        <table className="w-full text-left border-collapse min-w-[740px]">
-                          <thead>
-                            <tr className="bg-slate-50/95 border-b border-slate-200 text-[10.5px] font-extrabold text-slate-600">
-                              <th className="py-2.5 px-2.5 text-center w-9 tabular-nums">#</th>
-                              <th className="sticky left-0 z-10 bg-slate-50/95 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/80 min-w-[145px]">
-                                ชื่อลูกค้า
-                              </th>
-                              <th className="py-2.5 px-2.5 min-w-[142px] whitespace-nowrap">
-                                สถานะ
-                              </th>
-                              <th className="py-2.5 px-2.5 min-w-[165px]">
-                                รุ่นรถ / ดีลเลอร์
-                              </th>
-                              <th className="py-2.5 px-2.5 text-right min-w-[115px] whitespace-nowrap">
-                                ค่างวด / ยอดจัด
-                              </th>
-                              <th className="py-2.5 px-2.5 min-w-[110px] whitespace-nowrap">
-                                งวดแรก / วันที่
-                              </th>
-                              <th className="py-2.5 px-2 text-center w-[76px] whitespace-nowrap">
-                                จัดการ
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 text-[11px] bg-white">
-                            {group.items.map((record, idx) => {
-                              const isCurrentEditing = activeEditingId === record.id;
-                              const isApproved = record.approvalStatus === 'approved';
-                              const isDelivered = record.deliveryStatus === 'delivered';
-                              const firstDue = isDelivered
-                                ? calculateFirstPaymentDueDate(record.deliveryDate || record.createdAt)
-                                : null;
-                              const custName = getCustomerDisplayName(record);
-                              const statusMeta = getDealStatusMeta(record);
-
-                              return (
-                                <tr
-                                  key={record.id}
-                                  onClick={() => setDetailCase(record)}
-                                  className={`transition-colors duration-150 cursor-pointer group ${
-                                    isCurrentEditing
-                                      ? 'bg-amber-50/40 hover:bg-amber-50/70'
-                                      : 'hover:bg-sky-50/50'
-                                  }`}
-                                >
-                                  {/* # */}
-                                  <td className="py-2.5 px-2.5 text-center text-[10.5px] font-bold text-slate-400 tabular-nums align-middle">
-                                    {idx + 1}
-                                  </td>
-
-                                  {/* ชื่อลูกค้า (Sticky Left) */}
-                                  <td
-                                    className={`sticky left-0 z-10 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/70 max-w-[185px] align-middle ${
-                                      isCurrentEditing
-                                        ? 'bg-amber-50/95 group-hover:bg-amber-50'
-                                        : 'bg-white/95 group-hover:bg-sky-50/80'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-1 min-w-0">
-                                      <span className="font-extrabold text-xs text-slate-900 group-hover:text-sky-700 truncate">
-                                        {custName}
-                                      </span>
-                                      {isCurrentEditing && (
-                                        <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
-                                          แก้ไข
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 mt-0.5 truncate tabular-nums">
-                                      {record.customerPhone ? record.customerPhone : formatThaiDateOnly(record.createdAt)}
-                                    </div>
-                                  </td>
-
-                                  {/* สถานะ (Explicit Status Column + Quick Status Selector) */}
-                                  <td
-                                    className="py-2 px-2.5 align-middle"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="space-y-1">
-                                      <div className="relative inline-flex items-center w-full max-w-[136px]">
-                                        <span className="pointer-events-none absolute left-2 flex items-center">
-                                          {statusMeta.key === 'delivered' && (
-                                            <PackageCheck className={`w-3.5 h-3.5 ${statusMeta.iconColorClass}`} />
-                                          )}
-                                          {statusMeta.key === 'approved_pending' && (
-                                            <CheckCircle2 className={`w-3.5 h-3.5 ${statusMeta.iconColorClass}`} />
-                                          )}
-                                          {statusMeta.key === 'rejected' && (
-                                            <XCircle className={`w-3.5 h-3.5 ${statusMeta.iconColorClass}`} />
-                                          )}
-                                          {statusMeta.key === 'cancelled' && (
-                                            <Ban className={`w-3.5 h-3.5 ${statusMeta.iconColorClass}`} />
-                                          )}
-                                          {statusMeta.key === 'pending' && (
-                                            <Clock className={`w-3.5 h-3.5 ${statusMeta.iconColorClass}`} />
-                                          )}
-                                        </span>
-                                        <select
-                                          aria-label={`สถานะของ ${custName}`}
-                                          value={statusMeta.key}
-                                          onChange={(e) =>
-                                            handleQuickDealStatusChange(
-                                              record.id,
-                                              e.target.value as DealStatusKey
-                                            )
-                                          }
-                                          className={`w-full appearance-none pl-7 pr-6 py-1 rounded-lg text-[11px] font-extrabold border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/25 whitespace-nowrap ${statusMeta.selectClass}`}
-                                        >
-                                          <option value="pending">รออนุมัติ</option>
-                                          <option value="approved_pending">อนุมัติแล้ว</option>
-                                          <option value="delivered">รับรถแล้ว</option>
-                                          <option value="rejected">ไม่อนุมัติ</option>
-                                          <option value="cancelled">ยกเลิก</option>
-                                        </select>
-                                        <ChevronDown className="w-3 h-3 opacity-60 pointer-events-none absolute right-1.5" />
-                                      </div>
-
-                                      {statusMeta.subLabel && (
-                                        <div className="text-[9.5px] font-semibold text-slate-500 pl-0.5 tabular-nums whitespace-nowrap">
-                                          {statusMeta.subLabel}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
-
-                                  {/* รุ่นรถ / ดีลเลอร์ */}
-                                  <td className="py-2.5 px-2.5 max-w-[190px] align-middle">
-                                    <div className="font-semibold text-slate-800 truncate">
-                                      {record.bikeModelName || 'ไม่ระบุรุ่นรถ'}
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 truncate mt-0.5">
-                                      {record.dealerName ? (
-                                        <span className="text-sky-700 font-medium">{record.dealerName}</span>
-                                      ) : (
-                                        <span>{record.snapshot.proposalCode}</span>
-                                      )}
-                                    </div>
-                                  </td>
-
-                                  {/* ค่างวด / ยอดจัด */}
-                                  <td className="py-2.5 px-2.5 text-right tabular-nums align-middle whitespace-nowrap">
-                                    <div className="font-black text-sky-700 text-xs">
-                                      {formatBaht(record.snapshot.monthlyInstallment)}
-                                      <span className="text-[9.5px] font-semibold text-slate-500">/ด.</span>
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 mt-0.5">
-                                      {record.term} งวด · จัด {formatBaht(record.snapshot.financeAmount, true)}
-                                    </div>
-                                  </td>
-
-                                  {/* งวดแรก / วันที่ */}
-                                  <td className="py-2.5 px-2.5 tabular-nums align-middle whitespace-nowrap">
-                                    {firstDue ? (
-                                      <div className="text-[10.5px] font-bold text-indigo-800">
-                                        งวดแรก 2 {firstDue.monthShort} {firstDue.thaiShortYear}
-                                      </div>
-                                    ) : (
-                                      <div className="text-[10px] text-slate-500">
-                                        บันทึก {formatThaiDateOnly(record.createdAt)}
-                                      </div>
-                                    )}
-                                    <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] text-slate-500">
-                                      <span>{record.snapshot.proposalCode}</span>
-                                      {record.approvalDoc && (
-                                        <span className="text-rose-600 font-bold">· PDF</span>
-                                      )}
-                                    </div>
-                                  </td>
-
-                                  {/* จัดการ */}
-                                  <td className="py-2.5 px-2 text-center align-middle">
-                                    <div className="inline-flex items-center justify-center gap-1">
-                                      {isApproved && (
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            triggerHaptic('light');
-                                            setApprovalModalCase(record);
-                                          }}
-                                          className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
-                                          title="เปิดดูใบอนุมัติผลชั่วคราว"
-                                        >
-                                          <FileCheck className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setDetailCase(record);
-                                        }}
-                                        className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-500 inline-flex items-center justify-center transition-colors cursor-pointer"
-                                        title="ดูรายละเอียดเคส"
-                                      >
-                                        <ChevronRight className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Customer Records: LIST VIEW (รายการชื่อลูกค้า) */}
+                  {/* Customer Records: LIST VIEW (รายการชื่อลูกค้า - แนะนำ) */}
                   <div className={viewMode === 'list' ? 'block' : 'hidden'}>
                     <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                       {group.items.map((record) => {
@@ -1976,7 +1665,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                           : null;
                         const custName = getCustomerDisplayName(record);
                         const firstLetter = custName.slice(0, 1) || 'ค';
-                        const statusMeta = getDealStatusMeta(record);
 
                         return (
                           <div
@@ -2171,31 +1859,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                               </div>
                             </div>
 
-                            {/* Right: Dedicated Status Column + Quick Actions */}
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                              {/* Unified Status Column */}
-                              <div
-                                className={`px-2 py-1 rounded-lg border text-[10.5px] font-extrabold inline-flex items-center gap-1 whitespace-nowrap shrink-0 ${statusMeta.badgeClass}`}
-                                title={statusMeta.subLabel || statusMeta.label}
-                              >
-                                {statusMeta.key === 'delivered' && (
-                                  <PackageCheck className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'approved_pending' && (
-                                  <CheckCircle2 className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'rejected' && (
-                                  <XCircle className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'cancelled' && (
-                                  <Ban className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'pending' && (
-                                  <Clock className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                <span>{statusMeta.label}</span>
-                              </div>
-
+                            {/* Right: View Detail Indicator & Quick Actions */}
+                            <div className="flex items-center gap-1.5 shrink-0">
                               {isApproved && (
                                 <button
                                   type="button"
@@ -2210,6 +1875,9 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
                                 </button>
                               )}
+                              <span className="hidden xs:inline text-[11px] font-bold text-sky-600 group-hover:text-sky-700">
+                                ดูข้อมูล
+                              </span>
                               <div className="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-400 flex items-center justify-center transition-colors duration-150 shadow-2xs">
                                 <ChevronRight className="w-4 h-4" />
                               </div>
