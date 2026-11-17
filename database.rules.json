@@ -10,8 +10,14 @@
           ".validate": "newData.hasChildren(['uid', 'email']) && newData.child('uid').val() === $uid && newData.child('email').isString() && newData.child('email').val().length <= 320"
         },
         "cases": {
-          "$caseId": {
-            ".validate": "newData.hasChildren(['ownerUid', 'id', 'caseTitle', 'proposalKey', 'vehiclePrice', 'term', 'snapshot', 'recordCreatedAt', 'recordUpdatedAt']) && newData.child('ownerUid').val() === $uid && newData.child('id').val() === $caseId && newData.child('caseTitle').isString() && newData.child('caseTitle').val().length >= 1 && newData.child('caseTitle').val().length <= 300 && newData.child('vehiclePrice').isNumber() && newData.child('vehiclePrice').val() >= 0 && newData.child('term').isNumber() && newData.child('term').val() >= 1 && newData.child('recordCreatedAt').isNumber() && newData.child('recordUpdatedAt').isNumber() && newData.child('snapshot').hasChildren(['monthlyInstallment', 'financeAmount'])"
+          "$year": {
+            ".validate": "$year.matches(/^[0-9]{4}$/)",
+            "$month": {
+              ".validate": "$month.matches(/^(0[1-9]|1[0-2])$/)",
+              "$caseId": {
+                ".validate": "newData.hasChildren(['ownerUid', 'id', 'caseTitle', 'proposalKey', 'vehiclePrice', 'term', 'snapshot', 'recordCreatedAt', 'recordUpdatedAt']) && newData.child('ownerUid').val() === $uid && newData.child('id').val() === $caseId && newData.child('caseTitle').isString() && newData.child('caseTitle').val().length >= 1 && newData.child('caseTitle').val().length <= 300 && newData.child('vehiclePrice').isNumber() && newData.child('vehiclePrice').val() >= 0 && newData.child('term').isNumber() && newData.child('term').val() >= 1 && newData.child('recordCreatedAt').isNumber() && newData.child('recordUpdatedAt').isNumber() && newData.child('snapshot').hasChildren(['monthlyInstallment', 'financeAmount'])"
+              }
+            }
           }
         },
         "$other": {
