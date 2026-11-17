@@ -112,7 +112,7 @@ service cloud.firestore {
         && docMap.keys().hasAll(['name', 'size', 'uploadedAt'])
         && docMap.keys().hasOnly(['name', 'size', 'uploadedAt', 'type'])
         && docMap.name is string && docMap.name.size() >= 1 && docMap.name.size() <= 300
-        && docMap.size is number && docMap.size >= 0
+        && docMap['size'] is number && docMap['size'] >= 0
         && docMap.uploadedAt is number
         && (!('type' in docMap) || (docMap.type is string && docMap.type.size() <= 120));
     }
