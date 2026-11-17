@@ -124,7 +124,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         upsertCases: (records: CaseRecord[]) => {
           setSyncStatus('syncing');
           upsertCloudCases(
-            targetUser.uid,
+            targetUser,
             records,
             cloudCreatedAtMapRef.current,
             cloudRecordCreatedAtMapRef.current
@@ -145,7 +145,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteCases: (ids: string[]) => {
           setSyncStatus('syncing');
           deleteCloudCases(
-            targetUser.uid,
+            targetUser,
             ids,
             cloudCreatedAtMapRef.current,
             cloudRecordCreatedAtMapRef.current
@@ -167,7 +167,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       let pushRes = { pushedCount: 0, uploadedCount: 0, approvalDocSkippedCount: 0 };
       try {
         pushRes = await pushAllLocalCasesToCloud(
-          targetUser.uid,
+          targetUser,
           cloudCreatedAtMapRef.current,
           cloudRecordCreatedAtMapRef.current
         );
@@ -181,9 +181,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         unsubscribeCasesRef.current = null;
       }
 
-      // Attach real-time Firestore listener (only when auth is ready & authenticated)
+      // Attach real-time RTDB listener (only when auth is ready & authenticated)
       unsubscribeCasesRef.current = subscribeUserCases(
-        targetUser.uid,
+        targetUser,
         cloudCreatedAtMapRef.current,
         cloudRecordCreatedAtMapRef.current,
         (cases, fromCache, cloudCount) => {

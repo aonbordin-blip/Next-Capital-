@@ -7,9 +7,12 @@
 import fs from 'fs';
 import {
   buildRtdbCasePayload,
+  encodeEmailForRtdbKey,
   fromCloudCaseDoc,
+  getCaseNodeKey,
   getCaseRelPath,
   getCaseYearMonth,
+  getRtdbUserKey,
 } from './src/utils/cloudSync';
 import { SavedCaseRecord } from './src/types';
 
@@ -108,8 +111,18 @@ export const DIRTY_DOZEN_CASES = [
 
 export function runRtdbVerification(): void {
   const rules = JSON.parse(fs.readFileSync('database.rules.json', 'utf8'));
-  if (!rules.rules?.users?.['$uid']?.cases?.['$year']?.['$month']?.['$caseId']?.['.validate']) {
-    throw new Error('Invalid database.rules.json year/month structure');
+  const userRuleNode = rules.rules?.users?.['$userKey'];
+  if (!userRuleNode?.cases?.['$year']?.['$month']?.['$caseKey']?.['.validate']) {
+    throw new Error('Invalid database.rules.json email/year/month/caseKey structure');
+  }
+
+  const encodedEmail = encodeEmailForRtdbKey('Aon.Bordin@gmail.com');
+  if (encodedEmail !== 'aon_bordin@gmail_com' || /[.$#\[\]\/]/.test(encodedEmail)) {
+    throw new Error(`Invalid encoded email key: ${encodedEmail}`);
+  }
+  const userKey = getRtdbUserKey({ uid: 'nqoFfMLiGSWAohZ0Jtdqbb0g7XT2', email: 'aon.bordin@gmail.com' });
+  if (userKey !== 'aon_bordin@gmail_com') {
+    throw new Error(`Unexpected getRtdbUserKey result: ${userKey}`);
   }
 
   const raw = JSON.parse(
@@ -118,6 +131,7 @@ export function runRtdbVerification(): void {
   const cases: SavedCaseRecord[] = raw.cases || raw;
   const uid = 'nqoFfMLiGSWAohZ0Jtdqbb0g7XT2';
   const buckets: Record<string, number> = {};
+  const uniqueRelPaths = new Set<string>();
 
   for (const c of cases) {
     const payload = buildRtdbCasePayload(c, uid);
@@ -125,10 +139,17 @@ export function runRtdbVerification(): void {
       throw new Error(`Undefined property found in RTDB payload for ${c.id}`);
     }
     const { year, month } = getCaseYearMonth(payload.recordCreatedAt);
-    const relPath = getCaseRelPath(payload.recordCreatedAt, String(payload.id));
-    if (!/^[0-9]{4}$/.test(year) || !/^(0[1-9]|1[0-2])$/.test(month) || relPath !== `${year}/${month}/${c.id}`) {
-      throw new Error(`Invalid RTDB year/month path for ${c.id}: ${relPath}`);
+    const nodeKey = getCaseNodeKey(String(payload.id), c.customerName, c.caseTitle);
+    const relPath = getCaseRelPath(payload.recordCreatedAt, String(payload.id), c.customerName, c.caseTitle);
+    if (
+      !/^[0-9]{4}$/.test(year) ||
+      !/^(0[1-9]|1[0-2])$/.test(month) ||
+      /[.$#\[\]\/]/.test(nodeKey) ||
+      relPath !== `${year}/${month}/${nodeKey}`
+    ) {
+      throw new Error(`Invalid RTDB customer path for ${c.id}: ${relPath}`);
     }
+    uniqueRelPaths.add(relPath);
     const snap = payload.snapshot as Record<string, unknown>;
     if (
       payload.ownerUid !== uid ||
@@ -153,7 +174,16 @@ export function runRtdbVerification(): void {
     buckets[ym] = (buckets[ym] || 0) + 1;
   }
 
-  console.log('PASS RTDB verification:', cases.length, 'cases, buckets:', buckets);
+  if (uniqueRelPaths.size !== cases.length) {
+    throw new Error(`Expected ${cases.length} unique RTDB paths, got ${uniqueRelPaths.size}`);
+  }
+
+  console.log('PASS RTDB verification:', {
+    userKey,
+    caseCount: cases.length,
+    buckets,
+    samplePaths: Array.from(uniqueRelPaths).slice(0, 4),
+  });
 }
 
 const isDirectRun =
