@@ -344,7 +344,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
       {/* Header Row */}
       <div className="relative flex items-start sm:items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-sky-100/95 to-cyan-50/90 border border-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 border border-white/65 text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/25">
             <BarChart3 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -431,32 +431,32 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
           {/* KPI Summary Strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
             <div className="glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/75">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/80">
                 จำนวนเคสช่วงนี้
               </MarqueeText>
               <div className="text-base sm:text-xl font-black text-sky-950 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.totalCases}
-                <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">เคส</span>
+                <span className="text-[11px] font-semibold text-sky-800/70 ml-1 font-sans">เคส</span>
               </div>
             </div>
 
-            <div className="glass-panel-cyan dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-cyan-900/75">
+            <div className="glass-panel-amber dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-amber-900/80">
                 เฉลี่ยต่อเดือนที่มีเคส
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-cyan-950 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-amber-900 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.avgPerActiveMonth.toFixed(1)}
-                <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">
+                <span className="text-[11px] font-semibold text-amber-800/70 ml-1 font-sans">
                   / ด. ({summaryStats.activeMonthCount})
                 </span>
               </div>
             </div>
 
             <div className="glass-panel-indigo dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-blue-900/75">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-indigo-900/80">
                 เดือนที่บันทึกสูงสุด
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-blue-800 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-indigo-800 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.peakBucket ? (
                   <>
                     <span className="font-sans text-sm sm:text-base font-extrabold mr-1">
@@ -471,14 +471,14 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
             </div>
 
             <div className="glass-panel-teal dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/75">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/80">
                 อนุมัติ / รับรถแล้ว
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-teal-800 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-emerald-700 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.totalApproved}
                 <span className="text-slate-400 mx-1">/</span>
                 {summaryStats.totalDelivered}
-                <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">คัน</span>
+                <span className="text-[11px] font-semibold text-teal-800/70 ml-1 font-sans">คัน</span>
               </div>
             </div>
           </div>
@@ -579,7 +579,22 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                 margin={{ top: 20, right: 8, left: -18, bottom: 6 }}
                 barCategoryGap={monthScope === 'active_only' ? '26%' : '18%'}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <defs>
+                  <linearGradient id="ncapBarNormal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06b6d4" />
+                    <stop offset="100%" stopColor="#38bdf8" />
+                  </linearGradient>
+                  <linearGradient id="ncapBarPeak" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0284c7" />
+                    <stop offset="55%" stopColor="#0ea5e9" />
+                    <stop offset="100%" stopColor="#2dd4bf" />
+                  </linearGradient>
+                  <linearGradient id="ncapBarSelected" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1d4ed8" />
+                    <stop offset="100%" stopColor="#06b6d4" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.35)" />
                 <XAxis
                   dataKey="shortLabel"
                   axisLine={{ stroke: '#cbd5e1' }}
@@ -654,10 +669,10 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                         entry.total === 0
                           ? '#e2e8f0'
                           : isSelected
-                          ? '#1d4ed8'
+                          ? 'url(#ncapBarSelected)'
                           : isPeak
-                          ? '#0284c7'
-                          : '#38bdf8';
+                          ? 'url(#ncapBarPeak)'
+                          : 'url(#ncapBarNormal)';
                       const fillOpacity =
                         entry.total === 0
                           ? 0.7

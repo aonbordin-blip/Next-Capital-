@@ -1394,23 +1394,23 @@ export default function App() {
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-30" />
 
-        {/* Fixed Oceanic Ambient Light Mesh Inside Glass Frame (gives real depth behind frosted cards) */}
+        {/* Fixed Multi-Tone Aurora Light Mesh Inside Glass Frame (gives vibrant refraction behind frosted cards) */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
           <div
-            className="absolute -top-10 -left-16 w-80 h-80 rounded-full opacity-75"
-            style={{ background: 'radial-gradient(circle, rgba(125,211,252,0.34) 0%, rgba(125,211,252,0) 72%)' }}
+            className="absolute -top-10 -left-16 w-80 h-80 rounded-full opacity-80"
+            style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.38) 0%, rgba(56,189,248,0) 72%)' }}
           />
           <div
-            className="absolute top-1/3 -right-14 w-80 h-80 rounded-full opacity-75"
-            style={{ background: 'radial-gradient(circle, rgba(103,232,249,0.32) 0%, rgba(103,232,249,0) 72%)' }}
+            className="absolute top-1/4 -right-14 w-80 h-80 rounded-full opacity-75"
+            style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.34) 0%, rgba(45,212,191,0) 72%)' }}
           />
           <div
-            className="absolute bottom-16 left-1/5 w-80 h-80 rounded-full opacity-65"
-            style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.28) 0%, rgba(94,234,212,0) 72%)' }}
+            className="absolute top-1/2 -left-12 w-72 h-72 rounded-full opacity-65"
+            style={{ background: 'radial-gradient(circle, rgba(129,140,248,0.28) 0%, rgba(129,140,248,0) 72%)' }}
           />
           <div
-            className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full opacity-60"
-            style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.26) 0%, rgba(56,189,248,0) 72%)' }}
+            className="absolute bottom-16 right-8 w-80 h-80 rounded-full opacity-65"
+            style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.22) 0%, rgba(251,191,36,0) 72%)' }}
           />
         </div>
 
@@ -2128,7 +2128,7 @@ export default function App() {
               {/* Dealer Information Card (กล่องใส่ชื่อร้านตัวแทนจำหน่าย ลิงก์ไปยังเอกสารและทุกส่วน) */}
               <div
                 data-card-id="dealer"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2">
@@ -2311,7 +2311,7 @@ export default function App() {
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
               <div
                 data-card-id="insurance"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">
@@ -2420,7 +2420,7 @@ export default function App() {
             {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์) */}
             <div
               data-card-id="financing"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-indigo relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
 
