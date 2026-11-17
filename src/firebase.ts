@@ -119,20 +119,14 @@ export function formatReadableFirebaseError(err: unknown): string {
 
   const lower = innerMsg.toLowerCase();
   if (lower.includes('quota exceeded') || lower.includes('resource-exhausted')) {
-    const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/firestore/databases/${firebaseConfig.firestoreDatabaseId}/data?openUpgradeDialog=true`;
-    return `โควต้าการใช้งาน Cloud รายวันเต็มชั่วคราว (รีเซ็ตวันถัดไป) สามารถตรวจสอบเพิ่มเติมได้ที่ ${consoleUrl}`;
+    return 'โควต้าการใช้งาน Cloud เต็มชั่วคราว กรุณาลองใหม่ภายหลัง';
   }
   if (lower.includes('permission') || lower.includes('insufficient')) {
-    const diagPart = innerMsg.includes(' | ') ? innerMsg.split(' | ').slice(1).join(' | ') : '';
-    const dbTag = `db=${firebaseConfig.projectId}/${firebaseConfig.firestoreDatabaseId.slice(0, 12)}... verified=${String(auth.currentUser?.emailVerified)}`;
-    const extra = diagPart ? ` (${dbTag} | ${diagPart})` : ` (${dbTag})`;
-    return `สิทธิ์การเข้าถึงหรือรูปแบบข้อมูลบางเคสถูกกฎความปลอดภัยปฏิเสธ${pathInfo}${extra} กรุณากด "ล้างแคชแอปและโหลดใหม่" หรือลองซิงค์ใหม่อีกครั้ง`;
+    const rtdbHost = RTDB_DATABASE_URL.replace(/^https?:\/\//, '');
+    return `สิทธิ์การเข้าถึงฐานข้อมูล Realtime Database ถูกปฏิเสธ${pathInfo} (rtdb=${rtdbHost} verified=${String(auth.currentUser?.emailVerified)}) กรุณาตรวจสอบว่าได้กด Publish Rules ของ Realtime Database ใน Firebase Console แล้ว หรือลองกด "ซิงค์ตอนนี้"`;
   }
   if (lower.includes('offline') || lower.includes('unavailable') || lower.includes('network') || lower.includes('disconnected')) {
-    return 'ไม่สามารถเชื่อมต่อฐานข้อมูล Cloud Firestore ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองกดซิงค์อีกครั้ง';
-  }
-  if (lower.includes('index')) {
-    return `ฐานข้อมูลกำลังเตรียม Index${pathInfo} กรุณารอสักครู่แล้วลองใหม่อีกครั้ง`;
+    return 'ไม่สามารถเชื่อมต่อฐานข้อมูล Realtime Database ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองกดซิงค์อีกครั้ง';
   }
   if (innerMsg) {
     return `ซิงค์ข้อมูลไม่สำเร็จ: ${innerMsg}`;

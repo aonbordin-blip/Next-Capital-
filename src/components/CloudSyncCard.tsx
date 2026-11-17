@@ -77,7 +77,7 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
         const keys = await caches.keys();
         await Promise.all(keys.map((k) => caches.delete(k)));
       }
-      // Allow re-check of any RTDB rescue on next sync after clearing cache
+      // Allow re-check of any legacy rescue on next sync after clearing cache
       for (const k of Object.keys(localStorage)) {
         if (k.startsWith('ncap_rtdb_rescued_v1_')) {
           localStorage.removeItem(k);
@@ -243,7 +243,7 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
               </div>
               <div className="text-[10px] text-slate-500 truncate">
                 {user.email}
-                {` • Firestore ${cloudCaseCount} เคส`}
+                {` • Realtime DB ${cloudCaseCount} เคส`}
                 {typeof localCount === 'number' && localCount > cloudCaseCount && !isSyncing
                   ? ` (ในเครื่อง ${localCount})`
                   : ''}
@@ -380,7 +380,7 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-emerald-100/90 text-[11px]">
         <div className="text-slate-600 font-medium">
-          ข้อมูลบน Firestore: <strong className="text-slate-900">{cloudCaseCount} เคส</strong>
+          ข้อมูลบน Realtime DB: <strong className="text-slate-900">{cloudCaseCount} เคส</strong>
           {typeof localCount === 'number' && localCount > cloudCaseCount && !isSyncing && (
             <span className="text-amber-700 font-bold"> • รอซิงค์ขึ้น Cloud {localCount - cloudCaseCount} เคส</span>
           )}
