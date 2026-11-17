@@ -17,16 +17,12 @@ import {
   UserProfilePrefs,
 } from '../utils/cloudSync';
 import {
-  mergeBackupJsonIntoLocal,
   registerCloudSyncBridge,
   resetCloudSyncTracking,
 } from '../utils/savedCasesStorage';
 import { SavedCaseRecord as CaseRecord } from '../types';
 
 export type CloudSyncStatus = 'signed_out' | 'syncing' | 'synced' | 'error';
-
-const BACKUP_OWNER_EMAIL = 'aon.bordin@gmail.com';
-const ATTACHED_BACKUP_JSON_URL = '/assets/aistudio/MotoLease_Saved_Cases_2026-11-16_dda637bd.json';
 
 interface FirebaseContextValue {
   user: User | null;
@@ -37,13 +33,10 @@ interface FirebaseContextValue {
   syncError: string | null;
   syncNotice: string | null;
   approvalDocSkippedCount: number;
-  isRestoringBackup: boolean;
-  canRestoreAttachedBackup: boolean;
   cloudCaseCount: number;
   signInWithGoogle: () => Promise<boolean>;
   signOut: () => Promise<void>;
   syncNow: () => Promise<void>;
-  restoreFromAttachedBackup: () => Promise<void>;
   syncProfileSettings: (prefs: UserProfilePrefs) => void;
 }
 
@@ -102,7 +95,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
   const [approvalDocSkippedCount, setApprovalDocSkippedCount] = useState(0);
-  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
   const [cloudCaseCount, setCloudCaseCount] = useState(0);
 
   const cloudCreatedAtMapRef = useRef<Map<string, Timestamp>>(new Map());
@@ -112,7 +104,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const unsubscribeCasesRef = useRef<(() => void) | null>(null);
 
   const attachBridgeAndSubscription = useCallback(
-    async (targetUser: User, forceTokenRefresh = false, forcePushIds?: Set<string>) => {
+    async (targetUser: User, forceTokenRefresh = false) => {
       setSyncStatus('syncing');
       setSyncError(null);
 
@@ -178,8 +170,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         pushRes = await pushAllLocalCasesToCloud(
           targetUser.uid,
           cloudCreatedAtMapRef.current,
-          cloudRecordCreatedAtMapRef.current,
-          forcePushIds ? { forcePushIds } : undefined
+          cloudRecordCreatedAtMapRef.current
         );
         setApprovalDocSkippedCount(pushRes.approvalDocSkippedCount);
       } catch (err) {
@@ -369,55 +360,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [attachBridgeAndSubscription]);
 
-  const canRestoreAttachedBackup =
-    Boolean(user?.email && user.email.toLowerCase() === BACKUP_OWNER_EMAIL);
-
-  const restoreFromAttachedBackup = useCallback(async () => {
-    const currentUser = activeUserRef.current || auth.currentUser;
-    if (!currentUser || currentUser.email?.toLowerCase() !== BACKUP_OWNER_EMAIL) {
-      return;
-    }
-
-    setIsRestoringBackup(true);
-    setSyncStatus('syncing');
-    setSyncError(null);
-    setSyncNotice(null);
-
-    try {
-      const response = await fetch(ATTACHED_BACKUP_JSON_URL, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`โหลดไฟล์ข้อมูลสำรองไม่สำเร็จ (${response.status})`);
-      }
-      const jsonText = await response.text();
-      const importRes = mergeBackupJsonIntoLocal(jsonText, { triggerCloudBridge: false });
-      if (!importRes.success) {
-        throw new Error(importRes.error || 'ไม่สามารถอ่านไฟล์สำรองได้');
-      }
-
-      const restoredIds = new Set((importRes.records || []).map((r) => r.id));
-      const pushRes = await attachBridgeAndSubscription(currentUser, true, restoredIds);
-
-      setSyncStatus('synced');
-      setLastSyncedAt(Date.now());
-      setSyncError(null);
-
-      if (pushRes.approvalDocSkippedCount > 0) {
-        setSyncNotice(
-          `นำเข้าข้อมูล ${importRes.count} เคสและซิงค์ขึ้น Cloud เรียบร้อยแล้ว (${pushRes.approvalDocSkippedCount} เคสเก็บชื่อไฟล์แนบไว้ในเครื่องชั่วคราว)`
-        );
-      } else {
-        setSyncNotice(
-          `นำเข้าและซิงค์ข้อมูลจากไฟล์แนบครบ ${importRes.count} เคสขึ้น Cloud เรียบร้อยแล้ว ✓`
-        );
-      }
-    } catch (err) {
-      setSyncStatus('error');
-      setSyncError(formatReadableFirebaseError(err));
-    } finally {
-      setIsRestoringBackup(false);
-    }
-  }, [attachBridgeAndSubscription]);
-
   const syncProfileSettings = useCallback((prefs: UserProfilePrefs) => {
     const currentUser = activeUserRef.current;
     if (!currentUser) return;
@@ -442,13 +384,10 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         syncError,
         syncNotice,
         approvalDocSkippedCount,
-        isRestoringBackup,
-        canRestoreAttachedBackup,
         cloudCaseCount,
         signInWithGoogle,
         signOut: handleSignOut,
         syncNow,
-        restoreFromAttachedBackup,
         syncProfileSettings,
       }}
     >
