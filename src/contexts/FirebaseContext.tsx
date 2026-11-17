@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { Timestamp } from 'firebase/firestore';
 import {
   auth,
   formatReadableFirebaseError,
@@ -96,7 +97,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [approvalDocSkippedCount, setApprovalDocSkippedCount] = useState(0);
   const [cloudCaseCount, setCloudCaseCount] = useState(0);
 
-  const cloudCreatedAtMapRef = useRef<Map<string, number>>(new Map());
+  const cloudCreatedAtMapRef = useRef<Map<string, Timestamp>>(new Map());
   const cloudRecordCreatedAtMapRef = useRef<Map<string, number>>(new Map());
   const profileDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeUserRef = useRef<User | null>(null);

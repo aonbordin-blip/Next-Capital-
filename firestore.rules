@@ -252,7 +252,7 @@ service cloud.firestore {
         && (!('approvalUpdatedAt' in data) || data.approvalUpdatedAt is number)
         && (!('paymentDueDay' in data) || (data.paymentDueDay is number && data.paymentDueDay >= 1 && data.paymentDueDay <= 31))
         && (!('googleMapsLocation' in data) || (data.googleMapsLocation is string && data.googleMapsLocation.size() <= 1500))
-        && (!('installmentPayments' in data) || (data.installmentPayments is map && data.installmentPayments.size() <= 12))
+        && (!('installmentPayments' in data) || (data.installmentPayments is map && data.installmentPayments.size() <= 120))
         && (!('approvalDoc' in data) || isValidApprovalDoc(data.approvalDoc));
     }
 

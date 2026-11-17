@@ -1,21 +1,21 @@
 import {
   collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocFromServer,
   getDocs,
   getDocsFromServer,
+  onSnapshot,
   query,
+  serverTimestamp,
+  setDoc,
   Timestamp,
-  where,
-} from 'firebase/firestore';
-import {
-  get,
-  onValue,
-  ref,
-  remove,
-  serverTimestamp as rtdbServerTimestamp,
-  set,
   Unsubscribe,
-  update,
-} from 'firebase/database';
+  where,
+  writeBatch,
+} from 'firebase/firestore';
+import { get as rtdbGet, ref as rtdbRef } from 'firebase/database';
 import { User } from 'firebase/auth';
 import { db, handleFirestoreError, OperationType, rtdb } from '../firebase';
 import {
@@ -26,6 +26,7 @@ import {
 import {
   clearPendingCloudDeletes,
   clearPendingCloudUploads,
+  getSavedCases,
   markConfirmedCloudIds,
   markPendingCloudUploads,
   mergeCloudCasesIntoLocal,
@@ -42,148 +43,6 @@ const VALID_PROPOSAL_KEYS: ProposalKey[] = [
   'honda_yamaha',
   'second_hand',
 ];
-
-// Track relative paths under `users/${uid}/cases` (e.g. "2026/10/case-..." or legacy flat "case-...")
-const cloudKnownRelPathsMap = new Map<string, Set<string>>();
-
-function getRelPathMapKey(uid: string, safeId: string): string {
-  return `${uid}::${safeId}`;
-}
-
-function addKnownRelPath(uid: string, safeId: string, relPath: string): void {
-  const key = getRelPathMapKey(uid, safeId);
-  let setPaths = cloudKnownRelPathsMap.get(key);
-  if (!setPaths) {
-    setPaths = new Set<string>();
-    cloudKnownRelPathsMap.set(key, setPaths);
-  }
-  setPaths.add(relPath);
-}
-
-function setExactKnownRelPath(uid: string, safeId: string, relPath: string): void {
-  cloudKnownRelPathsMap.set(getRelPathMapKey(uid, safeId), new Set([relPath]));
-}
-
-function getKnownRelPaths(uid: string, safeId: string): string[] {
-  const setPaths = cloudKnownRelPathsMap.get(getRelPathMapKey(uid, safeId));
-  return setPaths ? Array.from(setPaths) : [];
-}
-
-function deleteKnownRelPaths(uid: string, safeId: string): void {
-  cloudKnownRelPathsMap.delete(getRelPathMapKey(uid, safeId));
-}
-
-export function getCaseYearMonth(createdAtMs: unknown): { year: string; month: string } {
-  const ts =
-    typeof createdAtMs === 'number' && Number.isFinite(createdAtMs) && createdAtMs > 0
-      ? createdAtMs
-      : Date.now();
-  const date = new Date(ts);
-  try {
-    const parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Bangkok',
-      year: 'numeric',
-      month: '2-digit',
-    }).formatToParts(date);
-    const year = parts.find((p) => p.type === 'year')?.value;
-    const month = parts.find((p) => p.type === 'month')?.value;
-    if (year && /^\d{4}$/.test(year) && month && /^(0[1-9]|1[0-2])$/.test(month)) {
-      return { year, month };
-    }
-  } catch {
-    // Fallback to UTC+7 offset calculation
-  }
-  const bkk = new Date(ts + 7 * 60 * 60 * 1000);
-  const year = String(bkk.getUTCFullYear()).padStart(4, '0');
-  const month = String(bkk.getUTCMonth() + 1).padStart(2, '0');
-  return { year, month };
-}
-
-export function getCaseRelPath(createdAtMs: unknown, safeId: string): string {
-  const { year, month } = getCaseYearMonth(createdAtMs);
-  return `${year}/${month}/${safeId}`;
-}
-
-interface RtdbCaseEntry {
-  caseId: string;
-  relPath: string;
-  isLegacyFlat: boolean;
-  data: Record<string, unknown>;
-}
-
-function isCaseObjectNode(val: unknown): val is Record<string, unknown> {
-  if (!val || typeof val !== 'object' || Array.isArray(val)) return false;
-  const obj = val as Record<string, unknown>;
-  return (
-    'snapshot' in obj ||
-    'ownerUid' in obj ||
-    'vehiclePrice' in obj ||
-    'caseTitle' in obj ||
-    'proposalKey' in obj
-  );
-}
-
-function collectRtdbCaseEntries(rawTree: unknown): RtdbCaseEntry[] {
-  const entries: RtdbCaseEntry[] = [];
-  if (!rawTree || typeof rawTree !== 'object') return entries;
-
-  for (const [level1Key, level1Val] of Object.entries(rawTree as Record<string, unknown>)) {
-    if (!level1Val || typeof level1Val !== 'object') continue;
-
-    // 1. Legacy flat structure: users/${uid}/cases/${caseId}
-    if (isCaseObjectNode(level1Val)) {
-      entries.push({
-        caseId: sanitizeCaseId(String(level1Val.id || level1Key)),
-        relPath: level1Key,
-        isLegacyFlat: true,
-        data: level1Val,
-      });
-      continue;
-    }
-
-    // 2. Year > Month > CaseId structure: users/${uid}/cases/${year}/${month}/${caseId}
-    if (/^\d{4}$/.test(level1Key)) {
-      for (const [level2Key, level2Val] of Object.entries(level1Val as Record<string, unknown>)) {
-        if (!level2Val || typeof level2Val !== 'object') continue;
-        for (const [caseKey, caseVal] of Object.entries(level2Val as Record<string, unknown>)) {
-          if (!isCaseObjectNode(caseVal)) continue;
-          entries.push({
-            caseId: sanitizeCaseId(String(caseVal.id || caseKey)),
-            relPath: `${level1Key}/${level2Key}/${caseKey}`,
-            isLegacyFlat: false,
-            data: caseVal,
-          });
-        }
-      }
-    }
-  }
-
-  return entries;
-}
-
-function dedupeRtdbEntries(uid: string, entries: RtdbCaseEntry[]): RtdbCaseEntry[] {
-  const bestByCaseId = new Map<string, RtdbCaseEntry>();
-
-  for (const entry of entries) {
-    addKnownRelPath(uid, entry.caseId, entry.relPath);
-    const existing = bestByCaseId.get(entry.caseId);
-    if (!existing) {
-      bestByCaseId.set(entry.caseId, entry);
-      continue;
-    }
-
-    const existingUpdated = Number(existing.data.recordUpdatedAt) || 0;
-    const incomingUpdated = Number(entry.data.recordUpdatedAt) || 0;
-    if (
-      incomingUpdated > existingUpdated ||
-      (incomingUpdated === existingUpdated && existing.isLegacyFlat && !entry.isLegacyFlat)
-    ) {
-      bestByCaseId.set(entry.caseId, entry);
-    }
-  }
-
-  return Array.from(bestByCaseId.values());
-}
 
 function safeStr(val: unknown, maxLen: number, fallback = ''): string {
   if (typeof val === 'string') return val.slice(0, maxLen);
@@ -214,48 +73,6 @@ function safeAnyNum(val: unknown, fallback = 0): number {
   return n === 0 ? 0 : n;
 }
 
-function toEpochMs(val: unknown): number | undefined {
-  if (typeof val === 'number' && Number.isFinite(val) && val > 0) {
-    return val;
-  }
-  if (val instanceof Timestamp) {
-    return val.toMillis();
-  }
-  if (
-    val &&
-    typeof val === 'object' &&
-    'toMillis' in val &&
-    typeof (val as { toMillis?: unknown }).toMillis === 'function'
-  ) {
-    const ms = (val as { toMillis: () => number }).toMillis();
-    if (typeof ms === 'number' && Number.isFinite(ms) && ms > 0) return ms;
-  }
-  return undefined;
-}
-
-function stripUndefinedDeep<T>(value: T): T {
-  if (value === null || value === undefined || typeof value !== 'object') {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value
-      .filter((item) => item !== undefined)
-      .map((item) => stripUndefinedDeep(item)) as unknown as T;
-  }
-  const obj = value as Record<string, unknown>;
-  // Preserve Firebase RTDB serverTimestamp placeholder { '.sv': 'timestamp' }
-  if (typeof obj['.sv'] === 'string') {
-    return value;
-  }
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) {
-      out[k] = stripUndefinedDeep(v);
-    }
-  }
-  return out as T;
-}
-
 export interface UserProfilePrefs {
   officerName?: string;
   officerCode?: string;
@@ -267,18 +84,22 @@ export async function ensureUserProfileDoc(
   user: User,
   localPrefs?: UserProfilePrefs
 ): Promise<UserProfilePrefs> {
-  const path = `users/${user.uid}/profile`;
-  const profileRef = ref(rtdb, path);
+  const path = `users/${user.uid}`;
+  const userRef = doc(db, 'users', user.uid);
 
   let snap;
   try {
-    snap = await get(profileRef);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
+    snap = await getDocFromServer(userRef);
+  } catch {
+    try {
+      snap = await getDoc(userRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
   }
 
   if (snap && snap.exists()) {
-    const data = snap.val() as Record<string, unknown>;
+    const data = snap.data();
     return {
       officerName: typeof data.officerName === 'string' ? data.officerName : undefined,
       officerCode: typeof data.officerCode === 'string' ? data.officerCode : undefined,
@@ -289,9 +110,9 @@ export async function ensureUserProfileDoc(
 
   const profilePayload: Record<string, unknown> = {
     uid: user.uid,
-    email: safeStr(user.email || '', 320),
-    createdAt: rtdbServerTimestamp(),
-    updatedAt: rtdbServerTimestamp(),
+    email: safeStr((user.email || '').trim(), 320),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
 
   if (user.displayName) {
@@ -311,7 +132,7 @@ export async function ensureUserProfileDoc(
   }
 
   try {
-    await set(profileRef, stripUndefinedDeep(profilePayload));
+    await setDoc(userRef, profilePayload);
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
   }
@@ -323,12 +144,12 @@ export async function updateUserProfilePrefs(
   user: User,
   prefs: UserProfilePrefs
 ): Promise<void> {
-  const path = `users/${user.uid}/profile`;
-  const profileRef = ref(rtdb, path);
+  const path = `users/${user.uid}`;
+  const userRef = doc(db, 'users', user.uid);
 
   let snap;
   try {
-    snap = await get(profileRef);
+    snap = await getDoc(userRef);
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
   }
@@ -338,17 +159,13 @@ export async function updateUserProfilePrefs(
     return;
   }
 
-  const existing = (snap.val() || {}) as Record<string, unknown>;
+  const existing = snap.data();
   const payload: Record<string, unknown> = {
-    uid: typeof existing.uid === 'string' ? existing.uid : user.uid,
-    email: typeof existing.email === 'string' ? existing.email : safeStr(user.email || '', 320),
-    createdAt: typeof existing.createdAt === 'number' ? existing.createdAt : rtdbServerTimestamp(),
-    updatedAt: rtdbServerTimestamp(),
+    uid: existing.uid,
+    email: existing.email,
+    createdAt: existing.createdAt,
+    updatedAt: serverTimestamp(),
   };
-
-  if (typeof existing.migratedFromFirestoreAt === 'number') {
-    payload.migratedFromFirestoreAt = existing.migratedFromFirestoreAt;
-  }
 
   if (typeof existing.displayName === 'string') {
     payload.displayName = safeStr(existing.displayName, 150);
@@ -381,16 +198,16 @@ export async function updateUserProfilePrefs(
   }
 
   try {
-    await set(profileRef, stripUndefinedDeep(payload));
+    await setDoc(userRef, payload);
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
 }
 
-export function buildRtdbCasePayload(
+export function buildFirestoreCasePayload(
   record: SavedCaseRecord,
   uid: string,
-  existingCreatedAt?: number,
+  existingCreatedAt?: Timestamp,
   existingRecordCreatedAt?: number,
   explicitSafeId?: string,
   buildOptions?: { omitApprovalDoc?: boolean }
@@ -424,10 +241,20 @@ export function buildRtdbCasePayload(
     rateDisplayText: safeStr(snapIn.rateDisplayText || '', 160),
   };
 
-  if (snapIn.rawMonthlyInstallment !== undefined && Number.isFinite(Number(snapIn.rawMonthlyInstallment))) {
+  if (
+    snapIn.rawMonthlyInstallment !== undefined &&
+    snapIn.rawMonthlyInstallment !== null &&
+    String(snapIn.rawMonthlyInstallment).trim() !== '' &&
+    Number.isFinite(Number(snapIn.rawMonthlyInstallment))
+  ) {
     snapshot.rawMonthlyInstallment = Number(snapIn.rawMonthlyInstallment);
   }
-  if (snapIn.totalDriveAwayCost !== undefined && Number.isFinite(Number(snapIn.totalDriveAwayCost))) {
+  if (
+    snapIn.totalDriveAwayCost !== undefined &&
+    snapIn.totalDriveAwayCost !== null &&
+    String(snapIn.totalDriveAwayCost).trim() !== '' &&
+    Number.isFinite(Number(snapIn.totalDriveAwayCost))
+  ) {
     snapshot.totalDriveAwayCost = Number(snapIn.totalDriveAwayCost);
   }
 
@@ -470,13 +297,11 @@ export function buildRtdbCasePayload(
     snapshot,
     recordCreatedAt: resolvedRecordCreatedAt,
     recordUpdatedAt: Math.max(1, safeAnyNum(record.updatedAt, nowMs)),
-    createdAt:
-      typeof existingCreatedAt === 'number' && Number.isFinite(existingCreatedAt) && existingCreatedAt > 0
-        ? existingCreatedAt
-        : rtdbServerTimestamp(),
-    updatedAt: rtdbServerTimestamp(),
+    createdAt: existingCreatedAt || serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
 
+  // Optional fields strictly validated by blueprint and firestore.rules
   if (typeof record.officerLicense === 'string' && record.officerLicense) {
     payload.officerLicense = safeStr(record.officerLicense, 100);
   }
@@ -586,17 +411,14 @@ export function buildRtdbCasePayload(
     }
   }
 
-  return stripUndefinedDeep(payload);
+  return payload;
 }
 
-export function fromCloudCaseDoc(
+export function fromFirestoreCaseDoc(
   data: Record<string, unknown>,
   fallbackId?: string
 ): SavedCaseRecord {
-  const paymentsRaw = data.installmentPayments as
-    | Record<string, InstallmentPaymentStatus>
-    | Array<InstallmentPaymentStatus | null>
-    | undefined;
+  const paymentsRaw = data.installmentPayments as Record<string, InstallmentPaymentStatus> | undefined;
   let installmentPayments: Record<number, InstallmentPaymentStatus> | undefined;
   if (paymentsRaw && typeof paymentsRaw === 'object') {
     installmentPayments = {};
@@ -638,8 +460,8 @@ export function fromCloudCaseDoc(
 
   return {
     id: String(data.id || fallbackId || sanitizeCaseId()),
-    createdAt: Number(data.recordCreatedAt) || toEpochMs(data.createdAt) || Date.now(),
-    updatedAt: Number(data.recordUpdatedAt) || toEpochMs(data.updatedAt) || Date.now(),
+    createdAt: Number(data.recordCreatedAt) || Date.now(),
+    updatedAt: Number(data.recordUpdatedAt) || Date.now(),
     caseTitle: String(data.caseTitle || 'คุณลูกค้า'),
     officerName: String(data.officerName || ''),
     officerCode: String(data.officerCode || ''),
@@ -700,10 +522,237 @@ export interface UpsertCloudCasesOptions {
   throwOnError?: boolean;
 }
 
+function isPermissionDeniedError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  const code =
+    typeof err === 'object' && err !== null && 'code' in err
+      ? String((err as { code?: unknown }).code)
+      : '';
+  return code.includes('permission-denied') || msg.toLowerCase().includes('permission');
+}
+
+export const RULE_REQUIRED_CASE_KEYS = [
+  'ownerUid',
+  'id',
+  'caseTitle',
+  'officerName',
+  'officerCode',
+  'customerName',
+  'proposalKey',
+  'vehiclePrice',
+  'downMode',
+  'downValue',
+  'term',
+  'includeDeliveryFees',
+  'registrationFee',
+  'theftInsuranceFee',
+  'isCustomRateEnabled',
+  'customRateInput',
+  'customRateType',
+  'enforceEirCap',
+  'insurancePlan',
+  'insuranceYears',
+  'snapshot',
+  'recordCreatedAt',
+  'recordUpdatedAt',
+  'createdAt',
+  'updatedAt',
+];
+
+export const RULE_ALLOWED_CASE_KEYS = new Set([
+  ...RULE_REQUIRED_CASE_KEYS,
+  'officerLicense',
+  'customerPhone',
+  'customerNote',
+  'customerAge',
+  'customerWorkMonths',
+  'customerIncome',
+  'customerResidenceMonths',
+  'customerOccupation',
+  'isAceCustomer',
+  'dealerName',
+  'bikeModelName',
+  'bikeModelCode',
+  'bikeBrand',
+  'approvalStatus',
+  'deliveryStatus',
+  'approvalDate',
+  'deliveryDate',
+  'deliveryConfirmedAt',
+  'approvalNote',
+  'approvalUpdatedAt',
+  'paymentDueDay',
+  'googleMapsLocation',
+  'installmentPayments',
+  'approvalDoc',
+]);
+
+export function diagnosePayloadAgainstRules(
+  payload: Record<string, unknown>,
+  uid: string,
+  caseId: string
+): string {
+  const issues: string[] = [];
+  const idRe = /^[a-zA-Z0-9_-]+$/;
+  const checkStr = (key: string, maxLen: number, minLen = 0) => {
+    if (!(key in payload)) return;
+    const v = payload[key];
+    if (typeof v !== 'string') issues.push(`${key}:type=${typeof v}`);
+    else if (v.length < minLen || v.length > maxLen) issues.push(`${key}:len=${v.length}`);
+  };
+  const checkNum = (key: string, min?: number, max?: number) => {
+    if (!(key in payload)) return;
+    const v = payload[key];
+    if (typeof v !== 'number' || !Number.isFinite(v)) issues.push(`${key}:num=${String(v)}`);
+    else if ((min !== undefined && v < min) || (max !== undefined && v > max)) {
+      issues.push(`${key}:range=${v}`);
+    }
+  };
+  const checkBool = (key: string) => {
+    if (key in payload && typeof payload[key] !== 'boolean') {
+      issues.push(`${key}:bool=${typeof payload[key]}`);
+    }
+  };
+
+  if (!idRe.test(uid) || uid.length > 128) issues.push('uid');
+  if (!idRe.test(caseId) || caseId.length > 128) issues.push('caseId');
+  if (payload.ownerUid !== uid) issues.push('ownerUid!=uid');
+  if (payload.id !== caseId) issues.push('id!=caseId');
+  for (const reqKey of RULE_REQUIRED_CASE_KEYS) {
+    if (!(reqKey in payload)) issues.push(`missing:${reqKey}`);
+  }
+  for (const key of Object.keys(payload)) {
+    if (!RULE_ALLOWED_CASE_KEYS.has(key)) issues.push(`extra:${key}`);
+  }
+
+  checkStr('caseTitle', 300, 1);
+  checkStr('officerName', 150);
+  checkStr('officerCode', 50);
+  checkStr('customerName', 200);
+  if (!VALID_PROPOSAL_KEYS.includes(payload.proposalKey as ProposalKey)) {
+    issues.push(`proposalKey=${String(payload.proposalKey)}`);
+  }
+  checkNum('vehiclePrice', 0, 10000000);
+  if (payload.downMode !== 'amount' && payload.downMode !== 'percent') issues.push(`downMode=${String(payload.downMode)}`);
+  checkNum('downValue', 0, 10000000);
+  checkNum('term', 1, 120);
+  checkBool('includeDeliveryFees');
+  checkNum('registrationFee', 0, 1000000);
+  checkNum('theftInsuranceFee', 0, 1000000);
+  checkBool('isCustomRateEnabled');
+  checkStr('customRateInput', 30);
+  if (payload.customRateType !== 'monthly' && payload.customRateType !== 'annual') issues.push('customRateType');
+  checkBool('enforceEirCap');
+  if (!['none', 'plan_a', 'plan_b'].includes(String(payload.insurancePlan))) issues.push('insurancePlan');
+  if (![1, 2, 3].includes(Number(payload.insuranceYears))) issues.push('insuranceYears');
+  checkNum('recordCreatedAt', 1);
+  checkNum('recordUpdatedAt', 1);
+
+  checkStr('officerLicense', 100);
+  checkStr('customerPhone', 50);
+  checkStr('customerNote', 1000);
+  checkStr('customerAge', 20);
+  checkStr('customerWorkMonths', 20);
+  checkStr('customerIncome', 30);
+  checkStr('customerResidenceMonths', 20);
+  checkStr('customerOccupation', 150);
+  checkBool('isAceCustomer');
+  checkStr('dealerName', 200);
+  checkStr('bikeModelName', 200);
+  checkStr('bikeModelCode', 80);
+  checkStr('bikeBrand', 80);
+  if (
+    'approvalStatus' in payload &&
+    !['pending', 'approved', 'rejected', 'cancelled'].includes(String(payload.approvalStatus))
+  ) {
+    issues.push(`approvalStatus=${String(payload.approvalStatus)}`);
+  }
+  if (
+    'deliveryStatus' in payload &&
+    !['pending_delivery', 'delivered'].includes(String(payload.deliveryStatus))
+  ) {
+    issues.push(`deliveryStatus=${String(payload.deliveryStatus)}`);
+  }
+  checkStr('approvalDate', 40);
+  checkStr('deliveryDate', 40);
+  checkNum('deliveryConfirmedAt');
+  checkStr('approvalNote', 1000);
+  checkNum('approvalUpdatedAt');
+  checkNum('paymentDueDay', 1, 31);
+  checkStr('googleMapsLocation', 1500);
+  if ('installmentPayments' in payload) {
+    const ip = payload.installmentPayments;
+    if (!ip || typeof ip !== 'object' || Array.isArray(ip) || Object.keys(ip).length > 120) {
+      issues.push('installmentPayments');
+    }
+  }
+  if ('approvalDoc' in payload) {
+    const ad = payload.approvalDoc as Record<string, unknown>;
+    if (!ad || typeof ad !== 'object') issues.push('approvalDoc');
+    else {
+      for (const k of ['name', 'size', 'uploadedAt']) {
+        if (!(k in ad)) issues.push(`adMissing:${k}`);
+      }
+      for (const k of Object.keys(ad)) {
+        if (!['name', 'size', 'uploadedAt', 'type'].includes(k)) issues.push(`adExtra:${k}`);
+      }
+      if (typeof ad.name !== 'string' || ad.name.length < 1 || ad.name.length > 300) issues.push('ad.name');
+      if (typeof ad.size !== 'number' || ad.size < 0) issues.push('ad.size');
+      if (typeof ad.uploadedAt !== 'number') issues.push('ad.uploadedAt');
+      if ('type' in ad && (typeof ad.type !== 'string' || ad.type.length > 120)) issues.push('ad.type');
+    }
+  }
+
+  const snap = payload.snapshot as Record<string, unknown> | undefined;
+  if (!snap || typeof snap !== 'object') {
+    issues.push('snapshot');
+  } else {
+    const snapReq = [
+      'monthlyInstallment',
+      'financeAmount',
+      'downAmount',
+      'downPercent',
+      'totalInterest',
+      'totalWithVat',
+      'effectiveMonthlyRate',
+      'eirAnnualPercent',
+      'proposalCode',
+      'proposalName',
+      'rateDisplayText',
+    ];
+    const snapAllowed = new Set([...snapReq, 'rawMonthlyInstallment', 'totalDriveAwayCost']);
+    for (const sk of snapReq) {
+      if (!(sk in snap)) issues.push(`snapMissing:${sk}`);
+    }
+    for (const sk of Object.keys(snap)) {
+      if (!snapAllowed.has(sk)) issues.push(`snapExtra:${sk}`);
+    }
+    for (const nk of [
+      'monthlyInstallment',
+      'financeAmount',
+      'downAmount',
+      'downPercent',
+      'totalInterest',
+      'totalWithVat',
+      'effectiveMonthlyRate',
+      'eirAnnualPercent',
+    ]) {
+      if (typeof snap[nk] !== 'number' || !Number.isFinite(snap[nk] as number)) issues.push(`snap:${nk}`);
+    }
+    if (typeof snap.proposalCode !== 'string' || snap.proposalCode.length > 60) issues.push('snap:proposalCode');
+    if (typeof snap.proposalName !== 'string' || snap.proposalName.length > 160) issues.push('snap:proposalName');
+    if (typeof snap.rateDisplayText !== 'string' || snap.rateDisplayText.length > 160) issues.push('snap:rateDisplayText');
+    if ('rawMonthlyInstallment' in snap && typeof snap.rawMonthlyInstallment !== 'number') issues.push('snap:rawMonthly');
+    if ('totalDriveAwayCost' in snap && typeof snap.totalDriveAwayCost !== 'number') issues.push('snap:driveAway');
+  }
+  const optKeys = Object.keys(payload).filter((k) => !RULE_REQUIRED_CASE_KEYS.includes(k));
+  return `check=${issues.length ? issues.join(',') : 'PASS'} opt=[${optKeys.join(',')}]`;
+}
+
 export async function upsertCloudCases(
   uid: string,
   records: SavedCaseRecord[],
-  cloudCreatedAtMap: Map<string, number>,
+  cloudCreatedAtMap: Map<string, Timestamp>,
   cloudRecordCreatedAtMap?: Map<string, number>,
   knownNewIds?: Set<string>,
   options?: UpsertCloudCasesOptions
@@ -718,7 +767,7 @@ export async function upsertCloudCases(
     };
   }
 
-  // Deduplicate by safeId (latest record wins)
+  // Deduplicate by safeId (latest record wins) because writeBatch cannot touch the same doc twice
   const dedupedMap = new Map<string, { safeId: string; record: SavedCaseRecord }>();
   for (const record of records) {
     const safeId = sanitizeCaseId(record.id);
@@ -728,35 +777,42 @@ export async function upsertCloudCases(
   const allSafeIds = uniqueItems.map((i) => i.safeId);
   const totalCount = uniqueItems.length;
 
+  // Mark all IDs pending BEFORE async Firestore writes so onSnapshot never wipes un-uploaded items
   markPendingCloudUploads(allSafeIds);
 
   let firstError: unknown = null;
   const succeededIds: string[] = [];
+  const approvalDocSkippedIds = new Set<string>();
   let failedCount = 0;
 
   try {
-    // 1. Pre-check existing RTDB records for createdAt & path tracking
+    // 1. Pre-check existing docs efficiently
     const needLookup = uniqueItems.filter(
       ({ safeId }) => !cloudCreatedAtMap.has(safeId) && !knownNewIds?.has(safeId)
     );
 
     if (needLookup.length > 3) {
+      const casesCol = collection(db, 'users', uid, 'cases');
+      const q = query(casesCol, where('ownerUid', '==', uid));
       const listPath = `users/${uid}/cases`;
       try {
-        const snap = await get(ref(rtdb, listPath));
-        if (snap.exists()) {
-          const entries = dedupeRtdbEntries(uid, collectRtdbCaseEntries(snap.val()));
-          for (const entry of entries) {
-            const createdMs = toEpochMs(entry.data.createdAt);
-            if (createdMs) {
-              cloudCreatedAtMap.set(entry.caseId, createdMs);
-            }
-            if (typeof entry.data.recordCreatedAt === 'number' && entry.data.recordCreatedAt > 0) {
-              cloudRecordCreatedAtMap?.set(entry.caseId, entry.data.recordCreatedAt);
-            }
-            markConfirmedCloudIds([entry.caseId]);
-          }
+        let existingSnap;
+        try {
+          existingSnap = await getDocsFromServer(q);
+        } catch {
+          existingSnap = await getDocs(q);
         }
+        existingSnap?.forEach((d) => {
+          const existingData = d.data();
+          const ts = existingData.createdAt;
+          if (ts instanceof Timestamp) {
+            cloudCreatedAtMap.set(d.id, ts);
+          }
+          if (typeof existingData.recordCreatedAt === 'number' && existingData.recordCreatedAt > 0) {
+            cloudRecordCreatedAtMap?.set(d.id, existingData.recordCreatedAt);
+          }
+          markConfirmedCloudIds([d.id]);
+        });
       } catch (error) {
         try {
           handleFirestoreError(error, OperationType.LIST, listPath);
@@ -766,159 +822,214 @@ export async function upsertCloudCases(
       }
     } else if (needLookup.length > 0) {
       await Promise.all(
-        needLookup.map(async ({ safeId, record }) => {
-          const existingRel = getKnownRelPaths(uid, safeId)[0];
-          const expectedRel = getCaseRelPath(
-            cloudRecordCreatedAtMap?.get(safeId) ?? record.createdAt,
-            safeId
-          );
-          const candidateRels = Array.from(
-            new Set([existingRel, expectedRel, safeId].filter(Boolean) as string[])
-          );
-
-          for (const relPath of candidateRels) {
-            const fullPath = `users/${uid}/cases/${relPath}`;
+        needLookup.map(async ({ safeId }) => {
+          const path = `users/${uid}/cases/${safeId}`;
+          const docRef = doc(db, 'users', uid, 'cases', safeId);
+          try {
+            let existingSnap;
             try {
-              const snap = await get(ref(rtdb, fullPath));
-              if (snap.exists() && isCaseObjectNode(snap.val())) {
-                const existingData = snap.val() as Record<string, unknown>;
-                addKnownRelPath(uid, safeId, relPath);
-                const createdMs = toEpochMs(existingData.createdAt);
-                if (createdMs) {
-                  cloudCreatedAtMap.set(safeId, createdMs);
-                }
-                if (typeof existingData.recordCreatedAt === 'number' && existingData.recordCreatedAt > 0) {
-                  cloudRecordCreatedAtMap?.set(safeId, existingData.recordCreatedAt);
-                }
-                markConfirmedCloudIds([safeId]);
-                break;
+              existingSnap = await getDocFromServer(docRef);
+            } catch {
+              existingSnap = await getDoc(docRef);
+            }
+            if (existingSnap && existingSnap.exists()) {
+              const existingData = existingSnap.data();
+              const ts = existingData.createdAt;
+              if (ts instanceof Timestamp) {
+                cloudCreatedAtMap.set(safeId, ts);
               }
-            } catch (error) {
-              try {
-                handleFirestoreError(error, OperationType.GET, fullPath);
-              } catch (wrapped) {
-                if (!firstError) firstError = wrapped;
+              if (typeof existingData.recordCreatedAt === 'number' && existingData.recordCreatedAt > 0) {
+                cloudRecordCreatedAtMap?.set(safeId, existingData.recordCreatedAt);
               }
+            }
+          } catch (error) {
+            try {
+              handleFirestoreError(error, OperationType.GET, path);
+            } catch (wrapped) {
+              if (!firstError) firstError = wrapped;
             }
           }
         })
       );
     }
 
-    // 2. Commit via RTDB multi-path update under `users/${uid}/cases/${year}/${month}/${caseId}`
+    // 2. Commit via Firestore writeBatch in chunks of 50 (fast, mobile-friendly, atomic per batch)
     const BATCH_SIZE = 50;
-    const casesBasePath = `users/${uid}/cases`;
-    const casesRef = ref(rtdb, casesBasePath);
     let processedCount = 0;
 
     for (let i = 0; i < uniqueItems.length; i += BATCH_SIZE) {
       const chunk = uniqueItems.slice(i, i + BATCH_SIZE);
       const prepared = chunk.map(({ safeId, record }) => {
-        const createdAtMs = cloudCreatedAtMap.get(safeId);
+        const createdAtTs = cloudCreatedAtMap.get(safeId);
         const existingRecordCreatedAt = cloudRecordCreatedAtMap?.get(safeId);
-        const payload = buildRtdbCasePayload(
+        const payload = buildFirestoreCasePayload(
           record,
           uid,
-          createdAtMs,
+          createdAtTs,
           existingRecordCreatedAt,
           safeId
         );
-        const targetRelPath = getCaseRelPath(payload.recordCreatedAt, safeId);
-        const obsoleteRelPaths = getKnownRelPaths(uid, safeId).filter((p) => p !== targetRelPath);
-
         return {
           safeId,
-          targetRelPath,
-          obsoleteRelPaths,
-          fullPath: `${casesBasePath}/${targetRelPath}`,
+          path: `users/${uid}/cases/${safeId}`,
+          docRef: doc(db, 'users', uid, 'cases', safeId),
           payload,
-          isUpdate: Boolean(createdAtMs),
+          isUpdate: Boolean(createdAtTs),
         };
       });
 
-      if (prepared.length === 1) {
-        const item = prepared[0];
+      const commitSingleWithReconcile = async (
+        item: (typeof prepared)[number],
+        rec: SavedCaseRecord
+      ): Promise<void> => {
         try {
-          if (item.obsoleteRelPaths.length > 0) {
-            const singleUpdates: Record<string, unknown> = {
-              [item.targetRelPath]: item.payload,
-            };
-            for (const oldRel of item.obsoleteRelPaths) {
-              singleUpdates[oldRel] = null;
-            }
-            await update(casesRef, singleUpdates);
-          } else {
-            await set(ref(rtdb, item.fullPath), item.payload);
-          }
-
+          await setDoc(item.docRef, item.payload);
           if (typeof item.payload.recordCreatedAt === 'number') {
             cloudRecordCreatedAtMap?.set(item.safeId, item.payload.recordCreatedAt);
           }
-          setExactKnownRelPath(uid, item.safeId, item.targetRelPath);
           succeededIds.push(item.safeId);
+          return;
         } catch (err) {
+          let latestErr: unknown = err;
+          let latestCreatedAt = cloudCreatedAtMap.get(item.safeId);
+          let latestRecordCreatedAt = cloudRecordCreatedAtMap?.get(item.safeId);
+
+          if (isPermissionDeniedError(err)) {
+            let shouldTryOmitApprovalDoc = 'approvalDoc' in item.payload;
+
+            try {
+              const prevCreatedAt = cloudCreatedAtMap.get(item.safeId);
+              const prevRecordCreatedAt = cloudRecordCreatedAtMap?.get(item.safeId);
+              const serverSnap = await getDocFromServer(item.docRef);
+              if (serverSnap.exists()) {
+                const serverData = serverSnap.data();
+                const serverCreatedAt =
+                  serverData.createdAt instanceof Timestamp ? serverData.createdAt : undefined;
+                const serverRecordCreatedAt =
+                  typeof serverData.recordCreatedAt === 'number' && serverData.recordCreatedAt > 0
+                    ? serverData.recordCreatedAt
+                    : undefined;
+
+                if (serverCreatedAt) {
+                  cloudCreatedAtMap.set(item.safeId, serverCreatedAt);
+                  latestCreatedAt = serverCreatedAt;
+                }
+                if (serverRecordCreatedAt) {
+                  cloudRecordCreatedAtMap?.set(item.safeId, serverRecordCreatedAt);
+                  latestRecordCreatedAt = serverRecordCreatedAt;
+                }
+
+                const createdAtChanged =
+                  !prevCreatedAt ||
+                  Boolean(serverCreatedAt && !serverCreatedAt.isEqual(prevCreatedAt));
+                const recordCreatedAtChanged =
+                  Boolean(serverRecordCreatedAt && serverRecordCreatedAt !== prevRecordCreatedAt);
+
+                if (!item.isUpdate || createdAtChanged || recordCreatedAtChanged) {
+                  const retryPayload = buildFirestoreCasePayload(
+                    rec,
+                    uid,
+                    serverCreatedAt,
+                    serverRecordCreatedAt,
+                    item.safeId
+                  );
+                  await setDoc(item.docRef, retryPayload);
+                  if (typeof retryPayload.recordCreatedAt === 'number') {
+                    cloudRecordCreatedAtMap?.set(item.safeId, retryPayload.recordCreatedAt);
+                  }
+                  succeededIds.push(item.safeId);
+                  return;
+                }
+              } else if (item.isUpdate) {
+                cloudCreatedAtMap.delete(item.safeId);
+                cloudRecordCreatedAtMap?.delete(item.safeId);
+                latestCreatedAt = undefined;
+                latestRecordCreatedAt = undefined;
+                const retryPayload = buildFirestoreCasePayload(
+                  rec,
+                  uid,
+                  undefined,
+                  undefined,
+                  item.safeId
+                );
+                await setDoc(item.docRef, retryPayload);
+                if (typeof retryPayload.recordCreatedAt === 'number') {
+                  cloudRecordCreatedAtMap?.set(item.safeId, retryPayload.recordCreatedAt);
+                }
+                succeededIds.push(item.safeId);
+                return;
+              }
+            } catch (reconcileErr) {
+              latestErr = reconcileErr;
+              shouldTryOmitApprovalDoc =
+                'approvalDoc' in item.payload && isPermissionDeniedError(reconcileErr);
+            }
+
+            if (shouldTryOmitApprovalDoc) {
+              try {
+                const fallbackPayload = buildFirestoreCasePayload(
+                  rec,
+                  uid,
+                  latestCreatedAt,
+                  latestRecordCreatedAt,
+                  item.safeId,
+                  { omitApprovalDoc: true }
+                );
+                await setDoc(item.docRef, fallbackPayload);
+                if (typeof fallbackPayload.recordCreatedAt === 'number') {
+                  cloudRecordCreatedAtMap?.set(item.safeId, fallbackPayload.recordCreatedAt);
+                }
+                approvalDocSkippedIds.add(item.safeId);
+                succeededIds.push(item.safeId);
+                return;
+              } catch (fallbackErr) {
+                latestErr = fallbackErr;
+              }
+            }
+          }
+
           failedCount++;
+          const existedOnServer = cloudCreatedAtMap.has(item.safeId);
+          const diag = diagnosePayloadAgainstRules(item.payload, uid, item.safeId);
+          const errMsg = latestErr instanceof Error ? latestErr.message : String(latestErr);
+          const enrichedErr = new Error(`${errMsg} | ${diag}`);
           try {
             handleFirestoreError(
-              err,
-              item.isUpdate ? OperationType.UPDATE : OperationType.CREATE,
-              item.fullPath
+              enrichedErr,
+              existedOnServer ? OperationType.UPDATE : OperationType.CREATE,
+              item.path
             );
           } catch (wrapped) {
             if (!firstError) firstError = wrapped;
           }
         }
+      };
+
+      if (prepared.length === 1) {
+        await commitSingleWithReconcile(prepared[0], chunk[0].record);
         processedCount += 1;
         options?.onProgress?.(processedCount, totalCount);
         continue;
       }
 
-      const multiUpdates: Record<string, unknown> = {};
-      for (const item of prepared) {
-        multiUpdates[item.targetRelPath] = item.payload;
-        for (const oldRel of item.obsoleteRelPaths) {
-          if (!(oldRel in multiUpdates)) {
-            multiUpdates[oldRel] = null;
-          }
-        }
-      }
-
       try {
-        await update(casesRef, multiUpdates);
+        const batch = writeBatch(db);
+        for (const item of prepared) {
+          batch.set(item.docRef, item.payload);
+        }
+        await batch.commit();
         for (const item of prepared) {
           if (typeof item.payload.recordCreatedAt === 'number') {
             cloudRecordCreatedAtMap?.set(item.safeId, item.payload.recordCreatedAt);
           }
-          setExactKnownRelPath(uid, item.safeId, item.targetRelPath);
           succeededIds.push(item.safeId);
         }
         processedCount += prepared.length;
         options?.onProgress?.(processedCount, totalCount);
       } catch {
-        // Fallback: write individually so 1 problematic record never blocks remaining valid records
-        for (const item of prepared) {
-          try {
-            await set(ref(rtdb, item.fullPath), item.payload);
-            for (const oldRel of item.obsoleteRelPaths) {
-              await remove(ref(rtdb, `${casesBasePath}/${oldRel}`)).catch(() => {});
-            }
-            if (typeof item.payload.recordCreatedAt === 'number') {
-              cloudRecordCreatedAtMap?.set(item.safeId, item.payload.recordCreatedAt);
-            }
-            setExactKnownRelPath(uid, item.safeId, item.targetRelPath);
-            succeededIds.push(item.safeId);
-          } catch (err) {
-            failedCount++;
-            try {
-              handleFirestoreError(
-                err,
-                item.isUpdate ? OperationType.UPDATE : OperationType.CREATE,
-                item.fullPath
-              );
-            } catch (wrapped) {
-              if (!firstError) firstError = wrapped;
-            }
-          }
+        // Fallback: commit individually so 1 problematic doc doesn't block all remaining valid docs
+        for (let idx = 0; idx < prepared.length; idx++) {
+          await commitSingleWithReconcile(prepared[idx], chunk[idx].record);
           processedCount += 1;
           options?.onProgress?.(processedCount, totalCount);
         }
@@ -939,38 +1050,42 @@ export async function upsertCloudCases(
     uploadedCount: succeededIds.length,
     failedCount,
     totalCount,
-    approvalDocSkippedCount: 0,
+    approvalDocSkippedCount: approvalDocSkippedIds.size,
     firstError,
   };
 }
 
 export async function fetchAllCloudCasesToLocal(
   uid: string,
-  cloudCreatedAtMap: Map<string, number>,
+  cloudCreatedAtMap: Map<string, Timestamp>,
   cloudRecordCreatedAtMap?: Map<string, number>
 ): Promise<{ cases: SavedCaseRecord[]; cloudCount: number }> {
+  const casesCol = collection(db, 'users', uid, 'cases');
+  const q = query(casesCol, where('ownerUid', '==', uid));
   const listPath = `users/${uid}/cases`;
-  let snap;
+
+  let cloudSnap;
   try {
-    snap = await get(ref(rtdb, listPath));
+    try {
+      cloudSnap = await getDocsFromServer(q);
+    } catch {
+      cloudSnap = await getDocs(q);
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, listPath);
   }
 
   const cloudRecords: SavedCaseRecord[] = [];
-  if (snap && snap.exists()) {
-    const entries = dedupeRtdbEntries(uid, collectRtdbCaseEntries(snap.val()));
-    for (const entry of entries) {
-      const createdMs = toEpochMs(entry.data.createdAt);
-      if (createdMs) {
-        cloudCreatedAtMap.set(entry.caseId, createdMs);
-      }
-      if (typeof entry.data.recordCreatedAt === 'number' && entry.data.recordCreatedAt > 0) {
-        cloudRecordCreatedAtMap?.set(entry.caseId, entry.data.recordCreatedAt);
-      }
-      cloudRecords.push(fromCloudCaseDoc(entry.data, entry.caseId));
+  cloudSnap?.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (data.createdAt instanceof Timestamp) {
+      cloudCreatedAtMap.set(docSnap.id, data.createdAt);
     }
-  }
+    if (typeof data.recordCreatedAt === 'number' && data.recordCreatedAt > 0) {
+      cloudRecordCreatedAtMap?.set(docSnap.id, data.recordCreatedAt);
+    }
+    cloudRecords.push(fromFirestoreCaseDoc(data, docSnap.id));
+  });
 
   const merged = mergeCloudCasesIntoLocal(cloudRecords, {
     fromCache: false,
@@ -986,7 +1101,7 @@ export async function fetchAllCloudCasesToLocal(
 export async function deleteCloudCases(
   uid: string,
   ids: string[],
-  cloudCreatedAtMap: Map<string, number>,
+  cloudCreatedAtMap: Map<string, Timestamp>,
   cloudRecordCreatedAtMap?: Map<string, number>
 ): Promise<void> {
   if (ids.length === 0) return;
@@ -994,93 +1109,46 @@ export async function deleteCloudCases(
   const uniqueIds = Array.from(new Set(ids.map((rawId) => sanitizeCaseId(rawId))));
   const deletedIds: string[] = [];
   const BATCH_SIZE = 100;
-  const casesBasePath = `users/${uid}/cases`;
-  const casesRef = ref(rtdb, casesBasePath);
-
-  // Ensure we know the exact Year/Month (or legacy flat) paths for every ID to delete
-  const missingPathIds = uniqueIds.filter((safeId) => getKnownRelPaths(uid, safeId).length === 0);
-  if (missingPathIds.length > 0) {
-    try {
-      const snap = await get(casesRef);
-      if (snap.exists()) {
-        const entries = collectRtdbCaseEntries(snap.val());
-        for (const entry of entries) {
-          addKnownRelPath(uid, entry.caseId, entry.relPath);
-        }
-      }
-    } catch {
-      // Fallback to deleting legacy flat path if scan fails
-    }
-  }
 
   try {
     for (let i = 0; i < uniqueIds.length; i += BATCH_SIZE) {
       const chunk = uniqueIds.slice(i, i + BATCH_SIZE);
-      const deleteMap: Record<string, null> = {};
-
-      for (const safeId of chunk) {
-        const knownPaths = getKnownRelPaths(uid, safeId);
-        if (knownPaths.length > 0) {
-          for (const relPath of knownPaths) {
-            deleteMap[relPath] = null;
-          }
-        } else {
-          const recCreatedAt = cloudRecordCreatedAtMap?.get(safeId);
-          if (recCreatedAt) {
-            deleteMap[getCaseRelPath(recCreatedAt, safeId)] = null;
-          }
-          deleteMap[safeId] = null;
-        }
-      }
-
-      const targetRelPaths = Object.keys(deleteMap);
-      if (targetRelPaths.length === 1) {
+      if (chunk.length === 1) {
         const safeId = chunk[0];
-        const fullPath = `${casesBasePath}/${targetRelPaths[0]}`;
+        const path = `users/${uid}/cases/${safeId}`;
         try {
-          await remove(ref(rtdb, fullPath));
+          await deleteDoc(doc(db, 'users', uid, 'cases', safeId));
           cloudCreatedAtMap.delete(safeId);
           cloudRecordCreatedAtMap?.delete(safeId);
-          deleteKnownRelPaths(uid, safeId);
           deletedIds.push(safeId);
         } catch (error) {
-          handleFirestoreError(error, OperationType.DELETE, fullPath);
+          handleFirestoreError(error, OperationType.DELETE, path);
         }
         continue;
       }
 
+      const batch = writeBatch(db);
+      for (const safeId of chunk) {
+        batch.delete(doc(db, 'users', uid, 'cases', safeId));
+      }
       try {
-        await update(casesRef, deleteMap);
+        await batch.commit();
         for (const safeId of chunk) {
           cloudCreatedAtMap.delete(safeId);
           cloudRecordCreatedAtMap?.delete(safeId);
-          deleteKnownRelPaths(uid, safeId);
           deletedIds.push(safeId);
         }
       } catch {
         for (const safeId of chunk) {
-          const rels = getKnownRelPaths(uid, safeId);
-          const candidateRels =
-            rels.length > 0
-              ? rels
-              : [
-                  ...(cloudRecordCreatedAtMap?.get(safeId)
-                    ? [getCaseRelPath(cloudRecordCreatedAtMap.get(safeId), safeId)]
-                    : []),
-                  safeId,
-                ];
-          for (const relPath of candidateRels) {
-            const fullPath = `${casesBasePath}/${relPath}`;
-            try {
-              await remove(ref(rtdb, fullPath));
-            } catch (error) {
-              handleFirestoreError(error, OperationType.DELETE, fullPath);
-            }
+          const path = `users/${uid}/cases/${safeId}`;
+          try {
+            await deleteDoc(doc(db, 'users', uid, 'cases', safeId));
+            cloudCreatedAtMap.delete(safeId);
+            cloudRecordCreatedAtMap?.delete(safeId);
+            deletedIds.push(safeId);
+          } catch (error) {
+            handleFirestoreError(error, OperationType.DELETE, path);
           }
-          cloudCreatedAtMap.delete(safeId);
-          cloudRecordCreatedAtMap?.delete(safeId);
-          deleteKnownRelPaths(uid, safeId);
-          deletedIds.push(safeId);
         }
       }
     }
@@ -1091,52 +1159,61 @@ export async function deleteCloudCases(
   }
 }
 
-/**
- * Best-effort one-time rescue of any legacy Firestore cases into local/RTDB
- * so switching from Firestore -> Realtime Database never strands cases on another device.
- */
-async function rescueLegacyFirestoreCasesOnce(uid: string): Promise<void> {
-  const profilePath = `users/${uid}/profile`;
-  const profileRef = ref(rtdb, profilePath);
+function extractCasesFromRtdbSnapshotVal(rawTree: unknown): SavedCaseRecord[] {
+  const results: SavedCaseRecord[] = [];
+  if (!rawTree || typeof rawTree !== 'object') return results;
 
+  const isCaseObj = (val: unknown): val is Record<string, unknown> =>
+    Boolean(val && typeof val === 'object' && !Array.isArray(val) && ('snapshot' in val || 'vehiclePrice' in val));
+
+  for (const [k1, v1] of Object.entries(rawTree as Record<string, unknown>)) {
+    if (!v1 || typeof v1 !== 'object') continue;
+    if (isCaseObj(v1)) {
+      results.push(fromFirestoreCaseDoc(v1, k1));
+      continue;
+    }
+    if (/^\d{4}$/.test(k1)) {
+      for (const [, v2] of Object.entries(v1 as Record<string, unknown>)) {
+        if (!v2 || typeof v2 !== 'object') continue;
+        for (const [caseId, caseVal] of Object.entries(v2 as Record<string, unknown>)) {
+          if (isCaseObj(caseVal)) {
+            results.push(fromFirestoreCaseDoc(caseVal, caseId));
+          }
+        }
+      }
+    }
+  }
+  return results;
+}
+
+/**
+ * Best-effort one-time rescue of any cases temporarily synced to Realtime Database
+ * so switching back to Firestore never leaves any case stranded.
+ */
+async function rescueRtdbCasesOnce(uid: string): Promise<void> {
+  const flagKey = `ncap_rtdb_rescued_v1_${uid}`;
   try {
-    const profileSnap = await get(profileRef);
-    const profileVal = profileSnap.exists()
-      ? (profileSnap.val() as Record<string, unknown>)
-      : null;
-    if (profileVal && profileVal.migratedFromFirestoreAt) {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(flagKey)) {
       return;
     }
-
-    const casesCol = collection(db, 'users', uid, 'cases');
-    const q = query(casesCol, where('ownerUid', '==', uid));
-
-    const legacySnap = await Promise.race([
-      getDocsFromServer(q).catch(() => getDocs(q)),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+    const snap = await Promise.race([
+      rtdbGet(rtdbRef(rtdb, `users/${uid}/cases`)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
     ]);
-
-    if (legacySnap && !legacySnap.empty) {
-      const legacyRecords: SavedCaseRecord[] = [];
-      legacySnap.forEach((docSnap) => {
-        legacyRecords.push(fromCloudCaseDoc(docSnap.data(), docSnap.id));
-      });
-      if (legacyRecords.length > 0) {
-        mergeCloudCasesIntoLocal(legacyRecords, {
+    if (snap && snap.exists()) {
+      const rescued = extractCasesFromRtdbSnapshotVal(snap.val());
+      if (rescued.length > 0) {
+        mergeCloudCasesIntoLocal(rescued, {
           fromCache: false,
           isServerSnapshotSettled: false,
         });
       }
     }
-
-    if (profileVal) {
-      await update(profileRef, {
-        migratedFromFirestoreAt: Date.now(),
-        updatedAt: rtdbServerTimestamp(),
-      });
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(flagKey, String(Date.now()));
     }
   } catch {
-    // Non-fatal: RTDB migration works from local storage even if legacy Firestore is unreachable
+    // Non-fatal: continue Firestore sync normally
   }
 }
 
@@ -1148,67 +1225,49 @@ export interface PushAllLocalCasesResult {
 
 export async function pushAllLocalCasesToCloud(
   uid: string,
-  cloudCreatedAtMap: Map<string, number>,
+  cloudCreatedAtMap: Map<string, Timestamp>,
   cloudRecordCreatedAtMap?: Map<string, number>,
   options?: { forcePushIds?: Set<string> }
 ): Promise<PushAllLocalCasesResult> {
-  await rescueLegacyFirestoreCasesOnce(uid);
+  await rescueRtdbCasesOnce(uid);
 
+  const localCases = normalizeLocalCaseIdsForCloud();
+  if (localCases.length === 0) {
+    return { pushedCount: 0, uploadedCount: 0, approvalDocSkippedCount: 0 };
+  }
+
+  const casesCol = collection(db, 'users', uid, 'cases');
+  const q = query(casesCol, where('ownerUid', '==', uid));
   const listPath = `users/${uid}/cases`;
+
   let cloudSnap;
   try {
-    cloudSnap = await get(ref(rtdb, listPath));
+    try {
+      cloudSnap = await getDocsFromServer(q);
+    } catch {
+      cloudSnap = await getDocs(q);
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, listPath);
   }
 
   const cloudUpdatedMap = new Map<string, number>();
   const cloudHasApprovalDocSet = new Set<string>();
-  const cloudActiveRelPathMap = new Map<string, string>();
-  const cloudNeedsPathMigrationSet = new Set<string>();
-  const cloudOnlyRecords: SavedCaseRecord[] = [];
-
-  if (cloudSnap && cloudSnap.exists()) {
-    const rawEntries = collectRtdbCaseEntries(cloudSnap.val());
-    const countByCaseId = new Map<string, number>();
-    for (const e of rawEntries) {
-      countByCaseId.set(e.caseId, (countByCaseId.get(e.caseId) || 0) + 1);
+  cloudSnap?.forEach((d) => {
+    const data = d.data();
+    const ts = data.createdAt;
+    if (ts instanceof Timestamp) {
+      cloudCreatedAtMap.set(d.id, ts);
     }
-
-    const entries = dedupeRtdbEntries(uid, rawEntries);
-    for (const entry of entries) {
-      const createdMs = toEpochMs(entry.data.createdAt);
-      if (createdMs) {
-        cloudCreatedAtMap.set(entry.caseId, createdMs);
-      }
-      if (typeof entry.data.recordCreatedAt === 'number' && entry.data.recordCreatedAt > 0) {
-        cloudRecordCreatedAtMap?.set(entry.caseId, entry.data.recordCreatedAt);
-      }
-      if (entry.data.approvalDoc) {
-        cloudHasApprovalDocSet.add(entry.caseId);
-      }
-      cloudUpdatedMap.set(entry.caseId, Number(entry.data.recordUpdatedAt) || 0);
-      cloudActiveRelPathMap.set(entry.caseId, entry.relPath);
-      if (entry.isLegacyFlat || (countByCaseId.get(entry.caseId) || 0) > 1) {
-        cloudNeedsPathMigrationSet.add(entry.caseId);
-      }
-      cloudOnlyRecords.push(fromCloudCaseDoc(entry.data, entry.caseId));
-      markConfirmedCloudIds([entry.caseId]);
+    if (typeof data.recordCreatedAt === 'number' && data.recordCreatedAt > 0) {
+      cloudRecordCreatedAtMap?.set(d.id, data.recordCreatedAt);
     }
-  }
-
-  let localCases = normalizeLocalCaseIdsForCloud();
-  const localIdSet = new Set(localCases.map((c) => sanitizeCaseId(c.id)));
-  const migratedCloudRecords = cloudOnlyRecords.filter(
-    (c) => cloudNeedsPathMigrationSet.has(sanitizeCaseId(c.id)) && !localIdSet.has(sanitizeCaseId(c.id))
-  );
-  if (migratedCloudRecords.length > 0) {
-    localCases = [...localCases, ...migratedCloudRecords];
-  }
-
-  if (localCases.length === 0) {
-    return { pushedCount: 0, uploadedCount: 0, approvalDocSkippedCount: 0 };
-  }
+    if (data.approvalDoc) {
+      cloudHasApprovalDocSet.add(d.id);
+    }
+    cloudUpdatedMap.set(d.id, Number(data.recordUpdatedAt) || 0);
+    markConfirmedCloudIds([d.id]);
+  });
 
   const toPush: SavedCaseRecord[] = [];
   const knownNewIds = new Set<string>();
@@ -1220,17 +1279,10 @@ export async function pushAllLocalCasesToCloud(
       Boolean(localCase.approvalDoc) && !cloudHasApprovalDocSet.has(safeId);
     const isForced = Boolean(options?.forcePushIds?.has(safeId));
 
-    const resolvedCreatedAt = cloudRecordCreatedAtMap?.get(safeId) ?? localCase.createdAt;
-    const expectedRelPath = getCaseRelPath(resolvedCreatedAt, safeId);
-    const currentRelPath = cloudActiveRelPathMap.get(safeId);
-    const needsPathMigration =
-      cloudNeedsPathMigrationSet.has(safeId) ||
-      (currentRelPath !== undefined && currentRelPath !== expectedRelPath);
-
     if (cloudUpdated === undefined) {
       knownNewIds.add(safeId);
       toPush.push(localCase);
-    } else if (localUpdated > cloudUpdated || needsApprovalDocBackfill || needsPathMigration || isForced) {
+    } else if (localUpdated > cloudUpdated || needsApprovalDocBackfill || isForced) {
       toPush.push(localCase);
     }
   }
@@ -1259,47 +1311,45 @@ export async function pushAllLocalCasesToCloud(
 
 export function subscribeUserCases(
   uid: string,
-  cloudCreatedAtMap: Map<string, number>,
+  cloudCreatedAtMap: Map<string, Timestamp>,
   cloudRecordCreatedAtMap: Map<string, number> | undefined,
   onSynced: (cases: SavedCaseRecord[], fromCache: boolean, cloudCount: number) => void,
   onError: (err: unknown) => void
 ): Unsubscribe {
+  const casesCol = collection(db, 'users', uid, 'cases');
+  const q = query(casesCol, where('ownerUid', '==', uid));
   const listPath = `users/${uid}/cases`;
-  const casesRef = ref(rtdb, listPath);
   let hasSettledServerSnapshot = false;
 
-  return onValue(
-    casesRef,
+  return onSnapshot(
+    q,
     (snapshot) => {
-      hasSettledServerSnapshot = true;
-      const cloudRecords: SavedCaseRecord[] = [];
+      if (!snapshot.metadata.fromCache) {
+        hasSettledServerSnapshot = true;
+      }
 
-      if (snapshot.exists()) {
-        const rawEntries = collectRtdbCaseEntries(snapshot.val());
-        // Reset known paths for this uid before rebuilding from fresh authoritative snapshot
-        for (const key of Array.from(cloudKnownRelPathsMap.keys())) {
-          if (key.startsWith(`${uid}::`)) {
-            cloudKnownRelPathsMap.delete(key);
-          }
+      const cloudRecords: SavedCaseRecord[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.createdAt instanceof Timestamp) {
+          cloudCreatedAtMap.set(docSnap.id, data.createdAt);
         }
-        const entries = dedupeRtdbEntries(uid, rawEntries);
-        for (const entry of entries) {
-          const createdMs = toEpochMs(entry.data.createdAt);
-          if (createdMs) {
-            cloudCreatedAtMap.set(entry.caseId, createdMs);
-          }
-          if (typeof entry.data.recordCreatedAt === 'number' && entry.data.recordCreatedAt > 0) {
-            cloudRecordCreatedAtMap?.set(entry.caseId, entry.data.recordCreatedAt);
-          }
-          cloudRecords.push(fromCloudCaseDoc(entry.data, entry.caseId));
+        if (typeof data.recordCreatedAt === 'number' && data.recordCreatedAt > 0) {
+          cloudRecordCreatedAtMap?.set(docSnap.id, data.recordCreatedAt);
         }
+        cloudRecords.push(fromFirestoreCaseDoc(data, docSnap.id));
+      });
+
+      // Avoid processing an initial empty cache snapshot before server sync arrives
+      if (snapshot.metadata.fromCache && cloudRecords.length === 0 && getSavedCases().length > 0) {
+        return;
       }
 
       const merged = mergeCloudCasesIntoLocal(cloudRecords, {
-        fromCache: false,
+        fromCache: snapshot.metadata.fromCache,
         isServerSnapshotSettled: hasSettledServerSnapshot,
       });
-      onSynced(merged, false, cloudRecords.length);
+      onSynced(merged, snapshot.metadata.fromCache, cloudRecords.length);
     },
     (error) => {
       try {
