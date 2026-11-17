@@ -103,7 +103,7 @@ import {
 } from './data/eligibilityCriteria';
 import { useFirebase } from './contexts/FirebaseContext';
 import { CloudSyncCard } from './components/CloudSyncCard';
-import { MonthlyCasesDashboard } from './components/MonthlyCasesDashboard';
+import { HomeDashboard } from './components/HomeDashboard';
 
 export default function App() {
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
@@ -429,7 +429,7 @@ export default function App() {
     },
     {
       id: 'financing' as const,
-      label: 'เงินดาวน์',
+      label: 'คำนวณเคส',
       icon: Banknote,
     },
     {
@@ -449,6 +449,10 @@ export default function App() {
     },
   ];
 
+  const [isOfficerExpanded, setIsOfficerExpanded] = useState<boolean>(
+    () => !localStorage.getItem('ncap_officer_name')?.trim()
+  );
+
   const handleTabChange = (newTab: ActivePageTab) => {
     triggerHaptic('selection');
     setActiveTab(newTab);
@@ -456,7 +460,7 @@ export default function App() {
       setExpandedCard('financing');
     } else if (newTab === 'calculation') {
       setExpandedCard('comparison');
-    } else if (newTab === 'documents' || newTab === 'installments') {
+    } else if (newTab === 'home' || newTab === 'documents' || newTab === 'installments') {
       setExpandedCard(null);
     }
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1148,7 +1152,8 @@ export default function App() {
       setBikeModelCode('');
     }
 
-    setActiveTab('home');
+    setActiveTab('financing');
+    setExpandedCard('financing');
     triggerToast(`✏️ เข้าสู่โหมดแก้ไขเคส: "${customerTitle}"`);
   };
 
@@ -1715,24 +1720,81 @@ export default function App() {
             </div>
           )}
 
-          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-3.5 pb-6">
+          <div
+            className={`${
+              viewMode === 'dashboard' && (activeTab === 'home' || activeTab === 'installments')
+                ? 'max-w-5xl'
+                : 'max-w-2xl'
+            } mx-auto space-y-3 sm:space-y-3.5 pb-6`}
+          >
             {/* ========================================================
-                หน้าโฮมเพจ: ข้อมูลทั่วไป & เงื่อนไขข้อเสนอ (ตามรูปที่ 1)
+                หน้าโฮมเพจ: แดชบอร์ดภาพรวมผลงาน & สรุปยอดรายเดือน
                 ======================================================== */}
             {activeTab === 'home' && (
-              <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
-                {/* Step Header Badge */}
-                <div className="flex items-center justify-between px-1 text-xs">
-                  <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
-                      1
-                    </span>
-                    หน้าโฮมเพจ: ข้อมูลทั่วไป & เงื่อนไขข้อเสนอ
-                  </span>
-                  <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
-                    ขั้นตอน 1 / 4
-                  </span>
-                </div>
+              <HomeDashboard
+                refreshTrigger={casesRevision}
+                officerName={officerName}
+                officerCode={officerCode}
+                officerLicense={officerLicense}
+                dealerName={dealerName}
+                activeDraft={{
+                  customerName,
+                  bikeModelName: selectedBike?.name || (bikeModelCode ? `รหัส ${bikeModelCode}` : undefined),
+                  monthlyInstallment: currentCalculation.monthlyInstallment,
+                  term,
+                  isEditing: Boolean(editingCaseId),
+                }}
+                onOpenSavedCases={() => {
+                  triggerHaptic('selection');
+                  setShowSavedCases(true);
+                }}
+                onNavigateToCaseForm={() => handleTabChange('financing')}
+                onNavigateToOfficerSetup={() => {
+                  setIsOfficerExpanded(true);
+                  setActiveTab('financing');
+                  setExpandedCard(null);
+                  setTimeout(() => {
+                    document
+                      .querySelector('[data-card-id="officer"]')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 120);
+                }}
+                onNavigateToCalculation={() => handleTabChange('calculation')}
+                onNavigateToDocuments={() => handleTabChange('documents')}
+                onNavigateToCheckerCommission={() => {
+                  triggerHaptic('selection');
+                  setActiveTab('documents');
+                  setExpandedCard('checker_commission');
+                  mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onNavigateToPeriodClosing={() => {
+                  triggerHaptic('selection');
+                  setActiveTab('documents');
+                  setExpandedCard('period_closing');
+                  mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onNavigateToInstallments={() => handleTabChange('installments')}
+                onLoadCase={handleLoadCase}
+              />
+            )}
+
+        {/* ========================================================
+            หน้าที่ 2: คำนวณเคส (ข้อมูลลูกค้า, ดีลเลอร์, รถ, ประกัน PA, เงินดาวน์ & เจ้าหน้าที่)
+            ======================================================== */}
+        {activeTab === 'financing' && (
+          <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
+            {/* Step Header Badge */}
+            <div className="flex items-center justify-between px-1 text-xs">
+              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
+                  1
+                </span>
+                ข้อมูลเคส รถ ประกัน PA & เงินดาวน์
+              </span>
+              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+                ขั้นตอน 1 / 3
+              </span>
+            </div>
 
                 {/* Quick Save & Saved Cases Action Bar */}
                 <div className="flex items-center gap-2">
@@ -1785,66 +1847,7 @@ export default function App() {
 
                 {/* Input Form Card - Frosted Glass */}
                 <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
-                  {/* Officer Name & Code & Broker License Card (ช่องใส่ชื่อ โค้ด และเลขที่ใบอนุญาตนายหน้าประกันวินาศภัย) */}
-                  <div
-                    data-card-id="officer"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
-              >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
-                    <UserCheck className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
-                    <span>ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา</span>
-                  </label>
-                  <span className="text-[9.5px] font-bold text-blue-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-blue-200/80 shadow-2xs">
-                    ลงชื่อในใบเสนอราคา & เอกสาร
-                  </span>
-                </div>
-                <div className="grid grid-cols-12 gap-2">
-                  <div className="col-span-7 sm:col-span-8">
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
-                      ชื่อเจ้าหน้าที่
-                    </label>
-                    <input
-                      type="text"
-                      value={officerName}
-                      onChange={(e) => handleOfficerNameChange(e.target.value)}
-                      placeholder="ใส่ชื่อเจ้าหน้าที่"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
-                    />
-                  </div>
-                  <div className="col-span-5 sm:col-span-4">
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
-                      โค้ด / รหัส
-                    </label>
-                    <input
-                      type="text"
-                      value={officerCode}
-                      onChange={(e) => handleOfficerCodeChange(e.target.value)}
-                      placeholder="ใส่โค้ด"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
-                    />
-                  </div>
-                  <div className="col-span-12">
-                    <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center justify-between">
-                      <span className="flex items-center gap-1 font-semibold text-blue-950">
-                        <Award className="w-3 h-3 text-amber-600" />
-                        เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
-                      </span>
-                      <span className="text-[9px] text-slate-400 font-normal">
-                        (สำหรับตารางความคุ้มครอง Group PA)
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      value={officerLicense}
-                      onChange={(e) => handleOfficerLicenseChange(e.target.value)}
-                      placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
+                  {/* Officer Name & Code & Broker License Card (ย้ายไปไว้เป็นส่วนตั้งค่าพับได้ด้านล่างของฟอร์ม) */}
 
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
               <div
@@ -2393,38 +2396,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Next Step Action Button */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => handleTabChange('financing')}
-                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-sky-500/25 transition-all cursor-pointer"
-              >
-                <span>ขั้นตอนถัดไป: ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================
-            หน้าที่ 2: ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์ (ตามรูปที่ 2)
-            ======================================================== */}
-        {activeTab === 'financing' && (
-          <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
-            {/* Step Header Badge */}
-            <div className="flex items-center justify-between px-1 text-xs">
-              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
-                  2
-                </span>
-                ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์
-              </span>
-              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
-                ขั้นตอน 2 / 4
-              </span>
             </div>
 
             {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์) */}
@@ -3077,6 +3048,105 @@ export default function App() {
             )}
           </div>
 
+            {/* Collapsible Officer Info Card (ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา) */}
+            <div
+              data-card-id="officer"
+              className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
+            >
+              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+              <div
+                data-card-toggle="true"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsOfficerExpanded((prev) => !prev);
+                }}
+                className={`flex items-center justify-between gap-2 cursor-pointer select-none ${
+                  isOfficerExpanded ? 'pb-2 border-b border-blue-200/60' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-2xs shrink-0">
+                    <UserCheck className="w-4 h-4 text-blue-700" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] sm:text-xs text-slate-800 font-bold block">
+                      ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา
+                    </span>
+                    {!isOfficerExpanded && (
+                      <span className="text-[10px] text-slate-600 block truncate">
+                        {officerName.trim() || 'ยังไม่ระบุชื่อ'}
+                        {officerCode.trim() ? ` · รหัส ${officerCode.trim()}` : ''}
+                        {officerLicense.trim() ? ` · นายหน้า ${officerLicense.trim()}` : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('light');
+                    setIsOfficerExpanded((prev) => !prev);
+                  }}
+                  className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs shrink-0"
+                  title={isOfficerExpanded ? 'ย่อกล่อง' : 'แก้ไขข้อมูลเจ้าหน้าที่'}
+                >
+                  {isOfficerExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
+              {isOfficerExpanded && (
+                <div className="grid grid-cols-12 gap-2 pt-0.5 animate-fade-in">
+                  <div className="col-span-7 sm:col-span-8">
+                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                      ชื่อเจ้าหน้าที่
+                    </label>
+                    <input
+                      type="text"
+                      value={officerName}
+                      onChange={(e) => handleOfficerNameChange(e.target.value)}
+                      placeholder="ใส่ชื่อเจ้าหน้าที่"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                    />
+                  </div>
+                  <div className="col-span-5 sm:col-span-4">
+                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                      โค้ด / รหัส
+                    </label>
+                    <input
+                      type="text"
+                      value={officerCode}
+                      onChange={(e) => handleOfficerCodeChange(e.target.value)}
+                      placeholder="ใส่โค้ด"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
+                    />
+                  </div>
+                  <div className="col-span-12">
+                    <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1 font-semibold text-blue-950">
+                        <Award className="w-3 h-3 text-amber-600" />
+                        เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        (สำหรับตารางความคุ้มครอง Group PA)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={officerLicense}
+                      onChange={(e) => handleOfficerLicenseChange(e.target.value)}
+                      placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Navigation Buttons for Page 2 */}
             <div className="flex items-center gap-2 pt-1">
               <button
@@ -3085,7 +3155,7 @@ export default function App() {
                 className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 text-slate-500" />
-                <span>ย้อนกลับ</span>
+                <span>ย้อนกลับ: โฮมเพจ</span>
               </button>
               <button
                 type="button"
@@ -3100,7 +3170,7 @@ export default function App() {
         )}
 
         {/* ========================================================
-            หน้าที่ 3: สรุปผลค่างวด & ตารางเปรียบเทียบ (ตามรูปที่ 3)
+            หน้าที่ 3: สรุปผลค่างวด & ตารางเปรียบเทียบ
             ======================================================== */}
         {activeTab === 'calculation' && (
           <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
@@ -3108,12 +3178,12 @@ export default function App() {
             <div className="flex items-center justify-between px-1 text-xs">
               <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
-                  3
+                  2
                 </span>
                 สรุปผลค่างวด & ตารางเปรียบเทียบ
               </span>
               <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
-                ขั้นตอน 3 / 4
+                ขั้นตอน 2 / 3
               </span>
             </div>
 
@@ -3593,13 +3663,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Monthly Saved Cases Dashboard (Recharts) */}
-            <MonthlyCasesDashboard
-              refreshTrigger={casesRevision}
-              onOpenSavedCases={() => setShowSavedCases(true)}
-              onGoToCalculate={() => handleTabChange('calculation')}
-            />
-
             {/* Cloud Backup & Multi-Device Sync Card */}
             <CloudSyncCard localCount={savedCasesCount} />
 
@@ -3619,7 +3682,7 @@ export default function App() {
                 className="flex-1 py-3 px-3 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:opacity-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-sky-500/20 transition-all cursor-pointer"
               >
                 <Home className="w-4 h-4" />
-                <span>กลับหน้าแรก (โฮมเพจ)</span>
+                <span>กลับหน้า Dashboard</span>
               </button>
             </div>
           </div>
