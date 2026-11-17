@@ -1333,20 +1333,20 @@ export default function App() {
       {/* Soft Ambient Background Radial Glows for Neo-Glassmorphism Depth (Zero GPU blur pass) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute -top-24 -left-20 w-[420px] h-[420px] rounded-full opacity-55"
-          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.45) 0%, rgba(34,211,238,0) 70%)' }}
+          className="absolute -top-24 -left-20 w-[440px] h-[440px] rounded-full opacity-65"
+          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.55) 0%, rgba(34,211,238,0) 70%)' }}
         />
         <div
-          className="absolute top-1/3 -right-24 w-[380px] h-[380px] rounded-full opacity-55"
-          style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.45) 0%, rgba(94,234,212,0) 70%)' }}
+          className="absolute top-1/3 -right-24 w-[400px] h-[400px] rounded-full opacity-60"
+          style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.5) 0%, rgba(45,212,191,0) 70%)' }}
         />
         <div
-          className="absolute -bottom-28 left-1/4 w-[440px] h-[440px] rounded-full opacity-55"
-          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.4) 0%, rgba(56,189,248,0) 70%)' }}
+          className="absolute -bottom-28 left-1/4 w-[460px] h-[460px] rounded-full opacity-60"
+          style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.48) 0%, rgba(14,165,233,0) 70%)' }}
         />
         <div
-          className="absolute top-2/3 -left-16 w-[360px] h-[360px] rounded-full opacity-45"
-          style={{ background: 'radial-gradient(circle, rgba(165,180,252,0.35) 0%, rgba(165,180,252,0) 70%)' }}
+          className="absolute top-2/3 -left-16 w-[380px] h-[380px] rounded-full opacity-50"
+          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.42) 0%, rgba(56,189,248,0) 70%)' }}
         />
         {/* Subtle geometric dot grid pattern */}
         <div
@@ -1393,6 +1393,26 @@ export default function App() {
       >
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-30" />
+
+        {/* Fixed Oceanic Ambient Light Mesh Inside Glass Frame (gives real depth behind frosted cards) */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
+          <div
+            className="absolute -top-10 -left-16 w-80 h-80 rounded-full opacity-75"
+            style={{ background: 'radial-gradient(circle, rgba(125,211,252,0.34) 0%, rgba(125,211,252,0) 72%)' }}
+          />
+          <div
+            className="absolute top-1/3 -right-14 w-80 h-80 rounded-full opacity-75"
+            style={{ background: 'radial-gradient(circle, rgba(103,232,249,0.32) 0%, rgba(103,232,249,0) 72%)' }}
+          />
+          <div
+            className="absolute bottom-16 left-1/5 w-80 h-80 rounded-full opacity-65"
+            style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.28) 0%, rgba(94,234,212,0) 72%)' }}
+          />
+          <div
+            className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full opacity-60"
+            style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.26) 0%, rgba(56,189,248,0) 72%)' }}
+          />
+        </div>
 
         {/* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
         <header className="shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-2.5 sm:pt-3 pb-5 px-3.5 sm:px-5 rounded-b-[24px] sm:rounded-b-[32px] shadow-md shadow-sky-950/15">
@@ -1553,14 +1573,14 @@ export default function App() {
         {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-20 sm:pb-24 space-y-2.5 sm:space-y-3.5 overscroll-contain"
+          className="relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-20 sm:pb-24 space-y-2.5 sm:space-y-3.5 overscroll-contain"
         >
           {/* In-App PWA Install Banner */}
           <InstallAppBanner />
 
           {/* Selected Bike Banner if active */}
           {(selectedBike || bikeModelCode) && (
-            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-sky-50 via-white to-cyan-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs shadow-2xs">
+            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 glass-panel-cyan rounded-2xl flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
                 <span className="text-slate-500 font-medium shrink-0">รุ่นที่เลือก:</span>
@@ -1587,7 +1607,7 @@ export default function App() {
 
           {/* Active Loaded Case Contract & Delivery Date Chip (เมื่อดึงเคสที่บันทึกไว้มาใช้งาน) */}
           {activeCaseRecord && !editingCaseId && (
-            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-emerald-50 via-white to-sky-50 rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-2 text-xs shadow-2xs">
+            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 glass-panel-teal rounded-2xl flex items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="w-6 h-6 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <FolderArchive className="w-3.5 h-3.5" />
@@ -1759,7 +1779,6 @@ export default function App() {
                       ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }, 120);
                 }}
-                onNavigateToCalculation={() => handleTabChange('calculation')}
                 onNavigateToDocuments={() => handleTabChange('documents')}
                 onNavigateToCheckerCommission={() => {
                   triggerHaptic('selection');
@@ -2292,7 +2311,7 @@ export default function App() {
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
               <div
                 data-card-id="insurance"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">

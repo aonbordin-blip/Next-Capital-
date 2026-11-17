@@ -10,7 +10,7 @@ import {
   Cell,
   LabelList,
 } from 'recharts';
-import { BarChart3, FolderOpen } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
 import { getSavedCases } from '../utils/savedCasesStorage';
 import { formatBaht } from '../data/proposals';
@@ -361,8 +361,8 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap justify-end">
-          {availableYears.length > 1 && (
+        {availableYears.length > 1 && (
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap justify-end">
             <div className="flex items-center gap-1 p-1 bg-sky-100/55 border border-white/80 rounded-xl">
               {availableYears.map((y) => (
                 <button
@@ -383,33 +383,19 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                 </button>
               ))}
             </div>
-          )}
-
-          {onOpenSavedCases && (
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                onOpenSavedCases();
-              }}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/80 hover:bg-sky-50/90 text-sky-800 border border-sky-200/80 shadow-2xs text-[11px] sm:text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-all hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              <FolderOpen className="w-3.5 h-3.5 shrink-0 text-sky-600" />
-              <span>เปิดคลังเคส</span>
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Empty State */}
       {savedCases.length === 0 ? (
-        <div className="relative rounded-2xl bg-gradient-to-br from-sky-50/75 via-white/80 to-cyan-50/65 border border-white/90 shadow-inner px-4 py-6 text-center space-y-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-100 to-cyan-50 border border-sky-200/75 text-sky-600 flex items-center justify-center mx-auto shadow-xs">
+        <div className="relative rounded-2xl glass-panel-blue px-4 py-6 text-center space-y-3">
+          <div className="w-11 h-11 rounded-2xl bg-white/65 backdrop-blur-sm border border-white/90 text-sky-600 flex items-center justify-center mx-auto shadow-xs">
             <BarChart3 className="w-5 h-5" />
           </div>
           <div className="space-y-1 max-w-sm mx-auto">
-            <div className="text-sm font-bold text-slate-800">ยังไม่มีข้อมูลเคสสำหรับแสดงกราฟ</div>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <div className="text-sm font-bold text-sky-950">ยังไม่มีข้อมูลเคสสำหรับแสดงกราฟ</div>
+            <p className="text-xs text-slate-600 leading-relaxed">
               เมื่อบันทึกเคสลูกค้าหรือซิงค์ข้อมูลจาก Cloud กราฟสรุปจำนวนเคสรายเดือนและยอดอนุมัติจะแสดงที่นี่โดยอัตโนมัติ
             </p>
           </div>
@@ -444,21 +430,21 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
         <>
           {/* KPI Summary Strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-            <div className="glass-mini-card dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-medium text-slate-500">
+            <div className="glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/75">
                 จำนวนเคสช่วงนี้
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-slate-900 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-sky-950 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.totalCases}
                 <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">เคส</span>
               </div>
             </div>
 
-            <div className="glass-mini-card dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-medium text-slate-500">
+            <div className="glass-panel-cyan dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-cyan-900/75">
                 เฉลี่ยต่อเดือนที่มีเคส
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-slate-900 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-cyan-950 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.avgPerActiveMonth.toFixed(1)}
                 <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">
                   / ด. ({summaryStats.activeMonthCount})
@@ -466,11 +452,11 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
               </div>
             </div>
 
-            <div className="glass-mini-card dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-medium text-slate-500">
+            <div className="glass-panel-indigo dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-blue-900/75">
                 เดือนที่บันทึกสูงสุด
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-sky-700 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-blue-800 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.peakBucket ? (
                   <>
                     <span className="font-sans text-sm sm:text-base font-extrabold mr-1">
@@ -484,11 +470,11 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
               </div>
             </div>
 
-            <div className="glass-mini-card dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-medium text-slate-500">
+            <div className="glass-panel-teal dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
+              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/75">
                 อนุมัติ / รับรถแล้ว
               </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-emerald-700 font-mono tabular-nums whitespace-nowrap">
+              <div className="text-base sm:text-xl font-black text-teal-800 font-mono tabular-nums whitespace-nowrap">
                 {summaryStats.totalApproved}
                 <span className="text-slate-400 mx-1">/</span>
                 {summaryStats.totalDelivered}
@@ -499,7 +485,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
 
           {/* Interactive Filter Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/70">
-            <div className="flex items-center gap-1 p-1 bg-sky-100/50 border border-white/80 rounded-xl">
+            <div className="flex items-center gap-1 p-1 bg-sky-100/40 backdrop-blur-sm border border-white/80 rounded-xl">
               <button
                 type="button"
                 onClick={() => {
@@ -508,7 +494,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                 }}
                 className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   chartMode === 'total'
-                    ? 'bg-white text-sky-900 shadow-xs'
+                    ? 'bg-white/85 text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -522,7 +508,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                 }}
                 className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   chartMode === 'status'
-                    ? 'bg-white text-sky-900 shadow-xs'
+                    ? 'bg-white/85 text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -530,7 +516,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
               </button>
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-sky-100/50 border border-white/80 rounded-xl">
+            <div className="flex items-center gap-1 p-1 bg-sky-100/40 backdrop-blur-sm border border-white/80 rounded-xl">
               <button
                 type="button"
                 onClick={() => {
@@ -539,7 +525,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                 }}
                 className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   monthScope === 'all_12'
-                    ? 'bg-white text-sky-900 shadow-xs'
+                    ? 'bg-white/85 text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -553,7 +539,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                 }}
                 className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   monthScope === 'active_only'
-                    ? 'bg-white text-sky-900 shadow-xs'
+                    ? 'bg-white/85 text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
