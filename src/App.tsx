@@ -107,6 +107,7 @@ import { CloudSyncCard } from './components/CloudSyncCard';
 export default function App() {
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
   const [showCloudSyncModal, setShowCloudSyncModal] = useState<boolean>(false);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   // Form states
   const [proposalKey, setProposalKey] = useState<ProposalKey>('small_bike');
   const [vehiclePrice, setVehiclePrice] = useState<number>(65000);
@@ -1433,43 +1434,73 @@ export default function App() {
             </div>
 
             <div className="flex flex-col items-end gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setShowCloudSyncModal(true);
-                }}
-                className="text-[9.5px] sm:text-[10.5px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/25 hover:bg-white/35 backdrop-blur-md text-white border border-white/35 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
-                title={
-                  firebaseUser
-                    ? `ซิงค์ Cloud: ${firebaseUser.email}`
-                    : 'เข้าสู่ระบบ Google เพื่อซิงค์เคสขึ้น Cloud อัตโนมัติ'
-                }
-              >
-                {firebaseUser ? (
-                  syncStatus === 'syncing' ? (
-                    <>
-                      <RefreshCw className="w-3 h-3 animate-spin text-sky-100 shrink-0" />
-                      <span>กำลังซิงค์</span>
-                    </>
-                  ) : syncStatus === 'error' ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-amber-300 shrink-0" />
-                      <span>ซิงค์ใหม่</span>
-                    </>
+              <div className="flex items-center gap-1.5">
+                {firebaseUser && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setShowCloudSyncModal(true);
+                    }}
+                    className="w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full border border-white/65 bg-emerald-600/85 backdrop-blur-md shadow-xs overflow-hidden flex items-center justify-center shrink-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                    title={firebaseUser.displayName || firebaseUser.email || 'บัญชีผู้ใช้'}
+                    aria-label="โปรไฟล์ผู้ใช้และสถานะ Cloud"
+                  >
+                    {firebaseUser.photoURL && failedAvatarUrl !== firebaseUser.photoURL ? (
+                      <img
+                        src={firebaseUser.photoURL}
+                        alt={firebaseUser.displayName || firebaseUser.email || 'User'}
+                        referrerPolicy="no-referrer"
+                        onError={() => setFailedAvatarUrl(firebaseUser.photoURL || null)}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-[10px] sm:text-[11px] font-extrabold text-white leading-none">
+                        {(firebaseUser.displayName || firebaseUser.email || 'U')
+                          .slice(0, 1)
+                          .toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowCloudSyncModal(true);
+                  }}
+                  className="text-[9.5px] sm:text-[10.5px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/25 hover:bg-white/35 backdrop-blur-md text-white border border-white/35 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                  title={
+                    firebaseUser
+                      ? `ซิงค์ Cloud: ${firebaseUser.email}`
+                      : 'เข้าสู่ระบบ Google เพื่อซิงค์เคสขึ้น Cloud อัตโนมัติ'
+                  }
+                >
+                  {firebaseUser ? (
+                    syncStatus === 'syncing' ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin text-sky-100 shrink-0" />
+                        <span>กำลังซิงค์</span>
+                      </>
+                    ) : syncStatus === 'error' ? (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-amber-300 shrink-0" />
+                        <span>ซิงค์ใหม่</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-emerald-300 shrink-0" />
+                        <span>Cloud ✓</span>
+                      </>
+                    )
                   ) : (
                     <>
-                      <span className="w-2 h-2 rounded-full bg-emerald-300 shrink-0" />
-                      <span>Cloud ✓</span>
+                      <Cloud className="w-3 h-3 text-white shrink-0" />
+                      <span>Cloud Sync</span>
                     </>
-                  )
-                ) : (
-                  <>
-                    <Cloud className="w-3 h-3 text-white shrink-0" />
-                    <span>Cloud Sync</span>
-                  </>
-                )}
-              </button>
+                  )}
+                </button>
+              </div>
               <span className="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none leading-tight">
                 พัฒนาระบบโดย Aonbordin
               </span>
