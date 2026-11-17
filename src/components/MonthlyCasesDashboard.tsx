@@ -571,20 +571,55 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
           )}
 
           {/* Recharts BarChart Viewport */}
-          <div className="w-full min-w-0 h-[230px] sm:h-[250px] pt-1">
+          <div className="w-full min-w-0 h-[235px] sm:h-[255px] pt-1 select-none [&_*]:outline-none [&_*]:focus:outline-none [&_svg]:outline-none [&_g]:outline-none [&_path]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
+                accessibilityLayer={false}
                 data={chartData}
-                margin={{ top: 18, right: 8, left: -18, bottom: 0 }}
+                margin={{ top: 20, right: 8, left: -18, bottom: 6 }}
                 barCategoryGap={monthScope === 'active_only' ? '26%' : '18%'}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis
                   dataKey="shortLabel"
-                  tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }}
                   axisLine={{ stroke: '#cbd5e1' }}
                   tickLine={false}
                   interval={0}
+                  tick={(tickProps: {
+                    x?: number | string;
+                    y?: number | string;
+                    payload?: { value?: string };
+                  }) => {
+                    const x = Number(tickProps.x) || 0;
+                    const y = Number(tickProps.y) || 0;
+                    const label = String(tickProps.payload?.value || '');
+                    const isSelectedTick = selectedBucket?.shortLabel === label;
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        <text
+                          x={0}
+                          y={0}
+                          dy={12}
+                          textAnchor="middle"
+                          fill={isSelectedTick ? '#1d4ed8' : '#64748b'}
+                          fontSize={11}
+                          fontWeight={isSelectedTick ? 800 : 600}
+                        >
+                          {label}
+                        </text>
+                        {isSelectedTick && (
+                          <rect
+                            x={-9}
+                            y={16}
+                            width={18}
+                            height={2.5}
+                            rx={1.25}
+                            fill="#1d4ed8"
+                          />
+                        )}
+                      </g>
+                    );
+                  }}
                 />
                 <YAxis
                   allowDecimals={false}
@@ -593,7 +628,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                   tickLine={false}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(14, 165, 233, 0.08)' }}
+                  cursor={{ fill: 'rgba(14, 165, 233, 0.06)' }}
                   content={<MonthlyChartTooltip />}
                 />
 
@@ -603,22 +638,39 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                     name="จำนวนเคส"
                     radius={[6, 6, 0, 0]}
                     maxBarSize={42}
-                    onClick={handleBarClick}
+                    onClick={(_data, idx) => {
+                      const target = chartData[idx];
+                      if (!target || target.total === 0) return;
+                      handleBarClick(_data, idx);
+                    }}
                     className="cursor-pointer"
                   >
                     {chartData.map((entry) => {
+                      const hasSelection = selectedBucket !== null;
                       const isSelected = selectedMonthKey === entry.key;
                       const isPeak =
                         summaryStats.peakBucket?.key === entry.key && entry.total > 0;
-                      const fillColor = isSelected
-                        ? '#0369a1'
-                        : isPeak
-                        ? '#0284c7'
-                        : '#38bdf8';
+                      const fillColor =
+                        entry.total === 0
+                          ? '#e2e8f0'
+                          : isSelected
+                          ? '#1d4ed8'
+                          : isPeak
+                          ? '#0284c7'
+                          : '#38bdf8';
+                      const fillOpacity =
+                        entry.total === 0
+                          ? 0.7
+                          : hasSelection && !isSelected
+                          ? 0.28
+                          : 1;
                       return (
                         <Cell
                           key={entry.key}
-                          fill={entry.total === 0 ? '#e2e8f0' : fillColor}
+                          fill={fillColor}
+                          fillOpacity={fillOpacity}
+                          stroke={isSelected ? '#1e3a8a' : 'none'}
+                          strokeWidth={isSelected ? 1.5 : 0}
                         />
                       );
                     })}
@@ -641,27 +693,69 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                       name="รับรถแล้ว"
                       fill="#059669"
                       maxBarSize={42}
-                      onClick={handleBarClick}
+                      onClick={(_data, idx) => {
+                        const target = chartData[idx];
+                        if (!target || target.total === 0) return;
+                        handleBarClick(_data, idx);
+                      }}
                       className="cursor-pointer"
-                    />
+                    >
+                      {chartData.map((entry) => (
+                        <Cell
+                          key={entry.key}
+                          fill="#059669"
+                          fillOpacity={
+                            selectedBucket !== null && selectedMonthKey !== entry.key ? 0.25 : 1
+                          }
+                        />
+                      ))}
+                    </Bar>
                     <Bar
                       dataKey="approvedPendingDelivery"
                       stackId="cases"
                       name="อนุมัติ (รอรับรถ)"
                       fill="#0284c7"
                       maxBarSize={42}
-                      onClick={handleBarClick}
+                      onClick={(_data, idx) => {
+                        const target = chartData[idx];
+                        if (!target || target.total === 0) return;
+                        handleBarClick(_data, idx);
+                      }}
                       className="cursor-pointer"
-                    />
+                    >
+                      {chartData.map((entry) => (
+                        <Cell
+                          key={entry.key}
+                          fill="#0284c7"
+                          fillOpacity={
+                            selectedBucket !== null && selectedMonthKey !== entry.key ? 0.25 : 1
+                          }
+                        />
+                      ))}
+                    </Bar>
                     <Bar
                       dataKey="pending"
                       stackId="cases"
                       name="รอผล / บันทึกไว้"
                       fill="#f59e0b"
                       maxBarSize={42}
-                      onClick={handleBarClick}
+                      onClick={(_data, idx) => {
+                        const target = chartData[idx];
+                        if (!target || target.total === 0) return;
+                        handleBarClick(_data, idx);
+                      }}
                       className="cursor-pointer"
-                    />
+                    >
+                      {chartData.map((entry) => (
+                        <Cell
+                          key={entry.key}
+                          fill="#f59e0b"
+                          fillOpacity={
+                            selectedBucket !== null && selectedMonthKey !== entry.key ? 0.25 : 1
+                          }
+                        />
+                      ))}
+                    </Bar>
                     <Bar
                       dataKey="closedOther"
                       stackId="cases"
@@ -669,9 +763,23 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                       fill="#94a3b8"
                       radius={[5, 5, 0, 0]}
                       maxBarSize={42}
-                      onClick={handleBarClick}
+                      onClick={(_data, idx) => {
+                        const target = chartData[idx];
+                        if (!target || target.total === 0) return;
+                        handleBarClick(_data, idx);
+                      }}
                       className="cursor-pointer"
-                    />
+                    >
+                      {chartData.map((entry) => (
+                        <Cell
+                          key={entry.key}
+                          fill="#94a3b8"
+                          fillOpacity={
+                            selectedBucket !== null && selectedMonthKey !== entry.key ? 0.25 : 1
+                          }
+                        />
+                      ))}
+                    </Bar>
                   </>
                 )}
               </BarChart>
@@ -679,47 +787,45 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
           </div>
 
           {/* Selected Month Detail Line or Quiet Interactive Hint */}
-          <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-            {selectedBucket ? (
-              <>
-                <div className="text-slate-700 flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-bold text-slate-900">{selectedBucket.fullLabel}</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="font-mono tabular-nums font-bold text-sky-700">
-                    {selectedBucket.total} เคส
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span className="tabular-nums">
-                    รับรถ {selectedBucket.delivered} · อนุมัติรอรับ{' '}
-                    {selectedBucket.approvedPendingDelivery} · รอผล {selectedBucket.pending}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span className="font-mono tabular-nums text-slate-600">
-                    ยอดจัด {formatBaht(Math.round(selectedBucket.totalFinance))} บ.
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setSelectedMonthKey(null);
-                  }}
-                  className="text-xs font-semibold text-slate-500 hover:text-slate-900 underline cursor-pointer whitespace-nowrap"
-                >
-                  ล้างการเลือก
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="text-slate-500">
-                  แตะที่แท่งกราฟเพื่อดูสรุปยอดจัดและสถานะรายเดือน · ยอดจัดรวมช่วงนี้{' '}
-                  <strong className="font-mono tabular-nums text-slate-800">
-                    {formatBaht(Math.round(summaryStats.totalFinance))} บ.
-                  </strong>
+          {selectedBucket ? (
+            <div className="rounded-xl bg-sky-50/80 border border-sky-200/80 px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="text-slate-700 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="font-bold text-blue-800">{selectedBucket.fullLabel}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono tabular-nums font-bold text-slate-900">
+                  {selectedBucket.total} เคส
                 </span>
-              </>
-            )}
-          </div>
+                <span aria-hidden="true">·</span>
+                <span className="tabular-nums">
+                  รับรถ {selectedBucket.delivered} · อนุมัติรอรับ{' '}
+                  {selectedBucket.approvedPendingDelivery} · รอผล {selectedBucket.pending}
+                </span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono tabular-nums text-slate-700">
+                  ยอดจัด {formatBaht(Math.round(selectedBucket.totalFinance))} บ.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSelectedMonthKey(null);
+                }}
+                className="text-xs font-bold text-blue-700 hover:text-blue-900 underline cursor-pointer whitespace-nowrap"
+              >
+                ล้างการเลือก
+              </button>
+            </div>
+          ) : (
+            <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-slate-500">
+                แตะที่แท่งกราฟเพื่อเน้นดูรายละเอียดรายเดือน · ยอดจัดรวมช่วงนี้{' '}
+                <strong className="font-mono tabular-nums text-slate-800">
+                  {formatBaht(Math.round(summaryStats.totalFinance))} บ.
+                </strong>
+              </span>
+            </div>
+          )}
         </>
       )}
     </section>
