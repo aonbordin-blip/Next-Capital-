@@ -1432,7 +1432,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-col items-end gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -1470,8 +1470,8 @@ export default function App() {
                   </>
                 )}
               </button>
-              <span className="hidden xs:inline-block text-[9.5px] sm:text-[10.5px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none">
-                พัฒนาระบบโดย Bordin 6683
+              <span className="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none leading-tight">
+                พัฒนาระบบโดย Aonbordin
               </span>
             </div>
           </div>
