@@ -489,6 +489,114 @@ function isPermissionDeniedError(err: unknown): boolean {
   return code.includes('permission-denied') || msg.toLowerCase().includes('permission');
 }
 
+const RULE_REQUIRED_CASE_KEYS = [
+  'ownerUid',
+  'id',
+  'caseTitle',
+  'officerName',
+  'officerCode',
+  'customerName',
+  'proposalKey',
+  'vehiclePrice',
+  'downMode',
+  'downValue',
+  'term',
+  'includeDeliveryFees',
+  'registrationFee',
+  'theftInsuranceFee',
+  'isCustomRateEnabled',
+  'customRateInput',
+  'customRateType',
+  'enforceEirCap',
+  'insurancePlan',
+  'insuranceYears',
+  'snapshot',
+  'recordCreatedAt',
+  'recordUpdatedAt',
+  'createdAt',
+  'updatedAt',
+];
+
+const RULE_ALLOWED_CASE_KEYS = new Set([
+  ...RULE_REQUIRED_CASE_KEYS,
+  'officerLicense',
+  'customerPhone',
+  'customerNote',
+  'customerAge',
+  'customerWorkMonths',
+  'customerIncome',
+  'customerResidenceMonths',
+  'customerOccupation',
+  'isAceCustomer',
+  'dealerName',
+  'bikeModelName',
+  'bikeModelCode',
+  'bikeBrand',
+  'approvalStatus',
+  'deliveryStatus',
+  'approvalDate',
+  'deliveryDate',
+  'deliveryConfirmedAt',
+  'approvalNote',
+  'approvalUpdatedAt',
+  'paymentDueDay',
+  'googleMapsLocation',
+  'installmentPayments',
+  'approvalDoc',
+]);
+
+function diagnosePayloadAgainstRules(
+  payload: Record<string, unknown>,
+  uid: string,
+  caseId: string
+): string {
+  const issues: string[] = [];
+  const idRe = /^[a-zA-Z0-9_-]+$/;
+  if (!idRe.test(uid) || uid.length > 128) issues.push('uid');
+  if (!idRe.test(caseId) || caseId.length > 128) issues.push('caseId');
+  for (const reqKey of RULE_REQUIRED_CASE_KEYS) {
+    if (!(reqKey in payload)) issues.push(`missing:${reqKey}`);
+  }
+  for (const key of Object.keys(payload)) {
+    if (!RULE_ALLOWED_CASE_KEYS.has(key)) issues.push(`extra:${key}`);
+  }
+  if (typeof payload.caseTitle !== 'string' || payload.caseTitle.length < 1 || payload.caseTitle.length > 300) {
+    issues.push('caseTitle');
+  }
+  if (typeof payload.term !== 'number' || payload.term < 1 || payload.term > 120) issues.push('term');
+  if (typeof payload.recordCreatedAt !== 'number' || payload.recordCreatedAt <= 0) issues.push('recordCreatedAt');
+  if (typeof payload.recordUpdatedAt !== 'number' || payload.recordUpdatedAt <= 0) issues.push('recordUpdatedAt');
+  if (
+    'paymentDueDay' in payload &&
+    (typeof payload.paymentDueDay !== 'number' || payload.paymentDueDay < 1 || payload.paymentDueDay > 31)
+  ) {
+    issues.push(`paymentDueDay=${String(payload.paymentDueDay)}`);
+  }
+  const snap = payload.snapshot as Record<string, unknown> | undefined;
+  if (!snap || typeof snap !== 'object') {
+    issues.push('snapshot');
+  } else {
+    const snapReq = [
+      'monthlyInstallment',
+      'financeAmount',
+      'downAmount',
+      'downPercent',
+      'totalInterest',
+      'totalWithVat',
+      'effectiveMonthlyRate',
+      'eirAnnualPercent',
+      'proposalCode',
+      'proposalName',
+      'rateDisplayText',
+    ];
+    for (const sk of snapReq) {
+      if (!(sk in snap)) issues.push(`snapMissing:${sk}`);
+    }
+  }
+  const optKeys = Object.keys(payload).filter((k) => !RULE_REQUIRED_CASE_KEYS.includes(k));
+  return `check=${issues.length ? issues.join(',') : 'PASS'} opt=[${optKeys.join(',')}]`;
+}
+
 export async function upsertCloudCases(
   uid: string,
   records: SavedCaseRecord[],
@@ -732,9 +840,12 @@ export async function upsertCloudCases(
 
           failedCount++;
           const existedOnServer = cloudCreatedAtMap.has(item.safeId);
+          const diag = diagnosePayloadAgainstRules(item.payload, uid, item.safeId);
+          const errMsg = latestErr instanceof Error ? latestErr.message : String(latestErr);
+          const enrichedErr = new Error(`${errMsg} | ${diag}`);
           try {
             handleFirestoreError(
-              latestErr,
+              enrichedErr,
               existedOnServer ? OperationType.UPDATE : OperationType.CREATE,
               item.path
             );

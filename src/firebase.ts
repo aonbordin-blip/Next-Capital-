@@ -115,7 +115,10 @@ export function formatReadableFirebaseError(err: unknown): string {
     return `โควต้าการใช้งาน Cloud รายวันเต็มชั่วคราว (รีเซ็ตวันถัดไป) สามารถตรวจสอบเพิ่มเติมได้ที่ ${consoleUrl}`;
   }
   if (lower.includes('permission') || lower.includes('insufficient')) {
-    return `สิทธิ์การเข้าถึงหรือรูปแบบข้อมูลบางเคสถูกกฎความปลอดภัยปฏิเสธ${pathInfo} กรุณากด "ล้างแคชแอปและโหลดใหม่" หรือลองซิงค์ใหม่อีกครั้ง`;
+    const diagPart = innerMsg.includes(' | ') ? innerMsg.split(' | ').slice(1).join(' | ') : '';
+    const dbTag = `db=${firebaseConfig.projectId}/${firebaseConfig.firestoreDatabaseId.slice(0, 12)}... verified=${String(auth.currentUser?.emailVerified)}`;
+    const extra = diagPart ? ` (${dbTag} | ${diagPart})` : ` (${dbTag})`;
+    return `สิทธิ์การเข้าถึงหรือรูปแบบข้อมูลบางเคสถูกกฎความปลอดภัยปฏิเสธ${pathInfo}${extra} กรุณากด "ล้างแคชแอปและโหลดใหม่" หรือลองซิงค์ใหม่อีกครั้ง`;
   }
   if (lower.includes('offline') || lower.includes('unavailable') || lower.includes('network')) {
     return 'ไม่สามารถเชื่อมต่อฐานข้อมูล Cloud ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองกดซิงค์อีกครั้ง';
