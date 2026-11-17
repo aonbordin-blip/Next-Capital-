@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCw,
+  UploadCloud,
 } from 'lucide-react';
 import { useFirebase } from '../contexts/FirebaseContext';
 import { GoogleSignInButton } from './GoogleSignInButton';
@@ -40,10 +41,15 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
     syncStatus,
     lastSyncedAt,
     syncError,
+    syncNotice,
+    approvalDocSkippedCount,
+    isRestoringBackup,
+    canRestoreAttachedBackup,
     cloudCaseCount,
     signInWithGoogle,
     signOut,
     syncNow,
+    restoreFromAttachedBackup,
   } = useFirebase();
 
   const [isRefreshingCache, setIsRefreshingCache] = useState(false);
@@ -56,6 +62,11 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
   const handleSyncNow = async () => {
     triggerHaptic('light');
     await syncNow();
+  };
+
+  const handleRestoreBackup = async () => {
+    triggerHaptic('medium');
+    await restoreFromAttachedBackup();
   };
 
   const handleSignOut = async () => {
@@ -239,10 +250,22 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
+            {canRestoreAttachedBackup && (
+              <button
+                type="button"
+                onClick={handleRestoreBackup}
+                disabled={isSyncing || isRestoringBackup}
+                className="px-2 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold inline-flex items-center gap-1 cursor-pointer disabled:opacity-60 active:scale-95 transition-all shadow-2xs"
+                title="นำเข้า 44 เคสจากไฟล์แนบแล้วซิงค์ขึ้น Cloud ใหม่"
+              >
+                <UploadCloud className={`w-3 h-3 ${isRestoringBackup ? 'animate-pulse' : ''}`} />
+                <span>{isRestoringBackup ? 'กำลังกู้...' : 'กู้คืน 44 เคส'}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={handleSyncNow}
-              disabled={isSyncing}
+              disabled={isSyncing || isRestoringBackup}
               className="px-2 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-800 border border-sky-200 text-[10.5px] font-bold inline-flex items-center gap-1 cursor-pointer disabled:opacity-60 active:scale-95 transition-all"
               title="ซิงค์ข้อมูลขึ้น Cloud ทันที"
             >
@@ -259,6 +282,22 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
             </button>
           </div>
         </div>
+
+        {syncNotice && !isError && (
+          <div className="px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-[10px] flex items-start gap-1.5">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{syncNotice}</span>
+          </div>
+        )}
+
+        {!isError && !syncNotice && approvalDocSkippedCount > 0 && (
+          <div className="px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-start gap-1.5">
+            <AlertCircle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+              ซิงค์ข้อมูลเคสทั้งหมดขึ้น Cloud แล้ว ({approvalDocSkippedCount} เคสเก็บชื่อไฟล์แนบไว้ในเครื่องชั่วคราว)
+            </span>
+          </div>
+        )}
 
         {isError && (
           <div className="px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-start gap-1.5">
@@ -312,6 +351,22 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
         )}
       </div>
 
+      {syncNotice && !isError && (
+        <div className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] flex items-start gap-1.5">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+          <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] leading-relaxed">{syncNotice}</span>
+        </div>
+      )}
+
+      {!isError && !syncNotice && approvalDocSkippedCount > 0 && (
+        <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-start gap-1.5">
+          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+          <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] leading-relaxed">
+            ซิงค์ข้อมูลเคสทั้งหมดขึ้น Cloud แล้ว ({approvalDocSkippedCount} เคสเก็บชื่อไฟล์แนบไว้ในเครื่องชั่วคราวระหว่างรอกฎ Cloud อัปเดต)
+          </span>
+        </div>
+      )}
+
       {isError && (
         <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1.5">
           <div className="flex items-start gap-1.5 min-w-0">
@@ -332,6 +387,24 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
         </div>
       )}
 
+      {canRestoreAttachedBackup && (
+        <div className="pt-0.5">
+          <button
+            type="button"
+            onClick={handleRestoreBackup}
+            disabled={isSyncing || isRestoringBackup}
+            className="w-full px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-[11.5px] inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 shadow-xs active:scale-[0.99] transition-all"
+          >
+            <UploadCloud className={`w-3.5 h-3.5 ${isRestoringBackup ? 'animate-pulse' : ''}`} />
+            <span>
+              {isRestoringBackup
+                ? 'กำลังนำเข้า 44 เคสและซิงค์ขึ้น Cloud...'
+                : 'นำเข้า 44 เคสจากไฟล์แนบ & ซิงค์ขึ้น Cloud'}
+            </span>
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-emerald-100/90 text-[11px]">
         <div className="text-slate-600 font-medium">
           ข้อมูลบน Cloud: <strong className="text-slate-900">{cloudCaseCount} เคส</strong>
@@ -344,7 +417,7 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
           <button
             type="button"
             onClick={handleSyncNow}
-            disabled={isSyncing}
+            disabled={isSyncing || isRestoringBackup}
             className="px-2.5 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-800 border border-sky-200 font-bold text-[11px] inline-flex items-center gap-1 cursor-pointer disabled:opacity-60 shadow-2xs active:scale-95 transition-all"
           >
             <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />

@@ -208,7 +208,8 @@ export function buildFirestoreCasePayload(
   uid: string,
   existingCreatedAt?: Timestamp,
   existingRecordCreatedAt?: number,
-  explicitSafeId?: string
+  explicitSafeId?: string,
+  buildOptions?: { omitApprovalDoc?: boolean }
 ): Record<string, unknown> {
   const safeId = explicitSafeId || sanitizeCaseId(record.id);
   const proposalKey: ProposalKey = VALID_PROPOSAL_KEYS.includes(record.proposalKey)
@@ -383,7 +384,7 @@ export function buildFirestoreCasePayload(
       payload.installmentPayments = cleanPayments;
     }
   }
-  if (record.approvalDoc && typeof record.approvalDoc.name === 'string') {
+  if (!buildOptions?.omitApprovalDoc && record.approvalDoc && typeof record.approvalDoc.name === 'string') {
     const cleanDocName = safeStr(record.approvalDoc.name.trim(), 300);
     if (cleanDocName.length >= 1) {
       const cleanDoc: Record<string, unknown> = {
@@ -470,12 +471,22 @@ export interface UpsertCloudCasesResult {
   uploadedCount: number;
   failedCount: number;
   totalCount: number;
+  approvalDocSkippedCount: number;
   firstError: unknown;
 }
 
 export interface UpsertCloudCasesOptions {
   onProgress?: (done: number, total: number) => void;
   throwOnError?: boolean;
+}
+
+function isPermissionDeniedError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  const code =
+    typeof err === 'object' && err !== null && 'code' in err
+      ? String((err as { code?: unknown }).code)
+      : '';
+  return code.includes('permission-denied') || msg.toLowerCase().includes('permission');
 }
 
 export async function upsertCloudCases(
@@ -487,7 +498,13 @@ export async function upsertCloudCases(
   options?: UpsertCloudCasesOptions
 ): Promise<UpsertCloudCasesResult> {
   if (records.length === 0) {
-    return { uploadedCount: 0, failedCount: 0, totalCount: 0, firstError: null };
+    return {
+      uploadedCount: 0,
+      failedCount: 0,
+      totalCount: 0,
+      approvalDocSkippedCount: 0,
+      firstError: null,
+    };
   }
 
   // Deduplicate by safeId (latest record wins) because writeBatch cannot touch the same doc twice
@@ -505,6 +522,7 @@ export async function upsertCloudCases(
 
   let firstError: unknown = null;
   const succeededIds: string[] = [];
+  const approvalDocSkippedIds = new Set<string>();
   let failedCount = 0;
 
   try {
@@ -613,12 +631,13 @@ export async function upsertCloudCases(
           succeededIds.push(item.safeId);
           return;
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          const code = typeof err === 'object' && err !== null && 'code' in err ? String((err as { code?: unknown }).code) : '';
-          const isPermDenied =
-            code.includes('permission-denied') || msg.toLowerCase().includes('permission');
+          let latestErr: unknown = err;
+          let latestCreatedAt = cloudCreatedAtMap.get(item.safeId);
+          let latestRecordCreatedAt = cloudRecordCreatedAtMap?.get(item.safeId);
 
-          if (isPermDenied) {
+          if (isPermissionDeniedError(err)) {
+            let shouldTryOmitApprovalDoc = 'approvalDoc' in item.payload;
+
             try {
               const prevCreatedAt = cloudCreatedAtMap.get(item.safeId);
               const prevRecordCreatedAt = cloudRecordCreatedAtMap?.get(item.safeId);
@@ -634,9 +653,11 @@ export async function upsertCloudCases(
 
                 if (serverCreatedAt) {
                   cloudCreatedAtMap.set(item.safeId, serverCreatedAt);
+                  latestCreatedAt = serverCreatedAt;
                 }
                 if (serverRecordCreatedAt) {
                   cloudRecordCreatedAtMap?.set(item.safeId, serverRecordCreatedAt);
+                  latestRecordCreatedAt = serverRecordCreatedAt;
                 }
 
                 const createdAtChanged =
@@ -664,6 +685,8 @@ export async function upsertCloudCases(
                 // Local map held stale createdAt for a doc that does not exist on server -> retry as fresh create
                 cloudCreatedAtMap.delete(item.safeId);
                 cloudRecordCreatedAtMap?.delete(item.safeId);
+                latestCreatedAt = undefined;
+                latestRecordCreatedAt = undefined;
                 const retryPayload = buildFirestoreCasePayload(
                   rec,
                   uid,
@@ -679,26 +702,40 @@ export async function upsertCloudCases(
                 return;
               }
             } catch (reconcileErr) {
-              failedCount++;
-              const existedOnServer = cloudCreatedAtMap.has(item.safeId);
+              latestErr = reconcileErr;
+              shouldTryOmitApprovalDoc =
+                'approvalDoc' in item.payload && isPermissionDeniedError(reconcileErr);
+            }
+
+            if (shouldTryOmitApprovalDoc) {
               try {
-                handleFirestoreError(
-                  reconcileErr,
-                  existedOnServer ? OperationType.UPDATE : OperationType.CREATE,
-                  item.path
+                const fallbackPayload = buildFirestoreCasePayload(
+                  rec,
+                  uid,
+                  latestCreatedAt,
+                  latestRecordCreatedAt,
+                  item.safeId,
+                  { omitApprovalDoc: true }
                 );
-              } catch (wrapped) {
-                if (!firstError) firstError = wrapped;
+                await setDoc(item.docRef, fallbackPayload);
+                if (typeof fallbackPayload.recordCreatedAt === 'number') {
+                  cloudRecordCreatedAtMap?.set(item.safeId, fallbackPayload.recordCreatedAt);
+                }
+                approvalDocSkippedIds.add(item.safeId);
+                succeededIds.push(item.safeId);
+                return;
+              } catch (fallbackErr) {
+                latestErr = fallbackErr;
               }
-              return;
             }
           }
 
           failedCount++;
+          const existedOnServer = cloudCreatedAtMap.has(item.safeId);
           try {
             handleFirestoreError(
-              err,
-              item.isUpdate ? OperationType.UPDATE : OperationType.CREATE,
+              latestErr,
+              existedOnServer ? OperationType.UPDATE : OperationType.CREATE,
               item.path
             );
           } catch (wrapped) {
@@ -744,7 +781,7 @@ export async function upsertCloudCases(
     }
   }
 
-  if (firstError && options?.throwOnError !== false) {
+  if (firstError && failedCount > 0 && options?.throwOnError !== false) {
     throw firstError;
   }
 
@@ -752,6 +789,7 @@ export async function upsertCloudCases(
     uploadedCount: succeededIds.length,
     failedCount,
     totalCount,
+    approvalDocSkippedCount: approvalDocSkippedIds.size,
     firstError,
   };
 }
@@ -860,13 +898,22 @@ export async function deleteCloudCases(
   }
 }
 
+export interface PushAllLocalCasesResult {
+  pushedCount: number;
+  uploadedCount: number;
+  approvalDocSkippedCount: number;
+}
+
 export async function pushAllLocalCasesToCloud(
   uid: string,
   cloudCreatedAtMap: Map<string, Timestamp>,
-  cloudRecordCreatedAtMap?: Map<string, number>
-): Promise<number> {
+  cloudRecordCreatedAtMap?: Map<string, number>,
+  options?: { forcePushIds?: Set<string> }
+): Promise<PushAllLocalCasesResult> {
   const localCases = normalizeLocalCaseIdsForCloud();
-  if (localCases.length === 0) return 0;
+  if (localCases.length === 0) {
+    return { pushedCount: 0, uploadedCount: 0, approvalDocSkippedCount: 0 };
+  }
 
   const casesCol = collection(db, 'users', uid, 'cases');
   const q = query(casesCol, where('ownerUid', '==', uid));
@@ -884,6 +931,7 @@ export async function pushAllLocalCasesToCloud(
   }
 
   const cloudUpdatedMap = new Map<string, number>();
+  const cloudHasApprovalDocSet = new Set<string>();
   cloudSnap?.forEach((d) => {
     const data = d.data();
     const ts = data.createdAt;
@@ -892,6 +940,9 @@ export async function pushAllLocalCasesToCloud(
     }
     if (typeof data.recordCreatedAt === 'number' && data.recordCreatedAt > 0) {
       cloudRecordCreatedAtMap?.set(d.id, data.recordCreatedAt);
+    }
+    if (data.approvalDoc) {
+      cloudHasApprovalDocSet.add(d.id);
     }
     cloudUpdatedMap.set(d.id, Number(data.recordUpdatedAt) || 0);
     markConfirmedCloudIds([d.id]);
@@ -903,24 +954,38 @@ export async function pushAllLocalCasesToCloud(
     const safeId = sanitizeCaseId(localCase.id);
     const cloudUpdated = cloudUpdatedMap.get(safeId);
     const localUpdated = Number(localCase.updatedAt) || 0;
+    const needsApprovalDocBackfill =
+      Boolean(localCase.approvalDoc) && !cloudHasApprovalDocSet.has(safeId);
+    const isForced = Boolean(options?.forcePushIds?.has(safeId));
+
     if (cloudUpdated === undefined) {
       knownNewIds.add(safeId);
       toPush.push(localCase);
-    } else if (localUpdated > cloudUpdated) {
+    } else if (localUpdated > cloudUpdated || needsApprovalDocBackfill || isForced) {
       toPush.push(localCase);
     }
   }
 
   if (toPush.length > 0) {
-    await upsertCloudCases(
+    const upsertRes = await upsertCloudCases(
       uid,
       toPush,
       cloudCreatedAtMap,
       cloudRecordCreatedAtMap,
       knownNewIds
     );
+    return {
+      pushedCount: toPush.length,
+      uploadedCount: upsertRes.uploadedCount,
+      approvalDocSkippedCount: upsertRes.approvalDocSkippedCount,
+    };
   }
-  return toPush.length;
+
+  return {
+    pushedCount: 0,
+    uploadedCount: 0,
+    approvalDocSkippedCount: 0,
+  };
 }
 
 export function subscribeUserCases(

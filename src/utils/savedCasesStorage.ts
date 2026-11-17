@@ -239,20 +239,25 @@ export function mergeCloudCasesIntoLocal(
       continue;
     }
 
-    const hydratedCloud: SavedCaseRecord =
-      cloudRecord.approvalDoc && localRecord.approvalDoc?.dataUrl && !cloudRecord.approvalDoc.dataUrl
-        ? {
-            ...cloudRecord,
-            approvalDoc: {
-              ...cloudRecord.approvalDoc,
-              dataUrl: localRecord.approvalDoc.dataUrl,
-            },
-          }
-        : cloudRecord;
-
     const isPendingLocalWrite = pendingCloudUploadIds.has(id);
     const localUpdated = Number(localRecord.updatedAt) || 0;
     const cloudUpdated = Number(cloudRecord.updatedAt) || 0;
+
+    let hydratedCloud: SavedCaseRecord = cloudRecord;
+    if (cloudRecord.approvalDoc && localRecord.approvalDoc?.dataUrl && !cloudRecord.approvalDoc.dataUrl) {
+      hydratedCloud = {
+        ...cloudRecord,
+        approvalDoc: {
+          ...cloudRecord.approvalDoc,
+          dataUrl: localRecord.approvalDoc.dataUrl,
+        },
+      };
+    } else if (!cloudRecord.approvalDoc && localRecord.approvalDoc && localUpdated >= cloudUpdated) {
+      hydratedCloud = {
+        ...cloudRecord,
+        approvalDoc: localRecord.approvalDoc,
+      };
+    }
 
     if (isPendingLocalWrite || localUpdated > cloudUpdated) {
       resultMap.set(id, localRecord);
