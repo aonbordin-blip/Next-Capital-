@@ -13,12 +13,19 @@ import {
   doc,
   getDocFromServer,
 } from 'firebase/firestore';
+import { getDatabase, Database } from 'firebase/database';
 import firebaseConfig from '../firebase-applet-config.json';
+
+const DEFAULT_RTDB_URL =
+  'https://next-capital-28320-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+export const RTDB_DATABASE_URL: string = (
+  (import.meta.env?.VITE_FIREBASE_DATABASE_URL as string | undefined)?.trim() || DEFAULT_RTDB_URL
+).replace(/\/+$/, '');
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// CRITICAL: Pass firestoreDatabaseId from firebase-applet-config.json
-// Use experimentalAutoDetectLongPolling to prevent WebChannel hangs / "client is offline" in iframes & mobile networks
+// CRITICAL: Pass firestoreDatabaseId from firebase-applet-config.json (retained for legacy one-time read fallback)
 let dbInstance: Firestore;
 try {
   dbInstance = initializeFirestore(
@@ -33,6 +40,7 @@ try {
 }
 
 export const db: Firestore = dbInstance;
+export const rtdb: Database = getDatabase(app, RTDB_DATABASE_URL);
 export const auth = getAuth(app);
 
 const googleProvider = new GoogleAuthProvider();
@@ -88,7 +96,7 @@ export function handleFirestoreError(
     operationType,
     path,
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  console.error('Firebase Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
 
@@ -111,20 +119,14 @@ export function formatReadableFirebaseError(err: unknown): string {
 
   const lower = innerMsg.toLowerCase();
   if (lower.includes('quota exceeded') || lower.includes('resource-exhausted')) {
-    const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/firestore/databases/${firebaseConfig.firestoreDatabaseId}/data?openUpgradeDialog=true`;
-    return `โควต้าการใช้งาน Cloud รายวันเต็มชั่วคราว (รีเซ็ตวันถัดไป) สามารถตรวจสอบเพิ่มเติมได้ที่ ${consoleUrl}`;
+    return 'โควต้าการใช้งาน Cloud เต็มชั่วคราว กรุณาลองใหม่ภายหลัง';
   }
   if (lower.includes('permission') || lower.includes('insufficient')) {
-    const diagPart = innerMsg.includes(' | ') ? innerMsg.split(' | ').slice(1).join(' | ') : '';
-    const dbTag = `db=${firebaseConfig.projectId}/${firebaseConfig.firestoreDatabaseId.slice(0, 12)}... verified=${String(auth.currentUser?.emailVerified)}`;
-    const extra = diagPart ? ` (${dbTag} | ${diagPart})` : ` (${dbTag})`;
-    return `สิทธิ์การเข้าถึงหรือรูปแบบข้อมูลบางเคสถูกกฎความปลอดภัยปฏิเสธ${pathInfo}${extra} กรุณากด "ล้างแคชแอปและโหลดใหม่" หรือลองซิงค์ใหม่อีกครั้ง`;
+    const rtdbHost = RTDB_DATABASE_URL.replace(/^https?:\/\//, '');
+    return `สิทธิ์การเข้าถึงฐานข้อมูล Realtime Database ถูกปฏิเสธ${pathInfo} (rtdb=${rtdbHost} verified=${String(auth.currentUser?.emailVerified)}) กรุณาตรวจสอบว่าตั้งค่า Rules ของ Realtime Database ใน Firebase Console เรียบร้อยแล้ว แล้วลองกด "ซิงค์ตอนนี้"`;
   }
-  if (lower.includes('offline') || lower.includes('unavailable') || lower.includes('network')) {
-    return 'ไม่สามารถเชื่อมต่อฐานข้อมูล Cloud ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองกดซิงค์อีกครั้ง';
-  }
-  if (lower.includes('index')) {
-    return `ฐานข้อมูลกำลังเตรียม Index${pathInfo} กรุณารอสักครู่แล้วลองใหม่อีกครั้ง`;
+  if (lower.includes('offline') || lower.includes('unavailable') || lower.includes('network') || lower.includes('disconnected')) {
+    return 'ไม่สามารถเชื่อมต่อฐานข้อมูล Realtime Database ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองกดซิงค์อีกครั้ง';
   }
   if (innerMsg) {
     return `ซิงค์ข้อมูลไม่สำเร็จ: ${innerMsg}`;
