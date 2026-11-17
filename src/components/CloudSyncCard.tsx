@@ -77,10 +77,22 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
         const keys = await caches.keys();
         await Promise.all(keys.map((k) => caches.delete(k)));
       }
+      // Allow re-check of any RTDB rescue on next sync after clearing cache
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith('ncap_rtdb_rescued_v1_')) {
+          localStorage.removeItem(k);
+        }
+      }
     } catch {
       // ignore cleanup errors and reload anyway
     }
-    window.location.reload();
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('_refresh', String(Date.now()));
+      window.location.replace(url.toString());
+    } catch {
+      window.location.reload();
+    }
   };
 
   if (!authReady) {
@@ -231,7 +243,7 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
               </div>
               <div className="text-[10px] text-slate-500 truncate">
                 {user.email}
-                {` • บน Cloud ${cloudCaseCount} เคส`}
+                {` • Firestore ${cloudCaseCount} เคส`}
                 {typeof localCount === 'number' && localCount > cloudCaseCount && !isSyncing
                   ? ` (ในเครื่อง ${localCount})`
                   : ''}
@@ -368,13 +380,13 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-emerald-100/90 text-[11px]">
         <div className="text-slate-600 font-medium">
-          ข้อมูลบน Cloud: <strong className="text-slate-900">{cloudCaseCount} เคส</strong>
+          ข้อมูลบน Firestore: <strong className="text-slate-900">{cloudCaseCount} เคส</strong>
           {typeof localCount === 'number' && localCount > cloudCaseCount && !isSyncing && (
             <span className="text-amber-700 font-bold"> • รอซิงค์ขึ้น Cloud {localCount - cloudCaseCount} เคส</span>
           )}
           {syncedClock && <span className="text-slate-400"> • อัปเดต {syncedClock}</span>}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={handleSyncNow}
@@ -383,6 +395,16 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({
           >
             <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
             <span>ซิงค์ตอนนี้</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleClearAppCacheReload}
+            disabled={isRefreshingCache}
+            className="px-2.5 py-1 rounded-xl bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 font-semibold text-[11px] inline-flex items-center gap-1 cursor-pointer disabled:opacity-60 shadow-2xs active:scale-95 transition-all"
+            title="ล้างแคชแอปและโหลดเวอร์ชันล่าสุด (ข้อมูลเคสในเครื่องไม่หาย)"
+          >
+            <RotateCw className={`w-3 h-3 ${isRefreshingCache ? 'animate-spin' : ''}`} />
+            <span>ล้างแคช</span>
           </button>
           <button
             type="button"
