@@ -608,18 +608,18 @@ export function DvApprovalCard({
         setDvSaveFeedback({
           type: 'cloud',
           text: existing
-            ? 'อัปเดตข้อมูลเคสขอ DV ลง Realtime Database แล้ว ✓'
-            : 'บันทึกข้อมูลลูกค้าขอ DV ลง Realtime Database แล้ว ✓',
+            ? 'อัปเดตข้อมูลเคสขอ DV แล้ว ✓'
+            : 'บันทึกข้อมูลลูกค้าขอ DV แล้ว ✓',
         });
       } else if (res.error) {
         setDvSaveFeedback({
           type: 'error',
-          text: `บันทึกในเครื่องแล้ว แต่ส่งขึ้น Realtime DB ไม่สำเร็จ: ${res.error}`,
+          text: `บันทึกในเครื่องแล้ว แต่ซิงก์ขึ้น Cloud ไม่สำเร็จ: ${res.error}`,
         });
       } else {
         setDvSaveFeedback({
           type: 'local',
-          text: 'บันทึกในเครื่องแล้ว (เข้าสู่ระบบด้วย Google เพื่อซิงก์ขึ้น Realtime Database)',
+          text: 'บันทึกในเครื่องแล้ว (เข้าสู่ระบบด้วย Google เพื่อซิงก์ขึ้น Cloud)',
         });
       }
     } finally {
@@ -966,7 +966,7 @@ export function DvApprovalCard({
                   </p>
                   <p className="text-[11px] text-slate-500">
                     {dvRequests.length === 0
-                      ? 'กรอกข้อมูลในแท็บ "แบบฟอร์มขอ DV" แล้วกดปุ่มบันทึกลง Realtime Database เพื่อกลับมาดูภายหลังได้เลย'
+                      ? 'กรอกข้อมูลในแท็บ "แบบฟอร์มขอ DV" แล้วกดปุ่มบันทึกข้อมูลลูกค้าขอ DV เพื่อกลับมาดูภายหลังได้เลย'
                       : 'ลองเปลี่ยนคำค้นหาหรือตัวกรองสถานะด้านบน'}
                   </p>
                   {dvRequests.length === 0 && (
@@ -1814,17 +1814,17 @@ export function DvApprovalCard({
               {isSavingDv ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>กำลังบันทึกลง Realtime Database...</span>
+                  <span>กำลังบันทึกข้อมูล...</span>
                 </>
               ) : editingDvId ? (
                 <>
                   <BookmarkCheck className="w-4 h-4" />
-                  <span>อัปเดตข้อมูลลูกค้าขอ DV ลง Realtime Database</span>
+                  <span>อัปเดตข้อมูลลูกค้าขอ DV</span>
                 </>
               ) : (
                 <>
                   <Database className="w-4 h-4" />
-                  <span>บันทึกข้อมูลลูกค้าขอ DV ลง Realtime Database</span>
+                  <span>บันทึกข้อมูลลูกค้าขอ DV</span>
                 </>
               )}
             </button>
