@@ -212,7 +212,7 @@ export function DvApprovalCard({
   const [topics, setTopics] = useState<string[]>(['A1 : อายุตัว']);
   const hasUserEditedTopicsRef = React.useRef<boolean>(false);
   const prevAutoTopicCodesRef = React.useRef<string[]>([]);
-  const prevAutoRemarkRef = React.useRef<string>('');
+  const prevAutoRemarkRef = React.useRef<string>(linkedRemarkLine || '');
   const [activeTopicIndexForModal, setActiveTopicIndexForModal] = useState<number | null>(null);
   const [ncb, setNcb] = useState<string>('Normal');
   const [dealer, setDealer] = useState<string>(() => {
@@ -324,14 +324,16 @@ export function DvApprovalCard({
     if (linkedRemarkLine === prevAuto) return;
 
     setRemark((currentRemark) => {
-      let cleaned = currentRemark;
-      if (prevAuto) {
-        cleaned = cleaned
-          .split('\n')
-          .filter((line) => line.trim() !== prevAuto.trim())
-          .join('\n')
-          .trim();
-      }
+      const cleaned = currentRemark
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => {
+          if (!line) return false;
+          if (prevAuto && line === prevAuto.trim()) return false;
+          if (linkedRemarkLine && line === linkedRemarkLine.trim()) return false;
+          return true;
+        })
+        .join('\n');
       if (!linkedRemarkLine) return cleaned;
       return cleaned ? `${linkedRemarkLine}\n${cleaned}` : linkedRemarkLine;
     });
@@ -404,15 +406,18 @@ export function DvApprovalCard({
     if (linkedRemarkLine) {
       setRemark((curr) => {
         const prevAuto = prevAutoRemarkRef.current;
-        const rest = prevAuto
-          ? curr
-              .split('\n')
-              .filter((line) => line.trim() !== prevAuto.trim())
-              .join('\n')
-              .trim()
-          : curr.trim();
+        const rest = curr
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => {
+            if (!line) return false;
+            if (prevAuto && line === prevAuto.trim()) return false;
+            if (line === linkedRemarkLine.trim()) return false;
+            return true;
+          })
+          .join('\n');
         prevAutoRemarkRef.current = linkedRemarkLine;
-        return rest && rest !== linkedRemarkLine ? `${linkedRemarkLine}\n${rest}` : linkedRemarkLine;
+        return rest ? `${linkedRemarkLine}\n${rest}` : linkedRemarkLine;
       });
     }
   };
