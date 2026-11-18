@@ -231,5 +231,35 @@ export interface ApprovalDocInfo {
 export type InstallmentPaymentStatus = 'paid' | 'unpaid';
 export type CaseApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 export type VehicleDeliveryStatus = 'pending_delivery' | 'delivered';
+export type DvRequestStatus = 'pending' | 'approved' | 'rejected';
 
+export interface SavedDvRequestRecord {
+  id: string;
+  createdAt: number;
+  updatedAt: number;
+  customerName: string;
+  topics: string[];
+  ncb: string;
+  dealer: string;
+  bikeModel: string;
+  bikeCode: string;
+  occupation: string;
+  income: string;
+  financialDocs: string;
+  downPayment: string;
+  remark: string;
+  ck: string;
+  yodRate: string;
+  dvMessage: string;
+  status: DvRequestStatus;
+  proposalKey?: ProposalKey;
+  financeAmount?: number;
+  monthlyInstallment?: number;
+  term?: number;
+  customerAge?: string;
+  customerWorkMonths?: string;
+  customerIncome?: string;
+  customerResidenceMonths?: string;
+  isAceCustomer?: boolean;
+}
 
