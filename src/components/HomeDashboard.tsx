@@ -528,7 +528,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           />
           <div className="flex items-center justify-between gap-2">
             <MarqueeText className="text-[11px] font-bold text-sky-900/80">
-              เคสในงวดนี้
+              เคสเดือนนี้
             </MarqueeText>
             <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white border border-white/60 flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/30">
               <FolderArchive className="w-3.5 h-3.5" />

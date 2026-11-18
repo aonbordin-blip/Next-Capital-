@@ -3124,10 +3124,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => handleTabChange('home')}
-                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer whitespace-nowrap"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-500" />
-                <span>ย้อนกลับ: โฮมเพจ</span>
+                <ArrowLeft className="w-4 h-4 text-slate-500 shrink-0" />
+                <span>โฮมเพจ</span>
               </button>
               <button
                 type="button"
