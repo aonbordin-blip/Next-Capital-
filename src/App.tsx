@@ -1329,34 +1329,7 @@ export default function App() {
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
-      {/* Soft Ambient Background Radial Glows for Neo-Glassmorphism Depth (Zero GPU blur pass) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute -top-24 -left-20 w-[440px] h-[440px] rounded-full opacity-65"
-          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.55) 0%, rgba(34,211,238,0) 70%)' }}
-        />
-        <div
-          className="absolute top-1/3 -right-24 w-[400px] h-[400px] rounded-full opacity-60"
-          style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.5) 0%, rgba(45,212,191,0) 70%)' }}
-        />
-        <div
-          className="absolute -bottom-28 left-1/4 w-[460px] h-[460px] rounded-full opacity-60"
-          style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.48) 0%, rgba(14,165,233,0) 70%)' }}
-        />
-        <div
-          className="absolute top-2/3 -left-16 w-[380px] h-[380px] rounded-full opacity-50"
-          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.42) 0%, rgba(56,189,248,0) 70%)' }}
-        />
-        {/* Subtle geometric dot grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `radial-gradient(#0284c7 1px, transparent 1px)`,
-            backgroundSize: '24px 24px',
-          }}
-        />
-      </div>
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-white text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
 
       {/* Top Floating View Mode Switcher on Desktop */}
       <div className="no-print hidden sm:flex items-center gap-2 mb-2 bg-white/70 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm shadow-sky-900/10 text-xs z-10 shrink-0">
@@ -1393,26 +1366,6 @@ export default function App() {
       >
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-30" />
-
-        {/* Fixed Multi-Tone Aurora Light Mesh Inside Glass Frame (gives vibrant refraction behind frosted cards) */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
-          <div
-            className="absolute -top-10 -left-16 w-80 h-80 rounded-full opacity-80"
-            style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.38) 0%, rgba(56,189,248,0) 72%)' }}
-          />
-          <div
-            className="absolute top-1/4 -right-14 w-80 h-80 rounded-full opacity-75"
-            style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.34) 0%, rgba(45,212,191,0) 72%)' }}
-          />
-          <div
-            className="absolute top-1/2 -left-12 w-72 h-72 rounded-full opacity-65"
-            style={{ background: 'radial-gradient(circle, rgba(129,140,248,0.28) 0%, rgba(129,140,248,0) 72%)' }}
-          />
-          <div
-            className="absolute bottom-16 right-8 w-80 h-80 rounded-full opacity-65"
-            style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.22) 0%, rgba(251,191,36,0) 72%)' }}
-          />
-        </div>
 
         {/* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
         <header className="shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-2.5 sm:pt-3 pb-5 px-3.5 sm:px-5 rounded-b-[24px] sm:rounded-b-[32px] shadow-md shadow-sky-950/15">
