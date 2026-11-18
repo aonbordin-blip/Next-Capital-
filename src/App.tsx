@@ -3316,74 +3316,81 @@ export default function App() {
 
                 {/* Share Format Selector & Preview Toggle */}
                 <div className="pt-1 space-y-2">
-                  <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => handleShareStyleChange('card')}
-                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
-                          shareTextStyle === 'card'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
-                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
-                        }`}
-                      >
-                        ✨ การ์ดเด่น
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleShareStyleChange('compare')}
-                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
-                          shareTextStyle === 'compare'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
-                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
-                        }`}
-                      >
-                        📊 เทียบงวด
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleShareStyleChange('compact')}
-                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
-                          shareTextStyle === 'compact'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
-                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
-                        }`}
-                      >
-                        ⚡ กระชับ
-                      </button>
-                    </div>
+                  {/* Format Style Segmented Control */}
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-sky-100/55 backdrop-blur-sm border border-white/85 rounded-xl shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => handleShareStyleChange('card')}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
+                        shareTextStyle === 'card'
+                          ? 'bg-white text-emerald-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>✨</span>
+                      <span>การ์ดเด่น</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShareStyleChange('compare')}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
+                        shareTextStyle === 'compare'
+                          ? 'bg-white text-emerald-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>📊</span>
+                      <span>เทียบงวด</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShareStyleChange('compact')}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
+                        shareTextStyle === 'compact'
+                          ? 'bg-white text-emerald-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>⚡</span>
+                      <span>กระชับ</span>
+                    </button>
+                  </div>
 
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setShowSharePreview((prev) => !prev);
-                        }}
-                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 border transition-colors cursor-pointer ${
-                          showSharePreview
-                            ? 'bg-sky-50 text-sky-800 border-sky-300'
-                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
-                        }`}
-                        title="ดูตัวอย่างข้อความก่อนแชร์"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>{showSharePreview ? 'ซ่อน' : 'ดูตัวอย่าง'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleQuickCopy}
-                        className="px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 transition-colors cursor-pointer"
-                        title="คัดลอกข้อความลงคลิปบอร์ด"
-                      >
-                        {copyFeedback ? (
-                          <Check className="w-3 h-3 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3 h-3 text-slate-500" />
-                        )}
-                        <span>{copyFeedback ? 'แล้ว' : 'คัดลอก'}</span>
-                      </button>
-                    </div>
+                  {/* Preview & Copy Utility Row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setShowSharePreview((prev) => !prev);
+                      }}
+                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-98 whitespace-nowrap shadow-2xs ${
+                        showSharePreview
+                          ? 'bg-sky-50 text-sky-800 border-sky-300'
+                          : 'bg-white/90 text-slate-700 border-slate-200/90 hover:bg-white'
+                      }`}
+                      title="ดูตัวอย่างข้อความก่อนแชร์"
+                    >
+                      <Eye className="w-3.5 h-3.5 shrink-0" />
+                      <span>{showSharePreview ? 'ซ่อนตัวอย่าง' : 'ดูตัวอย่าง'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleQuickCopy}
+                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-98 whitespace-nowrap shadow-2xs ${
+                        copyFeedback
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : 'bg-white/90 hover:bg-white text-slate-700 border-slate-200/90'
+                      }`}
+                      title="คัดลอกข้อความลงคลิปบอร์ด"
+                    >
+                      {copyFeedback ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      )}
+                      <span>{copyFeedback ? 'คัดลอกแล้ว!' : 'คัดลอก'}</span>
+                    </button>
                   </div>
 
                   {/* Optional Collapsible Preview Box */}
