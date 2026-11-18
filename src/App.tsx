@@ -104,6 +104,7 @@ import {
 import { useFirebase } from './contexts/FirebaseContext';
 import { CloudSyncCard } from './components/CloudSyncCard';
 import { HomeDashboard } from './components/HomeDashboard';
+import { YearsMonthsInput } from './components/YearsMonthsInput';
 
 export default function App() {
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
@@ -1898,99 +1899,73 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* 4 Criteria Inputs: อายุ, อายุงาน, รายได้, ระยะเวลาพักอาศัย */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div>
-                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
-                        อายุ (ปี){' '}
-                        <span className="text-[9px] text-slate-400">
-                          ({customerEligibilityEval.tier.ageLabel})
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="99"
-                        value={customerAge}
-                        onChange={(e) => handleCustomerAgeChange(e.target.value)}
-                        placeholder={`เช่น ${customerEligibilityEval.tier.minAge}`}
-                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
-                          customerEligibilityEval.fieldStatus.age === 'fail'
-                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
-                            : customerEligibilityEval.fieldStatus.age === 'pass'
-                            ? 'border-emerald-400 text-emerald-950'
-                            : 'text-slate-900'
-                        }`}
-                      />
+                  {/* 4 Criteria Inputs: อายุ, รายได้, อายุงาน (ปี/เดือน), พักอาศัย (ปี/เดือน) */}
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                          อายุ (ปี){' '}
+                          <span className="text-[9px] text-slate-400">
+                            ({customerEligibilityEval.tier.ageLabel})
+                          </span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="99"
+                          value={customerAge}
+                          onChange={(e) => handleCustomerAgeChange(e.target.value)}
+                          placeholder={`เช่น ${customerEligibilityEval.tier.minAge}`}
+                          className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                            customerEligibilityEval.fieldStatus.age === 'fail'
+                              ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                              : customerEligibilityEval.fieldStatus.age === 'pass'
+                              ? 'border-emerald-400 text-emerald-950'
+                              : 'text-slate-900'
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                          รายได้/เดือน{' '}
+                          <span className="text-[9px] text-slate-400">
+                            (≥{customerEligibilityEval.tier.incomeLabel})
+                          </span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="500"
+                          value={customerIncome}
+                          onChange={(e) => handleCustomerIncomeChange(e.target.value)}
+                          placeholder={`≥ ${customerEligibilityEval.tier.incomeLabel}`}
+                          className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                            customerEligibilityEval.fieldStatus.income === 'fail'
+                              ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                              : customerEligibilityEval.fieldStatus.income === 'pass'
+                              ? 'border-emerald-400 text-emerald-950'
+                              : 'text-slate-900'
+                          }`}
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
-                        อายุงาน (เดือน){' '}
-                        <span className="text-[9px] text-slate-400">
-                          (≥{customerEligibilityEval.tier.minWorkMonths})
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <YearsMonthsInput
+                        label="อายุงาน"
+                        criteriaHint={`≥${customerEligibilityEval.tier.workMonthsLabel}`}
                         value={customerWorkMonths}
-                        onChange={(e) => handleCustomerWorkMonthsChange(e.target.value)}
-                        placeholder={`≥ ${customerEligibilityEval.tier.minWorkMonths} ด.`}
-                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
-                          customerEligibilityEval.fieldStatus.workMonths === 'fail'
-                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
-                            : customerEligibilityEval.fieldStatus.workMonths === 'pass'
-                            ? 'border-emerald-400 text-emerald-950'
-                            : 'text-slate-900'
-                        }`}
+                        onChange={handleCustomerWorkMonthsChange}
+                        status={customerEligibilityEval.fieldStatus.workMonths}
                       />
-                    </div>
 
-                    <div>
-                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
-                        รายได้/เดือน{' '}
-                        <span className="text-[9px] text-slate-400">
-                          (≥{customerEligibilityEval.tier.incomeLabel})
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="500"
-                        value={customerIncome}
-                        onChange={(e) => handleCustomerIncomeChange(e.target.value)}
-                        placeholder={`≥ ${customerEligibilityEval.tier.incomeLabel}`}
-                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
-                          customerEligibilityEval.fieldStatus.income === 'fail'
-                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
-                            : customerEligibilityEval.fieldStatus.income === 'pass'
-                            ? 'border-emerald-400 text-emerald-950'
-                            : 'text-slate-900'
-                        }`}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
-                        พักอาศัย (เดือน){' '}
-                        <span className="text-[9px] text-slate-400">
-                          (≥{customerEligibilityEval.tier.minResidenceMonths})
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
+                      <YearsMonthsInput
+                        label="พักอาศัย"
+                        criteriaHint={`≥${customerEligibilityEval.tier.residenceLabel}`}
                         value={customerResidenceMonths}
-                        onChange={(e) => handleCustomerResidenceMonthsChange(e.target.value)}
-                        placeholder={`≥ ${customerEligibilityEval.tier.minResidenceMonths} ด.`}
-                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
-                          customerEligibilityEval.fieldStatus.residenceMonths === 'fail'
-                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
-                            : customerEligibilityEval.fieldStatus.residenceMonths === 'pass'
-                            ? 'border-emerald-400 text-emerald-950'
-                            : 'text-slate-900'
-                        }`}
+                        onChange={handleCustomerResidenceMonthsChange}
+                        status={customerEligibilityEval.fieldStatus.residenceMonths}
                       />
                     </div>
                   </div>

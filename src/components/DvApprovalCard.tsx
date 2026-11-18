@@ -39,6 +39,7 @@ import { ProposalKey } from '../types';
 import {
   resolveEligibilityTierKey,
   evaluateCustomerEligibility,
+  formatTenureThai,
   ACE_FULL_NOTE,
 } from '../data/eligibilityCriteria';
 
@@ -196,8 +197,12 @@ export function DvApprovalCard({
   const linkedRemarkLine = useMemo(() => {
     const parts: string[] = [];
     if (customerAge?.trim()) parts.push(`อายุ ${customerAge.trim()} ปี`);
-    if (customerWorkMonths?.trim()) parts.push(`อายุงาน ${customerWorkMonths.trim()} เดือน`);
-    if (customerResidenceMonths?.trim()) parts.push(`พักอาศัย ${customerResidenceMonths.trim()} เดือน`);
+    if (customerWorkMonths?.trim()) {
+      parts.push(`อายุงาน ${formatTenureThai(customerWorkMonths) || `${customerWorkMonths.trim()} เดือน`}`);
+    }
+    if (customerResidenceMonths?.trim()) {
+      parts.push(`พักอาศัย ${formatTenureThai(customerResidenceMonths) || `${customerResidenceMonths.trim()} เดือน`}`);
+    }
     if (isAceCustomer) parts.push('ACE (เขียน NCB / ห้ามขาย PA / ดาวน์ 10% ขึ้น / ≤150CC)');
     return parts.join(' | ');
   }, [customerAge, customerWorkMonths, customerResidenceMonths, isAceCustomer]);
@@ -721,7 +726,7 @@ export function DvApprovalCard({
                   ) : eligibilityEval.fieldStatus.workMonths === 'pass' ? (
                     <CheckCircle2 className="w-3 h-3" />
                   ) : null}
-                  อายุงาน: {customerWorkMonths?.trim() ? `${customerWorkMonths} ด.` : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
+                  อายุงาน: {customerWorkMonths?.trim() ? formatTenureThai(customerWorkMonths, true) : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
                 </span>
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
@@ -753,7 +758,7 @@ export function DvApprovalCard({
                   ) : eligibilityEval.fieldStatus.residenceMonths === 'pass' ? (
                     <CheckCircle2 className="w-3 h-3" />
                   ) : null}
-                  พักอาศัย: {customerResidenceMonths?.trim() ? `${customerResidenceMonths} ด.` : '-'} (≥{eligibilityEval.tier.residenceLabel})
+                  พักอาศัย: {customerResidenceMonths?.trim() ? formatTenureThai(customerResidenceMonths, true) : '-'} (≥{eligibilityEval.tier.residenceLabel})
                 </span>
               </div>
             ) : (
