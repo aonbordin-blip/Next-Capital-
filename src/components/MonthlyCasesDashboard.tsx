@@ -483,22 +483,22 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
             </div>
           </div>
 
-          {/* Interactive Filter Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/70">
-            <div className="flex items-center gap-1 p-1 bg-sky-100/40 backdrop-blur-sm border border-white/80 rounded-xl">
+          {/* Interactive Filter Toolbar (Single-Row Balanced Controls) */}
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 pt-2.5 border-t border-sky-200/45 overflow-x-auto">
+            <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-sky-100/55 backdrop-blur-sm border border-white/85 rounded-xl shrink-0 shadow-2xs">
               <button
                 type="button"
                 onClick={() => {
                   triggerHaptic('light');
                   setChartMode('total');
                 }}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold rounded-[9px] transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   chartMode === 'total'
-                    ? 'bg-white/85 text-sky-900 shadow-xs'
+                    ? 'bg-white text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                จำนวนเคสรวม
+                เคสรวม
               </button>
               <button
                 type="button"
@@ -506,30 +506,30 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                   triggerHaptic('light');
                   setChartMode('status');
                 }}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold rounded-[9px] transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   chartMode === 'status'
-                    ? 'bg-white/85 text-sky-900 shadow-xs'
+                    ? 'bg-white text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                แยกตามสถานะ
+                แยกสถานะ
               </button>
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-sky-100/40 backdrop-blur-sm border border-white/80 rounded-xl">
+            <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-sky-100/55 backdrop-blur-sm border border-white/85 rounded-xl shrink-0 shadow-2xs">
               <button
                 type="button"
                 onClick={() => {
                   triggerHaptic('light');
                   setMonthScope('all_12');
                 }}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold rounded-[9px] transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   monthScope === 'all_12'
-                    ? 'bg-white/85 text-sky-900 shadow-xs'
+                    ? 'bg-white text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                ครบ 12 เดือน
+                12 เดือน
               </button>
               <button
                 type="button"
@@ -537,13 +537,13 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
                   triggerHaptic('light');
                   setMonthScope('active_only');
                 }}
-                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold rounded-[9px] transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   monthScope === 'active_only'
-                    ? 'bg-white/85 text-sky-900 shadow-xs'
+                    ? 'bg-white text-sky-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                เฉพาะเดือนที่มีเคส
+                ที่มีเคส
               </button>
             </div>
           </div>
