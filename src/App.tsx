@@ -881,6 +881,8 @@ export default function App() {
 
     const downText = `${formatBaht(currentCalculation.downAmount)} บ. (${currentCalculation.downPercent.toFixed(1)}%)`;
 
+    const hasInsurance = currentCalculation.insuranceTotalWithVat > 0;
+
     if (activeStyle === 'compact') {
       const lines: string[] = [
         `🛵 สรุปค่างวด Next Capital`,
@@ -895,7 +897,18 @@ export default function App() {
       lines.push(
         `🏍️ รุ่นรถ : ${bikeLabel}`,
         `💰 ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ. | ดาวน์ : ${formatBaht(currentCalculation.downAmount)} บ.`,
-        `💳 ยอดจัด : ${formatBaht(currentCalculation.financeAmount, true)} บ.`,
+      );
+      if (hasInsurance) {
+        lines.push(
+          `💵 ยอดจัดตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`,
+          `💳 ยอดจัดรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บ.`
+        );
+      } else {
+        lines.push(
+          `💳 ยอดจัด (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`
+        );
+      }
+      lines.push(
         `🛡️ ประกัน : ${insuranceLabel}`,
         `━━━━━━━━━━━━━━━`,
         `🔥 ผ่อนเพียง : ${formatBaht(currentCalculation.monthlyInstallment)} บ./เดือน`,
@@ -935,7 +948,18 @@ export default function App() {
         `📋 แผน : ${currentCalculation.proposalName} (${currentCalculation.proposalCode})`,
         `▸ ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ.`,
         `▸ เงินดาวน์ : ${downText}`,
-        `▸ ยอดจัด : ${formatBaht(currentCalculation.financeAmount, true)} บ.`,
+      );
+      if (hasInsurance) {
+        lines.push(
+          `▸ ยอดจัดเฉพาะตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`,
+          `▸ ยอดจัดรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บ.`
+        );
+      } else {
+        lines.push(
+          `▸ ยอดจัด (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`
+        );
+      }
+      lines.push(
         `▸ ประกัน : ${insuranceLabel}`,
         ``,
         `📌 เลือกงวดผ่อนสบายๆ (รวม VAT 7%)`,
@@ -978,7 +1002,18 @@ export default function App() {
       `📌 รายละเอียดเงื่อนไขสินเชื่อ`,
       `▸ ราคารถเงินสด : ${formatBaht(currentCalculation.baseVehiclePrice)} บาท`,
       `▸ เงินดาวน์ : ${downText}`,
-      `▸ ยอดจัดสินเชื่อ : ${formatBaht(currentCalculation.financeAmount, true)} บาท`,
+    );
+    if (hasInsurance) {
+      lines.push(
+        `▸ ยอดจัดเฉพาะตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บาท`,
+        `▸ ยอดจัดสินเชื่อรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บาท`
+      );
+    } else {
+      lines.push(
+        `▸ ยอดจัดสินเชื่อ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บาท`
+      );
+    }
+    lines.push(
       `▸ ประกันคุ้มครอง : ${insuranceLabel}`,
       `▸ อัตราดอกเบี้ย : ${cleanRate}`,
     );
@@ -2536,19 +2571,36 @@ export default function App() {
 
                 {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
                 <div className="pt-0.5 space-y-1">
-                  <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden flex p-0.5 border border-slate-300/50 shadow-inner">
-                    <div
-                      style={{
-                        width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
-                      }}
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 shadow-2xs"
-                    />
-                    <div
-                      style={{
-                        width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
-                      }}
-                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300"
-                    />
+                  <div className="relative py-0.5">
+                    <div className="h-2.5 w-full bg-slate-200/80 rounded-full overflow-hidden flex p-0.5 border border-white/90 shadow-inner">
+                      <div
+                        style={{
+                          width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
+                        }}
+                        className={`h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500 ease-out shadow-2xs ${
+                          currentCalculation.downPercent > 0 ? 'animate-fuel-shimmer' : ''
+                        }`}
+                      />
+                      <div
+                        style={{
+                          width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
+                        }}
+                        className={`h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500 ease-out ${
+                          100 - currentCalculation.downPercent > 0 ? 'animate-fuel-shimmer' : ''
+                        }`}
+                      />
+                    </div>
+                    {currentCalculation.downPercent > 0 && currentCalculation.downPercent < 100 && (
+                      <div
+                        className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
+                        style={{
+                          left: `${Math.min(97, Math.max(3, currentCalculation.downPercent))}%`,
+                        }}
+                      >
+                        <span className="absolute inset-0 w-3 h-3 -m-[2.5px] rounded-full bg-emerald-400 animate-fuel-tip-ping" />
+                        <span className="block w-2 h-2 rounded-full bg-white border-[1.5px] border-slate-800 shadow-sm" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
                     <span className="flex items-center gap-1 text-emerald-800">

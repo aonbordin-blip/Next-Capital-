@@ -700,18 +700,49 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   </div>
 
                   {/* Achievement Progress Bar with Tier thresholds */}
-                  <div className="space-y-1">
-                    <div className="relative h-2 w-full rounded-full bg-white/65 border border-white/90 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          commissionSummary.tier === 3
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                            : commissionSummary.tier === 2
-                            ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
-                            : 'bg-gradient-to-r from-amber-400 to-orange-500'
-                        }`}
-                        style={{ width: `${paTierProgress}%` }}
+                  <div className="space-y-1 pt-0.5">
+                    <div className="relative py-1">
+                      <div className="relative h-2.5 w-full rounded-full bg-white/75 border border-white/95 shadow-inner overflow-hidden">
+                        <div
+                          className={`h-full rounded-full animate-fuel-shimmer transition-all duration-500 ease-out ${
+                            commissionSummary.tier === 3
+                              ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400'
+                              : commissionSummary.tier === 2
+                              ? 'bg-gradient-to-r from-sky-500 via-cyan-500 to-sky-400'
+                              : 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500'
+                          }`}
+                          style={{ width: `${paTierProgress}%` }}
+                        />
+                      </div>
+                      {/* Threshold divider ticks at 60% & 75% */}
+                      <span
+                        className="pointer-events-none absolute top-1 h-2.5 w-0.5 bg-slate-400/55 rounded-full"
+                        style={{ left: '60%' }}
+                        aria-hidden="true"
                       />
+                      <span
+                        className="pointer-events-none absolute top-1 h-2.5 w-0.5 bg-slate-400/55 rounded-full"
+                        style={{ left: '75%' }}
+                        aria-hidden="true"
+                      />
+                      {/* Glowing Active Tip Dot */}
+                      {paTierProgress > 0 && (
+                        <div
+                          className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
+                          style={{ left: `${Math.min(98.5, Math.max(1.5, paTierProgress))}%` }}
+                        >
+                          <span
+                            className={`absolute inset-0 w-3.5 h-3.5 -m-[3px] rounded-full animate-fuel-tip-ping ${
+                              commissionSummary.tier === 3
+                                ? 'bg-emerald-400'
+                                : commissionSummary.tier === 2
+                                ? 'bg-sky-400'
+                                : 'bg-orange-400'
+                            }`}
+                          />
+                          <span className="block w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-800 shadow-sm" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center justify-between text-[9.5px] text-slate-600 tabular-nums whitespace-nowrap">
                       <span>0% (Tier 1)</span>
@@ -837,24 +868,28 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   label: 'รับรถแล้ว',
                   count: periodStats.deliveredCount,
                   barColor: 'bg-gradient-to-r from-teal-500 to-emerald-500',
+                  tipGlow: 'bg-emerald-400',
                   textColor: 'text-teal-800',
                 },
                 {
                   label: 'อนุมัติแล้ว (รอรับรถ)',
                   count: periodStats.approvedPendingDeliveryCount,
                   barColor: 'bg-gradient-to-r from-emerald-500 to-green-400',
+                  tipGlow: 'bg-emerald-400',
                   textColor: 'text-emerald-800',
                 },
                 {
                   label: 'รออนุมัติ',
                   count: periodStats.pendingCount,
                   barColor: 'bg-gradient-to-r from-sky-500 to-cyan-400',
+                  tipGlow: 'bg-sky-400',
                   textColor: 'text-sky-800',
                 },
                 {
                   label: 'ไม่อนุมัติ / ยกเลิก',
                   count: periodStats.rejectedOrCancelledCount,
-                  barColor: 'bg-slate-400',
+                  barColor: 'bg-gradient-to-r from-slate-400 to-slate-500',
+                  tipGlow: 'bg-slate-400',
                   textColor: 'text-slate-600',
                 },
               ].map((row) => {
@@ -870,11 +905,26 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                         {row.count} เคส ({pct.toFixed(0)}%)
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-200/70 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${row.barColor} transition-all duration-300`}
-                        style={{ width: `${pct}%` }}
-                      />
+                    <div className="relative py-0.5">
+                      <div className="h-2 w-full bg-white/75 border border-white/95 shadow-inner rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${row.barColor} ${
+                            pct > 0 ? 'animate-fuel-shimmer' : ''
+                          } transition-all duration-500 ease-out`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      {pct > 0 && (
+                        <div
+                          className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
+                          style={{ left: `${Math.min(98.5, Math.max(1.5, pct))}%` }}
+                        >
+                          <span
+                            className={`absolute inset-0 w-3 h-3 -m-[2.5px] rounded-full ${row.tipGlow} animate-fuel-tip-ping`}
+                          />
+                          <span className="block w-2 h-2 rounded-full bg-white border-[1.5px] border-slate-800 shadow-sm" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
