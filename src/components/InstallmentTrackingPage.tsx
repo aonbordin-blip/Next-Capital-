@@ -695,13 +695,15 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           FIRST PAYMENT DUE MONTH SELECTOR PANEL
           จัดกลุ่มตาม "กำหนดชำระงวดแรก" (เฉพาะเคสที่อนุมัติและรับรถแล้ว)
           ============================================================== */}
-      <div className="glass-card-primary rounded-2xl p-3 border border-sky-200/90 space-y-2.5 shadow-2xs">
+      <div className="glass-card-primary rounded-2xl p-3 sm:p-3.5 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <CalendarDays className="w-4 h-4 text-sky-600 shrink-0" />
-            <span className="text-xs font-extrabold text-slate-800 whitespace-nowrap">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-7 h-7 rounded-xl bg-sky-100/90 text-sky-700 flex items-center justify-center shrink-0 shadow-2xs">
+              <CalendarDays className="w-3.5 h-3.5" />
+            </div>
+            <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-800 leading-tight truncate">
               เลือกกลุ่มเดือนกำหนดชำระงวดแรก
-            </span>
+            </h4>
           </div>
 
           <button
@@ -709,11 +711,11 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             onClick={() => handleSelectFirstDueMonth('ALL')}
             className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer shrink-0 whitespace-nowrap ${
               selectedFirstDueMonth === 'ALL'
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                : 'bg-white/90 hover:bg-indigo-50 text-indigo-700 border-indigo-200'
+                ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-sky-500 shadow-2xs'
+                : 'bg-white/75 hover:bg-white text-sky-800 border-white/90 shadow-2xs'
             }`}
           >
-            ดูครบทุกกลุ่มเดือน ({enrichedList.length})
+            ทั้งหมด ({enrichedList.length})
           </button>
         </div>
 
@@ -723,7 +725,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => handleStepFirstDueMonth(-1)}
-              className="p-2 rounded-xl bg-white/90 hover:bg-sky-50 border border-slate-200 text-slate-700 hover:text-sky-700 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs"
+              className="w-10 h-10 rounded-xl bg-white/75 hover:bg-white backdrop-blur-sm border border-white/90 text-slate-700 hover:text-sky-700 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs flex items-center justify-center"
               title="กลุ่มเดือนก่อนหน้า"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -734,14 +736,14 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 aria-label="เลือกกลุ่มเดือนกำหนดชำระงวดแรก"
                 value={selectedFirstDueMonth}
                 onChange={(e) => handleSelectFirstDueMonth(e.target.value)}
-                className="w-full appearance-none rounded-xl bg-gradient-to-r from-sky-50 via-white to-cyan-50 border-2 border-sky-300/90 focus:border-sky-500 px-3 py-2 pr-8 text-xs sm:text-sm font-extrabold text-sky-950 text-center outline-none cursor-pointer shadow-2xs"
+                className="w-full h-10 appearance-none rounded-xl bg-white/75 backdrop-blur-md border border-white/95 focus:border-sky-500 pl-3 pr-8 text-xs sm:text-sm font-bold text-sky-950 text-center truncate outline-none cursor-pointer shadow-2xs transition-colors"
               >
                 <option value="ALL">
-                  📊 แสดงทุกกลุ่มเดือนงวดแรก ({enrichedList.length} ราย)
+                  ทุกกลุ่มเดือนงวดแรก ({enrichedList.length} ราย)
                 </option>
                 {monthOptions.map((m) => (
                   <option key={m.monthKey} value={m.monthKey}>
-                    🗓️ งวดแรก {m.firstDueLabelShort} ({m.count} ราย)
+                    งวดแรก {m.firstDueLabelShort} ({m.count} ราย)
                   </option>
                 ))}
               </select>
@@ -751,7 +753,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => handleStepFirstDueMonth(1)}
-              className="p-2 rounded-xl bg-white/90 hover:bg-sky-50 border border-slate-200 text-slate-700 hover:text-sky-700 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs"
+              className="w-10 h-10 rounded-xl bg-white/75 hover:bg-white backdrop-blur-sm border border-white/90 text-slate-700 hover:text-sky-700 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs flex items-center justify-center"
               title="กลุ่มเดือนถัดไป"
             >
               <ChevronRight className="w-4 h-4" />
@@ -766,8 +768,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             onClick={() => handleSelectFirstDueMonth('ALL')}
             className={`px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
               selectedFirstDueMonth === 'ALL'
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                : 'bg-white/85 hover:bg-white text-slate-600 border-slate-200'
+                ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-sky-500 shadow-xs'
+                : 'bg-white/55 hover:bg-white/80 text-slate-700 border-white/85'
             }`}
           >
             <span>ทุกกลุ่มเดือน</span>

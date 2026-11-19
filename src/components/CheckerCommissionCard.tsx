@@ -749,11 +749,58 @@ export const CheckerCommissionCard: React.FC<Props> = ({
 
             {/* Progress Track */}
             <div className="relative pt-2 pb-1">
-              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden relative border border-slate-200">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-400 via-sky-500 to-emerald-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(4, summary.achievementPercent))}%` }}
+              <div className="relative py-1">
+                <div className="w-full bg-slate-100/90 h-3 rounded-full overflow-hidden relative border border-slate-200/90 shadow-inner">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ease-out ${
+                      summary.achievementPercent > 0 ? 'animate-fuel-shimmer' : ''
+                    } ${
+                      summary.tier === 3
+                        ? 'bg-gradient-to-r from-amber-400 via-sky-500 to-emerald-500'
+                        : summary.tier === 2
+                        ? 'bg-gradient-to-r from-amber-400 via-sky-500 to-cyan-500'
+                        : 'bg-gradient-to-r from-amber-400 to-orange-500'
+                    }`}
+                    style={{
+                      width: `${
+                        summary.achievementPercent > 0
+                          ? Math.min(100, Math.max(4, summary.achievementPercent))
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                {/* Tier 2 & Tier 3 Threshold Pins */}
+                <span
+                  className="pointer-events-none absolute top-1 h-3 w-0.5 bg-slate-400/60 rounded-full"
+                  style={{ left: '60%' }}
+                  aria-hidden="true"
                 />
+                <span
+                  className="pointer-events-none absolute top-1 h-3 w-0.5 bg-slate-400/60 rounded-full"
+                  style={{ left: '75%' }}
+                  aria-hidden="true"
+                />
+                {/* Glowing Active Tip Dot */}
+                {summary.achievementPercent > 0 && (
+                  <div
+                    className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
+                    style={{
+                      left: `${Math.min(98.5, Math.max(4, summary.achievementPercent))}%`,
+                    }}
+                  >
+                    <span
+                      className={`absolute inset-0 w-3.5 h-3.5 -m-[3px] rounded-full animate-fuel-tip-ping ${
+                        summary.tier === 3
+                          ? 'bg-emerald-400'
+                          : summary.tier === 2
+                          ? 'bg-sky-400'
+                          : 'bg-orange-400'
+                      }`}
+                    />
+                    <span className="block w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-800 shadow-sm" />
+                  </div>
+                )}
               </div>
 
               {/* Tier Threshold Markers */}

@@ -30,17 +30,27 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Database,
+  BookmarkCheck,
+  Search,
+  Clock,
+  RotateCcw,
+  AlertCircle,
+  Cloud,
 } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
 import { useModalTransition } from '../hooks/useModalTransition';
 import { MarqueeText } from './MarqueeText';
-import { ProposalKey } from '../types';
+import { DvRequestStatus, ProposalKey, SavedDvRequestRecord } from '../types';
 import {
   resolveEligibilityTierKey,
   evaluateCustomerEligibility,
+  formatTenureThai,
   ACE_FULL_NOTE,
 } from '../data/eligibilityCriteria';
+import { useFirebase } from '../contexts/FirebaseContext';
+import { sanitizeDvRequestId } from '../utils/dvCasesStorage';
 
 export interface DvTopicItem {
   code: string;
@@ -196,8 +206,12 @@ export function DvApprovalCard({
   const linkedRemarkLine = useMemo(() => {
     const parts: string[] = [];
     if (customerAge?.trim()) parts.push(`อายุ ${customerAge.trim()} ปี`);
-    if (customerWorkMonths?.trim()) parts.push(`อายุงาน ${customerWorkMonths.trim()} เดือน`);
-    if (customerResidenceMonths?.trim()) parts.push(`พักอาศัย ${customerResidenceMonths.trim()} เดือน`);
+    if (customerWorkMonths?.trim()) {
+      parts.push(`อายุงาน ${formatTenureThai(customerWorkMonths) || `${customerWorkMonths.trim()} เดือน`}`);
+    }
+    if (customerResidenceMonths?.trim()) {
+      parts.push(`พักอาศัย ${formatTenureThai(customerResidenceMonths) || `${customerResidenceMonths.trim()} เดือน`}`);
+    }
     if (isAceCustomer) parts.push('ACE (เขียน NCB / ห้ามขาย PA / ดาวน์ 10% ขึ้น / ≤150CC)');
     return parts.join(' | ');
   }, [customerAge, customerWorkMonths, customerResidenceMonths, isAceCustomer]);
@@ -207,7 +221,7 @@ export function DvApprovalCard({
   const [topics, setTopics] = useState<string[]>(['A1 : อายุตัว']);
   const hasUserEditedTopicsRef = React.useRef<boolean>(false);
   const prevAutoTopicCodesRef = React.useRef<string[]>([]);
-  const prevAutoRemarkRef = React.useRef<string>('');
+  const prevAutoRemarkRef = React.useRef<string>(linkedRemarkLine || '');
   const [activeTopicIndexForModal, setActiveTopicIndexForModal] = useState<number | null>(null);
   const [ncb, setNcb] = useState<string>('Normal');
   const [dealer, setDealer] = useState<string>(() => {
@@ -256,6 +270,28 @@ export function DvApprovalCard({
   });
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [lineSentFeedback, setLineSentFeedback] = useState<boolean>(false);
+
+  // Saved DV Requests (Firebase Realtime Database)
+  const {
+    user: firebaseUser,
+    isSigningIn,
+    signInWithGoogle,
+    dvRequests,
+    saveDvRequest,
+    updateDvRequestStatus,
+    removeDvRequest,
+  } = useFirebase();
+  const [modalTab, setModalTab] = useState<'form' | 'saved'>('form');
+  const [editingDvId, setEditingDvId] = useState<string | null>(null);
+  const [isSavingDv, setIsSavingDv] = useState<boolean>(false);
+  const [dvSaveFeedback, setDvSaveFeedback] = useState<{
+    type: 'cloud' | 'local' | 'error';
+    text: string;
+  } | null>(null);
+  const [savedSearch, setSavedSearch] = useState<string>('');
+  const [savedStatusFilter, setSavedStatusFilter] = useState<'all' | DvRequestStatus>('all');
+  const [confirmDeleteDvId, setConfirmDeleteDvId] = useState<string | null>(null);
+  const [copiedSavedDvId, setCopiedSavedDvId] = useState<string | null>(null);
 
   // Sync with main app customer name when changed externally
   useEffect(() => {
@@ -319,14 +355,16 @@ export function DvApprovalCard({
     if (linkedRemarkLine === prevAuto) return;
 
     setRemark((currentRemark) => {
-      let cleaned = currentRemark;
-      if (prevAuto) {
-        cleaned = cleaned
-          .split('\n')
-          .filter((line) => line.trim() !== prevAuto.trim())
-          .join('\n')
-          .trim();
-      }
+      const cleaned = currentRemark
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => {
+          if (!line) return false;
+          if (prevAuto && line === prevAuto.trim()) return false;
+          if (linkedRemarkLine && line === linkedRemarkLine.trim()) return false;
+          return true;
+        })
+        .join('\n');
       if (!linkedRemarkLine) return cleaned;
       return cleaned ? `${linkedRemarkLine}\n${cleaned}` : linkedRemarkLine;
     });
@@ -399,15 +437,18 @@ export function DvApprovalCard({
     if (linkedRemarkLine) {
       setRemark((curr) => {
         const prevAuto = prevAutoRemarkRef.current;
-        const rest = prevAuto
-          ? curr
-              .split('\n')
-              .filter((line) => line.trim() !== prevAuto.trim())
-              .join('\n')
-              .trim()
-          : curr.trim();
+        const rest = curr
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => {
+            if (!line) return false;
+            if (prevAuto && line === prevAuto.trim()) return false;
+            if (line === linkedRemarkLine.trim()) return false;
+            return true;
+          })
+          .join('\n');
         prevAutoRemarkRef.current = linkedRemarkLine;
-        return rest && rest !== linkedRemarkLine ? `${linkedRemarkLine}\n${rest}` : linkedRemarkLine;
+        return rest ? `${linkedRemarkLine}\n${rest}` : linkedRemarkLine;
       });
     }
   };
@@ -523,6 +564,135 @@ export function DvApprovalCard({
     window.open(lineUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleSaveDvToDatabase = async () => {
+    triggerHaptic('medium');
+    setIsSavingDv(true);
+    setDvSaveFeedback(null);
+    const now = Date.now();
+    const existing = editingDvId ? dvRequests.find((r) => r.id === editingDvId) : undefined;
+    const record: SavedDvRequestRecord = {
+      id: existing ? existing.id : sanitizeDvRequestId(),
+      createdAt: existing ? existing.createdAt : now,
+      updatedAt: now,
+      customerName: dvCustomerName.trim() || 'คุณลูกค้า',
+      topics: topics.map((t) => t.trim()).filter(Boolean),
+      ncb: ncb || 'Normal',
+      dealer: dealer.trim(),
+      bikeModel: bikeModel.trim(),
+      bikeCode: bikeCode.trim(),
+      occupation: occupation.trim(),
+      income: income.trim(),
+      financialDocs: financialDocs || 'สลิปเงินเดือน',
+      downPayment: downPayment.trim(),
+      remark: remark.trim(),
+      ck: ck.trim(),
+      yodRate: yodRate.trim(),
+      dvMessage: generateDvText(),
+      status: existing?.status || 'pending',
+      proposalKey,
+      financeAmount: _financeAmount,
+      monthlyInstallment: _monthlyInstallment,
+      term: _term,
+      customerAge,
+      customerWorkMonths,
+      customerIncome,
+      customerResidenceMonths,
+      isAceCustomer,
+    };
+
+    try {
+      const res = await saveDvRequest(record);
+      setEditingDvId(record.id);
+      triggerHaptic('success');
+      if (res.savedToCloud) {
+        setDvSaveFeedback({
+          type: 'cloud',
+          text: existing
+            ? 'อัปเดตข้อมูลเคสขอ DV แล้ว ✓'
+            : 'บันทึกข้อมูลลูกค้าขอ DV แล้ว ✓',
+        });
+      } else if (res.error) {
+        setDvSaveFeedback({
+          type: 'error',
+          text: `บันทึกในเครื่องแล้ว แต่ซิงก์ขึ้น Cloud ไม่สำเร็จ: ${res.error}`,
+        });
+      } else {
+        setDvSaveFeedback({
+          type: 'local',
+          text: 'บันทึกในเครื่องแล้ว (เข้าสู่ระบบด้วย Google เพื่อซิงก์ขึ้น Cloud)',
+        });
+      }
+    } finally {
+      setIsSavingDv(false);
+    }
+  };
+
+  const handleLoadSavedDv = (item: SavedDvRequestRecord) => {
+    triggerHaptic('selection');
+    setEditingDvId(item.id);
+    setDvCustomerName(item.customerName || 'คุณลูกค้า');
+    hasUserEditedTopicsRef.current = true;
+    setTopics(item.topics.length > 0 ? item.topics : ['A1 : อายุตัว']);
+    setNcb(item.ncb || 'Normal');
+    setDealer(item.dealer || '');
+    setBikeModel(item.bikeModel || '');
+    setBikeCode(item.bikeCode || '');
+    setOccupation(item.occupation || '');
+    setIncome(item.income || '');
+    setFinancialDocs(item.financialDocs || 'สลิปเงินเดือน');
+    setDownPayment(item.downPayment || '');
+    prevAutoRemarkRef.current = linkedRemarkLine || '';
+    setRemark(item.remark || '');
+    setCk(item.ck || resolvedOfficer);
+    setYodRate(item.yodRate || 'หัก 3%');
+    setDvSaveFeedback(null);
+    setModalTab('form');
+  };
+
+  const handleStartNewDvForm = () => {
+    triggerHaptic('light');
+    setEditingDvId(null);
+    hasUserEditedTopicsRef.current = false;
+    setDvSaveFeedback(null);
+    handleSyncFromCurrent();
+  };
+
+  const filteredSavedDvRequests = useMemo(() => {
+    const q = savedSearch.trim().toLowerCase();
+    return dvRequests.filter((item) => {
+      if (savedStatusFilter !== 'all' && item.status !== savedStatusFilter) {
+        return false;
+      }
+      if (!q) return true;
+      const hay = [
+        item.customerName,
+        item.bikeModel,
+        item.bikeCode,
+        item.dealer,
+        item.occupation,
+        item.remark,
+        ...item.topics,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [dvRequests, savedSearch, savedStatusFilter]);
+
+  const formatSavedDateTime = (ts: number): string => {
+    try {
+      return new Intl.DateTimeFormat('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(ts));
+    } catch {
+      return '';
+    }
+  };
+
   const OCCUPATION_PRESETS = [
     'พนักงานประจำ / โรงงาน',
     'ค้าขาย / ธุรกิจส่วนตัว',
@@ -587,6 +757,11 @@ export function DvApprovalCard({
               <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
                 <MarqueeText fitContent>Dealer Verification</MarqueeText>
               </span>
+              {dvRequests.length > 0 && (
+                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
+                  บันทึก {dvRequests.length}
+                </span>
+              )}
               {eligibilityEval.failedTopics.length > 0 && (
                 <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
                   {eligibilityEval.failedTopics.map((f) => f.code).join(', ')}
@@ -596,6 +771,8 @@ export function DvApprovalCard({
             <MarqueeText className="text-[10px] text-slate-500 font-medium">
               {eligibilityEval.failedTopics.length > 0
                 ? `ดึงเงื่อนไขขอ DV อัตโนมัติ (${eligibilityEval.failedTopics.length} หัวข้อ)`
+                : dvRequests.length > 0
+                ? `บันทึกแล้ว ${dvRequests.length} เคส • กดเพื่อดูหรือส่งขอ DV`
                 : 'กรอกฟอร์มส่งขออนุมัติ LINE อัตโนมัติ'}
             </MarqueeText>
           </div>
@@ -651,10 +828,382 @@ export function DvApprovalCard({
           </div>
         </div>
 
+        {/* Segmented Tab Switcher: Form vs Saved DV Requests */}
+        <div className="shrink-0 px-3 sm:px-5 py-2 bg-white border-b border-slate-200/80 flex items-center gap-2">
+          <div className="flex-1 grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('selection');
+                setModalTab('form');
+              }}
+              className={`py-1.5 px-2.5 rounded-lg text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                modalTab === 'form'
+                  ? 'bg-white text-emerald-800 shadow-2xs border border-emerald-200/80'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileCheck2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">แบบฟอร์มขอ DV</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('selection');
+                setModalTab('saved');
+              }}
+              className={`py-1.5 px-2.5 rounded-lg text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                modalTab === 'saved'
+                  ? 'bg-white text-sky-900 shadow-2xs border border-sky-200/80'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">รายการที่บันทึก</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[9.5px] font-extrabold ${
+                  modalTab === 'saved'
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {dvRequests.length}
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* Scrollable Modal Body */}
         <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
-          {/* Linked Customer Eligibility Status Banner */}
-          <div
+          {modalTab === 'saved' ? (
+            <div className="space-y-3">
+              {/* Cloud Status + Search Bar */}
+              <div className="p-3 rounded-2xl bg-white border border-sky-200/80 shadow-2xs space-y-2.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                    <Cloud className="w-4 h-4 text-sky-600 shrink-0" />
+                    {firebaseUser ? (
+                      <span className="text-emerald-700">
+                        ซิงก์ Realtime Database อัตโนมัติ ({firebaseUser.email})
+                      </span>
+                    ) : (
+                      <span className="text-amber-800">
+                        ยังไม่เข้าสู่ระบบ Google (ข้อมูลเก็บไว้ในเครื่อง)
+                      </span>
+                    )}
+                  </div>
+                  {!firebaseUser && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        void signInWithGoogle();
+                      }}
+                      disabled={isSigningIn}
+                      className="text-[10.5px] font-bold px-2.5 py-1 rounded-xl bg-sky-600 hover:bg-sky-700 text-white cursor-pointer transition-colors disabled:opacity-60"
+                    >
+                      {isSigningIn ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ Google'}
+                    </button>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={savedSearch}
+                    onChange={(e) => setSavedSearch(e.target.value)}
+                    placeholder="ค้นหาชื่อลูกค้า, รุ่นรถ, ดีลเลอร์ หรือหัวข้อ DV..."
+                    className="w-full glass-input-field rounded-xl pl-8 pr-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(
+                    [
+                      { key: 'all', label: `ทั้งหมด (${dvRequests.length})` },
+                      {
+                        key: 'pending',
+                        label: `รออนุมัติ (${dvRequests.filter((r) => r.status === 'pending').length})`,
+                      },
+                      {
+                        key: 'approved',
+                        label: `อนุมัติแล้ว (${dvRequests.filter((r) => r.status === 'approved').length})`,
+                      },
+                      {
+                        key: 'rejected',
+                        label: `ไม่ผ่าน (${dvRequests.filter((r) => r.status === 'rejected').length})`,
+                      },
+                    ] as const
+                  ).map((f) => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('selection');
+                        setSavedStatusFilter(f.key);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition-all cursor-pointer ${
+                        savedStatusFilter === f.key
+                          ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
+                          : 'bg-slate-50 hover:bg-sky-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Saved DV Requests List */}
+              {filteredSavedDvRequests.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white border border-slate-200/80 text-center space-y-2">
+                  <Database className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700">
+                    {dvRequests.length === 0
+                      ? 'ยังไม่มีลูกค้าขอ DV ที่บันทึกไว้'
+                      : 'ไม่พบรายการที่ตรงกับคำค้นหา'}
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    {dvRequests.length === 0
+                      ? 'กรอกข้อมูลในแท็บ "แบบฟอร์มขอ DV" แล้วกดปุ่มบันทึกข้อมูลลูกค้าขอ DV เพื่อกลับมาดูภายหลังได้เลย'
+                      : 'ลองเปลี่ยนคำค้นหาหรือตัวกรองสถานะด้านบน'}
+                  </p>
+                  {dvRequests.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setModalTab('form')}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5" />
+                      <span>ไปหน้ากรอกแบบฟอร์มขอ DV</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {filteredSavedDvRequests.map((item) => {
+                    const isDeleting = confirmDeleteDvId === item.id;
+                    const isItemCopied = copiedSavedDvId === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4 className="text-sm font-extrabold text-slate-900 truncate">
+                                {item.customerName}
+                              </h4>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                  item.status === 'approved'
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                    : item.status === 'rejected'
+                                    ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                    : 'bg-amber-100 text-amber-800 border-amber-300'
+                                }`}
+                              >
+                                {item.status === 'approved'
+                                  ? 'อนุมัติแล้ว'
+                                  : item.status === 'rejected'
+                                  ? 'ไม่ผ่าน'
+                                  : 'รออนุมัติ DV'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10.5px] text-slate-500 mt-0.5">
+                              <Clock className="w-3 h-3 shrink-0" />
+                              <span>อัปเดต {formatSavedDateTime(item.updatedAt)}</span>
+                              {item.dealer && <span>• {item.dealer}</span>}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            {(
+                              [
+                                { val: 'pending', label: 'รอ' },
+                                { val: 'approved', label: 'ผ่าน' },
+                                { val: 'rejected', label: 'ไม่ผ่าน' },
+                              ] as const
+                            ).map((st) => (
+                              <button
+                                key={st.val}
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic('selection');
+                                  void updateDvRequestStatus(item.id, st.val);
+                                }}
+                                className={`px-2 py-1 rounded-lg text-[9.5px] font-bold border transition-all cursor-pointer ${
+                                  item.status === st.val
+                                    ? st.val === 'approved'
+                                      ? 'bg-emerald-600 text-white border-emerald-600'
+                                      : st.val === 'rejected'
+                                      ? 'bg-rose-600 text-white border-rose-600'
+                                      : 'bg-amber-500 text-white border-amber-500'
+                                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                                }`}
+                              >
+                                {st.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-50/90 p-2.5 rounded-xl border border-slate-100">
+                          <div className="truncate">
+                            <span className="text-slate-400">รุ่นรถ: </span>
+                            <span className="font-bold text-slate-800">
+                              {item.bikeModel || '-'}
+                            </span>
+                          </div>
+                          <div className="truncate">
+                            <span className="text-slate-400">เงินดาวน์: </span>
+                            <span className="font-bold text-slate-800">
+                              {item.downPayment || '-'}
+                            </span>
+                          </div>
+                          <div className="truncate">
+                            <span className="text-slate-400">รายได้: </span>
+                            <span className="font-bold text-slate-800">
+                              {item.income || '-'}
+                            </span>
+                          </div>
+                          <div className="truncate">
+                            <span className="text-slate-400">NCB: </span>
+                            <span className="font-bold text-slate-800">{item.ncb || '-'}</span>
+                          </div>
+                        </div>
+
+                        {item.topics.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {item.topics.map((t, i) => (
+                              <span
+                                key={`${item.id}-t-${i}`}
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/80"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.remark && (
+                          <p className="text-[11px] text-slate-600 bg-amber-50/60 border border-amber-200/60 rounded-xl px-2.5 py-1.5 whitespace-pre-line">
+                            {item.remark}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => handleLoadSavedDv(item)}
+                              className="px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>เปิดดู / แก้ไข</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                triggerHaptic('success');
+                                try {
+                                  await navigator.clipboard.writeText(item.dvMessage);
+                                  setCopiedSavedDvId(item.id);
+                                  setTimeout(() => setCopiedSavedDvId(null), 2000);
+                                } catch {
+                                  // ignore
+                                }
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              {isItemCopied ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  <span className="text-emerald-700">คัดลอกแล้ว</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>คัดลอก</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('success');
+                                const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
+                                  item.dvMessage
+                                )}`;
+                                window.open(lineUrl, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <Share2 className="w-3 h-3" />
+                              <span>LINE</span>
+                            </button>
+                          </div>
+
+                          {isDeleting ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic('medium');
+                                  setConfirmDeleteDvId(null);
+                                  if (editingDvId === item.id) setEditingDvId(null);
+                                  void removeDvRequest(item.id);
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer"
+                              >
+                                ยืนยันลบ
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteDvId(null)}
+                                className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer"
+                              >
+                                ยกเลิก
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteDvId(item.id)}
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 cursor-pointer transition-colors"
+                              title="ลบรายการนี้"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {editingDvId && (
+                <div className="p-2.5 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[11px] font-bold text-sky-900">
+                    กำลังแก้ไขเคสที่บันทึกไว้: {dvCustomerName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleStartNewDvForm}
+                    className="text-[10.5px] font-bold px-2.5 py-1 rounded-xl bg-white hover:bg-sky-100 text-sky-800 border border-sky-200 cursor-pointer"
+                  >
+                    + สร้างเคสใหม่จากข้อมูลปัจจุบัน
+                  </button>
+                </div>
+              )}
+
+              {/* Linked Customer Eligibility Status Banner */}
+              <div
             className={`p-3 rounded-2xl border shadow-2xs space-y-2 ${
               eligibilityEval.failedTopics.length > 0 || eligibilityEval.aceWarnings.length > 0
                 ? 'bg-gradient-to-r from-rose-50/90 via-amber-50/70 to-white border-rose-200'
@@ -721,7 +1270,7 @@ export function DvApprovalCard({
                   ) : eligibilityEval.fieldStatus.workMonths === 'pass' ? (
                     <CheckCircle2 className="w-3 h-3" />
                   ) : null}
-                  อายุงาน: {customerWorkMonths?.trim() ? `${customerWorkMonths} ด.` : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
+                  อายุงาน: {customerWorkMonths?.trim() ? formatTenureThai(customerWorkMonths, true) : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
                 </span>
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
@@ -753,7 +1302,7 @@ export function DvApprovalCard({
                   ) : eligibilityEval.fieldStatus.residenceMonths === 'pass' ? (
                     <CheckCircle2 className="w-3 h-3" />
                   ) : null}
-                  พักอาศัย: {customerResidenceMonths?.trim() ? `${customerResidenceMonths} ด.` : '-'} (≥{eligibilityEval.tier.residenceLabel})
+                  พักอาศัย: {customerResidenceMonths?.trim() ? formatTenureThai(customerResidenceMonths, true) : '-'} (≥{eligibilityEval.tier.residenceLabel})
                 </span>
               </div>
             ) : (
@@ -1254,8 +1803,74 @@ export function DvApprovalCard({
             </pre>
           </div>
 
-          {/* Action Buttons: ปุ่มคัดลอกข้อความและส่ง Line ให้อยู่แถวเดียวกันในตำแหน่งกึ่งกลาง (เอาปุ่มดึงค่าล่าสุดออก) */}
-          <div className="pt-3 flex flex-row items-center justify-center gap-3 sm:gap-4 w-full">
+          {/* Save to Firebase Realtime Database Section */}
+          <div className="pt-2 space-y-2">
+            <button
+              type="button"
+              onClick={handleSaveDvToDatabase}
+              disabled={isSavingDv}
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-sm shadow-sky-500/25 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-60"
+            >
+              {isSavingDv ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>กำลังบันทึกข้อมูล...</span>
+                </>
+              ) : editingDvId ? (
+                <>
+                  <BookmarkCheck className="w-4 h-4" />
+                  <span>อัปเดตข้อมูลลูกค้าขอ DV</span>
+                </>
+              ) : (
+                <>
+                  <Database className="w-4 h-4" />
+                  <span>บันทึกข้อมูลลูกค้าขอ DV</span>
+                </>
+              )}
+            </button>
+
+            {dvSaveFeedback && (
+              <div
+                className={`p-2.5 rounded-xl border text-[11px] font-bold flex items-center justify-between gap-2 flex-wrap ${
+                  dvSaveFeedback.type === 'cloud'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : dvSaveFeedback.type === 'error'
+                    ? 'bg-rose-50 border-rose-200 text-rose-800'
+                    : 'bg-amber-50 border-amber-200 text-amber-900'
+                }`}
+              >
+                <span className="flex items-center gap-1.5 min-w-0 flex-1">
+                  {dvSaveFeedback.type === 'cloud' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{dvSaveFeedback.text}</span>
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {!firebaseUser && (
+                    <button
+                      type="button"
+                      onClick={() => void signInWithGoogle()}
+                      className="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-[10.5px] font-bold cursor-pointer"
+                    >
+                      เข้าสู่ระบบ Google
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setModalTab('saved')}
+                    className="px-2.5 py-1 rounded-lg bg-white border border-current/25 text-[10.5px] font-bold cursor-pointer"
+                  >
+                    ดูรายการที่บันทึก ({dvRequests.length}) →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons: ปุ่มคัดลอกข้อความและส่ง Line ให้อยู่แถวเดียวกันในตำแหน่งกึ่งกลาง */}
+          <div className="pt-1 flex flex-row items-center justify-center gap-3 sm:gap-4 w-full">
             {/* Copy Text Button */}
             <button
               type="button"
@@ -1295,6 +1910,8 @@ export function DvApprovalCard({
               )}
             </button>
           </div>
+            </>
+          )}
         </div>
       </CardModalOverlay>
 

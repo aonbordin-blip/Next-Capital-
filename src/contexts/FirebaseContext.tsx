@@ -8,18 +8,28 @@ import {
 } from '../firebase';
 import {
   deleteCloudCases,
+  deleteCloudDvRequest,
   ensureUserProfileDoc,
   pushAllLocalCasesToCloud,
+  pushLocalDvRequestsToCloud,
   subscribeUserCases,
+  subscribeUserDvRequests,
   updateUserProfilePrefs,
   upsertCloudCases,
+  upsertCloudDvRequest,
   UserProfilePrefs,
 } from '../utils/cloudSync';
 import {
   registerCloudSyncBridge,
   resetCloudSyncTracking,
 } from '../utils/savedCasesStorage';
-import { SavedCaseRecord as CaseRecord } from '../types';
+import {
+  deleteLocalDvRequest,
+  getSavedDvRequests,
+  resetDvCloudTracking,
+  saveLocalDvRequest,
+} from '../utils/dvCasesStorage';
+import { DvRequestStatus, SavedCaseRecord as CaseRecord, SavedDvRequestRecord } from '../types';
 
 export type CloudSyncStatus = 'signed_out' | 'syncing' | 'synced' | 'error';
 
@@ -33,6 +43,10 @@ interface FirebaseContextValue {
   syncNotice: string | null;
   approvalDocSkippedCount: number;
   cloudCaseCount: number;
+  dvRequests: SavedDvRequestRecord[];
+  saveDvRequest: (record: SavedDvRequestRecord) => Promise<{ savedToCloud: boolean; error?: string }>;
+  updateDvRequestStatus: (id: string, status: DvRequestStatus) => Promise<void>;
+  removeDvRequest: (id: string) => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
   signOut: () => Promise<void>;
   syncNow: () => Promise<void>;
@@ -95,12 +109,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
   const [approvalDocSkippedCount, setApprovalDocSkippedCount] = useState(0);
   const [cloudCaseCount, setCloudCaseCount] = useState(0);
+  const [dvRequests, setDvRequests] = useState<SavedDvRequestRecord[]>(() => getSavedDvRequests());
 
   const cloudCreatedAtMapRef = useRef<Map<string, number>>(new Map());
   const cloudRecordCreatedAtMapRef = useRef<Map<string, number>>(new Map());
   const profileDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeUserRef = useRef<User | null>(null);
   const unsubscribeCasesRef = useRef<(() => void) | null>(null);
+  const unsubscribeDvRequestsRef = useRef<(() => void) | null>(null);
 
   const attachBridgeAndSubscription = useCallback(
     async (targetUser: User, forceTokenRefresh = false) => {
@@ -176,9 +192,18 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         pushErr = err;
       }
 
+      // Push any existing local DV requests that aren't in cloud yet
+      pushLocalDvRequestsToCloud(targetUser).catch((err) => {
+        console.error('Failed to push local DV requests:', err);
+      });
+
       if (unsubscribeCasesRef.current) {
         unsubscribeCasesRef.current();
         unsubscribeCasesRef.current = null;
+      }
+      if (unsubscribeDvRequestsRef.current) {
+        unsubscribeDvRequestsRef.current();
+        unsubscribeDvRequestsRef.current = null;
       }
 
       // Attach real-time RTDB listener (only when auth is ready & authenticated)
@@ -205,6 +230,16 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       );
 
+      unsubscribeDvRequestsRef.current = subscribeUserDvRequests(
+        targetUser,
+        (records) => {
+          setDvRequests(records);
+        },
+        (err) => {
+          console.error('DV requests RTDB listener error:', err);
+        }
+      );
+
       if (pushErr) {
         throw pushErr;
       }
@@ -220,12 +255,17 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         unsubscribeCasesRef.current();
         unsubscribeCasesRef.current = null;
       }
+      if (unsubscribeDvRequestsRef.current) {
+        unsubscribeDvRequestsRef.current();
+        unsubscribeDvRequestsRef.current = null;
+      }
       cloudCreatedAtMapRef.current.clear();
       cloudRecordCreatedAtMapRef.current.clear();
 
       if (!nextUser || !nextUser.email || !nextUser.emailVerified) {
         activeUserRef.current = null;
         resetCloudSyncTracking();
+        resetDvCloudTracking();
         setUser(null);
         setSyncStatus('signed_out');
         setSyncNotice(null);
@@ -236,6 +276,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             : null
         );
         setCloudCaseCount(0);
+        setDvRequests(getSavedDvRequests());
         registerCloudSyncBridge(null);
         setAuthReady(true);
         return;
@@ -243,6 +284,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (activeUserRef.current?.uid !== nextUser.uid) {
         resetCloudSyncTracking();
+        resetDvCloudTracking();
         setSyncNotice(null);
         setApprovalDocSkippedCount(0);
       }
@@ -264,6 +306,10 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (unsubscribeCasesRef.current) {
         unsubscribeCasesRef.current();
         unsubscribeCasesRef.current = null;
+      }
+      if (unsubscribeDvRequestsRef.current) {
+        unsubscribeDvRequestsRef.current();
+        unsubscribeDvRequestsRef.current = null;
       }
       registerCloudSyncBridge(null);
     };
@@ -333,8 +379,13 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       unsubscribeCasesRef.current();
       unsubscribeCasesRef.current = null;
     }
+    if (unsubscribeDvRequestsRef.current) {
+      unsubscribeDvRequestsRef.current();
+      unsubscribeDvRequestsRef.current = null;
+    }
     registerCloudSyncBridge(null);
     resetCloudSyncTracking();
+    resetDvCloudTracking();
     await signOutFirebase();
     setUser(null);
     setSyncStatus('signed_out');
@@ -342,6 +393,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSyncError(null);
     setSyncNotice(null);
     setApprovalDocSkippedCount(0);
+    setDvRequests(getSavedDvRequests());
   }, []);
 
   const syncNow = useCallback(async () => {
@@ -372,6 +424,62 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 800);
   }, []);
 
+  const saveDvRequest = useCallback(
+    async (record: SavedDvRequestRecord): Promise<{ savedToCloud: boolean; error?: string }> => {
+      const updatedList = saveLocalDvRequest(record);
+      setDvRequests(updatedList);
+
+      const currentUser = activeUserRef.current || auth.currentUser;
+      if (!currentUser || !currentUser.emailVerified) {
+        return { savedToCloud: false };
+      }
+
+      try {
+        await upsertCloudDvRequest(currentUser, record);
+        setLastSyncedAt(Date.now());
+        return { savedToCloud: true };
+      } catch (err) {
+        return {
+          savedToCloud: false,
+          error: formatReadableFirebaseError(err),
+        };
+      }
+    },
+    []
+  );
+
+  const updateDvRequestStatus = useCallback(
+    async (id: string, status: DvRequestStatus): Promise<void> => {
+      const current = getSavedDvRequests().find((r) => r.id === id);
+      if (!current) return;
+      const updatedRecord: SavedDvRequestRecord = {
+        ...current,
+        status,
+        updatedAt: Date.now(),
+      };
+      const updatedList = saveLocalDvRequest(updatedRecord);
+      setDvRequests(updatedList);
+
+      const currentUser = activeUserRef.current || auth.currentUser;
+      if (currentUser && currentUser.emailVerified) {
+        await upsertCloudDvRequest(currentUser, updatedRecord);
+        setLastSyncedAt(Date.now());
+      }
+    },
+    []
+  );
+
+  const removeDvRequest = useCallback(async (id: string): Promise<void> => {
+    const nextList = deleteLocalDvRequest(id);
+    setDvRequests(nextList);
+
+    const currentUser = activeUserRef.current || auth.currentUser;
+    if (currentUser && currentUser.emailVerified) {
+      await deleteCloudDvRequest(currentUser, id);
+      setLastSyncedAt(Date.now());
+    }
+  }, []);
+
   return (
     <FirebaseContext.Provider
       value={{
@@ -384,6 +492,10 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         syncNotice,
         approvalDocSkippedCount,
         cloudCaseCount,
+        dvRequests,
+        saveDvRequest,
+        updateDvRequestStatus,
+        removeDvRequest,
         signInWithGoogle,
         signOut: handleSignOut,
         syncNow,

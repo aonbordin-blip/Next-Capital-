@@ -158,6 +158,27 @@ export interface CustomerEligibilityResult {
   allCheckedPassed: boolean;
 }
 
+export function formatTenureThai(rawMonths?: string | number | null, compact = false): string {
+  const num =
+    typeof rawMonths === 'number'
+      ? rawMonths
+      : parsePositiveNumber(rawMonths ?? undefined);
+  if (num === null) return '';
+
+  const total = Math.max(0, Math.round(num));
+  const years = Math.floor(total / 12);
+  const months = total % 12;
+  const monthUnit = compact ? 'ด.' : 'เดือน';
+
+  if (years > 0 && months > 0) {
+    return `${years} ปี ${months} ${monthUnit}`;
+  }
+  if (years > 0) {
+    return `${years} ปี`;
+  }
+  return `${months} ${monthUnit}`;
+}
+
 function parsePositiveNumber(raw?: string): number | null {
   if (!raw) return null;
   const cleaned = raw.replace(/,/g, '').trim();
@@ -213,7 +234,7 @@ export function evaluateCustomerEligibility(
         code: 'A2',
         dvTopic: 'A2 : อายุงานไม่ผ่าน',
         fieldLabel: 'อายุงาน',
-        detail: `อายุงาน ${workVal} เดือน (เกณฑ์ ≥ ${tier.workMonthsLabel})`,
+        detail: `อายุงาน ${formatTenureThai(workVal)} (เกณฑ์ ≥ ${tier.workMonthsLabel})`,
       });
     } else {
       workStatus = 'pass';
@@ -249,7 +270,7 @@ export function evaluateCustomerEligibility(
         code: 'A6',
         dvTopic: 'A6 : ระยะเวลาพักอาศัยไม่ผ่าน',
         fieldLabel: 'พักอาศัย',
-        detail: `พักอาศัย ${residenceVal} เดือน (เกณฑ์ ≥ ${tier.residenceLabel})`,
+        detail: `พักอาศัย ${formatTenureThai(residenceVal)} (เกณฑ์ ≥ ${tier.residenceLabel})`,
       });
     } else {
       residenceStatus = 'pass';
