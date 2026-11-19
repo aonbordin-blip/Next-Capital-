@@ -3,6 +3,7 @@ import { Layers, CheckCircle2, ShieldCheck, HelpCircle, ChevronDown, ChevronUp }
 import { TermComparisonItem } from '../types';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
+import { MarqueeText } from './MarqueeText';
 
 interface Props {
   comparisons: TermComparisonItem[];
@@ -45,75 +46,66 @@ export const TermComparisonTable: React.FC<Props> = ({
   return (
     <div
       data-card-id="comparison"
-      className="glass-card-primary rounded-[24px] p-3.5 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden transition-all duration-200"
+      className="glass-card-primary rounded-[24px] p-3 sm:p-4 lg:p-5 shadow-sm relative overflow-hidden transition-all duration-200"
     >
       {/* Subtle top specular sheen */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80 pointer-events-none" />
 
-      {/* Header section: Clean two-row hierarchy for mobile readability */}
+      {/* Header section with EIR button aligned to top-right corner and collapse toggle */}
       <div
         data-card-toggle="true"
         onClick={handleToggle}
-        className={`cursor-pointer select-none transition-all ${isExpanded ? 'mb-3' : 'mb-0'}`}
+        className={`flex items-start justify-between gap-2.5 cursor-pointer select-none transition-all ${isExpanded ? 'mb-3' : 'mb-0'}`}
       >
-        {/* Row 1: Icon + Full Title & Subtitle + Collapse Toggle */}
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-xl bg-cyan-100/90 text-cyan-700 flex items-center justify-center shadow-2xs shrink-0">
-              <Layers className="w-4 h-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-[13px] sm:text-sm font-extrabold text-slate-800 tracking-tight leading-tight truncate">
-                ตารางเปรียบเทียบระยะเวลางวดผ่อน
-              </h3>
-              <p className="text-[11px] font-medium text-slate-500 mt-0.5 leading-tight truncate">
-                {comparisons.length} ตัวเลือกระยะเวลา • {isExpanded ? 'แตะแถวเพื่อเลือกงวดผ่อน' : 'แตะเพื่อเปิดตารางเปรียบเทียบ'}
-              </p>
+        <div className="flex items-start gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shadow-xs shrink-0 mt-0.5">
+            <Layers className="w-3.5 h-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight min-w-0">
+              <MarqueeText>ตารางเปรียบเทียบระยะเวลางวดผ่อน</MarqueeText>
+            </h3>
+            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+              {hasAnyInsurance ? (
+                <span className="text-[9.5px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1 shadow-2xs">
+                  <ShieldCheck className="w-3 h-3 text-amber-600" />
+                  ประกัน {activePlanName}
+                </span>
+              ) : (
+                <span className="text-[9.5px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                  ไม่รวมประกัน
+                </span>
+              )}
+              {!isExpanded && (
+                <span className="text-[9.5px] font-semibold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200">
+                  {comparisons.length} ตัวเลือกระยะเวลา
+                </span>
+              )}
             </div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {onOpenEirInfo && (
+            <button
+              type="button"
+              onClick={onOpenEirInfo}
+              className="text-[10px] text-cyan-800 hover:text-cyan-900 font-bold px-2.5 py-1 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors cursor-pointer shadow-2xs whitespace-nowrap flex items-center gap-1"
+              title="ดูรายละเอียดเกณฑ์ EIR 23%"
+            >
+              <span>⚖️ เกณฑ์ EIR 23%</span>
+              <HelpCircle className="w-3 h-3 text-cyan-600" />
+            </button>
+          )}
 
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggle();
-            }}
-            className="w-8 h-8 rounded-xl bg-white/85 hover:bg-white text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs flex items-center justify-center shrink-0"
+            onClick={handleToggle}
+            className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
             title={isExpanded ? 'ย่อตารางเปรียบเทียบ' : 'ขยายตารางเปรียบเทียบ'}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
-        </div>
-
-        {/* Row 2: Insurance Plan Status + EIR 23% Info Trigger */}
-        <div className="flex items-center justify-between gap-2 pt-2.5 mt-2.5 border-t border-slate-200/60">
-          <div className="min-w-0 flex-1 flex items-center">
-            {hasAnyInsurance ? (
-              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-amber-800 bg-amber-50/95 px-2.5 py-1 rounded-lg border border-amber-200/90 shadow-2xs max-w-full">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span className="truncate">ประกัน {activePlanName}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center text-[10px] sm:text-[11px] font-medium text-slate-500 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
-                ไม่รวมประกัน
-              </span>
-            )}
-          </div>
-
-          {onOpenEirInfo && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenEirInfo();
-              }}
-              className="text-[10.5px] sm:text-[11px] text-cyan-800 hover:text-cyan-950 font-bold px-2.5 py-1 rounded-lg bg-cyan-50/95 hover:bg-cyan-100 border border-cyan-200/90 transition-colors cursor-pointer shadow-2xs whitespace-nowrap flex items-center gap-1 shrink-0"
-              title="ดูรายละเอียดเกณฑ์ EIR 23%"
-            >
-              <span>⚖️ เกณฑ์ EIR 23%</span>
-              <HelpCircle className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-            </button>
-          )}
         </div>
       </div>
 

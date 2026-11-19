@@ -20,27 +20,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-    <style>
-      html, body, #root {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #ffffff;
-        overflow: hidden;
-        overscroll-behavior: none;
-      }
-      @keyframes ncap-loading {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(250%); }
-      }
-    </style>
   </head>
-  <body class="bg-white text-slate-800 antialiased selection:bg-cyan-500 selection:text-white">
+  <body class="bg-[#cae8fe] text-slate-800 antialiased selection:bg-cyan-500 selection:text-white">
     <div id="root">
-      <!-- Graceful Pre-mount Shell (Eliminates Blank White Screen & Bottom Viewport Seam) -->
-      <div style="position: fixed; inset: 0; width: 100%; height: 100%; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Prompt', sans-serif; padding: 1rem; box-sizing: border-box;">
-        <div style="background: #ffffff; border-radius: 28px; padding: 2rem 2.5rem; text-align: center; max-width: 360px; width: 100%;">
+      <!-- Graceful Pre-mount Shell (Eliminates Blank White Screen) -->
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Prompt', sans-serif; padding: 1rem;">
+        <div style="background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(255, 255, 255, 0.9); border-radius: 28px; padding: 2rem 2.5rem; text-align: center; box-shadow: 0 20px 50px -10px rgba(2, 132, 199, 0.2); max-width: 360px; width: 100%;">
           <div style="width: 52px; height: 52px; margin: 0 auto 1rem; border-radius: 16px; background: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0;">
             <svg width="32" height="32" viewBox="0 0 500 500" fill="none" style="display: block;">
               <path d="M 112 72 L 416 72 L 398 138 L 332 138 L 286 264 L 240 138 L 160 138 L 102 348 L 38 348 Z" fill="#1C449C" />
@@ -53,6 +38,12 @@
             <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #0284c7, #06b6d4); border-radius: 9999px; animation: ncap-loading 1.2s infinite ease-in-out;"></div>
           </div>
         </div>
+        <style>
+          @keyframes ncap-loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(250%); }
+          }
+        </style>
       </div>
     </div>
     <script>

@@ -104,7 +104,6 @@ import {
 import { useFirebase } from './contexts/FirebaseContext';
 import { CloudSyncCard } from './components/CloudSyncCard';
 import { HomeDashboard } from './components/HomeDashboard';
-import { YearsMonthsInput } from './components/YearsMonthsInput';
 
 export default function App() {
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
@@ -881,8 +880,6 @@ export default function App() {
 
     const downText = `${formatBaht(currentCalculation.downAmount)} บ. (${currentCalculation.downPercent.toFixed(1)}%)`;
 
-    const hasInsurance = currentCalculation.insuranceTotalWithVat > 0;
-
     if (activeStyle === 'compact') {
       const lines: string[] = [
         `🛵 สรุปค่างวด Next Capital`,
@@ -897,18 +894,7 @@ export default function App() {
       lines.push(
         `🏍️ รุ่นรถ : ${bikeLabel}`,
         `💰 ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ. | ดาวน์ : ${formatBaht(currentCalculation.downAmount)} บ.`,
-      );
-      if (hasInsurance) {
-        lines.push(
-          `💵 ยอดจัดตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`,
-          `💳 ยอดจัดรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บ.`
-        );
-      } else {
-        lines.push(
-          `💳 ยอดจัด (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`
-        );
-      }
-      lines.push(
+        `💳 ยอดจัด : ${formatBaht(currentCalculation.financeAmount, true)} บ.`,
         `🛡️ ประกัน : ${insuranceLabel}`,
         `━━━━━━━━━━━━━━━`,
         `🔥 ผ่อนเพียง : ${formatBaht(currentCalculation.monthlyInstallment)} บ./เดือน`,
@@ -948,18 +934,7 @@ export default function App() {
         `📋 แผน : ${currentCalculation.proposalName} (${currentCalculation.proposalCode})`,
         `▸ ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ.`,
         `▸ เงินดาวน์ : ${downText}`,
-      );
-      if (hasInsurance) {
-        lines.push(
-          `▸ ยอดจัดเฉพาะตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`,
-          `▸ ยอดจัดรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บ.`
-        );
-      } else {
-        lines.push(
-          `▸ ยอดจัด (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`
-        );
-      }
-      lines.push(
+        `▸ ยอดจัด : ${formatBaht(currentCalculation.financeAmount, true)} บ.`,
         `▸ ประกัน : ${insuranceLabel}`,
         ``,
         `📌 เลือกงวดผ่อนสบายๆ (รวม VAT 7%)`,
@@ -1002,18 +977,7 @@ export default function App() {
       `📌 รายละเอียดเงื่อนไขสินเชื่อ`,
       `▸ ราคารถเงินสด : ${formatBaht(currentCalculation.baseVehiclePrice)} บาท`,
       `▸ เงินดาวน์ : ${downText}`,
-    );
-    if (hasInsurance) {
-      lines.push(
-        `▸ ยอดจัดเฉพาะตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บาท`,
-        `▸ ยอดจัดสินเชื่อรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บาท`
-      );
-    } else {
-      lines.push(
-        `▸ ยอดจัดสินเชื่อ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บาท`
-      );
-    }
-    lines.push(
+      `▸ ยอดจัดสินเชื่อ : ${formatBaht(currentCalculation.financeAmount, true)} บาท`,
       `▸ ประกันคุ้มครอง : ${insuranceLabel}`,
       `▸ อัตราดอกเบี้ย : ${cleanRate}`,
     );
@@ -1365,7 +1329,34 @@ export default function App() {
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden bg-white text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#cae8fe] text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
+      {/* Soft Ambient Background Radial Glows for Neo-Glassmorphism Depth (Zero GPU blur pass) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute -top-24 -left-20 w-[420px] h-[420px] rounded-full opacity-55"
+          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.45) 0%, rgba(34,211,238,0) 70%)' }}
+        />
+        <div
+          className="absolute top-1/3 -right-24 w-[380px] h-[380px] rounded-full opacity-55"
+          style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.45) 0%, rgba(94,234,212,0) 70%)' }}
+        />
+        <div
+          className="absolute -bottom-28 left-1/4 w-[440px] h-[440px] rounded-full opacity-55"
+          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.4) 0%, rgba(56,189,248,0) 70%)' }}
+        />
+        <div
+          className="absolute top-2/3 -left-16 w-[360px] h-[360px] rounded-full opacity-45"
+          style={{ background: 'radial-gradient(circle, rgba(165,180,252,0.35) 0%, rgba(165,180,252,0) 70%)' }}
+        />
+        {/* Subtle geometric dot grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `radial-gradient(#0284c7 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+      </div>
 
       {/* Top Floating View Mode Switcher on Desktop */}
       <div className="no-print hidden sm:flex items-center gap-2 mb-2 bg-white/70 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm shadow-sky-900/10 text-xs z-10 shrink-0">
@@ -1562,14 +1553,14 @@ export default function App() {
         {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
-          className="relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-20 sm:pb-24 space-y-2.5 sm:space-y-3.5 overscroll-contain"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-20 sm:pb-24 space-y-2.5 sm:space-y-3.5 overscroll-contain"
         >
           {/* In-App PWA Install Banner */}
           <InstallAppBanner />
 
           {/* Selected Bike Banner if active */}
           {(selectedBike || bikeModelCode) && (
-            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 glass-panel-cyan rounded-2xl flex items-center justify-between text-xs">
+            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-sky-50 via-white to-cyan-50 rounded-2xl border border-sky-100 flex items-center justify-between text-xs shadow-2xs">
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
                 <span className="text-slate-500 font-medium shrink-0">รุ่นที่เลือก:</span>
@@ -1596,7 +1587,7 @@ export default function App() {
 
           {/* Active Loaded Case Contract & Delivery Date Chip (เมื่อดึงเคสที่บันทึกไว้มาใช้งาน) */}
           {activeCaseRecord && !editingCaseId && (
-            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 glass-panel-teal rounded-2xl flex items-center justify-between gap-2 text-xs">
+            <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-emerald-50 via-white to-sky-50 rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-2 text-xs shadow-2xs">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="w-6 h-6 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <FolderArchive className="w-3.5 h-3.5" />
@@ -1934,73 +1925,99 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* 4 Criteria Inputs: อายุ, รายได้, อายุงาน (ปี/เดือน), พักอาศัย (ปี/เดือน) */}
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[10px] text-slate-600 font-medium mb-1">
-                          อายุ (ปี){' '}
-                          <span className="text-[9px] text-slate-400">
-                            ({customerEligibilityEval.tier.ageLabel})
-                          </span>
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="99"
-                          value={customerAge}
-                          onChange={(e) => handleCustomerAgeChange(e.target.value)}
-                          placeholder={`เช่น ${customerEligibilityEval.tier.minAge}`}
-                          className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
-                            customerEligibilityEval.fieldStatus.age === 'fail'
-                              ? 'border-rose-400 bg-rose-50/60 text-rose-900'
-                              : customerEligibilityEval.fieldStatus.age === 'pass'
-                              ? 'border-emerald-400 text-emerald-950'
-                              : 'text-slate-900'
-                          }`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] text-slate-600 font-medium mb-1">
-                          รายได้/เดือน{' '}
-                          <span className="text-[9px] text-slate-400">
-                            (≥{customerEligibilityEval.tier.incomeLabel})
-                          </span>
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="500"
-                          value={customerIncome}
-                          onChange={(e) => handleCustomerIncomeChange(e.target.value)}
-                          placeholder={`≥ ${customerEligibilityEval.tier.incomeLabel}`}
-                          className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
-                            customerEligibilityEval.fieldStatus.income === 'fail'
-                              ? 'border-rose-400 bg-rose-50/60 text-rose-900'
-                              : customerEligibilityEval.fieldStatus.income === 'pass'
-                              ? 'border-emerald-400 text-emerald-950'
-                              : 'text-slate-900'
-                          }`}
-                        />
-                      </div>
+                  {/* 4 Criteria Inputs: อายุ, อายุงาน, รายได้, ระยะเวลาพักอาศัย */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        อายุ (ปี){' '}
+                        <span className="text-[9px] text-slate-400">
+                          ({customerEligibilityEval.tier.ageLabel})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={customerAge}
+                        onChange={(e) => handleCustomerAgeChange(e.target.value)}
+                        placeholder={`เช่น ${customerEligibilityEval.tier.minAge}`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.age === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.age === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
+                      />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <YearsMonthsInput
-                        label="อายุงาน"
-                        criteriaHint={`≥${customerEligibilityEval.tier.workMonthsLabel}`}
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        อายุงาน (เดือน){' '}
+                        <span className="text-[9px] text-slate-400">
+                          (≥{customerEligibilityEval.tier.minWorkMonths})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
                         value={customerWorkMonths}
-                        onChange={handleCustomerWorkMonthsChange}
-                        status={customerEligibilityEval.fieldStatus.workMonths}
+                        onChange={(e) => handleCustomerWorkMonthsChange(e.target.value)}
+                        placeholder={`≥ ${customerEligibilityEval.tier.minWorkMonths} ด.`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.workMonths === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.workMonths === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
                       />
+                    </div>
 
-                      <YearsMonthsInput
-                        label="พักอาศัย"
-                        criteriaHint={`≥${customerEligibilityEval.tier.residenceLabel}`}
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        รายได้/เดือน{' '}
+                        <span className="text-[9px] text-slate-400">
+                          (≥{customerEligibilityEval.tier.incomeLabel})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="500"
+                        value={customerIncome}
+                        onChange={(e) => handleCustomerIncomeChange(e.target.value)}
+                        placeholder={`≥ ${customerEligibilityEval.tier.incomeLabel}`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.income === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.income === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        พักอาศัย (เดือน){' '}
+                        <span className="text-[9px] text-slate-400">
+                          (≥{customerEligibilityEval.tier.minResidenceMonths})
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
                         value={customerResidenceMonths}
-                        onChange={handleCustomerResidenceMonthsChange}
-                        status={customerEligibilityEval.fieldStatus.residenceMonths}
+                        onChange={(e) => handleCustomerResidenceMonthsChange(e.target.value)}
+                        placeholder={`≥ ${customerEligibilityEval.tier.minResidenceMonths} ด.`}
+                        className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
+                          customerEligibilityEval.fieldStatus.residenceMonths === 'fail'
+                            ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                            : customerEligibilityEval.fieldStatus.residenceMonths === 'pass'
+                            ? 'border-emerald-400 text-emerald-950'
+                            : 'text-slate-900'
+                        }`}
                       />
                     </div>
                   </div>
@@ -2091,7 +2108,7 @@ export default function App() {
               {/* Dealer Information Card (กล่องใส่ชื่อร้านตัวแทนจำหน่าย ลิงก์ไปยังเอกสารและทุกส่วน) */}
               <div
                 data-card-id="dealer"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2">
@@ -2383,7 +2400,7 @@ export default function App() {
             {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์) */}
             <div
               data-card-id="financing"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-indigo relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
+                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
 
@@ -2571,36 +2588,19 @@ export default function App() {
 
                 {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
                 <div className="pt-0.5 space-y-1">
-                  <div className="relative py-0.5">
-                    <div className="h-2.5 w-full bg-slate-200/80 rounded-full overflow-hidden flex p-0.5 border border-white/90 shadow-inner">
-                      <div
-                        style={{
-                          width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
-                        }}
-                        className={`h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500 ease-out shadow-2xs ${
-                          currentCalculation.downPercent > 0 ? 'animate-fuel-shimmer' : ''
-                        }`}
-                      />
-                      <div
-                        style={{
-                          width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
-                        }}
-                        className={`h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500 ease-out ${
-                          100 - currentCalculation.downPercent > 0 ? 'animate-fuel-shimmer' : ''
-                        }`}
-                      />
-                    </div>
-                    {currentCalculation.downPercent > 0 && currentCalculation.downPercent < 100 && (
-                      <div
-                        className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
-                        style={{
-                          left: `${Math.min(97, Math.max(3, currentCalculation.downPercent))}%`,
-                        }}
-                      >
-                        <span className="absolute inset-0 w-3 h-3 -m-[2.5px] rounded-full bg-emerald-400 animate-fuel-tip-ping" />
-                        <span className="block w-2 h-2 rounded-full bg-white border-[1.5px] border-slate-800 shadow-sm" />
-                      </div>
-                    )}
+                  <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden flex p-0.5 border border-slate-300/50 shadow-inner">
+                    <div
+                      style={{
+                        width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
+                      }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 shadow-2xs"
+                    />
+                    <div
+                      style={{
+                        width: `${Math.min(Math.max(100 - currentCalculation.downPercent, 0), 100)}%`,
+                      }}
+                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300"
+                    />
                   </div>
                   <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
                     <span className="flex items-center gap-1 text-emerald-800">
@@ -3151,10 +3151,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => handleTabChange('home')}
-                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer whitespace-nowrap"
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-500 shrink-0" />
-                <span>โฮมเพจ</span>
+                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <span>ย้อนกลับ: โฮมเพจ</span>
               </button>
               <button
                 type="button"
@@ -3343,81 +3343,74 @@ export default function App() {
 
                 {/* Share Format Selector & Preview Toggle */}
                 <div className="pt-1 space-y-2">
-                  {/* Format Style Segmented Control */}
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-sky-100/55 backdrop-blur-sm border border-white/85 rounded-xl shadow-2xs">
-                    <button
-                      type="button"
-                      onClick={() => handleShareStyleChange('card')}
-                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
-                        shareTextStyle === 'card'
-                          ? 'bg-white text-emerald-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <span>✨</span>
-                      <span>การ์ดเด่น</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleShareStyleChange('compare')}
-                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
-                        shareTextStyle === 'compare'
-                          ? 'bg-white text-emerald-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <span>📊</span>
-                      <span>เทียบงวด</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleShareStyleChange('compact')}
-                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
-                        shareTextStyle === 'compact'
-                          ? 'bg-white text-emerald-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <span>⚡</span>
-                      <span>กระชับ</span>
-                    </button>
-                  </div>
+                  <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleShareStyleChange('card')}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
+                          shareTextStyle === 'card'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        ✨ การ์ดเด่น
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleShareStyleChange('compare')}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
+                          shareTextStyle === 'compare'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        📊 เทียบงวด
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleShareStyleChange('compact')}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer border ${
+                          shareTextStyle === 'compact'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        ⚡ กระชับ
+                      </button>
+                    </div>
 
-                  {/* Preview & Copy Utility Row */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setShowSharePreview((prev) => !prev);
-                      }}
-                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-98 whitespace-nowrap shadow-2xs ${
-                        showSharePreview
-                          ? 'bg-sky-50 text-sky-800 border-sky-300'
-                          : 'bg-white/90 text-slate-700 border-slate-200/90 hover:bg-white'
-                      }`}
-                      title="ดูตัวอย่างข้อความก่อนแชร์"
-                    >
-                      <Eye className="w-3.5 h-3.5 shrink-0" />
-                      <span>{showSharePreview ? 'ซ่อนตัวอย่าง' : 'ดูตัวอย่าง'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleQuickCopy}
-                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-98 whitespace-nowrap shadow-2xs ${
-                        copyFeedback
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          : 'bg-white/90 hover:bg-white text-slate-700 border-slate-200/90'
-                      }`}
-                      title="คัดลอกข้อความลงคลิปบอร์ด"
-                    >
-                      {copyFeedback ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                      )}
-                      <span>{copyFeedback ? 'คัดลอกแล้ว!' : 'คัดลอก'}</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setShowSharePreview((prev) => !prev);
+                        }}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 border transition-colors cursor-pointer ${
+                          showSharePreview
+                            ? 'bg-sky-50 text-sky-800 border-sky-300'
+                            : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-white'
+                        }`}
+                        title="ดูตัวอย่างข้อความก่อนแชร์"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>{showSharePreview ? 'ซ่อน' : 'ดูตัวอย่าง'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleQuickCopy}
+                        className="px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 bg-white/80 hover:bg-white text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+                        title="คัดลอกข้อความลงคลิปบอร์ด"
+                      >
+                        {copyFeedback ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-slate-500" />
+                        )}
+                        <span>{copyFeedback ? 'แล้ว' : 'คัดลอก'}</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Optional Collapsible Preview Box */}

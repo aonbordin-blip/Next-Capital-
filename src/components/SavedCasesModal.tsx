@@ -1978,241 +1978,198 @@ export const SavedCasesModal: React.FC<Props> = ({
                         const firstLetter = custName.slice(0, 1) || 'ค';
                         const statusMeta = getDealStatusMeta(record);
 
+                        const crossMonthNote = (() => {
+                          if (!isApproved) return null;
+                          const approvalYM = getCaseApprovalYM(record);
+                          const deliveryYM = getCaseDeliveryYM(record);
+                          if (isDelivered) {
+                            if (approvalYM && deliveryYM && approvalYM < deliveryYM) {
+                              return {
+                                text: `ยกยอดรับรถ (อนุมัติ ${formatThaiDateOnly(record.approvalDate)})`,
+                                className: 'text-teal-700 font-bold',
+                              };
+                            }
+                            if (approvalYM && deliveryYM && approvalYM > deliveryYM) {
+                              return {
+                                text: 'รับรถก่อนผล',
+                                className: 'text-indigo-700 font-bold',
+                              };
+                            }
+                            return null;
+                          }
+                          if (approvalYM && selectedMonthKey !== 'all' && approvalYM < selectedMonthKey) {
+                            return {
+                              text: `ยกยอดรอรับรถ (อนุมัติ ${formatThaiDateOnly(record.approvalDate)})`,
+                              className: 'text-amber-700 font-bold',
+                            };
+                          }
+                          if (approvalYM && deliveryYM && deliveryYM > approvalYM) {
+                            return {
+                              text: `รับรถเดือนถัดไป (${formatThaiDateOnly(record.deliveryDate)})`,
+                              className: 'text-indigo-700 font-bold',
+                            };
+                          }
+                          return null;
+                        })();
+
                         return (
                           <div
                             key={record.id}
                             onClick={() => setDetailCase(record)}
-                            className={`p-3 sm:p-3.5 flex items-center justify-between gap-2.5 hover:bg-sky-50/60 transition-colors duration-150 cursor-pointer group active:bg-sky-100/60 ${
-                              isCurrentEditing ? 'bg-amber-50/30' : ''
+                            className={`p-3 sm:p-3.5 space-y-1.5 hover:bg-sky-50/60 transition-colors duration-150 cursor-pointer group active:bg-sky-100/60 ${
+                              isCurrentEditing ? 'bg-amber-50/40' : ''
                             }`}
                           >
-                            {/* Left: Avatar initial */}
-                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              <div
-                                className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs border ${
-                                  isApproved
-                                    ? isDelivered
-                                      ? 'bg-teal-50 text-teal-700 border-teal-200'
-                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : record.approvalStatus === 'rejected'
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                    : record.approvalStatus === 'cancelled'
-                                    ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                    : 'bg-sky-50 text-sky-700 border-sky-200'
-                                }`}
-                              >
-                                {firstLetter}
-                              </div>
+                            {/* Row 1: Avatar + Customer Name + Unified Status & Actions */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div
+                                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-2xs border ${
+                                    isApproved
+                                      ? isDelivered
+                                        ? 'bg-teal-50 text-teal-700 border-teal-200'
+                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : record.approvalStatus === 'rejected'
+                                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                      : record.approvalStatus === 'cancelled'
+                                      ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                      : 'bg-sky-50 text-sky-700 border-sky-200'
+                                  }`}
+                                >
+                                  {firstLetter}
+                                </div>
 
-                              {/* Center: Customer Name, Badges, Bike, Payment */}
-                              <div className="min-w-0 flex-1 space-y-0.5">
-                                {/* Row 1: Customer Name + Status Badges */}
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-sky-700 transition-colors truncate max-w-[170px] sm:max-w-[260px]">
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <MarqueeText className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-sky-700 transition-colors">
                                     {custName}
-                                  </span>
-
+                                  </MarqueeText>
                                   {isCurrentEditing && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                                      กำลังแก้ไข
-                                    </span>
-                                  )}
-
-                                  {/* Approval Status Badge */}
-                                  {(!record.approvalStatus || record.approvalStatus === 'pending') && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-sky-50 text-sky-700 border border-sky-200 inline-flex items-center gap-0.5">
-                                      <Clock className="w-2.5 h-2.5 text-sky-500" />
-                                      <span>รอผล</span>
-                                    </span>
-                                  )}
-                                  {isApproved && (
-                                    <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 inline-flex items-center gap-0.5">
-                                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                                      <span>อนุมัติ</span>
-                                    </span>
-                                  )}
-                                  {record.approvalStatus === 'rejected' && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-0.5">
-                                      <XCircle className="w-2.5 h-2.5 text-rose-600" />
-                                      <span>ไม่อนุมัติ</span>
-                                    </span>
-                                  )}
-                                  {record.approvalStatus === 'cancelled' && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 border border-slate-200 inline-flex items-center gap-0.5">
-                                      <Ban className="w-2.5 h-2.5 text-slate-500" />
-                                      <span>ยกเลิก</span>
-                                    </span>
-                                  )}
-
-                                  {/* Delivery Badge if approved */}
-                                  {isApproved && (
-                                    <>
-                                      {isDelivered ? (
-                                        <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-teal-50 text-teal-800 border border-teal-200 inline-flex items-center gap-0.5">
-                                          <PackageCheck className="w-2.5 h-2.5 text-teal-600" />
-                                          <span>รับรถแล้ว ✓</span>
-                                        </span>
-                                      ) : (
-                                        <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-900 border border-amber-200 inline-flex items-center gap-0.5">
-                                          <Clock className="w-2.5 h-2.5 text-amber-600" />
-                                          <span>รอรับรถ</span>
-                                        </span>
-                                      )}
-                                    </>
-                                  )}
-
-                                  {/* Cross-month Delivery & Approval Indicators */}
-                                  {isApproved && isDelivered && (() => {
-                                    const approvalYM = getCaseApprovalYM(record);
-                                    const deliveryYM = getCaseDeliveryYM(record);
-                                    if (approvalYM && deliveryYM && approvalYM < deliveryYM) {
-                                      return (
-                                        <span
-                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-teal-100 text-teal-900 border border-teal-300 inline-flex items-center gap-0.5"
-                                          title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} และมารับรถในเดือนนี้`}
-                                        >
-                                          <span>ยกยอดรับรถ (อนุมัติ {formatThaiDateOnly(record.approvalDate)})</span>
-                                        </span>
-                                      );
-                                    }
-                                    if (approvalYM && deliveryYM && approvalYM > deliveryYM) {
-                                      return (
-                                        <span
-                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 inline-flex items-center gap-0.5"
-                                        >
-                                          <span>รับรถก่อนผล</span>
-                                        </span>
-                                      );
-                                    }
-                                    return null;
-                                  })()}
-
-                                  {isApproved && !isDelivered && (() => {
-                                    const approvalYM = getCaseApprovalYM(record);
-                                    const deliveryYM = getCaseDeliveryYM(record);
-                                    if (approvalYM && selectedMonthKey !== 'all' && approvalYM < selectedMonthKey) {
-                                      return (
-                                        <span
-                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-950 border border-amber-300 inline-flex items-center gap-0.5 shadow-2xs"
-                                          title={`อนุมัติตั้งแต่งวด ${formatYearMonthLabel(approvalYM)} (${formatThaiDateOnly(record.approvalDate)}) แต่ยังไม่ได้รับรถ (ยกยอดมารอรับรถในงวดนี้)`}
-                                        >
-                                          <Clock className="w-2.5 h-2.5 text-amber-700" />
-                                          <span>ยกยอดรอรับรถ (อนุมัติ {formatThaiDateOnly(record.approvalDate)})</span>
-                                        </span>
-                                      );
-                                    }
-                                    if (approvalYM && deliveryYM && deliveryYM > approvalYM) {
-                                      return (
-                                        <span
-                                          className="text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 inline-flex items-center gap-0.5"
-                                          title={`อนุมัติในงวดนี้ แต่มีกำหนดรับรถเมื่อ ${formatThaiDateOnly(record.deliveryDate)}`}
-                                        >
-                                          <span>รับรถเดือนถัดไป ({formatThaiDateOnly(record.deliveryDate)})</span>
-                                        </span>
-                                      );
-                                    }
-                                    return null;
-                                  })()}
-
-                                  {/* Approval PDF Badge */}
-                                  {record.approvalDoc && (
-                                    <span
-                                      className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-0.5"
-                                      title={`แนบเอกสารแล้ว: ${record.approvalDoc.name}`}
-                                    >
-                                      <FileText className="w-2.5 h-2.5 text-rose-600" />
-                                      <span>PDF</span>
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap shrink-0">
+                                      แก้ไข
                                     </span>
                                   )}
                                 </div>
+                              </div>
 
-                                {/* Row 2: Phone + Bike Model + Dealer */}
-                                <MarqueeText className="text-[10.5px] text-slate-500">
-                                  <span className="inline-flex items-center gap-2">
-                                    {record.customerPhone && (
-                                      <span className="text-slate-600 font-medium inline-flex items-center gap-0.5">
-                                        <Phone className="w-2.5 h-2.5 text-slate-400" />
-                                        {record.customerPhone}
-                                      </span>
-                                    )}
-                                    {record.customerPhone && record.bikeModelName && (
-                                      <span className="text-slate-300">•</span>
-                                    )}
-                                    {record.bikeModelName && (
-                                      <span className="text-slate-700 font-medium inline-flex items-center gap-0.5">
-                                        <Bike className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                        <span>{record.bikeModelName}</span>
-                                      </span>
-                                    )}
-                                    {record.dealerName && (
-                                      <>
-                                        <span className="text-slate-300">•</span>
-                                        <span className="text-sky-700 font-medium inline-flex items-center gap-0.5">
-                                          <Building2 className="w-2.5 h-2.5 text-sky-500 shrink-0" />
-                                          <span>{record.dealerName}</span>
-                                        </span>
-                                      </>
-                                    )}
-                                  </span>
-                                </MarqueeText>
-
-                                {/* Row 3: First Due Date badge or Installment preview */}
-                                <div className="flex items-center gap-1.5 flex-wrap text-[10px] pt-0.5">
-                                  {firstDue && (
-                                    <span className="px-1.5 py-0.2 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200/80 font-bold inline-flex items-center gap-0.5">
-                                      <CalendarClock className="w-2.5 h-2.5 text-indigo-600" />
-                                      <span>งวดแรก: 2 {firstDue.monthShort} {firstDue.thaiShortYear}</span>
-                                    </span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {/* Unified Status Badge */}
+                                <div
+                                  className={`px-2 py-1 rounded-lg border text-[10.5px] font-extrabold inline-flex items-center gap-1 whitespace-nowrap shrink-0 ${statusMeta.badgeClass}`}
+                                  title={statusMeta.subLabel || statusMeta.label}
+                                >
+                                  {statusMeta.key === 'delivered' && (
+                                    <PackageCheck className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
                                   )}
-                                  <span className="text-slate-600 font-medium">
-                                    ค่างวด <strong className="text-sky-700 font-bold">{formatBaht(record.snapshot.monthlyInstallment)}</strong>/ด. ({record.term} งวด)
-                                  </span>
+                                  {statusMeta.key === 'approved_pending' && (
+                                    <CheckCircle2 className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
+                                  )}
+                                  {statusMeta.key === 'rejected' && (
+                                    <XCircle className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
+                                  )}
+                                  {statusMeta.key === 'cancelled' && (
+                                    <Ban className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
+                                  )}
+                                  {statusMeta.key === 'pending' && (
+                                    <Clock className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
+                                  )}
+                                  <span>{statusMeta.label}</span>
+                                </div>
+
+                                {isApproved && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      triggerHaptic('light');
+                                      setApprovalModalCase(record);
+                                    }}
+                                    className="p-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
+                                    title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
+                                  >
+                                    <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                  </button>
+                                )}
+
+                                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-400 flex items-center justify-center transition-colors duration-150 shrink-0">
+                                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 </div>
                               </div>
                             </div>
 
-                            {/* Right: Dedicated Status Column + Quick Actions */}
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                              {/* Unified Status Column */}
-                              <div
-                                className={`px-2 py-1 rounded-lg border text-[10.5px] font-extrabold inline-flex items-center gap-1 whitespace-nowrap shrink-0 ${statusMeta.badgeClass}`}
-                                title={statusMeta.subLabel || statusMeta.label}
-                              >
-                                {statusMeta.key === 'delivered' && (
-                                  <PackageCheck className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'approved_pending' && (
-                                  <CheckCircle2 className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'rejected' && (
-                                  <XCircle className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'cancelled' && (
-                                  <Ban className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                {statusMeta.key === 'pending' && (
-                                  <Clock className={`w-3 h-3 shrink-0 ${statusMeta.iconColorClass}`} />
-                                )}
-                                <span>{statusMeta.label}</span>
-                              </div>
+                            {/* Row 2: Phone · Bike Model · Dealer · PDF/Carry-over (Full readable width with RTL marquee) */}
+                            <div className="pl-[42px] sm:pl-[46px] min-w-0">
+                              <MarqueeText className="text-[11px] text-slate-500">
+                                <span className="inline-flex items-center gap-1.5">
+                                  {record.customerPhone && (
+                                    <span className="text-slate-600 font-medium inline-flex items-center gap-0.5 tabular-nums">
+                                      <Phone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                      <span>{record.customerPhone}</span>
+                                    </span>
+                                  )}
+                                  {record.customerPhone && (record.bikeModelName || record.dealerName) && (
+                                    <span className="text-slate-300">·</span>
+                                  )}
+                                  {record.bikeModelName && (
+                                    <span className="text-slate-700 font-semibold inline-flex items-center gap-0.5">
+                                      <Bike className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                      <span>{record.bikeModelName}</span>
+                                    </span>
+                                  )}
+                                  {record.dealerName && (
+                                    <>
+                                      {record.bikeModelName && <span className="text-slate-300">·</span>}
+                                      <span className="text-sky-700 font-medium inline-flex items-center gap-0.5">
+                                        <Building2 className="w-2.5 h-2.5 text-sky-500 shrink-0" />
+                                        <span>{record.dealerName}</span>
+                                      </span>
+                                    </>
+                                  )}
+                                  {record.approvalDoc && (
+                                    <>
+                                      <span className="text-slate-300">·</span>
+                                      <span className="text-rose-600 font-bold inline-flex items-center gap-0.5">
+                                        <FileText className="w-2.5 h-2.5 shrink-0" />
+                                        <span>แนบ PDF</span>
+                                      </span>
+                                    </>
+                                  )}
+                                  {crossMonthNote && (
+                                    <>
+                                      <span className="text-slate-300">·</span>
+                                      <span className={crossMonthNote.className}>{crossMonthNote.text}</span>
+                                    </>
+                                  )}
+                                  {!record.customerPhone &&
+                                    !record.bikeModelName &&
+                                    !record.dealerName && (
+                                      <span>{record.snapshot.proposalCode}</span>
+                                    )}
+                                </span>
+                              </MarqueeText>
+                            </div>
 
-                              {isApproved && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    triggerHaptic('light');
-                                    setApprovalModalCase(record);
-                                  }}
-                                  className="p-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all active:scale-95 cursor-pointer shadow-2xs"
-                                  title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
-                                >
-                                  <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
-                                </button>
+                            {/* Row 3: Installment Summary (Left) + First Due Date / Recorded Date (Right) */}
+                            <div className="pl-[42px] sm:pl-[46px] flex items-center justify-between gap-2 pt-0.5 text-[11px]">
+                              <span className="text-slate-600 font-medium tabular-nums whitespace-nowrap">
+                                ค่างวด{' '}
+                                <strong className="text-sky-700 font-extrabold">
+                                  {formatBaht(record.snapshot.monthlyInstallment)}
+                                </strong>
+                                /ด. · {record.term} งวด
+                              </span>
+
+                              {firstDue ? (
+                                <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200/80 font-bold text-[10px] inline-flex items-center gap-1 tabular-nums whitespace-nowrap shrink-0">
+                                  <CalendarClock className="w-3 h-3 text-indigo-600 shrink-0" />
+                                  <span>
+                                    งวดแรก 2 {firstDue.monthShort} {firstDue.thaiShortYear}
+                                  </span>
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap shrink-0">
+                                  บันทึก {formatThaiDateOnly(record.createdAt)}
+                                </span>
                               )}
-                              <div className="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-400 flex items-center justify-center transition-colors duration-150 shadow-2xs">
-                                <ChevronRight className="w-4 h-4" />
-                              </div>
                             </div>
                           </div>
                         );

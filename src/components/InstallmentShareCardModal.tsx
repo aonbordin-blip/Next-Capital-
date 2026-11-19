@@ -779,16 +779,11 @@ export const InstallmentShareCardModal: React.FC<Props> = ({
           }}
         >
           <div style={{ fontSize: '10.5px', color: theme.bentoLabel, fontWeight: '600' }}>
-            {result.insuranceTotalWithVat > 0 ? '💳 ยอดจัดสินเชื่อรวมประกัน' : '💳 ยอดจัด (ไม่รวมประกัน)'}
+            💳 ยอดจัดสินเชื่อรวม
           </div>
           <div style={{ fontSize: '16px', fontWeight: '800', color: theme.bentoValue, marginTop: '2px' }}>
             {formatBaht(result.financeAmount, true)} บาท
           </div>
-          {result.insuranceTotalWithVat > 0 && (
-            <div style={{ fontSize: '10px', color: theme.bentoLabel, fontWeight: '600', marginTop: '2px' }}>
-              ตัวรถไม่รวมประกัน: {formatBaht(result.vehicleFinanceAmount)} บ.
-            </div>
-          )}
         </div>
 
         <div
