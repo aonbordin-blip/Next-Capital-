@@ -515,24 +515,42 @@ export function DvApprovalCard({
   */
   const generateDvText = (): string => {
     const activeTopics = topics.map((t) => t.trim()).filter(Boolean);
-    const topicsFormatted = activeTopics.length > 0 ? activeTopics.join('\n') : '-';
+    const topicsLine =
+      activeTopics.length === 0
+        ? '📌 หัวข้อ : -'
+        : activeTopics.length === 1
+        ? `📌 หัวข้อ : ${activeTopics[0]}`
+        : ['📌 หัวข้อ :', ...activeTopics.map((t) => `  • ${t}`)].join('\n');
+
+    const remarkText = remark.trim();
+    const remarkBlock = remarkText
+      ? remarkText.includes('\n')
+        ? `📝 หมายเหตุ :\n${remarkText}`
+        : `📝 หมายเหตุ : ${remarkText}`
+      : '📝 หมายเหตุ : -';
 
     const lines = [
-      'ขออนุมัติเคส DV',
-      `ชื่อลูกค้า : ${dvCustomerName || '-'}`,
-      `หัวข้อ : ${topicsFormatted}`,
-      `NCB : ${ncb || '-'}`,
-      `Dealer : ${dealer || '-'}`,
-      `รุ่นรถ : ${bikeModel || '-'}`,
-      `รหัสรุ่นรถ : ${bikeCode || '-'}`,
-      `อาชีพ : ${occupation || '-'}`,
-      `รายได้ : ${income || '-'}`,
-      `เอกสารการเงิน : ${financialDocs || '-'}`,
-      `เงินดาวน์ : ${downPayment || '-'}`,
-      `หมายเหตุ : ${remark.trim() ? remark.trim() : '-'}`,
-      '',
-      `CK : ${ck || '-'}`,
-      `YOD1-9% : ${yodRate || '-'}`,
+      '📋 ขออนุมัติเคส DV',
+      '━━━━━━━━━━━━━━━━━━━━',
+      `👤 ชื่อลูกค้า : ${dvCustomerName || '-'}`,
+      topicsLine,
+      `🛡️ NCB : ${ncb || '-'}`,
+      `🏪 Dealer : ${dealer || '-'}`,
+      '──────────────',
+      '🏍️ ข้อมูลรถ & เงินดาวน์',
+      `• รุ่นรถ : ${bikeModel || '-'}`,
+      `• รหัสรุ่นรถ : ${bikeCode || '-'}`,
+      `• เงินดาวน์ : ${downPayment || '-'}`,
+      '──────────────',
+      '💼 ข้อมูลอาชีพ & การเงิน',
+      `• อาชีพ : ${occupation || '-'}`,
+      `• รายได้ : ${income || '-'}`,
+      `• เอกสารการเงิน : ${financialDocs || '-'}`,
+      '──────────────',
+      remarkBlock,
+      '━━━━━━━━━━━━━━━━━━━━',
+      `👨‍💼 CK : ${ck || '-'}`,
+      `📊 YOD1-9% : ${yodRate || '-'}`,
     ];
     return lines.join('\n');
   };
@@ -1789,16 +1807,16 @@ export function DvApprovalCard({
 
           {/* Live LINE Message Preview Box (ปรับสีให้อ่อน สว่าง สบายตา สไตล์ LINE) */}
           <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-sky-50/60 border border-emerald-200/80 shadow-2xs">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-emerald-200/70 text-[11px]">
-              <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse" />
-                ตัวอย่างข้อความขออนุมัติเคส DV ที่จะส่งเข้า LINE :
+            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 text-[11px]">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse shrink-0" />
+                <span>ตัวอย่างข้อความขออนุมัติเคส DV ที่จะส่งเข้า LINE :</span>
               </span>
-              <span className="text-[10px] text-emerald-800 font-semibold bg-white/90 border border-emerald-200/80 px-2 py-0.5 rounded-full shadow-2xs">
+              <span className="text-[10px] text-emerald-800 font-semibold bg-white/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap shrink-0 tabular-nums">
                 {generateDvText().length} ตัวอักษร
               </span>
             </div>
-            <pre className="font-sans text-[11.5px] leading-relaxed whitespace-pre-wrap text-slate-800 select-text bg-white/95 p-3 rounded-xl border border-emerald-200/70 shadow-2xs">
+            <pre className="font-sans text-[11.5px] leading-[1.6] whitespace-pre-wrap text-slate-800 select-text bg-white/95 p-3.5 rounded-xl border border-emerald-200/70 shadow-2xs">
               {generateDvText()}
             </pre>
           </div>
