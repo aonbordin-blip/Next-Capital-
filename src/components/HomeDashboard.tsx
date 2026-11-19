@@ -27,6 +27,7 @@ import { calculateCheckerCommission } from '../utils/checkerCommission';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import { MonthlyCasesDashboard } from './MonthlyCasesDashboard';
+import { GasolineAllowanceCard } from './GasolineAllowanceCard';
 import { MarqueeText } from './MarqueeText';
 
 interface HomeDashboardProps {
@@ -617,10 +618,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onGoToCalculate={onNavigateToCaseForm}
       />
 
-      {/* 2-Column Analytics: Checker Commission Summary + Deal Pipeline & Dealers */}
+      {/* 2-Column Analytics: Checker Commission Summary + Deal Pipeline & Dealers + Gasoline Allowance */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Card A: Checker Insurance Commission Summary */}
-        <div className="glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
+        <div className="order-1 glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
           <div
             className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
             aria-hidden="true"
@@ -795,8 +796,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           )}
         </div>
 
+        {/* Card A-2: Gasoline Allowance (ค่าน้ำมัน) right after Checker Commission */}
+        <GasolineAllowanceCard
+          className="order-2 lg:order-3 lg:col-span-2"
+          actualContractCount={commissionSummary.totalDeliveredContracts}
+          periodLabel={formatMonthLabel(selectedMonth)}
+          onOpenSavedCases={onOpenSavedCases}
+        />
+
         {/* Card B: Deal Pipeline, Top Dealers & First Installment Overview */}
-        <div className="glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
+        <div className="order-3 lg:order-2 glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
           <div
             className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
             aria-hidden="true"

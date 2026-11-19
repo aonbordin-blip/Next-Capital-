@@ -721,6 +721,79 @@
   );
 }
 
+/* Gasoline Allowance Card Visual Effects */
+@keyframes fuel-shimmer-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+
+.animate-fuel-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-fuel-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  animation: fuel-shimmer-sweep 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fuel-aura-pulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+.animate-fuel-aura {
+  animation: fuel-aura-pulse 3.4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes fuel-tip-ping {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  70% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+.animate-fuel-tip-ping {
+  animation: fuel-tip-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fuel-shimmer::after,
+  .animate-fuel-aura,
+  .animate-fuel-tip-ping {
+    animation: none !important;
+  }
+}
+
 /* Print specific styles */
 @media print {
   html,
