@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { formatTenureThai } from '../data/eligibilityCriteria';
+
+function formatTenureThai(totalMonths: number, compact = false): string {
+  const safe = Math.max(0, Math.round(totalMonths));
+  const years = Math.floor(safe / 12);
+  const months = safe % 12;
+  if (years > 0 && months > 0) {
+    return compact ? `${years} ปี ${months} ด.` : `${years} ปี ${months} เดือน`;
+  }
+  if (years > 0) {
+    return `${years} ปี`;
+  }
+  return compact ? `${months} ด.` : `${months} เดือน`;
+}
 
 interface YearsMonthsInputProps {
   label: string;

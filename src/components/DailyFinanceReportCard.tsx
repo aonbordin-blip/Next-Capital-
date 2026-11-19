@@ -445,6 +445,7 @@ export function DailyFinanceReportCard({
   // Quick Finance Picker modal state for a specific dealer
   const [addingFinanceToDealerId, setAddingFinanceToDealerId] = useState<string | null>(null);
   const [customFinanceName, setCustomFinanceName] = useState('');
+  const [pendingConfirmAction, setPendingConfirmAction] = useState<'reset' | 'restore' | null>(null);
 
   // Save to localStorage when dealers change
   useEffect(() => {
@@ -804,20 +805,30 @@ export function DailyFinanceReportCard({
   // Reset all counts to 0 for a new day
   const handleResetCountsToZero = () => {
     triggerHaptic('warning');
-    if (!window.confirm('ต้องการรีเซ็ตยอดจำนวนเคสทุกไฟแนนซ์เป็น 0 หรือไม่?')) return;
+    setPendingConfirmAction('reset');
+  };
+
+  const executeResetCountsToZero = () => {
+    triggerHaptic('success');
     setDealers((prev) =>
       prev.map((d) => ({
         ...d,
         finances: d.finances.map((f) => ({ ...f, count: '0' })),
       }))
     );
+    setPendingConfirmAction(null);
   };
 
   // Restore default template (from user's original request)
   const handleRestoreDefaultTemplate = () => {
     triggerHaptic('warning');
-    if (!window.confirm('ต้องการกู้คืนข้อมูลเริ่มต้นตามตัวอย่าง (ป.ยานยนต์) หรือไม่?')) return;
+    setPendingConfirmAction('restore');
+  };
+
+  const executeRestoreDefaultTemplate = () => {
+    triggerHaptic('success');
     setDealers(createInitialDealers());
+    setPendingConfirmAction(null);
   };
 
   return (
@@ -954,15 +965,35 @@ export function DailyFinanceReportCard({
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-600 text-white shadow-2xs">
                 รวม {summary.totalNumericCases} เคส
               </span>
-              <button
-                type="button"
-                onClick={handleResetCountsToZero}
-                className="text-[9.5px] font-semibold text-slate-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer flex items-center gap-1"
-                title="รีเซ็ตจำนวนเคสเป็น 0"
-              >
-                <RotateCcw className="w-2.5 h-2.5" />
-                <span>รีเซ็ตยอดเป็น 0</span>
-              </button>
+              {pendingConfirmAction === 'reset' ? (
+                <div className="inline-flex items-center gap-1 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-lg">
+                  <span className="text-[10px] font-bold text-rose-800">รีเซ็ตยอดเป็น 0?</span>
+                  <button
+                    type="button"
+                    onClick={executeResetCountsToZero}
+                    className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[9.5px] font-bold cursor-pointer"
+                  >
+                    ยืนยัน
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingConfirmAction(null)}
+                    className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 text-[9.5px] font-semibold cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResetCountsToZero}
+                  className="text-[9.5px] font-semibold text-slate-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                  title="รีเซ็ตจำนวนเคสเป็น 0"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span>รีเซ็ตยอดเป็น 0</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1274,14 +1305,34 @@ export function DailyFinanceReportCard({
               <span>เพิ่ม Dealer ใหม่ (+ เพิ่มดีลเลอร์)</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handleRestoreDefaultTemplate}
-              className="text-[10.5px] text-slate-500 hover:text-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
-              title="รีเซ็ตกลับเป็นตัวอย่าง ป.ยานยนต์ เริ่มต้น"
-            >
-              กู้คืนตัวอย่าง ป.ยานยนต์
-            </button>
+            {pendingConfirmAction === 'restore' ? (
+              <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-xl">
+                <span className="text-[10.5px] font-bold text-amber-900">กู้คืนตัวอย่าง ป.ยานยนต์?</span>
+                <button
+                  type="button"
+                  onClick={executeRestoreDefaultTemplate}
+                  className="px-2 py-0.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold cursor-pointer"
+                >
+                  ยืนยันกู้คืน
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingConfirmAction(null)}
+                  className="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-semibold cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleRestoreDefaultTemplate}
+                className="text-[10.5px] text-slate-500 hover:text-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
+                title="รีเซ็ตกลับเป็นตัวอย่าง ป.ยานยนต์ เริ่มต้น"
+              >
+                กู้คืนตัวอย่าง ป.ยานยนต์
+              </button>
+            )}
           </div>
 
           {/* Live Preview Box with Alignment Controls (ปรับสีสว่างเหมือนกล่องขออนุมัติเคส DV) */}

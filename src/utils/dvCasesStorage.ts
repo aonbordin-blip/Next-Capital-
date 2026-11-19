@@ -1,4 +1,34 @@
-import { DvRequestStatus, SavedDvRequestRecord } from '../types';
+export type DvRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface SavedDvRequestRecord {
+  id: string;
+  createdAt: number;
+  updatedAt: number;
+  customerName: string;
+  topics: string[];
+  ncb: string;
+  dealer: string;
+  bikeModel: string;
+  bikeCode: string;
+  occupation: string;
+  income: string;
+  financialDocs: string;
+  downPayment: string;
+  remark: string;
+  ck: string;
+  yodRate: string;
+  dvMessage: string;
+  status: DvRequestStatus;
+  proposalKey?: string;
+  financeAmount?: number;
+  monthlyInstallment?: number;
+  term?: number;
+  customerAge?: string;
+  customerWorkMonths?: string;
+  customerIncome?: string;
+  customerResidenceMonths?: string;
+  isAceCustomer?: boolean;
+}
 
 const DV_STORAGE_KEY = 'ncap_dv_requests_v1';
 const PENDING_DV_UPLOADS_KEY = 'ncap_dv_pending_uploads_v1';

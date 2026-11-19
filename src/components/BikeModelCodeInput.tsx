@@ -73,6 +73,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
   const [newPrice, setNewPrice] = useState<string>('');
   const [newBrand, setNewBrand] = useState<'HONDA' | 'YAMAHA' | 'อื่นๆ'>('HONDA');
   const [formError, setFormError] = useState<string>('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Sync search query and auto-focus when modal opens
   useEffect(() => {
@@ -231,9 +232,12 @@ export const BikeModelCodeInput: React.FC<Props> = ({
   // Delete custom motorcycle model
   const handleDeleteCustomModel = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (window.confirm('ต้องการลบรหัสรุ่นนี้ที่บันทึกไว้ออกหรือไม่?')) {
+    if (confirmDeleteId === id) {
       deleteCustomMotorcycleModel(id);
       setCustomVersion((v) => v + 1);
+      setConfirmDeleteId(null);
+    } else {
+      setConfirmDeleteId(id);
     }
   };
 
@@ -723,14 +727,25 @@ export const BikeModelCodeInput: React.FC<Props> = ({
 
                             {/* Delete button for user-custom models */}
                             {m.isCustom && (
-                              <button
-                                type="button"
-                                onClick={(e) => handleDeleteCustomModel(e, m.id)}
-                                title="ลบรหัสรุ่นนี้"
-                                className="w-6 h-6 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              confirmDeleteId === m.id ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteCustomModel(e, m.id)}
+                                  title="แตะอีกครั้งเพื่อยืนยันลบ"
+                                  className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold hover:bg-rose-700 transition-colors cursor-pointer"
+                                >
+                                  ยืนยันลบ
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteCustomModel(e, m.id)}
+                                  title="ลบรหัสรุ่นนี้"
+                                  className="w-6 h-6 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )
                             )}
 
                             {isSelected ? (
