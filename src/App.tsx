@@ -1562,7 +1562,7 @@ export default function App() {
         {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
-          className="relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-20 sm:pb-24 space-y-2.5 sm:space-y-3.5 overscroll-contain"
+          className="relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-24 sm:pb-28 space-y-2.5 sm:space-y-3.5 overscroll-contain"
         >
           {/* In-App PWA Install Banner */}
           <InstallAppBanner />
@@ -3714,59 +3714,71 @@ export default function App() {
       </div>
     </main>
 
-        {/* Bottom Docked Glassmorphic Navigation Bar: ติดขอบล่างสุด โปร่งใสแบบแก้วใสเห็นเนื้อหาเบลออยู่ด้านหลัง พร้อมขอบบนโค้งมน */}
+        {/* Bottom Floating Crystal Glass Navigation Capsule (โปร่งใสเหมือนแท่งแก้วคริสตัล เห็นเนื้อหาด้านหลังชัดเจนพร้อมขอบหักเหแสง) */}
         <div
-          className="absolute bottom-0 inset-x-0 z-40 w-full bg-white/10 hover:bg-white/20 backdrop-blur-md border-t border-white/45 hover:border-white/65 rounded-t-[30px] sm:rounded-t-[32px] shadow-[0_-4px_20px_-6px_rgba(2,132,199,0.14)] px-1.5 sm:px-3 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.375rem)] transition-colors duration-200 transform-gpu will-change-transform"
+          className="pointer-events-none absolute bottom-2 sm:bottom-3 inset-x-2 sm:inset-x-4 z-40 flex justify-center pb-[env(safe-area-inset-bottom)]"
           style={{ transform: 'translate3d(0, 0, 0)' }}
         >
-          <nav
-            aria-label="แถบนำทางหลัก"
-            className="relative mx-auto w-full max-w-[580px] flex items-center justify-between overflow-hidden"
-          >
-            {/* Animated Smooth Sliding Glass Pill Indicator (แคปซูลไฮไลท์เลื่อนนุ่มนวลแบบ Spring Physics) */}
+          <div className="pointer-events-auto liquid-crystal-nav w-full max-w-[590px] rounded-full p-1 sm:p-1.5 relative overflow-hidden">
+            {/* Curved Top & Bottom Crystal Specular Glint Line */}
             <div
-              className="absolute top-0.5 bottom-0.5 rounded-full bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-500 shadow-md shadow-sky-500/30 border border-white/50 transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
-              style={{
-                width: `calc(${100 / NAV_TABS.length}% - 4px)`,
-                left: `calc(${Math.max(0, NAV_TABS.findIndex((t) => t.id === activeTab)) * (100 / NAV_TABS.length)}% + 2px)`,
-              }}
-            >
-              {/* Subtle liquid shimmer light across the active pill */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-pulse pointer-events-none" />
-            </div>
+              className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-90"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80"
+              aria-hidden="true"
+            />
 
-            {NAV_TABS.map((tab) => {
-              const isActive = activeTab === tab.id;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-3 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
-                    isActive
-                      ? 'text-white font-bold'
-                      : 'text-slate-800 hover:text-sky-900 hover:bg-white/20 font-semibold'
-                  }`}
-                >
-                  <Icon
-                    className={`w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
+            <nav
+              aria-label="แถบนำทางหลัก"
+              className="relative w-full flex items-center justify-between overflow-hidden rounded-full"
+            >
+              {/* Animated Smooth Sliding Crystal Pill Indicator */}
+              <div
+                className="liquid-crystal-active-pill absolute top-0.5 bottom-0.5 rounded-full transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+                style={{
+                  width: `calc(${100 / NAV_TABS.length}% - 4px)`,
+                  left: `calc(${Math.max(0, NAV_TABS.findIndex((t) => t.id === activeTab)) * (100 / NAV_TABS.length)}% + 2px)`,
+                }}
+              >
+                {/* Subtle liquid shimmer light across the crystal active pill */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent -translate-x-full animate-pulse pointer-events-none" />
+              </div>
+
+              {NAV_TABS.map((tab) => {
+                const isActive = activeTab === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-2.5 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
                       isActive
-                        ? 'text-white animate-tab-icon'
-                        : 'text-slate-800'
-                    }`}
-                  />
-                  <span
-                    className={`text-[10px] sm:text-xs leading-tight whitespace-nowrap transition-transform duration-200 ${
-                      isActive ? 'scale-105' : ''
+                        ? 'text-white font-extrabold drop-shadow-[0_1px_2px_rgba(12,74,110,0.65)]'
+                        : 'text-slate-900 hover:text-sky-950 hover:bg-white/20 font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)]'
                     }`}
                   >
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+                    <Icon
+                      className={`w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
+                        isActive
+                          ? 'text-white animate-tab-icon'
+                          : 'text-slate-900'
+                      }`}
+                    />
+                    <span
+                      className={`text-[10px] sm:text-xs leading-tight whitespace-nowrap transition-transform duration-200 ${
+                        isActive ? 'scale-105' : ''
+                      }`}
+                    >
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
       </div>
 

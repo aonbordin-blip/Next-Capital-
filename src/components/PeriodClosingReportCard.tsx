@@ -292,21 +292,31 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
     ? manualPendingNames.length
     : autoStats.pendingCount;
 
-  // Build exact LINE report string matching user's format
+  // Build structured & readable LINE report string
   const reportText = useMemo(() => {
     const lines = [
-      `ปิดยอด ${periodShortLabel}`,
-      activeOfficerTag,
-      `Approve ${effectiveApproveCount}`,
-      `รับรถ ${effectiveDeliveredCount} คัน`,
-      `ยกยอด ${effectivePendingCount} คัน`,
+      `📊 สรุปปิดยอด ${periodShortLabel}`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `👨‍💼 เจ้าหน้าที่ : ${activeOfficerTag}`,
+      `──────────────`,
+      `✅ Approve : ${effectiveApproveCount} เคส`,
+      `🏍️ รับรถแล้ว : ${effectiveDeliveredCount} คัน`,
+      `⏳ ยกยอด : ${effectivePendingCount} คัน`,
     ];
 
     if (effectivePendingNames.length > 0) {
+      lines.push(
+        `──────────────`,
+        `📋 รายชื่อยกยอด (${effectivePendingNames.length} ราย) :`
+      );
       effectivePendingNames.forEach((name, idx) => {
-        lines.push(`${idx + 1}. ${name}`);
+        lines.push(`  ${idx + 1}. ${name}`);
       });
+    } else if (effectivePendingCount === 0) {
+      lines.push(`──────────────`, `🎉 รับรถครบแล้ว ไม่มีเคสยกยอด`);
     }
+
+    lines.push(`━━━━━━━━━━━━━━━━━━━━`);
 
     return lines.join('\n');
   }, [
@@ -839,14 +849,17 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
           )}
 
           {/* Live LINE Preview Box */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
-              <span>ตัวอย่างข้อความส่งสรุปปิดยอด (LINE):</span>
-              <span className="text-[10px] font-medium text-slate-400">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-sky-50/60 border border-emerald-200/80 shadow-2xs">
+            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 text-[11px]">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse shrink-0" />
+                <span>ตัวอย่างข้อความส่งสรุปปิดยอด (LINE) :</span>
+              </span>
+              <span className="text-[10px] text-emerald-800 font-semibold bg-white/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap shrink-0 tabular-nums">
                 งวด {periodShortLabel}
               </span>
             </div>
-            <pre className="p-3 sm:p-3.5 rounded-2xl bg-slate-900 text-slate-100 text-xs leading-relaxed font-sans whitespace-pre-wrap select-all border border-slate-800 shadow-inner">
+            <pre className="font-sans text-[11.5px] leading-[1.6] whitespace-pre-wrap text-slate-800 select-all bg-white/95 p-3.5 rounded-xl border border-emerald-200/70 shadow-2xs">
               {reportText}
             </pre>
           </div>
