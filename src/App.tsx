@@ -420,6 +420,10 @@ export default function App() {
   // 5-Page Navigation Tab State (โฮมเพจ, เงินดาวน์, ค่างวด, เอกสาร/เคส, เช็คค่างวด)
   type ActivePageTab = 'home' | 'financing' | 'calculation' | 'documents' | 'installments';
   const [activeTab, setActiveTab] = useState<ActivePageTab>('home');
+  const [navAnimState, setNavAnimState] = useState<{ key: number; tab: ActivePageTab | null }>({
+    key: 0,
+    tab: null,
+  });
   const mainRef = useRef<HTMLElement>(null);
 
   const NAV_TABS = [
@@ -456,6 +460,7 @@ export default function App() {
 
   const handleTabChange = (newTab: ActivePageTab) => {
     triggerHaptic('selection');
+    setNavAnimState((prev) => ({ key: prev.key + 1, tab: newTab }));
     setActiveTab(newTab);
     if (newTab === 'financing') {
       setExpandedCard('financing');
@@ -3714,7 +3719,7 @@ export default function App() {
       </div>
     </main>
 
-        {/* Bottom Floating Crystal Glass Navigation Capsule (โปร่งใสเหมือนแท่งแก้วคริสตัล เห็นเนื้อหาด้านหลังชัดเจนพร้อมขอบหักเหแสง) */}
+        {/* Bottom Floating Crystal Glass Navigation Capsule (โปร่งใสเหมือนแท่งแก้วคริสตัล พร้อมเอฟเฟคแสงสะท้อนและแรงเด้งมีมิติ) */}
         <div
           className="pointer-events-none absolute bottom-2 sm:bottom-3 inset-x-2 sm:inset-x-4 z-40 flex justify-center pb-[env(safe-area-inset-bottom)]"
           style={{ transform: 'translate3d(0, 0, 0)' }}
@@ -3722,11 +3727,17 @@ export default function App() {
           <div className="pointer-events-auto liquid-crystal-nav w-full max-w-[590px] rounded-full p-1 sm:p-1.5 relative overflow-hidden">
             {/* Curved Top & Bottom Crystal Specular Glint Line */}
             <div
-              className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-90"
+              className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-95"
               aria-hidden="true"
             />
             <div
-              className="pointer-events-none absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80"
+              className="pointer-events-none absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-white/75 to-transparent opacity-85"
+              aria-hidden="true"
+            />
+
+            {/* Ambient Sweeping Specular Light Beam across the Crystal Capsule */}
+            <div
+              className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-crystal-sheen"
               aria-hidden="true"
             />
 
@@ -3734,42 +3745,67 @@ export default function App() {
               aria-label="แถบนำทางหลัก"
               className="relative w-full flex items-center justify-between overflow-hidden rounded-full"
             >
-              {/* Animated Smooth Sliding Crystal Pill Indicator */}
+              {/* Animated Smooth Sliding Crystal Pill Indicator with Liquid Jelly Rebound */}
               <div
-                className="liquid-crystal-active-pill absolute top-0.5 bottom-0.5 rounded-full transition-all duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none overflow-hidden"
+                className="absolute top-0.5 bottom-0.5 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
                 style={{
                   width: `calc(${100 / NAV_TABS.length}% - 4px)`,
                   left: `calc(${Math.max(0, NAV_TABS.findIndex((t) => t.id === activeTab)) * (100 / NAV_TABS.length)}% + 2px)`,
                 }}
               >
-                {/* Subtle liquid shimmer light across the crystal active pill */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent -translate-x-full animate-pulse pointer-events-none" />
+                <div
+                  key={navAnimState.key}
+                  className="liquid-crystal-active-pill animate-liquid-jelly w-full h-full rounded-full relative overflow-hidden animate-fuel-shimmer"
+                >
+                  {/* Top Lens Specular Rim */}
+                  <div
+                    className="pointer-events-none absolute inset-x-3 top-0.5 h-px bg-gradient-to-r from-transparent via-white/95 to-transparent"
+                    aria-hidden="true"
+                  />
+                  {/* Glowing 3D Bottom Light Core */}
+                  <div
+                    className="pointer-events-none absolute bottom-1 inset-x-0 flex justify-center"
+                    aria-hidden="true"
+                  >
+                    <span className="w-6 h-[2.5px] rounded-full bg-white/95 shadow-[0_0_8px_rgba(255,255,255,0.95)] animate-active-aura" />
+                  </div>
+                </div>
               </div>
 
               {NAV_TABS.map((tab) => {
                 const isActive = activeTab === tab.id;
+                const showTapRipple = navAnimState.key > 0 && navAnimState.tab === tab.id;
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     type="button"
                     onClick={() => handleTabChange(tab.id)}
-                    className={`relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-2.5 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 ${
+                    className={`group relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-2.5 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 overflow-hidden ${
                       isActive
                         ? 'text-white font-extrabold drop-shadow-[0_1px_2px_rgba(12,74,110,0.65)]'
                         : 'text-slate-900 hover:text-sky-950 hover:bg-white/20 font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)]'
                     }`}
                   >
+                    {/* Tactile Crystal Ripple Wave on Tap */}
+                    {showTapRipple && (
+                      <span
+                        key={`ripple-${navAnimState.key}`}
+                        className="pointer-events-none absolute w-10 h-10 rounded-full border border-white/85 bg-sky-200/35 animate-crystal-ripple"
+                        aria-hidden="true"
+                      />
+                    )}
+
                     <Icon
-                      className={`w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
+                      className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
                         isActive
-                          ? 'text-white animate-tab-icon'
-                          : 'text-slate-900'
+                          ? 'text-white animate-tab-icon -translate-y-0.5 drop-shadow-[0_2px_6px_rgba(255,255,255,0.55)]'
+                          : 'text-slate-900 group-hover:-translate-y-0.5 group-hover:scale-110'
                       }`}
                     />
                     <span
-                      className={`text-[10px] sm:text-xs leading-tight whitespace-nowrap transition-transform duration-200 ${
-                        isActive ? 'scale-105' : ''
+                      className={`relative z-10 text-[10px] sm:text-xs leading-tight whitespace-nowrap transition-transform duration-200 ${
+                        isActive ? 'scale-105' : 'group-hover:scale-[1.03]'
                       }`}
                     >
                       {tab.label}
