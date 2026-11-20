@@ -354,16 +354,16 @@ export const DealPipelineAndDealersChartCard: React.FC<
           aria-hidden="true"
         />
 
-        {/* Lightweight Radial Gradient Aura Orbs (zero CSS filter:blur cost during scroll) */}
+        {/* Lightweight Radial Gradient Aura Orbs with GPU Breathing Pulse */}
         <div
-          className="pointer-events-none -right-12 -top-12 absolute w-44 h-44 rounded-full transition-opacity duration-300"
+          className="pointer-events-none -right-12 -top-12 absolute w-44 h-44 rounded-full animate-fuel-aura"
           style={{
             background:
               activeStatusObj?.key === 'pending'
-                ? 'radial-gradient(circle, rgba(56,189,248,0.28) 0%, rgba(56,189,248,0.08) 45%, transparent 72%)'
+                ? 'radial-gradient(circle, rgba(56,189,248,0.32) 0%, rgba(56,189,248,0.09) 45%, transparent 72%)'
                 : activeStatusObj?.key === 'rejected'
-                ? 'radial-gradient(circle, rgba(148,163,184,0.26) 0%, rgba(148,163,184,0.08) 45%, transparent 72%)'
-                : 'radial-gradient(circle, rgba(45,212,191,0.26) 0%, rgba(45,212,191,0.08) 45%, transparent 72%)',
+                ? 'radial-gradient(circle, rgba(148,163,184,0.30) 0%, rgba(148,163,184,0.08) 45%, transparent 72%)'
+                : 'radial-gradient(circle, rgba(45,212,191,0.30) 0%, rgba(45,212,191,0.08) 45%, transparent 72%)',
           }}
           aria-hidden="true"
         />
@@ -554,18 +554,18 @@ export const DealPipelineAndDealersChartCard: React.FC<
                     onClick={handleCycleStatusOrb}
                     title="แตะเพื่อสลับดูแต่ละสถานะ"
                     aria-label="ศูนย์กลางกราฟสถานะดีล แตะเพื่อสลับสถานะ"
-                    className="group absolute w-[76px] h-[76px] rounded-full flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 z-10 transition-transform duration-200 hover:scale-[1.03] active:scale-95"
+                    className="group absolute w-[76px] h-[76px] rounded-full flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 animate-kpi-float z-10"
                   >
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute -inset-[2.5px] rounded-full opacity-75 animate-kpi-orbit"
+                      className="pointer-events-none absolute -inset-[2.5px] rounded-full opacity-80 animate-kpi-orbit"
                       style={{
                         background: activeStatusObj
                           ? `conic-gradient(from 0deg, ${activeStatusObj.accentHex}55, transparent 42%, ${activeStatusObj.accentHex}99 75%, transparent)`
-                          : 'conic-gradient(from 0deg, rgba(16,185,129,0.48), rgba(14,165,233,0.42), rgba(100,116,139,0.32), rgba(16,185,129,0.48))',
+                          : 'conic-gradient(from 0deg, rgba(16,185,129,0.5), rgba(14,165,233,0.45), rgba(100,116,139,0.35), rgba(16,185,129,0.5))',
                       }}
                     />
-                    <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/98 via-white/94 to-teal-50/92 border-2 border-white shadow-[0_6px_16px_-4px_rgba(13,148,136,0.26),inset_0_2px_4px_rgba(255,255,255,1)] flex flex-col items-center justify-center px-1 text-center">
+                    <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/98 via-white/94 to-teal-50/92 border-2 border-white shadow-[0_8px_20px_-6px_rgba(13,148,136,0.28),inset_0_2px_5px_rgba(255,255,255,1)] flex flex-col items-center justify-center px-1 text-center transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-95">
                       <div
                         key={`${effectiveStatus}-${orbTick}`}
                         className="flex flex-col items-center justify-center animate-number-tick"
@@ -627,21 +627,19 @@ export const DealPipelineAndDealersChartCard: React.FC<
                           <div className="h-1.5 w-full bg-white/85 border border-white shadow-inner rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full ${row.barColor} ${
-                                isPinned && row.percent > 0 ? 'animate-fuel-shimmer' : ''
-                              } transition-[width] duration-300 ease-out`}
+                                row.percent > 0 ? 'animate-fuel-shimmer' : ''
+                              } transition-[width] duration-500 ease-out`}
                               style={{ width: `${row.percent}%` }}
                             />
                           </div>
                           {row.percent > 0 && (
                             <div
-                              className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-[left] duration-300 ease-out z-10"
+                              className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-[left] duration-500 ease-out z-10"
                               style={{ left: `${Math.min(98.5, Math.max(1.5, row.percent))}%` }}
                             >
-                              {isPinned && (
-                                <span
-                                  className={`absolute inset-0 w-2.5 h-2.5 -m-[2px] rounded-full ${row.tipGlow} animate-fuel-tip-ping`}
-                                />
-                              )}
+                              <span
+                                className={`absolute inset-0 w-2.5 h-2.5 -m-[2px] rounded-full ${row.tipGlow} animate-fuel-tip-ping`}
+                              />
                               <span className="block w-1.5 h-1.5 rounded-full bg-white border-[1.5px] border-slate-800 shadow-xs" />
                             </div>
                           )}

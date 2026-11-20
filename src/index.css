@@ -825,13 +825,13 @@
   );
 }
 
-/* Gasoline Allowance Card Visual Effects */
+/* Gasoline Allowance Card Visual Effects (GPU-composited 3D transforms) */
 @keyframes fuel-shimmer-sweep {
   0% {
-    transform: translateX(-120%) skewX(-18deg);
+    transform: translate3d(-120%, 0, 0) skewX(-18deg);
   }
   100% {
-    transform: translateX(260%) skewX(-18deg);
+    transform: translate3d(260%, 0, 0) skewX(-18deg);
   }
 }
 
@@ -852,59 +852,64 @@
     transparent 100%
   );
   animation: fuel-shimmer-sweep 2.6s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
   pointer-events: none;
 }
 
 @keyframes fuel-aura-pulse {
   0%, 100% {
-    opacity: 0.45;
-    transform: scale(1);
+    opacity: 0.55;
+    transform: scale3d(1, 1, 1);
   }
   50% {
-    opacity: 0.85;
-    transform: scale(1.06);
+    opacity: 0.92;
+    transform: scale3d(1.06, 1.06, 1);
   }
 }
 
 .animate-fuel-aura {
   animation: fuel-aura-pulse 3.4s ease-in-out infinite;
   will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 @keyframes fuel-tip-ping {
   0% {
-    transform: scale(0.9);
+    transform: scale3d(0.9, 0.9, 1);
     opacity: 0.85;
   }
   70% {
-    transform: scale(1.75);
+    transform: scale3d(1.75, 1.75, 1);
     opacity: 0;
   }
   100% {
-    transform: scale(1.75);
+    transform: scale3d(1.75, 1.75, 1);
     opacity: 0;
   }
 }
 
 .animate-fuel-tip-ping {
   animation: fuel-tip-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 /* Liquid Crystal Navigation Motion Effects */
 @keyframes crystal-sheen-sweep {
   0%, 58% {
-    transform: translateX(-140%) skewX(-24deg);
+    transform: translate3d(-140%, 0, 0) skewX(-24deg);
     opacity: 0;
   }
   65% {
     opacity: 0.75;
   }
   88% {
-    transform: translateX(340%) skewX(-24deg);
+    transform: translate3d(340%, 0, 0) skewX(-24deg);
     opacity: 0;
   }
   100% {
-    transform: translateX(340%) skewX(-24deg);
+    transform: translate3d(340%, 0, 0) skewX(-24deg);
     opacity: 0;
   }
 }
@@ -936,11 +941,11 @@
 
 @keyframes crystal-ripple-wave {
   0% {
-    transform: scale(0.35);
+    transform: scale3d(0.35, 0.35, 1);
     opacity: 0.85;
   }
   100% {
-    transform: scale(1.75);
+    transform: scale3d(1.75, 1.75, 1);
     opacity: 0;
   }
 }
@@ -953,11 +958,11 @@
 @keyframes active-aura-breathe {
   0%, 100% {
     opacity: 0.65;
-    transform: scaleX(0.92);
+    transform: scale3d(0.92, 1, 1);
   }
   50% {
     opacity: 1;
-    transform: scaleX(1.08);
+    transform: scale3d(1.08, 1, 1);
   }
 }
 
@@ -968,30 +973,32 @@
 
 @keyframes kpi-orbit-spin {
   0% {
-    transform: rotate(0deg);
+    transform: rotate3d(0, 0, 1, 0deg);
   }
   100% {
-    transform: rotate(360deg);
+    transform: rotate3d(0, 0, 1, 360deg);
   }
 }
 
 .animate-kpi-orbit {
   animation: kpi-orbit-spin 16s linear infinite;
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 @keyframes kpi-orb-float {
   0%, 100% {
-    transform: translateY(0px) scale(1);
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
   }
   50% {
-    transform: translateY(-2.5px) scale(1.015);
+    transform: translate3d(0, -2.5px, 0) scale3d(1.015, 1.015, 1);
   }
 }
 
 .animate-kpi-float {
   animation: kpi-orb-float 4.2s ease-in-out infinite;
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 @keyframes kpi-bar-aura-pulse {

@@ -206,12 +206,12 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
         aria-hidden="true"
       />
 
-      {/* Ambient Energy Halos (lightweight radial gradients, zero blur filter lag) */}
+      {/* Ambient Energy Halos (lightweight radial gradients, GPU-animated without blur filter lag) */}
       <div
-        className="pointer-events-none -right-12 -top-12 absolute w-48 h-48 rounded-full opacity-75"
+        className="pointer-events-none -right-12 -top-12 absolute w-48 h-48 rounded-full animate-fuel-aura"
         style={{
           background:
-            'radial-gradient(circle, rgba(251,191,36,0.22) 0%, rgba(251,191,36,0.05) 45%, transparent 72%)',
+            'radial-gradient(circle, rgba(251,191,36,0.24) 0%, rgba(251,191,36,0.06) 45%, transparent 72%)',
         }}
         aria-hidden="true"
       />
