@@ -54,6 +54,9 @@ import {
   XCircle,
   Cloud,
   RefreshCw,
+  ScanLine,
+  CreditCard,
+  MapPin,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -73,6 +76,13 @@ import { BikePresetsModal } from './components/BikePresetsModal';
 import { QuotationModal } from './components/QuotationModal';
 import { ProvisionalApprovalModal } from './components/ProvisionalApprovalModal';
 import { InstallmentShareCardModal } from './components/InstallmentShareCardModal';
+import { IdCardScannerModal, AppliedThaiIdData } from './components/IdCardScannerModal';
+import {
+  formatThaiDateFromIso,
+  formatThaiIdDisplay,
+  normalizeThaiIdDigits,
+  validateThaiNationalId,
+} from './utils/thaiIdUtils';
 import { AmortizationModal } from './components/AmortizationModal';
 import { TermComparisonTable } from './components/TermComparisonTable';
 import { DvApprovalCard } from './components/DvApprovalCard';
@@ -253,6 +263,52 @@ export default function App() {
     }
   };
 
+  // Customer Thai National ID Card Info (เก็บในข้อมูลเคส & ซิงค์ Cloud เท่านั้น ไม่แสดงในใบเสนอราคา/LINE)
+  const [customerIdCard, setCustomerIdCard] = useState<string>(() => {
+    try {
+      return normalizeThaiIdDigits(localStorage.getItem('ncap_customer_id_card') ?? '');
+    } catch {
+      return '';
+    }
+  });
+  const [customerAddress, setCustomerAddress] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_address') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [customerBirthDate, setCustomerBirthDate] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ncap_customer_birth_date') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [showIdCardDetails, setShowIdCardDetails] = useState<boolean>(false);
+
+  const handleCustomerIdCardChange = (val: string) => {
+    const digits = normalizeThaiIdDigits(val);
+    setCustomerIdCard(digits);
+    try {
+      localStorage.setItem('ncap_customer_id_card', digits);
+    } catch {}
+  };
+  const handleCustomerAddressChange = (val: string) => {
+    const trimmed = val.slice(0, 500);
+    setCustomerAddress(trimmed);
+    try {
+      localStorage.setItem('ncap_customer_address', trimmed);
+    } catch {}
+  };
+  const handleCustomerBirthDateChange = (val: string) => {
+    const clean = val.trim().slice(0, 20);
+    setCustomerBirthDate(clean);
+    try {
+      localStorage.setItem('ncap_customer_birth_date', clean);
+    } catch {}
+  };
+
   // Customer Eligibility Information (อายุ, อายุงาน, รายได้, ระยะเวลาพักอาศัย, อาชีพ, ลูกค้า ACE)
   const [customerAge, setCustomerAge] = useState<string>(() => {
     try {
@@ -372,6 +428,7 @@ export default function App() {
   const [showInsuranceDoc, setShowInsuranceDoc] = useState<boolean>(false);
   const [showEirInfo, setShowEirInfo] = useState<boolean>(false);
   const [showSavedCases, setShowSavedCases] = useState<boolean>(false);
+  const [showIdCardScanner, setShowIdCardScanner] = useState<boolean>(false);
   const [savedCasesPreferAll, setSavedCasesPreferAll] = useState<boolean>(false);
   const [savedCasesCount, setSavedCasesCount] = useState<number>(() => {
     return getSavedCases().length;
@@ -1133,6 +1190,10 @@ export default function App() {
     handleCustomerNameChange(record.customerName || 'คุณลูกค้า');
     handleCustomerPhoneChange(record.customerPhone ?? '');
     handleCustomerAgeChange(record.customerAge ?? '');
+    handleCustomerIdCardChange(record.customerIdCard ?? '');
+    handleCustomerAddressChange(record.customerAddress ?? '');
+    handleCustomerBirthDateChange(record.customerBirthDate ?? '');
+    setShowIdCardDetails(Boolean(record.customerIdCard || record.customerAddress));
     handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
     handleCustomerIncomeChange(record.customerIncome ?? '');
     handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
@@ -1226,6 +1287,9 @@ export default function App() {
       customerPhone,
       customerNote: '',
       customerAge: customerAge.trim() || undefined,
+      customerIdCard: normalizeThaiIdDigits(customerIdCard) || undefined,
+      customerAddress: customerAddress.trim() || undefined,
+      customerBirthDate: customerBirthDate.trim() || undefined,
       customerWorkMonths: customerWorkMonths.trim() || undefined,
       customerIncome: customerIncome.trim() || undefined,
       customerResidenceMonths: customerResidenceMonths.trim() || undefined,
@@ -1302,6 +1366,10 @@ export default function App() {
     handleCustomerNameChange(record.customerName || 'คุณลูกค้า');
     handleCustomerPhoneChange(record.customerPhone ?? '');
     handleCustomerAgeChange(record.customerAge ?? '');
+    handleCustomerIdCardChange(record.customerIdCard ?? '');
+    handleCustomerAddressChange(record.customerAddress ?? '');
+    handleCustomerBirthDateChange(record.customerBirthDate ?? '');
+    setShowIdCardDetails(Boolean(record.customerIdCard || record.customerAddress));
     handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
     handleCustomerIncomeChange(record.customerIncome ?? '');
     handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
@@ -1873,14 +1941,23 @@ export default function App() {
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-emerald-400/20 to-transparent opacity-90 pointer-events-none" />
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <label className="text-[11px] text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
                     <span>ข้อมูลลูกค้า</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-emerald-800 dark:text-emerald-200 bg-white/80 dark:bg-emerald-950/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-emerald-200/80 dark:border-emerald-700/60 shadow-2xs">
-                    แสดงในใบเสนอราคา & LINE
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      setShowIdCardScanner(true);
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-[10.5px] flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer shrink-0"
+                    title="เปิดกล้องถ่ายรูป หรือเลือกรูปบัตรประชาชนจากคลังภาพ"
+                  >
+                    <ScanLine className="w-3.5 h-3.5" />
+                    <span>สแกนบัตรประชาชน</span>
+                  </button>
                 </div>
                 <div className="grid grid-cols-12 gap-2">
                   <div className="col-span-7 sm:col-span-7">
@@ -2093,6 +2170,161 @@ export default function App() {
                         <span>ส่งขออนุมัติ DV</span>
                         <ArrowRight className="w-3 h-3" />
                       </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Thai National ID Card Info Block (เก็บในข้อมูลเคสเท่านั้น ไม่แสดงในใบเสนอราคา & LINE) */}
+                <div className="pt-2.5 border-t border-emerald-200/70 dark:border-emerald-800/60 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[10.5px] font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                      <span>ข้อมูลบัตรประชาชน (เก็บในเคสเท่านั้น)</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setShowIdCardDetails((prev) => !prev);
+                      }}
+                      className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <span>
+                        {showIdCardDetails || customerIdCard || customerAddress
+                          ? showIdCardDetails
+                            ? 'ซ่อนรายละเอียด'
+                            : 'ดู/แก้ไขข้อมูลบัตร'
+                          : '+ กรอกหรือดูข้อมูลบัตร'}
+                      </span>
+                      {showIdCardDetails ? (
+                        <ChevronUp className="w-3 h-3" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+
+                  {!showIdCardDetails && (customerIdCard || customerAddress) && (
+                    <div
+                      onClick={() => setShowIdCardDetails(true)}
+                      className="p-2 rounded-xl bg-white/75 dark:bg-slate-900/70 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] space-y-0.5 cursor-pointer hover:border-emerald-400 transition-colors"
+                    >
+                      {customerIdCard && (
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400">เลขบัตร 13 หลัก:</span>
+                          <span className="font-mono font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">
+                            {formatThaiIdDisplay(customerIdCard)}
+                          </span>
+                        </div>
+                      )}
+                      {customerAddress && (
+                        <div className="text-[10.5px] text-slate-600 dark:text-slate-300 truncate">
+                          ที่อยู่: {customerAddress}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {showIdCardDetails && (
+                    <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/75 border border-emerald-200/80 dark:border-emerald-800/60 space-y-2 animate-fade-in">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <label className="text-[10px] text-slate-600 dark:text-slate-300 font-semibold">
+                            เลขประจำตัวประชาชน 13 หลัก
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {customerIdCard && (
+                              <span
+                                className={`text-[9.5px] font-bold ${
+                                  validateThaiNationalId(customerIdCard).isValid
+                                    ? 'text-emerald-700 dark:text-emerald-300'
+                                    : 'text-amber-700 dark:text-amber-300'
+                                }`}
+                              >
+                                {validateThaiNationalId(customerIdCard).isValid
+                                  ? '✓ ครบ 13 หลัก'
+                                  : 'ควรตรวจทาน'}
+                              </span>
+                            )}
+                            {customerIdCard && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard?.writeText(customerIdCard);
+                                  triggerHaptic('light');
+                                  triggerToast('คัดลอกเลขบัตรประชาชนแล้ว');
+                                }}
+                                className="text-[9.5px] font-bold text-sky-700 dark:text-sky-300 hover:underline flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <Copy className="w-2.5 h-2.5" /> คัดลอก
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={17}
+                          value={formatThaiIdDisplay(customerIdCard)}
+                          onChange={(e) => handleCustomerIdCardChange(e.target.value)}
+                          placeholder="X-XXXX-XXXXX-XX-X"
+                          className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 tracking-wider tabular-nums outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <label className="text-[10px] text-slate-600 dark:text-slate-300 font-semibold flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>
+                              ที่อยู่ตามบัตรประชาชน
+                              {customerBirthDate
+                                ? ` • เกิด ${formatThaiDateFromIso(customerBirthDate)}`
+                                : ''}
+                            </span>
+                          </label>
+                          {customerAddress && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard?.writeText(customerAddress);
+                                triggerHaptic('light');
+                                triggerToast('คัดลอกที่อยู่ตามบัตรแล้ว');
+                              }}
+                              className="text-[9.5px] font-bold text-sky-700 dark:text-sky-300 hover:underline flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <Copy className="w-2.5 h-2.5" /> คัดลอก
+                            </button>
+                          )}
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={customerAddress}
+                          onChange={(e) => handleCustomerAddressChange(e.target.value)}
+                          placeholder="บ้านเลขที่ หมู่ ถนน ตำบล อำเภอ จังหวัด (สแกนบัตรหรือกรอกเอง)"
+                          className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none leading-relaxed"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-0.5 text-[10px]">
+                        <span className="text-slate-500 dark:text-slate-400">
+                          ซิงค์ขึ้น Cloud กับเคส (ไม่แสดงในใบเสนอราคา/LINE)
+                        </span>
+                        {(customerIdCard || customerAddress || customerBirthDate) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              handleCustomerIdCardChange('');
+                              handleCustomerAddressChange('');
+                              handleCustomerBirthDateChange('');
+                            }}
+                            className="text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer shrink-0"
+                          >
+                            ล้างข้อมูลบัตร
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -4021,6 +4253,28 @@ export default function App() {
         }}
         activeEditingId={editingCaseId}
         initialShowAllMonths={savedCasesPreferAll}
+      />
+
+      {/* Thai National ID Card Scanner Modal (เปิดจากกล่องข้อมูลลูกค้าหน้าคำนวณเคสเท่านั้น) */}
+      <IdCardScannerModal
+        isOpen={showIdCardScanner}
+        onClose={() => setShowIdCardScanner(false)}
+        existingCustomerName={customerName}
+        onApply={(scanned: AppliedThaiIdData) => {
+          if (scanned.fullName) {
+            handleCustomerNameChange(scanned.fullName);
+          }
+          if (scanned.age) {
+            handleCustomerAgeChange(scanned.age);
+          }
+          handleCustomerIdCardChange(scanned.idCard);
+          handleCustomerAddressChange(scanned.address);
+          handleCustomerBirthDateChange(scanned.birthDateIso);
+          setShowIdCardDetails(true);
+          triggerToast(
+            '✓ นำเข้าข้อมูลบัตรประชาชน (ชื่อ, อายุ, เลข 13 หลัก, ที่อยู่) เรียบร้อยแล้ว'
+          );
+        }}
       />
 
       {/* Cloud Sync & Google Account Modal */}

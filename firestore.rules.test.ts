@@ -170,6 +170,25 @@ export function runRtdbVerification(): void {
     if (rt.id !== c.id || rt.caseTitle !== c.caseTitle) {
       throw new Error(`Roundtrip mismatch for ${c.id}`);
     }
+    if (cases.indexOf(c) === 0) {
+      const withIdPayload = buildRtdbCasePayload(
+        {
+          ...c,
+          customerIdCard: '1100201234567',
+          customerAddress: '99/1 หมู่ 2 ต.ศรีราชา อ.ศรีราชา จ.ชลบุรี 20110',
+          customerBirthDate: '1995-05-14',
+        },
+        uid
+      );
+      const withIdRoundtrip = fromCloudCaseDoc(withIdPayload, c.id);
+      if (
+        withIdRoundtrip.customerIdCard !== '1100201234567' ||
+        withIdRoundtrip.customerBirthDate !== '1995-05-14' ||
+        !withIdRoundtrip.customerAddress?.includes('ศรีราชา')
+      ) {
+        throw new Error('Thai ID card fields RTDB roundtrip mismatch');
+      }
+    }
     const ym = `${year}/${month}`;
     buckets[ym] = (buckets[ym] || 0) + 1;
   }

@@ -109,6 +109,22 @@
           "type": "string",
           "maxLength": 20
         },
+        "customerIdCard": {
+          "type": "string",
+          "maxLength": 20,
+          "pattern": "^[0-9]{13}$",
+          "description": "Thai 13-digit National ID card number (stored in case only, excluded from quotations)"
+        },
+        "customerAddress": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Customer address from Thai National ID card (stored in case only, excluded from quotations)"
+        },
+        "customerBirthDate": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "ISO date of birth YYYY-MM-DD from Thai National ID card"
+        },
         "customerWorkMonths": {
           "type": "string",
           "maxLength": 20

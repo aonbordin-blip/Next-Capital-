@@ -1,16 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
   Cell,
-  LabelList,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from 'recharts';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import {
@@ -95,49 +89,6 @@ interface StatusItemDescriptor {
   activeBgClass: string;
 }
 
-interface DealerTooltipProps {
-  active?: boolean;
-  payload?: ReadonlyArray<{ payload?: DealerSummaryItem }>;
-}
-
-const DealerChartTooltip: React.FC<DealerTooltipProps> = ({ active, payload }) => {
-  if (!active || !payload || payload.length === 0) return null;
-  const d = payload[0]?.payload;
-  if (!d) return null;
-
-  return (
-    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/85 shadow-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 min-w-[190px] max-w-[240px]">
-      <div className="font-extrabold text-slate-900 dark:text-slate-50 pb-1 border-b border-slate-100 dark:border-slate-800 truncate">
-        {d.name}
-      </div>
-      <div className="pt-1.5 space-y-1 text-[11px] tabular-nums">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-teal-700 dark:text-teal-300 font-semibold">รับรถแล้ว</span>
-          <span className="font-bold text-slate-900 dark:text-slate-100">{d.delivered} เคส</span>
-        </div>
-        {d.approvedPending > 0 && (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-emerald-700 dark:text-emerald-300 font-semibold">อนุมัติ (รอรับรถ)</span>
-            <span className="font-bold text-slate-900 dark:text-slate-100">{d.approvedPending} เคส</span>
-          </div>
-        )}
-        {d.other > 0 && (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-500 dark:text-slate-400 font-semibold">รอผล / อื่นๆ</span>
-            <span className="font-bold text-slate-700 dark:text-slate-300">{d.other} เคส</span>
-          </div>
-        )}
-        <div className="pt-1 mt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-          <span className="text-slate-500 dark:text-slate-400">รวม / ยอดจัด</span>
-          <span className="font-extrabold text-sky-800 dark:text-sky-300">
-            {d.total} เคส · {formatBaht(Math.round(d.finance))}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 interface DonutTooltipProps {
   active?: boolean;
   payload?: ReadonlyArray<{ payload?: StatusItemDescriptor }>;
@@ -181,11 +132,6 @@ function formatShortBaht(val: number): string {
   if (n >= 1_000_000) return `฿${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 100_000) return `฿${(n / 1_000).toFixed(0)}K`;
   return formatBaht(n);
-}
-
-function formatShortDealerLabel(name: string): string {
-  if (name.length <= 16) return name;
-  return `${name.slice(0, 15)}…`;
 }
 
 export const DealPipelineAndDealersChartCard: React.FC<
@@ -340,7 +286,10 @@ export const DealPipelineAndDealersChartCard: React.FC<
     [hiddenDealers]
   );
 
-  const dealerChartHeight = Math.max(146, Math.min(440, dealers.length * 36 + 24));
+  const maxDealerCases = useMemo(
+    () => Math.max(1, ...dealers.map((d) => d.total)),
+    [dealers]
+  );
 
   return (
     <MotionConfig reducedMotion="user">
@@ -762,194 +711,148 @@ export const DealPipelineAndDealersChartCard: React.FC<
                     </span>
                   </div>
 
-                  {/* Horizontal Stacked 3D Bar Chart */}
-                  <div style={{ height: `${dealerChartHeight}px` }} className="w-full chart-gpu-layer">
-                    <ResponsiveContainer width="100%" height="100%" debounce={120}>
-                      <BarChart
-                        accessibilityLayer={false}
-                        data={dealers}
-                        layout="vertical"
-                        margin={{ top: 2, right: 34, left: 2, bottom: 2 }}
-                        barSize={15}
-                      >
-                        <defs>
-                          <linearGradient id="dealerGradDelivered" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#14b8a6" />
-                            <stop offset="100%" stopColor="#10b981" />
-                          </linearGradient>
-                          <linearGradient id="dealerGradPendingDel" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#6ee7b7" />
-                            <stop offset="100%" stopColor="#34d399" />
-                          </linearGradient>
-                          <linearGradient id="dealerGradOther" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#94a3b8" />
-                            <stop offset="100%" stopColor="#64748b" />
-                          </linearGradient>
-                          <filter id="dealerAuraSelected" x="-15%" y="-35%" width="130%" height="170%">
-                            <feDropShadow
-                              dx="0"
-                              dy="0"
-                              stdDeviation="3.5"
-                              floodColor="#0ea5e9"
-                              floodOpacity="0.6"
-                            />
-                          </filter>
-                        </defs>
+                  {/* Shared-Scale Horizontal Stacked 3D Bar Chart (Full Dealer Names & Guaranteed Counts) */}
+                  <div className="relative space-y-1.5 chart-gpu-layer">
+                    {/* Vertical Dashed Reference Gridlines aligned with 80% max bar track */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-2 top-0 bottom-5 z-0"
+                    >
+                      {[0, 20, 40, 60, 80].map((posPct) => (
+                        <div
+                          key={posPct}
+                          className="absolute top-0 bottom-0 border-l border-dashed border-slate-300/70 dark:border-slate-700/70"
+                          style={{ left: `${posPct}%` }}
+                        />
+                      ))}
+                    </div>
 
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          horizontal={false}
-                          stroke="var(--chart-grid)"
-                        />
-                        <XAxis type="number" hide domain={[0, 'dataMax + 2']} />
-                        <YAxis
-                          type="category"
-                          dataKey="name"
-                          width={106}
-                          axisLine={false}
-                          tickLine={false}
-                          tickFormatter={formatShortDealerLabel}
-                          tick={{ fill: 'var(--chart-tick)', fontSize: 10.5, fontWeight: 700 }}
-                        />
-                        <Tooltip
-                          cursor={false}
-                          wrapperStyle={{ pointerEvents: 'none', zIndex: 30 }}
-                          content={<DealerChartTooltip />}
-                        />
-                        <Bar
-                          dataKey="delivered"
-                          stackId="cases"
-                          fill="url(#dealerGradDelivered)"
-                          radius={[4, 0, 0, 4]}
-                          animationDuration={550}
-                          onClick={(entry) => {
-                            const raw = entry as unknown as {
-                              name?: string;
-                              payload?: DealerSummaryItem;
-                            };
-                            const dealerName = raw?.payload?.name ?? raw?.name;
-                            if (dealerName) {
+                    {/* Dealer Rows */}
+                    <div className="relative z-10 space-y-1.5">
+                      {dealers.map((d, idx) => {
+                        const isSel = selectedDealer?.name === d.name;
+                        const isDimmed = Boolean(selectedDealer && !isSel);
+                        const barTrackPct = Math.min(80, (d.total / maxDealerCases) * 80);
+                        const delShare = d.total > 0 ? (d.delivered / d.total) * 100 : 0;
+                        const pendShare = d.total > 0 ? (d.approvedPending / d.total) * 100 : 0;
+                        const otherShare = d.total > 0 ? (d.other / d.total) * 100 : 0;
+
+                        return (
+                          <button
+                            key={d.name}
+                            type="button"
+                            onClick={() => {
                               triggerHaptic('selection');
                               setSelectedDealerName((prev) =>
-                                prev === dealerName ? null : dealerName
+                                prev === d.name ? null : d.name
                               );
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {dealers.map((d) => {
-                            const isSel = selectedDealer?.name === d.name;
-                            return (
-                              <Cell
-                                key={d.name}
-                                fillOpacity={!selectedDealer || isSel ? 1 : 0.42}
-                                filter={isSel ? 'url(#dealerAuraSelected)' : undefined}
-                                style={{ transition: 'fill-opacity 200ms ease', outline: 'none' }}
-                              />
-                            );
-                          })}
-                        </Bar>
-                        <Bar
-                          dataKey="approvedPending"
-                          stackId="cases"
-                          fill="url(#dealerGradPendingDel)"
-                          animationDuration={550}
-                          onClick={(entry) => {
-                            const raw = entry as unknown as {
-                              name?: string;
-                              payload?: DealerSummaryItem;
-                            };
-                            const dealerName = raw?.payload?.name ?? raw?.name;
-                            if (dealerName) {
-                              triggerHaptic('selection');
-                              setSelectedDealerName((prev) =>
-                                prev === dealerName ? null : dealerName
-                              );
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {dealers.map((d) => {
-                            const isSel = selectedDealer?.name === d.name;
-                            return (
-                              <Cell
-                                key={d.name}
-                                fillOpacity={!selectedDealer || isSel ? 1 : 0.42}
-                                style={{ transition: 'fill-opacity 200ms ease', outline: 'none' }}
-                              />
-                            );
-                          })}
-                        </Bar>
-                        <Bar
-                          dataKey="other"
-                          stackId="cases"
-                          fill="url(#dealerGradOther)"
-                          radius={[0, 6, 6, 0]}
-                          animationDuration={550}
-                          onClick={(entry) => {
-                            const raw = entry as unknown as {
-                              name?: string;
-                              payload?: DealerSummaryItem;
-                            };
-                            const dealerName = raw?.payload?.name ?? raw?.name;
-                            if (dealerName) {
-                              triggerHaptic('selection');
-                              setSelectedDealerName((prev) =>
-                                prev === dealerName ? null : dealerName
-                              );
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <LabelList
-                            dataKey="total"
-                            position="right"
-                            formatter={(val: unknown) => `${Number(val) || 0}`}
-                            style={{
-                              fill: 'var(--chart-label)',
-                              fontSize: '10.5px',
-                              fontWeight: 800,
                             }}
-                          />
-                          {dealers.map((d) => {
-                            const isSel = selectedDealer?.name === d.name;
-                            return (
-                              <Cell
-                                key={d.name}
-                                fillOpacity={!selectedDealer || isSel ? 1 : 0.42}
-                                style={{ transition: 'fill-opacity 200ms ease', outline: 'none' }}
-                              />
-                            );
-                          })}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                            aria-pressed={isSel}
+                            className={`w-full text-left rounded-xl px-2 py-1.5 border transition-all duration-200 cursor-pointer space-y-1 ${
+                              isSel
+                                ? 'bg-sky-50/90 dark:bg-sky-950/75 border-sky-300/90 dark:border-sky-600/80 shadow-xs'
+                                : isDimmed
+                                ? 'border-transparent opacity-50 hover:opacity-95'
+                                : 'border-transparent hover:bg-white/65 dark:hover:bg-slate-800/60'
+                            }`}
+                          >
+                            {/* Full Dealer Name + Delivered/Finance Summary */}
+                            <div className="flex items-center justify-between gap-2">
+                              <MarqueeText className="text-[11px] font-bold text-slate-800 dark:text-slate-100 flex-1 min-w-0">
+                                {d.name}
+                              </MarqueeText>
+                              <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap shrink-0">
+                                รับรถ <strong className="text-teal-700 dark:text-teal-300">{d.delivered}</strong>/{d.total} ·{' '}
+                                <strong className="text-sky-800 dark:text-sky-300">{formatShortBaht(d.finance)}</strong>
+                              </span>
+                            </div>
+
+                            {/* Proportional 3D Stacked Bar + Guaranteed Tip Count */}
+                            <div className="flex items-center w-full h-4">
+                              <motion.div
+                                initial={{ scaleX: 0 }}
+                                animate={{ scaleX: 1 }}
+                                transition={{
+                                  duration: 0.45,
+                                  delay: Math.min(idx * 0.04, 0.24),
+                                  ease: [0.16, 1, 0.3, 1],
+                                }}
+                                style={{
+                                  width: `${barTrackPct}%`,
+                                  minWidth: d.total > 0 ? '14px' : '0px',
+                                  transformOrigin: 'left',
+                                }}
+                                className={`relative h-3.5 rounded-full overflow-hidden flex shadow-xs ${
+                                  isSel
+                                    ? 'ring-2 ring-sky-400/90 shadow-[0_0_12px_rgba(14,165,233,0.45)]'
+                                    : 'border border-white/75 dark:border-slate-700/70'
+                                }`}
+                              >
+                                {d.delivered > 0 && (
+                                  <div
+                                    style={{ width: `${delShare}%` }}
+                                    className="h-full bg-gradient-to-r from-teal-500 to-emerald-500"
+                                  />
+                                )}
+                                {d.approvedPending > 0 && (
+                                  <div
+                                    style={{ width: `${pendShare}%` }}
+                                    className="h-full bg-gradient-to-r from-emerald-400 to-green-300"
+                                  />
+                                )}
+                                {d.other > 0 && (
+                                  <div
+                                    style={{ width: `${otherShare}%` }}
+                                    className="h-full bg-gradient-to-r from-slate-400 to-slate-500"
+                                  />
+                                )}
+                                {/* Specular Top Glass Sheen */}
+                                <div
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/40 to-transparent"
+                                />
+                              </motion.div>
+
+                              {/* Guaranteed Case Count at Bar Tip */}
+                              <span className="ml-2 text-[11px] font-black tabular-nums text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0">
+                                {d.total} เคส
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* X-Axis Scale Ticks aligned with Dashed Gridlines */}
+                    <div className="relative mx-2 h-4 text-[9.5px] font-bold text-slate-400 dark:text-slate-500 tabular-nums select-none pt-0.5">
+                      <span className="absolute left-0">0</span>
+                      {maxDealerCases >= 4 && (
+                        <span className="absolute -translate-x-1/2" style={{ left: '40%' }}>
+                          {Math.round(maxDealerCases / 2)}
+                        </span>
+                      )}
+                      <span className="absolute -translate-x-1/2" style={{ left: '80%' }}>
+                        {maxDealerCases} เคส
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Interactive Dealer Quick-Select Chips + Detail Spotlight */}
-                  <div className="flex flex-wrap gap-1 pt-0.5">
-                    {dealers.map((d) => {
-                      const isSel = selectedDealer?.name === d.name;
-                      return (
-                        <button
-                          key={d.name}
-                          type="button"
-                          onClick={() => {
-                            triggerHaptic('selection');
-                            setSelectedDealerName((prev) =>
-                              prev === d.name ? null : d.name
-                            );
-                          }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer tabular-nums ${
-                            isSel
-                              ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white border-white shadow-xs'
-                              : 'bg-white/70 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-white/95 dark:border-slate-700/80'
-                          }`}
-                        >
-                          {d.name} ({d.total})
-                        </button>
-                      );
-                    })}
+                  {/* Interactive Tap Hint / Reset Filter */}
+                  <div className="flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-slate-400 pt-0.5 px-0.5">
+                    <span>แตะที่แท่งกราฟร้านเพื่อดูรายละเอียดเพิ่มเติม</span>
+                    {selectedDealer && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setSelectedDealerName(null);
+                        }}
+                        className="text-sky-700 dark:text-sky-300 font-bold hover:underline cursor-pointer inline-flex items-center gap-1 shrink-0"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>แสดงทุกร้าน</span>
+                      </button>
+                    )}
                   </div>
 
                   <AnimatePresence mode="wait">

@@ -630,6 +630,18 @@ export function buildRtdbCasePayload(
   if (typeof record.customerAge === 'string' && record.customerAge) {
     payload.customerAge = safeStr(record.customerAge, 20);
   }
+  if (typeof record.customerIdCard === 'string' && record.customerIdCard) {
+    const cleanId = record.customerIdCard.replace(/\D/g, '').slice(0, 13);
+    if (cleanId.length === 13) {
+      payload.customerIdCard = cleanId;
+    }
+  }
+  if (typeof record.customerAddress === 'string' && record.customerAddress.trim()) {
+    payload.customerAddress = safeStr(record.customerAddress.trim(), 500);
+  }
+  if (typeof record.customerBirthDate === 'string' && record.customerBirthDate.trim()) {
+    payload.customerBirthDate = safeStr(record.customerBirthDate.trim(), 20);
+  }
   if (typeof record.customerWorkMonths === 'string' && record.customerWorkMonths) {
     payload.customerWorkMonths = safeStr(record.customerWorkMonths, 20);
   }
@@ -789,6 +801,9 @@ export function fromCloudCaseDoc(
     customerPhone: typeof data.customerPhone === 'string' ? data.customerPhone : undefined,
     customerNote: typeof data.customerNote === 'string' ? data.customerNote : undefined,
     customerAge: typeof data.customerAge === 'string' ? data.customerAge : undefined,
+    customerIdCard: typeof data.customerIdCard === 'string' ? data.customerIdCard : undefined,
+    customerAddress: typeof data.customerAddress === 'string' ? data.customerAddress : undefined,
+    customerBirthDate: typeof data.customerBirthDate === 'string' ? data.customerBirthDate : undefined,
     customerWorkMonths: typeof data.customerWorkMonths === 'string' ? data.customerWorkMonths : undefined,
     customerIncome: typeof data.customerIncome === 'string' ? data.customerIncome : undefined,
     customerResidenceMonths:

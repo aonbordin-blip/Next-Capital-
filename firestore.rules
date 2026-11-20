@@ -159,6 +159,9 @@ service cloud.firestore {
           'customerPhone',
           'customerNote',
           'customerAge',
+          'customerIdCard',
+          'customerAddress',
+          'customerBirthDate',
           'customerWorkMonths',
           'customerIncome',
           'customerResidenceMonths',
@@ -234,6 +237,9 @@ service cloud.firestore {
         && (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() <= 50))
         && (!('customerNote' in data) || (data.customerNote is string && data.customerNote.size() <= 1000))
         && (!('customerAge' in data) || (data.customerAge is string && data.customerAge.size() <= 20))
+        && (!('customerIdCard' in data) || (data.customerIdCard is string && data.customerIdCard.size() <= 20 && data.customerIdCard.matches('^[0-9]{13}$')))
+        && (!('customerAddress' in data) || (data.customerAddress is string && data.customerAddress.size() <= 500))
+        && (!('customerBirthDate' in data) || (data.customerBirthDate is string && data.customerBirthDate.size() <= 20))
         && (!('customerWorkMonths' in data) || (data.customerWorkMonths is string && data.customerWorkMonths.size() <= 20))
         && (!('customerIncome' in data) || (data.customerIncome is string && data.customerIncome.size() <= 30))
         && (!('customerResidenceMonths' in data) || (data.customerResidenceMonths is string && data.customerResidenceMonths.size() <= 20))
@@ -302,6 +308,9 @@ service cloud.firestore {
         'customerPhone',
         'customerNote',
         'customerAge',
+        'customerIdCard',
+        'customerAddress',
+        'customerBirthDate',
         'customerWorkMonths',
         'customerIncome',
         'customerResidenceMonths',

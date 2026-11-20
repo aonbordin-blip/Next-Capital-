@@ -809,6 +809,15 @@ function normalizeImportedRecord(
     ...(typeof raw.customerPhone === 'string' && raw.customerPhone ? { customerPhone: raw.customerPhone } : {}),
     ...(typeof raw.customerNote === 'string' && raw.customerNote ? { customerNote: raw.customerNote } : {}),
     ...(typeof raw.customerAge === 'string' && raw.customerAge ? { customerAge: raw.customerAge } : {}),
+    ...(typeof raw.customerIdCard === 'string' && raw.customerIdCard.replace(/\D/g, '').length === 13
+      ? { customerIdCard: raw.customerIdCard.replace(/\D/g, '').slice(0, 13) }
+      : {}),
+    ...(typeof raw.customerAddress === 'string' && raw.customerAddress.trim()
+      ? { customerAddress: raw.customerAddress.trim().slice(0, 500) }
+      : {}),
+    ...(typeof raw.customerBirthDate === 'string' && raw.customerBirthDate.trim()
+      ? { customerBirthDate: raw.customerBirthDate.trim().slice(0, 20) }
+      : {}),
     ...(typeof raw.customerWorkMonths === 'string' && raw.customerWorkMonths
       ? { customerWorkMonths: raw.customerWorkMonths }
       : {}),
