@@ -3,14 +3,12 @@ import {
   ArrowRight,
   Award,
   Ban,
-  Building2,
   CalendarClock,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   Clock,
   FileText,
   FolderArchive,
@@ -18,7 +16,6 @@ import {
   Plus,
   RotateCcw,
   ShieldCheck,
-  TrendingUp,
   UserCheck,
   XCircle,
 } from 'lucide-react';
@@ -34,6 +31,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { MonthlyCasesDashboard } from './MonthlyCasesDashboard';
 import { GasolineAllowanceCard } from './GasolineAllowanceCard';
 import { KpiSummaryChartCard } from './KpiSummaryChartCard';
+import { DealPipelineAndDealersChartCard } from './DealPipelineAndDealersChartCard';
 import { MarqueeText } from './MarqueeText';
 
 interface HomeDashboardProps {
@@ -207,7 +205,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [savedCases, setSavedCases] = useState<SavedCaseRecord[]>(() => getSavedCases());
   const currentMonthKey = useMemo(() => getCurrentMonthKey(), []);
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
-  const [showAllDealers, setShowAllDealers] = useState<boolean>(false);
 
   useEffect(() => {
     setSavedCases(getSavedCases());
@@ -270,6 +267,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     let rejectedOrCancelledCount = 0;
     let totalFinance = 0;
     let deliveredFinance = 0;
+    let approvedPendingFinance = 0;
+    let pendingFinance = 0;
+    let rejectedFinance = 0;
     let approvedTotalFinance = 0;
     let totalMonthlyInstallments = 0;
 
@@ -285,11 +285,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           deliveredFinance += caseFinance;
         } else {
           approvedPendingDeliveryCount += 1;
+          approvedPendingFinance += caseFinance;
         }
       } else if (c.approvalStatus === 'rejected' || c.approvalStatus === 'cancelled') {
         rejectedOrCancelledCount += 1;
+        rejectedFinance += caseFinance;
       } else {
         pendingCount += 1;
+        pendingFinance += caseFinance;
       }
     }
 
@@ -307,6 +310,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       rejectedOrCancelledCount,
       totalFinance,
       deliveredFinance,
+      approvedPendingFinance,
+      pendingFinance,
+      rejectedFinance,
       approvedTotalFinance,
       totalMonthlyInstallments,
       avgFinance,
@@ -328,7 +334,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const dealerSummaryList = useMemo(() => {
     const map = new Map<
       string,
-      { name: string; total: number; delivered: number; finance: number }
+      {
+        name: string;
+        total: number;
+        delivered: number;
+        approvedPending: number;
+        other: number;
+        finance: number;
+        deliveredFinance: number;
+      }
     >();
     for (const c of periodCases) {
       const display = (c.dealerName || '').replace(/\s+/g, ' ').trim() || 'ไม่ระบุร้านตัวแทน';
@@ -339,12 +353,28 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         .replace(/\s+/g, ' ')
         .trim();
 
-      const entry = map.get(key) || { name: display, total: 0, delivered: 0, finance: 0 };
+      const caseFinance = Number(c.snapshot?.financeAmount) || 0;
+      const entry = map.get(key) || {
+        name: display,
+        total: 0,
+        delivered: 0,
+        approvedPending: 0,
+        other: 0,
+        finance: 0,
+        deliveredFinance: 0,
+      };
       entry.total += 1;
-      if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
-        entry.delivered += 1;
+      if (c.approvalStatus === 'approved') {
+        if (c.deliveryStatus === 'delivered') {
+          entry.delivered += 1;
+          entry.deliveredFinance += caseFinance;
+        } else {
+          entry.approvedPending += 1;
+        }
+      } else {
+        entry.other += 1;
       }
-      entry.finance += Number(c.snapshot?.financeAmount) || 0;
+      entry.finance += caseFinance;
       map.set(key, entry);
     }
     return Array.from(map.values()).sort(
@@ -796,279 +826,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onOpenSavedCases={onOpenSavedCases}
         />
 
-        {/* Card B: Deal Pipeline, Top Dealers & First Installment Overview */}
-        <div className="order-3 lg:order-2 glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
-          <div
-            className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
-            aria-hidden="true"
-          />
-          <div
-            className="pointer-events-none -right-10 -top-10 absolute w-36 h-36 rounded-full bg-teal-300/25 blur-2xl"
-            aria-hidden="true"
-          />
-
-          {/* Pipeline Status Breakdown */}
-          <div className="relative space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 border border-white/60 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/25">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <MarqueeText className="text-xs sm:text-sm font-black text-slate-900">
-                  สัดส่วนสถานะดีล & ร้านตัวแทน
-                </MarqueeText>
-              </div>
-              <span className="text-[10.5px] text-teal-900 font-bold tabular-nums whitespace-nowrap shrink-0 px-2 py-0.5 rounded-lg bg-teal-50/75 backdrop-blur-sm border border-white/85">
-                {periodStats.totalCases} รายการ
-              </span>
-            </div>
-
-            <div className="glass-mini-card rounded-xl p-2.5 sm:p-3 space-y-2 text-[11px]">
-              {[
-                {
-                  label: 'รับรถแล้ว',
-                  count: periodStats.deliveredCount,
-                  barColor: 'bg-gradient-to-r from-teal-500 to-emerald-500',
-                  tipGlow: 'bg-emerald-400',
-                  textColor: 'text-teal-800',
-                },
-                {
-                  label: 'อนุมัติแล้ว (รอรับรถ)',
-                  count: periodStats.approvedPendingDeliveryCount,
-                  barColor: 'bg-gradient-to-r from-emerald-500 to-green-400',
-                  tipGlow: 'bg-emerald-400',
-                  textColor: 'text-emerald-800',
-                },
-                {
-                  label: 'รออนุมัติ',
-                  count: periodStats.pendingCount,
-                  barColor: 'bg-gradient-to-r from-sky-500 to-cyan-400',
-                  tipGlow: 'bg-sky-400',
-                  textColor: 'text-sky-800',
-                },
-                {
-                  label: 'ไม่อนุมัติ / ยกเลิก',
-                  count: periodStats.rejectedOrCancelledCount,
-                  barColor: 'bg-gradient-to-r from-slate-400 to-slate-500',
-                  tipGlow: 'bg-slate-400',
-                  textColor: 'text-slate-600',
-                },
-              ].map((row) => {
-                const pct =
-                  periodStats.totalCases > 0 ? (row.count / periodStats.totalCases) * 100 : 0;
-                return (
-                  <div key={row.label} className="space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <MarqueeText className={`font-semibold ${row.textColor}`}>
-                        {row.label}
-                      </MarqueeText>
-                      <span className="font-bold text-slate-800 tabular-nums whitespace-nowrap shrink-0">
-                        {row.count} เคส ({pct.toFixed(0)}%)
-                      </span>
-                    </div>
-                    <div className="relative py-0.5">
-                      <div className="h-2 w-full bg-white/75 border border-white/95 shadow-inner rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${row.barColor} ${
-                            pct > 0 ? 'animate-fuel-shimmer' : ''
-                          } transition-all duration-500 ease-out`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      {pct > 0 && (
-                        <div
-                          className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
-                          style={{ left: `${Math.min(98.5, Math.max(1.5, pct))}%` }}
-                        >
-                          <span
-                            className={`absolute inset-0 w-3 h-3 -m-[2.5px] rounded-full ${row.tipGlow} animate-fuel-tip-ping`}
-                          />
-                          <span className="block w-2 h-2 rounded-full bg-white border-[1.5px] border-slate-800 shadow-sm" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* All Dealers in Selected Period (100% reconciled with period totals) */}
-          <div className="relative pt-2 border-t border-white/75 space-y-1.5">
-            <div className="flex items-center justify-between gap-2 min-w-0">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 min-w-0 flex-1">
-                <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                <MarqueeText>สรุปตามร้านตัวแทน (Dealers)</MarqueeText>
-              </div>
-              {dealerSummaryList.length > 0 && (
-                <span className="text-[10px] font-bold text-slate-500 tabular-nums whitespace-nowrap shrink-0">
-                  {dealerSummaryList.length} ร้าน · {periodStats.totalCases} เคส
-                </span>
-              )}
-            </div>
-
-            {dealerSummaryList.length === 0 ? (
-              <p className="text-[11px] text-slate-500 py-1">ยังไม่มีข้อมูลร้านตัวแทนในงวดนี้</p>
-            ) : (
-              <div className="space-y-1">
-                {(() => {
-                  const defaultVisibleCount = 5;
-                  const needsCollapse = dealerSummaryList.length > 6;
-                  const visibleDealers =
-                    needsCollapse && !showAllDealers
-                      ? dealerSummaryList.slice(0, defaultVisibleCount)
-                      : dealerSummaryList;
-                  const hiddenDealers =
-                    needsCollapse && !showAllDealers
-                      ? dealerSummaryList.slice(defaultVisibleCount)
-                      : [];
-                  const hiddenSummary = hiddenDealers.reduce(
-                    (acc, item) => ({
-                      total: acc.total + item.total,
-                      delivered: acc.delivered + item.delivered,
-                      finance: acc.finance + item.finance,
-                    }),
-                    { total: 0, delivered: 0, finance: 0 }
-                  );
-
-                  return (
-                    <>
-                      <div className="divide-y divide-white/80 text-[11px]">
-                        {visibleDealers.map((d) => (
-                          <div
-                            key={d.name}
-                            className="py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/55 transition-colors flex items-center justify-between gap-2"
-                          >
-                            <MarqueeText className="font-semibold text-slate-800 flex-1 min-w-0">
-                              {d.name}
-                            </MarqueeText>
-                            <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
-                              <span>
-                                <strong className="text-slate-900">{d.total}</strong> เคส (รับรถ{' '}
-                                {d.delivered})
-                              </span>
-                              <span className="text-slate-300">·</span>
-                              <span className="font-bold text-sky-800">
-                                {formatBaht(Math.round(d.finance))}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-
-                        {hiddenDealers.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              triggerHaptic('light');
-                              setShowAllDealers(true);
-                            }}
-                            className="w-full py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/65 transition-colors flex items-center justify-between gap-2 text-left cursor-pointer"
-                          >
-                            <span className="font-semibold text-sky-700 flex items-center gap-1 min-w-0 truncate">
-                              <span>ร้านอื่นๆ ({hiddenDealers.length} ร้าน)</span>
-                              <ChevronDown className="w-3 h-3 shrink-0" />
-                            </span>
-                            <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
-                              <span>
-                                <strong className="text-slate-900">{hiddenSummary.total}</strong>{' '}
-                                เคส (รับรถ {hiddenSummary.delivered})
-                              </span>
-                              <span className="text-slate-300">·</span>
-                              <span className="font-bold text-sky-800">
-                                {formatBaht(Math.round(hiddenSummary.finance))}
-                              </span>
-                            </div>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Total Reconciliation Row matching Deal Pipeline header & Top KPI */}
-                      <div className="pt-1 border-t border-white/85 flex items-center justify-between gap-2 text-[10.5px] tabular-nums text-slate-600">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="font-bold text-slate-700">รวมทุกร้าน</span>
-                          {needsCollapse && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                triggerHaptic('light');
-                                setShowAllDealers((prev) => !prev);
-                              }}
-                              className="text-sky-700 hover:text-sky-900 font-bold inline-flex items-center gap-0.5 cursor-pointer"
-                            >
-                              <span>{showAllDealers ? 'ย่อลง' : 'ดูทั้งหมด'}</span>
-                              {showAllDealers ? (
-                                <ChevronUp className="w-3 h-3" />
-                              ) : (
-                                <ChevronDown className="w-3 h-3" />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap font-bold">
-                          <span className="text-slate-800">
-                            {periodStats.totalCases} เคส (รับรถ {periodStats.deliveredCount})
-                          </span>
-                          <span className="text-slate-300">·</span>
-                          <span className="text-indigo-800">
-                            {formatBaht(Math.round(periodStats.totalFinance))}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-          </div>
-
-          {/* Upcoming First Payment Cohort Banner (Clean 2-line layout, zero word-clipping) */}
-          <div className="relative glass-panel-indigo rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px]">
-            <div className="flex items-start sm:items-center gap-2 min-w-0 flex-1">
-              <CalendarClock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
-              <div className="min-w-0 flex-1 leading-snug">
-                {upcomingInstallmentSummary ? (
-                  <>
-                    <div className="text-slate-800 font-semibold tabular-nums flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                      <span>งวดแรก:</span>
-                      {upcomingInstallmentSummary.cohorts.map((cohort, idx) => (
-                        <span key={cohort.sortKey} className="inline-flex items-center gap-1">
-                          {idx > 0 && <span className="text-slate-400">·</span>}
-                          <strong className="text-sky-950">{cohort.label}</strong>
-                          <span className="text-slate-600">({cohort.count})</span>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="text-[10px] text-slate-600 tabular-nums mt-0.5">
-                      {upcomingInstallmentSummary.isPeriodScoped
-                        ? `รับรถงวดนี้ ${upcomingInstallmentSummary.totalDeliveredCount} ราย`
-                        : `ทั้งหมด ${upcomingInstallmentSummary.totalDeliveredCount} ราย`}{' '}
-                      · รวมค่างวด{' '}
-                      <strong className="text-indigo-900">
-                        {formatBaht(Math.round(upcomingInstallmentSummary.totalMonthlyInstallment))}
-                      </strong>
-                      /ด.
-                    </div>
-                  </>
-                ) : (
-                  <span className="text-slate-600">
-                    ติดตามค่างวดชำระทุกวันที่ 2 ของเดือน
-                  </span>
-                )}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                onNavigateToInstallments();
-              }}
-              className="text-blue-700 hover:text-sky-900 font-bold whitespace-nowrap shrink-0 flex items-center gap-0.5 cursor-pointer"
-            >
-              <span>เช็คค่างวด</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
+        {/* Card B: Interactive Deal Pipeline Donut & Dealers Stacked Chart */}
+        <DealPipelineAndDealersChartCard
+          className="order-3 lg:order-2"
+          periodLabel={formatMonthLabel(selectedMonth)}
+          stats={periodStats}
+          dealers={dealerSummaryList}
+          installmentSummary={upcomingInstallmentSummary}
+          onNavigateToInstallments={onNavigateToInstallments}
+        />
       </section>
 
       {/* Recent Deals Table with Unified Status Column */}
