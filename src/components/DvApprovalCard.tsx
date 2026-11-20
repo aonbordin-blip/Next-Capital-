@@ -499,9 +499,9 @@ export function DvApprovalCard({
     Exact Template Requested:
     ขออนุมัติเคส DV
     ชื่อลูกค้า :
-    หัวข้อ :  
     NCB : 
     Dealer : 
+    หัวข้อ :  
     รุ่นรถ : 
     รหัสรุ่นรถ :
     อาชีพ : 
@@ -533,9 +533,9 @@ export function DvApprovalCard({
       '📋 ขออนุมัติเคส DV',
       '━━━━━━━━━━━━━━━━━━━━',
       `👤 ชื่อลูกค้า : ${dvCustomerName || '-'}`,
-      topicsLine,
       `🛡️ NCB : ${ncb || '-'}`,
       `🏪 Dealer : ${dealer || '-'}`,
+      topicsLine,
       '──────────────',
       '🏍️ ข้อมูลรถ & เงินดาวน์',
       `• รุ่นรถ : ${bikeModel || '-'}`,

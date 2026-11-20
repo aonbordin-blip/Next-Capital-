@@ -115,6 +115,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
 }) => {
   const [savedCases, setSavedCases] = useState<SavedCaseRecord[]>([]);
   const [copied, setCopied] = useState(false);
+  const [lineSentFeedback, setLineSentFeedback] = useState(false);
 
   // Selected month YYYY-MM
   const [selectedYM, setSelectedYM] = useState<string>(() => {
@@ -348,21 +349,25 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
     }
   };
 
-  const handleShareReport = async () => {
-    triggerHaptic('medium');
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-      try {
-        await navigator.share({
-          title: `ปิดยอด ${periodShortLabel} (${activeOfficerTag})`,
-          text: reportText,
-        });
-        triggerHaptic('success');
-        return;
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-      }
+  const handleSendLine = async () => {
+    triggerHaptic('success');
+    try {
+      await navigator.clipboard.writeText(reportText);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = reportText;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
     }
-    await handleCopyReport();
+    setLineSentFeedback(true);
+    setTimeout(() => setLineSentFeedback(false), 3000);
+
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(reportText)}`;
+    window.open(lineUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleAddManualCustomer = () => {
@@ -864,34 +869,44 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
             </pre>
           </div>
 
-          {/* Bottom Action Buttons: Copy & Share */}
-          <div className="flex items-center gap-2 pt-0.5">
+          {/* Bottom Action Buttons: Copy & Send to LINE (matching DV Approval Card) */}
+          <div className="pt-1 flex flex-row items-center justify-center gap-3 sm:gap-4 w-full">
             <button
               type="button"
               onClick={handleCopyReport}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all active:scale-98 cursor-pointer"
+              className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-4 py-2.5 rounded-xl bg-sky-50 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 text-xs font-bold flex items-center gap-2 shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4 text-white shrink-0" />
-                  <span>คัดลอกรายงานปิดยอดแล้ว!</span>
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-emerald-700 font-bold">คัดลอกเรียบร้อย!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4 text-white shrink-0" />
-                  <span>คัดลอกส่ง LINE</span>
+                  <Copy className="w-4 h-4 text-sky-700 shrink-0" />
+                  <span>คัดลอกข้อความ</span>
                 </>
               )}
             </button>
 
             <button
               type="button"
-              onClick={handleShareReport}
-              className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-98 cursor-pointer shrink-0"
-              title="เปิดหน้าต่างแชร์ของอุปกรณ์เพื่อส่งเข้า LINE หรือแอปอื่น"
+              onClick={handleSendLine}
+              className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-[#06c755] to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-extrabold flex items-center gap-2 shadow-sm shadow-emerald-500/30 transition-all active:scale-95 cursor-pointer"
+              title="คัดลอกข้อความและเปิดแอป LINE เพื่อส่งรายงานปิดยอด"
             >
-              <Share2 className="w-4 h-4 shrink-0" />
-              <span>แชร์</span>
+              {lineSentFeedback ? (
+                <>
+                  <Check className="w-4 h-4 text-white shrink-0" />
+                  <span>คัดลอก &amp; กำลังส่ง LINE!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4 text-white shrink-0" />
+                  <span>ส่ง Line</span>
+                  <ExternalLink className="w-3 h-3 text-emerald-200 shrink-0" />
+                </>
+              )}
             </button>
           </div>
         </div>
