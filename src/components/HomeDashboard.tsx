@@ -28,6 +28,7 @@ import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import { MonthlyCasesDashboard } from './MonthlyCasesDashboard';
 import { GasolineAllowanceCard } from './GasolineAllowanceCard';
+import { KpiSummaryChartCard } from './KpiSummaryChartCard';
 import { MarqueeText } from './MarqueeText';
 
 interface HomeDashboardProps {
@@ -262,15 +263,20 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     let pendingCount = 0;
     let rejectedOrCancelledCount = 0;
     let totalFinance = 0;
+    let deliveredFinance = 0;
+    let approvedTotalFinance = 0;
     let totalMonthlyInstallments = 0;
 
     for (const c of periodCases) {
-      totalFinance += Number(c.snapshot?.financeAmount) || 0;
+      const caseFinance = Number(c.snapshot?.financeAmount) || 0;
+      totalFinance += caseFinance;
       totalMonthlyInstallments += Number(c.snapshot?.monthlyInstallment) || 0;
 
       if (c.approvalStatus === 'approved') {
+        approvedTotalFinance += caseFinance;
         if (c.deliveryStatus === 'delivered') {
           deliveredCount += 1;
+          deliveredFinance += caseFinance;
         } else {
           approvedPendingDeliveryCount += 1;
         }
@@ -294,6 +300,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       pendingCount,
       rejectedOrCancelledCount,
       totalFinance,
+      deliveredFinance,
+      approvedTotalFinance,
       totalMonthlyInstallments,
       avgFinance,
       approvalRate,
@@ -520,96 +528,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
       </section>
 
-      {/* 4-Column KPI Summary Strip (Vibrant Crystal Glass Quartet + Brand Gold Accent) */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <div className="glass-panel-blue dashboard-card-lift rounded-2xl p-3 sm:p-3.5 space-y-1.5 relative overflow-hidden">
-          <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
-            aria-hidden="true"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <MarqueeText className="text-[11px] font-bold text-sky-900/80">
-              เคสเดือนนี้
-            </MarqueeText>
-            <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white border border-white/60 flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/30">
-              <FolderArchive className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-sky-950 tabular-nums whitespace-nowrap">
-            {periodStats.totalCases}{' '}
-            <span className="text-xs font-bold text-sky-800/70">เคส</span>
-          </div>
-          <MarqueeText className="text-[10.5px] text-slate-600 tabular-nums">
-            รอผล {periodStats.pendingCount} · อนุมัติ {periodStats.approvedTotalCount}
-          </MarqueeText>
-        </div>
-
-        <div className="glass-panel-teal dashboard-card-lift rounded-2xl p-3 sm:p-3.5 space-y-1.5 relative overflow-hidden">
-          <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
-            aria-hidden="true"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <MarqueeText className="text-[11px] font-bold text-teal-900/80">
-              รับรถแล้ว
-            </MarqueeText>
-            <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white border border-white/60 flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/30">
-              <PackageCheck className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-teal-900 tabular-nums whitespace-nowrap">
-            {periodStats.deliveredCount}{' '}
-            <span className="text-xs font-bold text-teal-800/70">คัน</span>
-          </div>
-          <MarqueeText className="text-[10.5px] text-slate-600 tabular-nums">
-            รอรับรถ {periodStats.approvedPendingDeliveryCount} · อนุมัติ{' '}
-            {periodStats.approvalRate.toFixed(0)}%
-          </MarqueeText>
-        </div>
-
-        <div className="glass-panel-indigo dashboard-card-lift rounded-2xl p-3 sm:p-3.5 space-y-1.5 relative overflow-hidden">
-          <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
-            aria-hidden="true"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <MarqueeText className="text-[11px] font-bold text-indigo-900/80">
-              ยอดจัดไฟแนนซ์รวม
-            </MarqueeText>
-            <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white border border-white/60 flex items-center justify-center shrink-0 shadow-sm shadow-indigo-500/30">
-              <TrendingUp className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          <MarqueeText className="text-lg sm:text-xl font-black text-indigo-950 tabular-nums">
-            {formatBaht(Math.round(periodStats.totalFinance))}
-          </MarqueeText>
-          <MarqueeText className="text-[10.5px] text-slate-600 tabular-nums">
-            เฉลี่ย {formatBaht(Math.round(periodStats.avgFinance))}/เคส
-          </MarqueeText>
-        </div>
-
-        <div className="glass-panel-amber dashboard-card-lift rounded-2xl p-3 sm:p-3.5 space-y-1.5 relative overflow-hidden">
-          <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
-            aria-hidden="true"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <MarqueeText className="text-[11px] font-bold text-amber-900/85">
-              ค่าคอมประกัน PA
-            </MarqueeText>
-            <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white border border-white/60 flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/30">
-              <Award className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          <MarqueeText className="text-lg sm:text-xl font-black text-amber-900 tabular-nums">
-            {formatBaht(commissionSummary.totalCommissionBaht)}
-          </MarqueeText>
-          <MarqueeText className="text-[10.5px] text-slate-600 tabular-nums">
-            Tier {commissionSummary.tier} · {commissionSummary.achievementPercent.toFixed(1)}% (
-            {commissionSummary.totalInsuredContracts}/{commissionSummary.totalDeliveredContracts})
-          </MarqueeText>
-        </div>
-      </section>
+      {/* Unified 4-Dimension Interactive Summary Chart */}
+      <KpiSummaryChartCard
+        periodLabel={formatMonthLabel(selectedMonth)}
+        stats={periodStats}
+        commissionSummary={commissionSummary}
+        onOpenSavedCases={onOpenSavedCases}
+        onNavigateToCaseForm={onNavigateToCaseForm}
+        onNavigateToCheckerCommission={onNavigateToCheckerCommission}
+      />
 
       {/* Monthly Cases Recharts Dashboard */}
       <MonthlyCasesDashboard

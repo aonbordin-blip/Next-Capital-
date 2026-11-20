@@ -924,6 +924,64 @@
   will-change: transform, opacity;
 }
 
+@keyframes kpi-orbit-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-kpi-orbit {
+  animation: kpi-orbit-spin 16s linear infinite;
+  will-change: transform;
+}
+
+@keyframes kpi-orb-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-2.5px) scale(1.015);
+  }
+}
+
+.animate-kpi-float {
+  animation: kpi-orb-float 4.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes kpi-bar-aura-pulse {
+  0%, 100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+
+.animate-kpi-bar-aura {
+  animation: kpi-bar-aura-pulse 1.9s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* Prevent Chrome/Android tap black focus outline on Recharts SVG surfaces */
+.recharts-wrapper,
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-surface,
+.recharts-surface:focus,
+.recharts-surface:focus-visible,
+.recharts-wrapper svg,
+.recharts-wrapper svg:focus,
+.recharts-wrapper g:focus,
+.recharts-wrapper path:focus,
+.recharts-wrapper rect:focus {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fuel-shimmer::after,
   .animate-fuel-aura,
@@ -931,7 +989,10 @@
   .animate-crystal-sheen,
   .animate-liquid-jelly,
   .animate-crystal-ripple,
-  .animate-active-aura {
+  .animate-active-aura,
+  .animate-kpi-orbit,
+  .animate-kpi-float,
+  .animate-kpi-bar-aura {
     animation: none !important;
   }
 }
