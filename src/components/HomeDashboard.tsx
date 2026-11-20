@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clock,
   FileText,
   FolderArchive,
@@ -22,7 +23,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
-import { calculateFirstPaymentDueDate, getSavedCases } from '../utils/savedCasesStorage';
+import {
+  calculateFirstPaymentDueDate,
+  getNineInstallmentSchedule,
+  getSavedCases,
+} from '../utils/savedCasesStorage';
 import { calculateCheckerCommission } from '../utils/checkerCommission';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
@@ -202,6 +207,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [savedCases, setSavedCases] = useState<SavedCaseRecord[]>(() => getSavedCases());
   const currentMonthKey = useMemo(() => getCurrentMonthKey(), []);
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
+  const [showAllDealers, setShowAllDealers] = useState<boolean>(false);
 
   useEffect(() => {
     setSavedCases(getSavedCases());
@@ -318,59 +324,87 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     [savedCases, selectedMonth]
   );
 
-  // Top Dealers in selected period
-  const topDealers = useMemo(() => {
+  // All Dealers in selected period (normalized whitespace/parentheses so totals reconcile 100%)
+  const dealerSummaryList = useMemo(() => {
     const map = new Map<
       string,
       { name: string; total: number; delivered: number; finance: number }
     >();
     for (const c of periodCases) {
-      const name = c.dealerName?.trim() || 'ไม่ระบุร้านตัวแทน';
-      const entry = map.get(name) || { name, total: 0, delivered: 0, finance: 0 };
+      const display = (c.dealerName || '').replace(/\s+/g, ' ').trim() || 'ไม่ระบุร้านตัวแทน';
+      const key = display
+        .toLowerCase()
+        .replace(/\s*\(\s*/g, '(')
+        .replace(/\s*\)\s*/g, ')')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const entry = map.get(key) || { name: display, total: 0, delivered: 0, finance: 0 };
       entry.total += 1;
       if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
         entry.delivered += 1;
       }
       entry.finance += Number(c.snapshot?.financeAmount) || 0;
-      map.set(name, entry);
+      map.set(key, entry);
     }
-    return Array.from(map.values())
-      .sort((a, b) => b.total - a.total || b.finance - a.finance)
-      .slice(0, 4);
+    return Array.from(map.values()).sort(
+      (a, b) => b.total - a.total || b.delivered - a.delivered || b.finance - a.finance
+    );
   }, [periodCases]);
 
-  // Upcoming / First Payment Cohort summary (for delivered cases)
+  // First Payment Cohort summary (matches selected period & InstallmentTrackingPage due-date logic)
   const upcomingInstallmentSummary = useMemo(() => {
-    const delivered = savedCases.filter(
+    const periodDelivered = periodCases.filter(
       (c) => c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered'
     );
-    if (delivered.length === 0) return null;
+    const usePeriodScope = selectedMonth !== 'all' && periodDelivered.length > 0;
+    const sourceDelivered = usePeriodScope
+      ? periodDelivered
+      : savedCases.filter(
+          (c) => c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered'
+        );
+
+    if (sourceDelivered.length === 0) return null;
 
     const cohorts = new Map<
       string,
-      { label: string; sortKey: string; count: number; sumInstallment: number }
+      { label: string; shortDate: string; sortKey: string; count: number; sumInstallment: number }
     >();
-    for (const c of delivered) {
+    let totalMonthlyInstallment = 0;
+
+    for (const c of sourceDelivered) {
+      const schedule = getNineInstallmentSchedule(c);
+      const firstSlot = schedule[0];
       const due = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
-      const sortKey = due.key;
+      const sortKey = firstSlot?.monthKey || `${due.year}-${String(due.month).padStart(2, '0')}`;
+      const shortDate = firstSlot?.formattedShort || `2 ${due.monthShort} ${due.thaiShortYear}`;
+      const monthly = Number(c.snapshot?.monthlyInstallment) || 0;
+      totalMonthlyInstallment += monthly;
+
       const existing = cohorts.get(sortKey) || {
-        label: `2 ${due.monthShort} ${due.thaiShortYear}`,
+        label: shortDate,
+        shortDate,
         sortKey,
         count: 0,
         sumInstallment: 0,
       };
       existing.count += 1;
-      existing.sumInstallment += Number(c.snapshot?.monthlyInstallment) || 0;
+      existing.sumInstallment += monthly;
       cohorts.set(sortKey, existing);
     }
-    const sorted = Array.from(cohorts.values()).sort((a, b) =>
-      b.sortKey.localeCompare(a.sortKey)
+
+    const sortedAsc = Array.from(cohorts.values()).sort((a, b) =>
+      a.sortKey.localeCompare(b.sortKey)
     );
+
     return {
-      totalDeliveredAllTime: delivered.length,
-      latestCohort: sorted[0] || null,
+      isPeriodScoped: usePeriodScope,
+      totalDeliveredCount: sourceDelivered.length,
+      totalMonthlyInstallment,
+      cohorts: sortedAsc,
+      latestCohort: sortedAsc[sortedAsc.length - 1] || null,
     };
-  }, [savedCases]);
+  }, [periodCases, savedCases, selectedMonth]);
 
   const recentCases = useMemo(() => periodCases.slice(0, 5), [periodCases]);
 
@@ -859,66 +893,166 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </div>
           </div>
 
-          {/* Top Dealers in Selected Period */}
+          {/* All Dealers in Selected Period (100% reconciled with period totals) */}
           <div className="relative pt-2 border-t border-white/75 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 min-w-0">
-              <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-              <MarqueeText>สรุปตามร้านตัวแทน (Top Dealers)</MarqueeText>
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 min-w-0 flex-1">
+                <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                <MarqueeText>สรุปตามร้านตัวแทน (Dealers)</MarqueeText>
+              </div>
+              {dealerSummaryList.length > 0 && (
+                <span className="text-[10px] font-bold text-slate-500 tabular-nums whitespace-nowrap shrink-0">
+                  {dealerSummaryList.length} ร้าน · {periodStats.totalCases} เคส
+                </span>
+              )}
             </div>
 
-            {topDealers.length === 0 ? (
+            {dealerSummaryList.length === 0 ? (
               <p className="text-[11px] text-slate-500 py-1">ยังไม่มีข้อมูลร้านตัวแทนในงวดนี้</p>
             ) : (
-              <div className="divide-y divide-white/80 text-[11px]">
-                {topDealers.map((d) => (
-                  <div
-                    key={d.name}
-                    className="py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/55 transition-colors flex items-center justify-between gap-2"
-                  >
-                    <MarqueeText className="font-semibold text-slate-800 flex-1 min-w-0">
-                      {d.name}
-                    </MarqueeText>
-                    <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
-                      <span>
-                        <strong className="text-slate-900">{d.total}</strong> เคส (รับรถ{' '}
-                        {d.delivered})
-                      </span>
-                      <span className="text-slate-300">·</span>
-                      <span className="font-bold text-sky-800">
-                        {formatBaht(Math.round(d.finance))}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-1">
+                {(() => {
+                  const defaultVisibleCount = 5;
+                  const needsCollapse = dealerSummaryList.length > 6;
+                  const visibleDealers =
+                    needsCollapse && !showAllDealers
+                      ? dealerSummaryList.slice(0, defaultVisibleCount)
+                      : dealerSummaryList;
+                  const hiddenDealers =
+                    needsCollapse && !showAllDealers
+                      ? dealerSummaryList.slice(defaultVisibleCount)
+                      : [];
+                  const hiddenSummary = hiddenDealers.reduce(
+                    (acc, item) => ({
+                      total: acc.total + item.total,
+                      delivered: acc.delivered + item.delivered,
+                      finance: acc.finance + item.finance,
+                    }),
+                    { total: 0, delivered: 0, finance: 0 }
+                  );
+
+                  return (
+                    <>
+                      <div className="divide-y divide-white/80 text-[11px]">
+                        {visibleDealers.map((d) => (
+                          <div
+                            key={d.name}
+                            className="py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/55 transition-colors flex items-center justify-between gap-2"
+                          >
+                            <MarqueeText className="font-semibold text-slate-800 flex-1 min-w-0">
+                              {d.name}
+                            </MarqueeText>
+                            <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
+                              <span>
+                                <strong className="text-slate-900">{d.total}</strong> เคส (รับรถ{' '}
+                                {d.delivered})
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="font-bold text-sky-800">
+                                {formatBaht(Math.round(d.finance))}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
+                        {hiddenDealers.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setShowAllDealers(true);
+                            }}
+                            className="w-full py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/65 transition-colors flex items-center justify-between gap-2 text-left cursor-pointer"
+                          >
+                            <span className="font-semibold text-sky-700 flex items-center gap-1 min-w-0 truncate">
+                              <span>ร้านอื่นๆ ({hiddenDealers.length} ร้าน)</span>
+                              <ChevronDown className="w-3 h-3 shrink-0" />
+                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
+                              <span>
+                                <strong className="text-slate-900">{hiddenSummary.total}</strong>{' '}
+                                เคส (รับรถ {hiddenSummary.delivered})
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="font-bold text-sky-800">
+                                {formatBaht(Math.round(hiddenSummary.finance))}
+                              </span>
+                            </div>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Total Reconciliation Row matching Deal Pipeline header & Top KPI */}
+                      <div className="pt-1 border-t border-white/85 flex items-center justify-between gap-2 text-[10.5px] tabular-nums text-slate-600">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-bold text-slate-700">รวมทุกร้าน</span>
+                          {needsCollapse && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('light');
+                                setShowAllDealers((prev) => !prev);
+                              }}
+                              className="text-sky-700 hover:text-sky-900 font-bold inline-flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <span>{showAllDealers ? 'ย่อลง' : 'ดูทั้งหมด'}</span>
+                              {showAllDealers ? (
+                                <ChevronUp className="w-3 h-3" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap font-bold">
+                          <span className="text-slate-800">
+                            {periodStats.totalCases} เคส (รับรถ {periodStats.deliveredCount})
+                          </span>
+                          <span className="text-slate-300">·</span>
+                          <span className="text-indigo-800">
+                            {formatBaht(Math.round(periodStats.totalFinance))}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
 
-          {/* Upcoming First Payment Cohort Banner */}
+          {/* Upcoming First Payment Cohort Banner (Clean 2-line layout, zero word-clipping) */}
           <div className="relative glass-panel-indigo rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px]">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <CalendarClock className="w-4 h-4 text-blue-600 shrink-0" />
-              <div className="min-w-0 flex-1">
-                {upcomingInstallmentSummary?.latestCohort ? (
-                  <MarqueeText className="text-slate-700">
-                    งวดแรก{' '}
-                    <strong className="text-sky-950">
-                      {upcomingInstallmentSummary.latestCohort.label}
-                    </strong>{' '}
-                    ·{' '}
-                    <strong className="tabular-nums">
-                      {upcomingInstallmentSummary.latestCohort.count}
-                    </strong>{' '}
-                    ราย (รวม{' '}
-                    <strong className="tabular-nums">
-                      {formatBaht(upcomingInstallmentSummary.latestCohort.sumInstallment)}
-                    </strong>
-                    /ด.)
-                  </MarqueeText>
+            <div className="flex items-start sm:items-center gap-2 min-w-0 flex-1">
+              <CalendarClock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
+              <div className="min-w-0 flex-1 leading-snug">
+                {upcomingInstallmentSummary ? (
+                  <>
+                    <div className="text-slate-800 font-semibold tabular-nums flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <span>งวดแรก:</span>
+                      {upcomingInstallmentSummary.cohorts.map((cohort, idx) => (
+                        <span key={cohort.sortKey} className="inline-flex items-center gap-1">
+                          {idx > 0 && <span className="text-slate-400">·</span>}
+                          <strong className="text-sky-950">{cohort.label}</strong>
+                          <span className="text-slate-600">({cohort.count})</span>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-slate-600 tabular-nums mt-0.5">
+                      {upcomingInstallmentSummary.isPeriodScoped
+                        ? `รับรถงวดนี้ ${upcomingInstallmentSummary.totalDeliveredCount} ราย`
+                        : `ทั้งหมด ${upcomingInstallmentSummary.totalDeliveredCount} ราย`}{' '}
+                      · รวมค่างวด{' '}
+                      <strong className="text-indigo-900">
+                        {formatBaht(Math.round(upcomingInstallmentSummary.totalMonthlyInstallment))}
+                      </strong>
+                      /ด.
+                    </div>
+                  </>
                 ) : (
-                  <MarqueeText className="text-slate-600">
+                  <span className="text-slate-600">
                     ติดตามค่างวดชำระทุกวันที่ 2 ของเดือน
-                  </MarqueeText>
+                  </span>
                 )}
               </div>
             </div>
