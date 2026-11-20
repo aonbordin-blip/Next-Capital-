@@ -206,13 +206,21 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
         aria-hidden="true"
       />
 
-      {/* Ambient Animated Energy Blobs */}
+      {/* Ambient Energy Halos (lightweight radial gradients, zero blur filter lag) */}
       <div
-        className={`pointer-events-none -right-12 -top-12 absolute w-44 h-44 rounded-full blur-2xl transition-colors duration-500 animate-fuel-aura ${theme.auraBg}`}
+        className="pointer-events-none -right-12 -top-12 absolute w-48 h-48 rounded-full opacity-75"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(251,191,36,0.22) 0%, rgba(251,191,36,0.05) 45%, transparent 72%)',
+        }}
         aria-hidden="true"
       />
       <div
-        className={`pointer-events-none -left-12 -bottom-14 absolute w-36 h-36 rounded-full blur-2xl transition-colors duration-500 ${theme.secondaryAuraBg}`}
+        className="pointer-events-none -left-12 -bottom-14 absolute w-40 h-40 rounded-full opacity-70"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(56,189,248,0.18) 0%, rgba(56,189,248,0.04) 45%, transparent 72%)',
+        }}
         aria-hidden="true"
       />
 
@@ -220,7 +228,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
       <div className="relative flex items-start sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
-            className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.iconGradient} border border-white/65 text-white flex items-center justify-center shrink-0 shadow-sm ${theme.iconShadow} transition-all duration-300`}
+            className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.iconGradient} border border-white/65 text-white flex items-center justify-center shrink-0 shadow-sm ${theme.iconShadow} transition-colors duration-300`}
           >
             {summary.isMaxTier ? (
               <Trophy className="w-4 h-4" />
@@ -255,7 +263,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
             triggerHaptic('light');
             setShowFullTable((prev) => !prev);
           }}
-          className="px-2.5 py-1 rounded-lg bg-white/65 hover:bg-white/90 backdrop-blur-md border border-white/90 text-[11px] font-bold text-slate-700 hover:text-sky-900 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-all"
+          className="px-2.5 py-1 rounded-lg bg-white/85 hover:bg-white border border-white/95 text-[11px] font-bold text-slate-700 hover:text-sky-900 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
         >
           <span>เกณฑ์ 7 ขั้น</span>
           {showFullTable ? (

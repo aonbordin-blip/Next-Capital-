@@ -190,7 +190,7 @@ function formatShortDealerLabel(name: string): string {
 
 export const DealPipelineAndDealersChartCard: React.FC<
   DealPipelineAndDealersChartCardProps
-> = ({
+> = React.memo(({
   className = '',
   periodLabel,
   stats,
@@ -345,6 +345,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
   return (
     <MotionConfig reducedMotion="user">
       <div
+        style={{ contain: 'layout style' }}
         className={`glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden ${className}`.trim()}
       >
         {/* Top Specular Hairline */}
@@ -353,19 +354,25 @@ export const DealPipelineAndDealersChartCard: React.FC<
           aria-hidden="true"
         />
 
-        {/* Dynamic Aura Background Blobs */}
+        {/* Lightweight Radial Gradient Aura Orbs (zero CSS filter:blur cost during scroll) */}
         <div
-          className={`pointer-events-none -right-12 -top-12 absolute w-40 h-40 rounded-full blur-2xl transition-colors duration-500 animate-fuel-aura ${
-            activeStatusObj?.key === 'pending'
-              ? 'bg-sky-300/35'
-              : activeStatusObj?.key === 'rejected'
-              ? 'bg-slate-300/35'
-              : 'bg-teal-300/30'
-          }`}
+          className="pointer-events-none -right-12 -top-12 absolute w-44 h-44 rounded-full transition-opacity duration-300"
+          style={{
+            background:
+              activeStatusObj?.key === 'pending'
+                ? 'radial-gradient(circle, rgba(56,189,248,0.28) 0%, rgba(56,189,248,0.08) 45%, transparent 72%)'
+                : activeStatusObj?.key === 'rejected'
+                ? 'radial-gradient(circle, rgba(148,163,184,0.26) 0%, rgba(148,163,184,0.08) 45%, transparent 72%)'
+                : 'radial-gradient(circle, rgba(45,212,191,0.26) 0%, rgba(45,212,191,0.08) 45%, transparent 72%)',
+          }}
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none -left-12 -bottom-14 absolute w-36 h-36 rounded-full bg-indigo-200/25 blur-2xl"
+          className="pointer-events-none -left-12 -bottom-14 absolute w-40 h-40 rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(165,180,252,0.22) 0%, rgba(165,180,252,0.06) 45%, transparent 72%)',
+          }}
           aria-hidden="true"
         />
 
@@ -377,21 +384,21 @@ export const DealPipelineAndDealersChartCard: React.FC<
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <MarqueeText className="text-xs sm:text-sm font-black text-slate-900">
+                <div className="text-xs sm:text-sm font-black text-slate-900 truncate">
                   สัดส่วนสถานะดีล & ร้านตัวแทน
-                </MarqueeText>
-                <MarqueeText className="text-[10px] text-slate-500">
+                </div>
+                <div className="text-[10px] text-slate-500 truncate">
                   {periodLabel} · แตะกราฟเพื่อดูรายละเอียด
-                </MarqueeText>
+                </div>
               </div>
             </div>
-            <span className="text-[10.5px] text-teal-900 font-bold tabular-nums whitespace-nowrap shrink-0 px-2 py-0.5 rounded-lg bg-teal-50/80 backdrop-blur-sm border border-white/90 shadow-2xs">
+            <span className="text-[10.5px] text-teal-900 font-bold tabular-nums whitespace-nowrap shrink-0 px-2 py-0.5 rounded-lg bg-teal-50/90 border border-white/95 shadow-2xs">
               {stats.totalCases} รายการ
             </span>
           </div>
 
           {stats.totalCases === 0 ? (
-            <div className="glass-mini-card rounded-xl p-5 text-center space-y-1">
+            <div className="glass-inner-surface rounded-xl p-5 text-center space-y-1">
               <PieChartIcon className="w-6 h-6 text-teal-500 mx-auto opacity-80" />
               <p className="text-xs font-bold text-slate-700">
                 ยังไม่มีข้อมูลสถานะดีลในงวด {periodLabel}
@@ -401,12 +408,12 @@ export const DealPipelineAndDealersChartCard: React.FC<
               </p>
             </div>
           ) : (
-            <div className="glass-mini-card rounded-2xl p-2.5 sm:p-3 space-y-2.5">
+            <div className="glass-inner-surface rounded-2xl p-2.5 sm:p-3 space-y-2.5">
               {/* Top Sub-bar + Reset when filtered */}
               <div className="flex items-center justify-between gap-2 text-[10.5px]">
-                <span className="font-bold text-slate-600 flex items-center gap-1">
+                <span className="font-bold text-slate-600 flex items-center gap-1 min-w-0 truncate">
                   <PieChartIcon className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                  <span>
+                  <span className="truncate">
                     {activeStatusObj
                       ? `โฟกัส: ${activeStatusObj.label}`
                       : 'กราฟสัดส่วนสถานะเคส'}
@@ -420,7 +427,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                       setOrbTick((t) => t + 1);
                       setSelectedStatus('all');
                     }}
-                    className="px-2 py-0.5 rounded-lg bg-white/85 hover:bg-white border border-white text-[10px] font-bold text-teal-700 inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                    className="px-2 py-0.5 rounded-lg bg-white/90 hover:bg-white border border-white text-[10px] font-bold text-teal-700 inline-flex items-center gap-1 cursor-pointer shadow-2xs shrink-0"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
                     <span>ทั้งหมด</span>
@@ -431,8 +438,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
               {/* Donut + 4 Gauge Rows Responsive Split */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
                 {/* 3D Donut Chart Stage */}
-                <div className="sm:col-span-5 relative h-[156px] w-full flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="sm:col-span-5 relative h-[156px] w-full flex items-center justify-center chart-gpu-layer">
+                  <ResponsiveContainer width="100%" height="100%" debounce={120}>
                     <PieChart accessibilityLayer={false}>
                       <defs>
                         <linearGradient id="dealGradDelivered" x1="0" y1="0" x2="1" y2="1">
@@ -451,15 +458,6 @@ export const DealPipelineAndDealersChartCard: React.FC<
                           <stop offset="0%" stopColor="#94a3b8" />
                           <stop offset="100%" stopColor="#475569" />
                         </linearGradient>
-                        <filter id="dealShadowSoft" x="-15%" y="-15%" width="130%" height="130%">
-                          <feDropShadow
-                            dx="0"
-                            dy="2"
-                            stdDeviation="2.5"
-                            floodColor="#0f172a"
-                            floodOpacity="0.14"
-                          />
-                        </filter>
                         <filter id="dealAuraTeal" x="-30%" y="-30%" width="160%" height="160%">
                           <feDropShadow
                             dx="0"
@@ -530,15 +528,11 @@ export const DealPipelineAndDealersChartCard: React.FC<
                               key={slice.key}
                               fill={`url(#${slice.gradientId})`}
                               fillOpacity={isFocused ? 1 : 0.28}
-                              stroke={isPinned ? slice.rimHex : 'rgba(255,255,255,0.85)'}
-                              strokeWidth={isPinned ? 2.2 : 1.2}
-                              filter={
-                                isPinned
-                                  ? `url(#${slice.auraFilterId})`
-                                  : 'url(#dealShadowSoft)'
-                              }
+                              stroke={isPinned ? slice.rimHex : 'rgba(255,255,255,0.9)'}
+                              strokeWidth={isPinned ? 2.2 : 1.3}
+                              filter={isPinned ? `url(#${slice.auraFilterId})` : undefined}
                               style={{
-                                transition: 'fill-opacity 220ms ease, filter 220ms ease',
+                                transition: 'fill-opacity 200ms ease',
                                 cursor: 'pointer',
                                 outline: 'none',
                               }}
@@ -560,18 +554,18 @@ export const DealPipelineAndDealersChartCard: React.FC<
                     onClick={handleCycleStatusOrb}
                     title="แตะเพื่อสลับดูแต่ละสถานะ"
                     aria-label="ศูนย์กลางกราฟสถานะดีล แตะเพื่อสลับสถานะ"
-                    className="group absolute w-[76px] h-[76px] rounded-full flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 animate-kpi-float z-10"
+                    className="group absolute w-[76px] h-[76px] rounded-full flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 z-10 transition-transform duration-200 hover:scale-[1.03] active:scale-95"
                   >
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute -inset-[2.5px] rounded-full opacity-80 animate-kpi-orbit"
+                      className="pointer-events-none absolute -inset-[2.5px] rounded-full opacity-75 animate-kpi-orbit"
                       style={{
                         background: activeStatusObj
                           ? `conic-gradient(from 0deg, ${activeStatusObj.accentHex}55, transparent 42%, ${activeStatusObj.accentHex}99 75%, transparent)`
-                          : 'conic-gradient(from 0deg, rgba(16,185,129,0.5), rgba(14,165,233,0.45), rgba(100,116,139,0.35), rgba(16,185,129,0.5))',
+                          : 'conic-gradient(from 0deg, rgba(16,185,129,0.48), rgba(14,165,233,0.42), rgba(100,116,139,0.32), rgba(16,185,129,0.48))',
                       }}
                     />
-                    <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/95 via-white/90 to-teal-50/90 border-2 border-white shadow-[0_8px_20px_-6px_rgba(13,148,136,0.3),inset_0_2px_5px_rgba(255,255,255,1)] flex flex-col items-center justify-center px-1 text-center transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-95">
+                    <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/98 via-white/94 to-teal-50/92 border-2 border-white shadow-[0_6px_16px_-4px_rgba(13,148,136,0.26),inset_0_2px_4px_rgba(255,255,255,1)] flex flex-col items-center justify-center px-1 text-center">
                       <div
                         key={`${effectiveStatus}-${orbTick}`}
                         className="flex flex-col items-center justify-center animate-number-tick"
@@ -609,12 +603,12 @@ export const DealPipelineAndDealersChartCard: React.FC<
                         onMouseEnter={() => setHoveredStatus(row.key)}
                         onMouseLeave={() => setHoveredStatus(null)}
                         aria-pressed={selectedStatus === row.key}
-                        className={`w-full text-left rounded-xl px-2 py-1.5 border transition-all duration-200 cursor-pointer space-y-1 ${
+                        className={`w-full text-left rounded-xl px-2 py-1.5 border transition-colors duration-150 cursor-pointer space-y-1 ${
                           isPinned
                             ? row.activeBgClass
                             : isDimmed
                             ? 'border-transparent opacity-55 hover:opacity-95'
-                            : 'border-transparent hover:bg-white/60'
+                            : 'border-transparent hover:bg-white/65'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -630,22 +624,24 @@ export const DealPipelineAndDealersChartCard: React.FC<
                           </span>
                         </div>
                         <div className="relative py-0.5">
-                          <div className="h-1.5 w-full bg-white/80 border border-white shadow-inner rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-white/85 border border-white shadow-inner rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full ${row.barColor} ${
-                                row.percent > 0 ? 'animate-fuel-shimmer' : ''
-                              } transition-all duration-500 ease-out`}
+                                isPinned && row.percent > 0 ? 'animate-fuel-shimmer' : ''
+                              } transition-[width] duration-300 ease-out`}
                               style={{ width: `${row.percent}%` }}
                             />
                           </div>
                           {row.percent > 0 && (
                             <div
-                              className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10"
+                              className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-[left] duration-300 ease-out z-10"
                               style={{ left: `${Math.min(98.5, Math.max(1.5, row.percent))}%` }}
                             >
-                              <span
-                                className={`absolute inset-0 w-2.5 h-2.5 -m-[2px] rounded-full ${row.tipGlow} animate-fuel-tip-ping`}
-                              />
+                              {isPinned && (
+                                <span
+                                  className={`absolute inset-0 w-2.5 h-2.5 -m-[2px] rounded-full ${row.tipGlow} animate-fuel-tip-ping`}
+                                />
+                              )}
                               <span className="block w-1.5 h-1.5 rounded-full bg-white border-[1.5px] border-slate-800 shadow-xs" />
                             </div>
                           )}
@@ -686,7 +682,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
           <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 min-w-0 flex-1">
               <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-              <MarqueeText>สรุปตามร้านตัวแทน (Dealers)</MarqueeText>
+              <span className="truncate">สรุปตามร้านตัวแทน (Dealers)</span>
             </div>
 
             {/* Chart vs List Toggle */}
@@ -695,7 +691,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                 <div
                   role="group"
                   aria-label="มุมมองข้อมูลร้านตัวแทน"
-                  className="flex items-center gap-0.5 p-0.5 rounded-lg bg-white/60 backdrop-blur-md border border-white/90 shadow-2xs"
+                  className="flex items-center gap-0.5 p-0.5 rounded-lg bg-white/80 border border-white shadow-2xs"
                 >
                   <button
                     type="button"
@@ -704,7 +700,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                       setDealerViewMode('chart');
                     }}
                     aria-pressed={dealerViewMode === 'chart'}
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
                       dealerViewMode === 'chart'
                         ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-2xs'
                         : 'text-slate-600 hover:text-slate-900'
@@ -720,7 +716,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                       setDealerViewMode('list');
                     }}
                     aria-pressed={dealerViewMode === 'list'}
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
                       dealerViewMode === 'list'
                         ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-2xs'
                         : 'text-slate-600 hover:text-slate-900'
@@ -741,11 +737,11 @@ export const DealPipelineAndDealersChartCard: React.FC<
               {dealerViewMode === 'chart' ? (
                 <motion.div
                   key="dealer-chart"
-                  initial={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-mini-card rounded-2xl p-2.5 space-y-2"
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  className="glass-inner-surface rounded-2xl p-2.5 space-y-2"
                 >
                   {/* Legend Bar */}
                   <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-600 px-0.5">
@@ -769,8 +765,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
                   </div>
 
                   {/* Horizontal Stacked 3D Bar Chart */}
-                  <div style={{ height: `${dealerChartHeight}px` }} className="w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                  <div style={{ height: `${dealerChartHeight}px` }} className="w-full chart-gpu-layer">
+                    <ResponsiveContainer width="100%" height="100%" debounce={120}>
                       <BarChart
                         accessibilityLayer={false}
                         data={dealers}
@@ -1093,7 +1089,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
         </div>
 
         {/* SECTION 3: Upcoming First Payment Cohort Banner */}
-        <div className="relative glass-panel-indigo rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px]">
+        <div className="relative glass-inner-indigo rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px]">
           <div className="flex items-start sm:items-center gap-2 min-w-0 flex-1">
             <CalendarClock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
             <div className="min-w-0 flex-1 leading-snug">
@@ -1140,4 +1136,4 @@ export const DealPipelineAndDealersChartCard: React.FC<
       </div>
     </MotionConfig>
   );
-};
+});

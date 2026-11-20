@@ -618,7 +618,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             aria-hidden="true"
           />
           <div
-            className="pointer-events-none -right-10 -top-10 absolute w-36 h-36 rounded-full bg-amber-300/25 blur-2xl"
+            className="pointer-events-none -right-10 -top-10 absolute w-40 h-40 rounded-full"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(252,211,77,0.28) 0%, rgba(252,211,77,0.06) 45%, transparent 72%)',
+            }}
             aria-hidden="true"
           />
 
@@ -643,7 +647,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   triggerHaptic('light');
                   onNavigateToCheckerCommission();
                 }}
-                className="px-2.5 py-1 rounded-lg bg-white/55 hover:bg-white/80 backdrop-blur-md border border-white/85 text-[11px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-white/95 text-[11px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
               >
                 <span>ตารางเต็ม</span>
                 <ArrowRight className="w-3 h-3" />
