@@ -45,27 +45,27 @@ export const ProposalSelectModal: React.FC<Props> = ({
       }}
     >
       <div
-        className={`bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden my-auto ${sheetAnimClass}`}
+        className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden my-auto ${sheetAnimClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/70">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+            <div className="p-1.5 bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 rounded-lg">
               <Layers className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-xs sm:text-sm font-bold text-slate-800">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
                 เลือกประเภทข้อเสนอ (Proposal)
               </h2>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
                 แตะเพื่อเลือกประเภทเงื่อนไขคำนวณค่างวด
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 active:scale-95 rounded-full transition-all cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700 active:scale-95 rounded-full transition-all cursor-pointer"
             title="ปิด (Close)"
           >
             <X className="w-4 h-4" />
@@ -88,17 +88,17 @@ export const ProposalSelectModal: React.FC<Props> = ({
                 }}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all cursor-pointer text-left border ${
                   isSelected
-                    ? 'bg-blue-50/90 border-blue-300 text-blue-950 font-bold shadow-xs'
-                    : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700 hover:border-slate-300'
+                    ? 'bg-blue-50/90 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-950 dark:text-blue-100 font-bold shadow-xs'
+                    : 'bg-white dark:bg-slate-800/70 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
                 }`}
               >
-                {/* Left: Radio Indicator + Name (Single Row, Small Font) */}
+                {/* Left: Radio Indicator + Name */}
                 <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                   <div
                     className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                       isSelected
-                        ? 'border-blue-700 bg-blue-700 text-white'
-                        : 'border-slate-300 bg-white'
+                        ? 'border-blue-700 dark:border-blue-500 bg-blue-700 dark:bg-blue-500 text-white'
+                        : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
                     }`}
                   >
                     {isSelected && (
@@ -110,12 +110,12 @@ export const ProposalSelectModal: React.FC<Props> = ({
                   </MarqueeText>
                 </div>
 
-                {/* Right: Code Badge (Single Row) */}
+                {/* Right: Code Badge */}
                 <span
                   className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap flex-shrink-0 ${
                     isSelected
-                      ? 'bg-blue-700 text-white border-blue-700 shadow-2xs'
-                      : 'bg-slate-100 text-blue-700 border-slate-200/80'
+                      ? 'bg-blue-700 dark:bg-blue-600 text-white border-blue-700 dark:border-blue-500 shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-900 text-blue-700 dark:text-blue-300 border-slate-200/80 dark:border-slate-700'
                   }`}
                 >
                   {prop.code}
@@ -126,7 +126,7 @@ export const ProposalSelectModal: React.FC<Props> = ({
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400">
+        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 text-center text-[10px] text-slate-400 dark:text-slate-500">
           แสดงแบบแถวเดียวขนาดกะทัดรัด • เลือกได้ 7 ประเภทข้อเสนอ
         </div>
       </div>

@@ -106,30 +106,30 @@ const DealerChartTooltip: React.FC<DealerTooltipProps> = ({ active, payload }) =
   if (!d) return null;
 
   return (
-    <div className="rounded-xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl px-3 py-2 text-xs text-slate-800 min-w-[190px] max-w-[240px]">
-      <div className="font-extrabold text-slate-900 pb-1 border-b border-slate-100 truncate">
+    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/85 shadow-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 min-w-[190px] max-w-[240px]">
+      <div className="font-extrabold text-slate-900 dark:text-slate-50 pb-1 border-b border-slate-100 dark:border-slate-800 truncate">
         {d.name}
       </div>
       <div className="pt-1.5 space-y-1 text-[11px] tabular-nums">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-teal-700 font-semibold">รับรถแล้ว</span>
-          <span className="font-bold text-slate-900">{d.delivered} เคส</span>
+          <span className="text-teal-700 dark:text-teal-300 font-semibold">รับรถแล้ว</span>
+          <span className="font-bold text-slate-900 dark:text-slate-100">{d.delivered} เคส</span>
         </div>
         {d.approvedPending > 0 && (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-emerald-700 font-semibold">อนุมัติ (รอรับรถ)</span>
-            <span className="font-bold text-slate-900">{d.approvedPending} เคส</span>
+            <span className="text-emerald-700 dark:text-emerald-300 font-semibold">อนุมัติ (รอรับรถ)</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{d.approvedPending} เคส</span>
           </div>
         )}
         {d.other > 0 && (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-500 font-semibold">รอผล / อื่นๆ</span>
-            <span className="font-bold text-slate-700">{d.other} เคส</span>
+            <span className="text-slate-500 dark:text-slate-400 font-semibold">รอผล / อื่นๆ</span>
+            <span className="font-bold text-slate-700 dark:text-slate-300">{d.other} เคส</span>
           </div>
         )}
-        <div className="pt-1 mt-1 border-t border-slate-100 flex items-center justify-between gap-2">
-          <span className="text-slate-500">รวม / ยอดจัด</span>
-          <span className="font-extrabold text-sky-800">
+        <div className="pt-1 mt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+          <span className="text-slate-500 dark:text-slate-400">รวม / ยอดจัด</span>
+          <span className="font-extrabold text-sky-800 dark:text-sky-300">
             {d.total} เคส · {formatBaht(Math.round(d.finance))}
           </span>
         </div>
@@ -149,9 +149,9 @@ const StatusDonutTooltip: React.FC<DonutTooltipProps> = ({ active, payload }) =>
   if (!item) return null;
 
   return (
-    <div className="rounded-xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl px-3 py-2 text-xs text-slate-800 min-w-[170px]">
-      <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-100">
-        <span className="flex items-center gap-1.5 font-extrabold text-slate-900">
+    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/85 shadow-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 min-w-[170px]">
+      <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+        <span className="flex items-center gap-1.5 font-extrabold text-slate-900 dark:text-slate-50">
           <span
             className="w-2.5 h-2.5 rounded-full shrink-0"
             style={{ backgroundColor: item.accentHex }}
@@ -164,12 +164,12 @@ const StatusDonutTooltip: React.FC<DonutTooltipProps> = ({ active, payload }) =>
       </div>
       <div className="pt-1.5 space-y-0.5 text-[11px] tabular-nums">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-slate-500">จำนวน</span>
-          <span className="font-bold text-slate-900">{item.count} เคส</span>
+          <span className="text-slate-500 dark:text-slate-400">จำนวน</span>
+          <span className="font-bold text-slate-900 dark:text-slate-100">{item.count} เคส</span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-slate-500">ยอดจัดรวม</span>
-          <span className="font-bold text-sky-800">{formatBaht(Math.round(item.finance))}</span>
+          <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวม</span>
+          <span className="font-bold text-sky-800 dark:text-sky-300">{formatBaht(Math.round(item.finance))}</span>
         </div>
       </div>
     </div>
@@ -222,8 +222,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
         rimHex: '#6ee7b7',
         barColor: 'bg-gradient-to-r from-teal-500 to-emerald-500',
         tipGlow: 'bg-emerald-400',
-        textColor: 'text-teal-800',
-        activeBgClass: 'bg-emerald-50/90 border-emerald-200 shadow-xs',
+        textColor: 'text-teal-800 dark:text-teal-300',
+        activeBgClass: 'bg-emerald-50/90 border-emerald-200 dark:bg-emerald-950/75 dark:border-emerald-700/75 shadow-xs',
       },
       {
         key: 'approved_pending',
@@ -238,8 +238,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
         rimHex: '#a7f3d0',
         barColor: 'bg-gradient-to-r from-emerald-500 to-green-400',
         tipGlow: 'bg-emerald-400',
-        textColor: 'text-emerald-800',
-        activeBgClass: 'bg-teal-50/90 border-teal-200 shadow-xs',
+        textColor: 'text-emerald-800 dark:text-emerald-300',
+        activeBgClass: 'bg-teal-50/90 border-teal-200 dark:bg-teal-950/75 dark:border-teal-700/75 shadow-xs',
       },
       {
         key: 'pending',
@@ -254,8 +254,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
         rimHex: '#7dd3fc',
         barColor: 'bg-gradient-to-r from-sky-500 to-cyan-400',
         tipGlow: 'bg-sky-400',
-        textColor: 'text-sky-800',
-        activeBgClass: 'bg-sky-50/90 border-sky-200 shadow-xs',
+        textColor: 'text-sky-800 dark:text-sky-300',
+        activeBgClass: 'bg-sky-50/90 border-sky-200 dark:bg-sky-950/75 dark:border-sky-700/75 shadow-xs',
       },
       {
         key: 'rejected',
@@ -270,8 +270,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
         rimHex: '#cbd5e1',
         barColor: 'bg-gradient-to-r from-slate-400 to-slate-500',
         tipGlow: 'bg-slate-400',
-        textColor: 'text-slate-600',
-        activeBgClass: 'bg-slate-100/90 border-slate-200 shadow-xs',
+        textColor: 'text-slate-600 dark:text-slate-300',
+        activeBgClass: 'bg-slate-100/90 border-slate-200 dark:bg-slate-800/85 dark:border-slate-600/80 shadow-xs',
       },
     ];
   }, [stats]);
@@ -350,7 +350,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
       >
         {/* Top Specular Hairline */}
         <div
-          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-teal-300/35 to-transparent opacity-95"
           aria-hidden="true"
         />
 
@@ -380,30 +380,30 @@ export const DealPipelineAndDealersChartCard: React.FC<
         <div className="relative space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 border border-white/60 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/25">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 border border-white/60 dark:border-teal-300/30 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/25">
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-50 truncate">
                   สัดส่วนสถานะดีล & ร้านตัวแทน
                 </div>
-                <div className="text-[10px] text-slate-500 truncate">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                   {periodLabel} · แตะกราฟเพื่อดูรายละเอียด
                 </div>
               </div>
             </div>
-            <span className="text-[10.5px] text-teal-900 font-bold tabular-nums whitespace-nowrap shrink-0 px-2 py-0.5 rounded-lg bg-teal-50/90 border border-white/95 shadow-2xs">
+            <span className="text-[10.5px] text-teal-900 dark:text-teal-200 font-bold tabular-nums whitespace-nowrap shrink-0 px-2 py-0.5 rounded-lg bg-teal-50/90 dark:bg-teal-950/80 border border-white/95 dark:border-teal-700/75 shadow-2xs">
               {stats.totalCases} รายการ
             </span>
           </div>
 
           {stats.totalCases === 0 ? (
             <div className="glass-inner-surface rounded-xl p-5 text-center space-y-1">
-              <PieChartIcon className="w-6 h-6 text-teal-500 mx-auto opacity-80" />
-              <p className="text-xs font-bold text-slate-700">
+              <PieChartIcon className="w-6 h-6 text-teal-500 dark:text-teal-300 mx-auto opacity-80" />
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                 ยังไม่มีข้อมูลสถานะดีลในงวด {periodLabel}
               </p>
-              <p className="text-[10.5px] text-slate-500">
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
                 บันทึกเคสใหม่เพื่อดูกราฟสัดส่วนสถานะและร้านตัวแทนแบบเรียลไทม์
               </p>
             </div>
@@ -411,8 +411,8 @@ export const DealPipelineAndDealersChartCard: React.FC<
             <div className="glass-inner-surface rounded-2xl p-2.5 sm:p-3 space-y-2.5">
               {/* Top Sub-bar + Reset when filtered */}
               <div className="flex items-center justify-between gap-2 text-[10.5px]">
-                <span className="font-bold text-slate-600 flex items-center gap-1 min-w-0 truncate">
-                  <PieChartIcon className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                <span className="font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 min-w-0 truncate">
+                  <PieChartIcon className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
                   <span className="truncate">
                     {activeStatusObj
                       ? `โฟกัส: ${activeStatusObj.label}`
@@ -427,7 +427,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                       setOrbTick((t) => t + 1);
                       setSelectedStatus('all');
                     }}
-                    className="px-2 py-0.5 rounded-lg bg-white/90 hover:bg-white border border-white text-[10px] font-bold text-teal-700 inline-flex items-center gap-1 cursor-pointer shadow-2xs shrink-0"
+                    className="px-2 py-0.5 rounded-lg bg-white/90 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10px] font-bold text-teal-700 dark:text-teal-300 inline-flex items-center gap-1 cursor-pointer shadow-2xs shrink-0"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
                     <span>ทั้งหมด</span>
@@ -565,22 +565,22 @@ export const DealPipelineAndDealersChartCard: React.FC<
                           : 'conic-gradient(from 0deg, rgba(16,185,129,0.5), rgba(14,165,233,0.45), rgba(100,116,139,0.35), rgba(16,185,129,0.5))',
                       }}
                     />
-                    <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/98 via-white/94 to-teal-50/92 border-2 border-white shadow-[0_8px_20px_-6px_rgba(13,148,136,0.28),inset_0_2px_5px_rgba(255,255,255,1)] flex flex-col items-center justify-center px-1 text-center transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-95">
+                    <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/98 via-white/94 to-teal-50/92 dark:from-slate-800 dark:via-slate-900 dark:to-teal-950/90 border-2 border-white dark:border-slate-600/80 shadow-[0_8px_20px_-6px_rgba(13,148,136,0.28),inset_0_2px_5px_rgba(255,255,255,1)] dark:shadow-[0_10px_24px_-6px_rgba(2,6,23,0.75),inset_0_2px_5px_rgba(255,255,255,0.08)] flex flex-col items-center justify-center px-1 text-center transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-95">
                       <div
                         key={`${effectiveStatus}-${orbTick}`}
                         className="flex flex-col items-center justify-center animate-number-tick"
                       >
-                        <span className="text-[8.5px] font-bold text-slate-500 leading-tight max-w-[64px] truncate">
+                        <span className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 leading-tight max-w-[64px] truncate">
                           {activeStatusObj ? activeStatusObj.shortLabel : 'รวมทั้งหมด'}
                         </span>
                         <span
                           className={`text-sm font-black tabular-nums leading-tight mt-0.5 ${
-                            activeStatusObj ? activeStatusObj.textColor : 'text-teal-900'
+                            activeStatusObj ? activeStatusObj.textColor : 'text-teal-900 dark:text-teal-200'
                           }`}
                         >
                           {activeStatusObj ? `${activeStatusObj.count} เคส` : `${stats.totalCases} เคส`}
                         </span>
-                        <span className="text-[8.5px] font-extrabold tabular-nums text-slate-600 mt-0.5">
+                        <span className="text-[8.5px] font-extrabold tabular-nums text-slate-600 dark:text-slate-300 mt-0.5">
                           {activeStatusObj
                             ? `${activeStatusObj.percent.toFixed(0)}%`
                             : `อนุมัติ ${stats.approvalRate.toFixed(0)}%`}
@@ -608,7 +608,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                             ? row.activeBgClass
                             : isDimmed
                             ? 'border-transparent opacity-55 hover:opacity-95'
-                            : 'border-transparent hover:bg-white/65'
+                            : 'border-transparent hover:bg-white/65 dark:hover:bg-slate-800/65'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -619,12 +619,12 @@ export const DealPipelineAndDealersChartCard: React.FC<
                             />
                             <span className="truncate">{row.label}</span>
                           </span>
-                          <span className="font-bold text-slate-800 tabular-nums whitespace-nowrap shrink-0">
+                          <span className="font-bold text-slate-800 dark:text-slate-100 tabular-nums whitespace-nowrap shrink-0">
                             {row.count} เคส ({row.percent.toFixed(0)}%)
                           </span>
                         </div>
                         <div className="relative py-0.5">
-                          <div className="h-1.5 w-full bg-white/85 border border-white shadow-inner rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-white/85 dark:bg-slate-800/90 border border-white dark:border-slate-700/80 shadow-inner rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full ${row.barColor} ${
                                 row.percent > 0 ? 'animate-fuel-shimmer' : ''
@@ -659,13 +659,13 @@ export const DealPipelineAndDealersChartCard: React.FC<
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.98 }}
                     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="rounded-xl bg-white/75 border border-white px-2.5 py-1.5 flex items-center justify-between gap-2 text-[10.5px] tabular-nums shadow-2xs"
+                    className="rounded-xl bg-white/75 dark:bg-slate-800/85 border border-white dark:border-slate-700/80 px-2.5 py-1.5 flex items-center justify-between gap-2 text-[10.5px] tabular-nums shadow-2xs"
                   >
                     <span className={`font-bold ${activeStatusObj.textColor}`}>
                       {activeStatusObj.label}: {activeStatusObj.count} เคส (
                       {activeStatusObj.percent.toFixed(1)}%)
                     </span>
-                    <span className="font-extrabold text-slate-900 whitespace-nowrap">
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                       ยอดจัด {formatBaht(Math.round(activeStatusObj.finance))}
                     </span>
                   </motion.div>
@@ -676,10 +676,10 @@ export const DealPipelineAndDealersChartCard: React.FC<
         </div>
 
         {/* SECTION 2: Interactive Dealers Chart & Full Reconciliation */}
-        <div className="relative pt-2 border-t border-white/75 space-y-2">
+        <div className="relative pt-2 border-t border-white/75 dark:border-slate-700/75 space-y-2">
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 min-w-0 flex-1">
-              <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-200 min-w-0 flex-1">
+              <Building2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
               <span className="truncate">สรุปตามร้านตัวแทน (Dealers)</span>
             </div>
 
@@ -689,7 +689,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                 <div
                   role="group"
                   aria-label="มุมมองข้อมูลร้านตัวแทน"
-                  className="flex items-center gap-0.5 p-0.5 rounded-lg bg-white/80 border border-white shadow-2xs"
+                  className="flex items-center gap-0.5 p-0.5 rounded-lg bg-white/80 dark:bg-slate-800/85 border border-white dark:border-slate-700/80 shadow-2xs"
                 >
                   <button
                     type="button"
@@ -701,7 +701,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                     className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
                       dealerViewMode === 'chart'
                         ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-2xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <BarChart3 className="w-2.5 h-2.5" />
@@ -717,7 +717,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                     className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
                       dealerViewMode === 'list'
                         ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-2xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <LayoutList className="w-2.5 h-2.5" />
@@ -729,7 +729,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
           </div>
 
           {dealers.length === 0 ? (
-            <p className="text-[11px] text-slate-500 py-1">ยังไม่มีข้อมูลร้านตัวแทนในงวดนี้</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 py-1">ยังไม่มีข้อมูลร้านตัวแทนในงวดนี้</p>
           ) : (
             <AnimatePresence mode="wait">
               {dealerViewMode === 'chart' ? (
@@ -742,7 +742,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                   className="glass-inner-surface rounded-2xl p-2.5 space-y-2"
                 >
                   {/* Legend Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-600 px-0.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-600 dark:text-slate-300 px-0.5">
                     <div className="flex items-center gap-2.5">
                       <span className="inline-flex items-center gap-1 font-semibold">
                         <span className="w-2 h-2 rounded-full bg-teal-500" />
@@ -757,7 +757,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                         <span>รอผล/อื่นๆ</span>
                       </span>
                     </div>
-                    <span className="font-bold text-slate-500 tabular-nums">
+                    <span className="font-bold text-slate-500 dark:text-slate-400 tabular-nums">
                       {dealers.length} ร้านครบถ้วน
                     </span>
                   </div>
@@ -799,7 +799,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                         <CartesianGrid
                           strokeDasharray="3 3"
                           horizontal={false}
-                          stroke="rgba(148, 163, 184, 0.25)"
+                          stroke="var(--chart-grid)"
                         />
                         <XAxis type="number" hide domain={[0, 'dataMax + 2']} />
                         <YAxis
@@ -809,7 +809,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                           axisLine={false}
                           tickLine={false}
                           tickFormatter={formatShortDealerLabel}
-                          tick={{ fill: '#1e293b', fontSize: 10.5, fontWeight: 700 }}
+                          tick={{ fill: 'var(--chart-tick)', fontSize: 10.5, fontWeight: 700 }}
                         />
                         <Tooltip
                           cursor={false}
@@ -906,7 +906,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                             position="right"
                             formatter={(val: unknown) => `${Number(val) || 0}`}
                             style={{
-                              fill: '#0f172a',
+                              fill: 'var(--chart-label)',
                               fontSize: '10.5px',
                               fontWeight: 800,
                             }}
@@ -943,7 +943,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                           className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer tabular-nums ${
                             isSel
                               ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white border-white shadow-xs'
-                              : 'bg-white/70 hover:bg-white text-slate-700 border-white/95'
+                              : 'bg-white/70 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-white/95 dark:border-slate-700/80'
                           }`}
                         >
                           {d.name} ({d.total})
@@ -960,34 +960,34 @@ export const DealPipelineAndDealersChartCard: React.FC<
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -4, scale: 0.98 }}
                         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                        className="rounded-xl bg-gradient-to-r from-sky-50/90 via-white/90 to-teal-50/90 border border-sky-200/80 px-2.5 py-2 space-y-1 text-[10.5px] shadow-2xs"
+                        className="rounded-xl bg-gradient-to-r from-sky-50/90 via-white/90 to-teal-50/90 dark:from-sky-950/85 dark:via-slate-900/90 dark:to-teal-950/85 border border-sky-200/80 dark:border-sky-700/75 px-2.5 py-2 space-y-1 text-[10.5px] shadow-2xs"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-extrabold text-slate-900 truncate">
+                          <span className="font-extrabold text-slate-900 dark:text-slate-50 truncate">
                             {selectedDealer.name}
                           </span>
-                          <span className="font-black text-indigo-800 tabular-nums whitespace-nowrap">
+                          <span className="font-black text-indigo-800 dark:text-indigo-300 tabular-nums whitespace-nowrap">
                             {formatBaht(Math.round(selectedDealer.finance))}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-slate-600 tabular-nums">
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-slate-600 dark:text-slate-300 tabular-nums">
                           <span>
-                            รวม <strong className="text-slate-900">{selectedDealer.total}</strong> เคส
+                            รวม <strong className="text-slate-900 dark:text-white">{selectedDealer.total}</strong> เคส
                           </span>
-                          <span className="text-teal-700 font-bold">
+                          <span className="text-teal-700 dark:text-teal-300 font-bold">
                             รับรถ {selectedDealer.delivered}
                           </span>
                           {selectedDealer.approvedPending > 0 && (
-                            <span className="text-emerald-700 font-semibold">
+                            <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
                               รอรับ {selectedDealer.approvedPending}
                             </span>
                           )}
                           {selectedDealer.other > 0 && (
-                            <span className="text-slate-500">
+                            <span className="text-slate-500 dark:text-slate-400">
                               รอผล/อื่นๆ {selectedDealer.other}
                             </span>
                           )}
-                          <span className="text-slate-500 ml-auto">
+                          <span className="text-slate-500 dark:text-slate-400 ml-auto">
                             รับรถแล้ว {formatShortBaht(selectedDealer.deliveredFinance)}
                           </span>
                         </div>
@@ -1002,23 +1002,23 @@ export const DealPipelineAndDealersChartCard: React.FC<
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="divide-y divide-white/80 text-[11px]"
+                  className="divide-y divide-white/80 dark:divide-slate-800/80 text-[11px]"
                 >
                   {visibleDealers.map((d) => (
                     <div
                       key={d.name}
-                      className="py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/55 transition-colors flex items-center justify-between gap-2"
+                      className="py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/55 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-2"
                     >
-                      <MarqueeText className="font-semibold text-slate-800 flex-1 min-w-0">
+                      <MarqueeText className="font-semibold text-slate-800 dark:text-slate-100 flex-1 min-w-0">
                         {d.name}
                       </MarqueeText>
-                      <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         <span>
-                          <strong className="text-slate-900">{d.total}</strong> เคส (รับรถ{' '}
+                          <strong className="text-slate-900 dark:text-white">{d.total}</strong> เคส (รับรถ{' '}
                           {d.delivered})
                         </span>
-                        <span className="text-slate-300">·</span>
-                        <span className="font-bold text-sky-800">
+                        <span className="text-slate-300 dark:text-slate-600">·</span>
+                        <span className="font-bold text-sky-800 dark:text-sky-300">
                           {formatBaht(Math.round(d.finance))}
                         </span>
                       </div>
@@ -1032,19 +1032,19 @@ export const DealPipelineAndDealersChartCard: React.FC<
                         triggerHaptic('light');
                         setShowAllDealers(true);
                       }}
-                      className="w-full py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/65 transition-colors flex items-center justify-between gap-2 text-left cursor-pointer"
+                      className="w-full py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-sky-50/65 dark:hover:bg-slate-800/65 transition-colors flex items-center justify-between gap-2 text-left cursor-pointer"
                     >
-                      <span className="font-semibold text-sky-700 flex items-center gap-1 min-w-0 truncate">
+                      <span className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1 min-w-0 truncate">
                         <span>ร้านอื่นๆ ({hiddenDealers.length} ร้าน)</span>
                         <ChevronDown className="w-3 h-3 shrink-0" />
                       </span>
-                      <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 shrink-0 tabular-nums text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         <span>
-                          <strong className="text-slate-900">{hiddenDealersSummary.total}</strong>{' '}
+                          <strong className="text-slate-900 dark:text-white">{hiddenDealersSummary.total}</strong>{' '}
                           เคส (รับรถ {hiddenDealersSummary.delivered})
                         </span>
-                        <span className="text-slate-300">·</span>
-                        <span className="font-bold text-sky-800">
+                        <span className="text-slate-300 dark:text-slate-600">·</span>
+                        <span className="font-bold text-sky-800 dark:text-sky-300">
                           {formatBaht(Math.round(hiddenDealersSummary.finance))}
                         </span>
                       </div>
@@ -1058,7 +1058,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                         triggerHaptic('light');
                         setShowAllDealers(false);
                       }}
-                      className="w-full py-1 text-center text-[10.5px] font-bold text-sky-700 hover:text-sky-900 inline-flex items-center justify-center gap-0.5 cursor-pointer"
+                      className="w-full py-1 text-center text-[10.5px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 inline-flex items-center justify-center gap-0.5 cursor-pointer"
                     >
                       <span>ย่อรายการร้าน</span>
                       <ChevronUp className="w-3 h-3" />
@@ -1071,14 +1071,14 @@ export const DealPipelineAndDealersChartCard: React.FC<
 
           {/* Total Reconciliation Footer */}
           {dealers.length > 0 && (
-            <div className="pt-1 border-t border-white/85 flex items-center justify-between gap-2 text-[10.5px] tabular-nums text-slate-600">
-              <span className="font-bold text-slate-700">รวมทุกร้าน ({dealers.length} ร้าน)</span>
+            <div className="pt-1 border-t border-white/85 dark:border-slate-700/75 flex items-center justify-between gap-2 text-[10.5px] tabular-nums text-slate-600 dark:text-slate-300">
+              <span className="font-bold text-slate-700 dark:text-slate-200">รวมทุกร้าน ({dealers.length} ร้าน)</span>
               <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap font-bold">
-                <span className="text-slate-800">
+                <span className="text-slate-800 dark:text-slate-100">
                   {stats.totalCases} เคส (รับรถ {stats.deliveredCount})
                 </span>
-                <span className="text-slate-300">·</span>
-                <span className="text-indigo-800">
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-indigo-800 dark:text-indigo-300">
                   {formatBaht(Math.round(stats.totalFinance))}
                 </span>
               </div>
@@ -1089,33 +1089,33 @@ export const DealPipelineAndDealersChartCard: React.FC<
         {/* SECTION 3: Upcoming First Payment Cohort Banner */}
         <div className="relative glass-inner-indigo rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px]">
           <div className="flex items-start sm:items-center gap-2 min-w-0 flex-1">
-            <CalendarClock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
+            <CalendarClock className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
             <div className="min-w-0 flex-1 leading-snug">
               {installmentSummary ? (
                 <>
-                  <div className="text-slate-800 font-semibold tabular-nums flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <div className="text-slate-800 dark:text-slate-100 font-semibold tabular-nums flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span>งวดแรก:</span>
                     {installmentSummary.cohorts.map((cohort, idx) => (
                       <span key={cohort.sortKey} className="inline-flex items-center gap-1">
-                        {idx > 0 && <span className="text-slate-400">·</span>}
-                        <strong className="text-sky-950">{cohort.label}</strong>
-                        <span className="text-slate-600">({cohort.count})</span>
+                        {idx > 0 && <span className="text-slate-400 dark:text-slate-500">·</span>}
+                        <strong className="text-sky-950 dark:text-sky-100">{cohort.label}</strong>
+                        <span className="text-slate-600 dark:text-slate-300">({cohort.count})</span>
                       </span>
                     ))}
                   </div>
-                  <div className="text-[10px] text-slate-600 tabular-nums mt-0.5">
+                  <div className="text-[10px] text-slate-600 dark:text-slate-300 tabular-nums mt-0.5">
                     {installmentSummary.isPeriodScoped
                       ? `รับรถงวดนี้ ${installmentSummary.totalDeliveredCount} ราย`
                       : `ทั้งหมด ${installmentSummary.totalDeliveredCount} ราย`}{' '}
                     · รวมค่างวด{' '}
-                    <strong className="text-indigo-900">
+                    <strong className="text-indigo-900 dark:text-indigo-200">
                       {formatBaht(Math.round(installmentSummary.totalMonthlyInstallment))}
                     </strong>
                     /ด.
                   </div>
                 </>
               ) : (
-                <span className="text-slate-600">ติดตามค่างวดชำระทุกวันที่ 2 ของเดือน</span>
+                <span className="text-slate-600 dark:text-slate-300">ติดตามค่างวดชำระทุกวันที่ 2 ของเดือน</span>
               )}
             </div>
           </div>
@@ -1125,7 +1125,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
               triggerHaptic('light');
               onNavigateToInstallments();
             }}
-            className="text-blue-700 hover:text-sky-900 font-bold whitespace-nowrap shrink-0 flex items-center gap-0.5 cursor-pointer"
+            className="text-blue-700 dark:text-blue-300 hover:text-sky-900 dark:hover:text-sky-200 font-bold whitespace-nowrap shrink-0 flex items-center gap-0.5 cursor-pointer"
           >
             <span>เช็คค่างวด</span>
             <ArrowRight className="w-3 h-3" />

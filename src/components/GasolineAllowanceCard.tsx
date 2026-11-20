@@ -45,14 +45,15 @@ function getTierVisualTheme(tierIndex: number): TierVisualTheme {
   if (tierIndex >= 6) {
     // 51+ สูงสุด: Royal Emerald + Gold Trophy Glow
     return {
-      auraBg: 'bg-emerald-300/35',
-      secondaryAuraBg: 'bg-amber-300/30',
+      auraBg: 'bg-emerald-300/35 dark:bg-emerald-500/18',
+      secondaryAuraBg: 'bg-amber-300/30 dark:bg-amber-500/15',
       iconGradient: 'from-amber-400 via-orange-500 to-rose-500',
       iconShadow: 'shadow-amber-500/35',
       panelBg:
-        'bg-gradient-to-br from-emerald-50/90 via-white/80 to-amber-50/85 border-emerald-200/90',
-      amountText: 'text-emerald-800',
-      badgeBg: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-white/60 shadow-xs',
+        'bg-gradient-to-br from-emerald-50/90 via-white/80 to-amber-50/85 dark:from-emerald-950/75 dark:via-slate-900/85 dark:to-amber-950/60 border-emerald-200/90 dark:border-emerald-700/70',
+      amountText: 'text-emerald-800 dark:text-emerald-300',
+      badgeBg:
+        'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-white/60 dark:border-white/20 shadow-xs',
       gaugeGradient: 'from-amber-400 via-emerald-500 to-teal-500',
       tipGlow: 'bg-emerald-400',
     };
@@ -60,14 +61,14 @@ function getTierVisualTheme(tierIndex: number): TierVisualTheme {
   if (tierIndex >= 4) {
     // 30-50 (ขั้น 4-5): Vibrant Emerald / Teal
     return {
-      auraBg: 'bg-teal-300/30',
-      secondaryAuraBg: 'bg-amber-200/25',
+      auraBg: 'bg-teal-300/30 dark:bg-teal-500/18',
+      secondaryAuraBg: 'bg-amber-200/25 dark:bg-amber-500/15',
       iconGradient: 'from-emerald-400 to-teal-600',
       iconShadow: 'shadow-teal-500/30',
       panelBg:
-        'bg-gradient-to-br from-teal-50/85 via-white/80 to-emerald-50/80 border-teal-200/90',
-      amountText: 'text-teal-900',
-      badgeBg: 'bg-teal-600 text-white border-white/60 shadow-xs',
+        'bg-gradient-to-br from-teal-50/85 via-white/80 to-emerald-50/80 dark:from-teal-950/75 dark:via-slate-900/85 dark:to-emerald-950/60 border-teal-200/90 dark:border-teal-700/70',
+      amountText: 'text-teal-900 dark:text-teal-200',
+      badgeBg: 'bg-teal-600 text-white border-white/60 dark:border-white/20 shadow-xs',
       gaugeGradient: 'from-amber-400 via-teal-500 to-emerald-500',
       tipGlow: 'bg-teal-400',
     };
@@ -75,28 +76,29 @@ function getTierVisualTheme(tierIndex: number): TierVisualTheme {
   if (tierIndex >= 1) {
     // 15-29 (ขั้น 1-3): Warm Amber / Flame Orange
     return {
-      auraBg: 'bg-amber-300/30',
-      secondaryAuraBg: 'bg-orange-200/25',
+      auraBg: 'bg-amber-300/30 dark:bg-amber-500/18',
+      secondaryAuraBg: 'bg-orange-200/25 dark:bg-orange-500/15',
       iconGradient: 'from-amber-400 to-orange-500',
       iconShadow: 'shadow-amber-500/30',
       panelBg:
-        'bg-gradient-to-br from-amber-50/90 via-white/80 to-orange-50/80 border-amber-200/90',
-      amountText: 'text-amber-950',
-      badgeBg: 'bg-amber-500 text-white border-white/60 shadow-xs',
+        'bg-gradient-to-br from-amber-50/90 via-white/80 to-orange-50/80 dark:from-amber-950/70 dark:via-slate-900/85 dark:to-orange-950/55 border-amber-200/90 dark:border-amber-700/70',
+      amountText: 'text-amber-950 dark:text-amber-200',
+      badgeBg: 'bg-amber-500 text-white border-white/60 dark:border-white/20 shadow-xs',
       gaugeGradient: 'from-amber-400 via-orange-500 to-rose-500',
       tipGlow: 'bg-orange-400',
     };
   }
   // 0-14 (ยังไม่ถึงเกณฑ์): Cool Slate / Sky
   return {
-    auraBg: 'bg-sky-200/30',
-    secondaryAuraBg: 'bg-cyan-200/25',
+    auraBg: 'bg-sky-200/30 dark:bg-sky-500/18',
+    secondaryAuraBg: 'bg-cyan-200/25 dark:bg-cyan-500/15',
     iconGradient: 'from-sky-500 to-cyan-600',
     iconShadow: 'shadow-sky-500/25',
     panelBg:
-      'bg-gradient-to-br from-sky-50/80 via-white/80 to-slate-50/85 border-sky-200/80',
-    amountText: 'text-slate-800',
-    badgeBg: 'bg-slate-200/85 text-slate-700 border-white',
+      'bg-gradient-to-br from-sky-50/80 via-white/80 to-slate-50/85 dark:from-slate-800/85 dark:via-slate-900/85 dark:to-sky-950/60 border-sky-200/80 dark:border-slate-700/80',
+    amountText: 'text-slate-800 dark:text-slate-100',
+    badgeBg:
+      'bg-slate-200/85 text-slate-700 border-white dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600/80',
     gaugeGradient: 'from-sky-400 to-cyan-500',
     tipGlow: 'bg-sky-400',
   };
@@ -202,7 +204,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
     >
       {/* Top Specular Glass Edge */}
       <div
-        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-amber-300/35 to-transparent opacity-95"
         aria-hidden="true"
       />
 
@@ -228,7 +230,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
       <div className="relative flex items-start sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
-            className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.iconGradient} border border-white/65 text-white flex items-center justify-center shrink-0 shadow-sm ${theme.iconShadow} transition-colors duration-300`}
+            className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.iconGradient} border border-white/65 dark:border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm ${theme.iconShadow} transition-colors duration-300`}
           >
             {summary.isMaxTier ? (
               <Trophy className="w-4 h-4" />
@@ -240,17 +242,17 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 min-w-0">
-              <MarqueeText className="text-xs sm:text-sm font-black text-slate-900">
+              <MarqueeText className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-50">
                 สรุปยอดค่าน้ำมัน (Gasoline Allowance)
               </MarqueeText>
               {isSimulating && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-100/90 text-violet-800 border border-violet-300/80 text-[9.5px] font-extrabold whitespace-nowrap shrink-0">
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-100/90 dark:bg-violet-950/85 text-violet-800 dark:text-violet-200 border border-violet-300/80 dark:border-violet-700/80 text-[9.5px] font-extrabold whitespace-nowrap shrink-0">
                   <Sparkles className="w-2.5 h-2.5" />
                   จำลองเป้า
                 </span>
               )}
             </div>
-            <MarqueeText className="text-[10.5px] text-slate-600">
+            <MarqueeText className="text-[10.5px] text-slate-600 dark:text-slate-400">
               {periodLabel} · อ้างอิงสัญญาอนุมัติและรับรถแล้ว ({actualContractCount} สัญญา)
             </MarqueeText>
           </div>
@@ -263,7 +265,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
             triggerHaptic('light');
             setShowFullTable((prev) => !prev);
           }}
-          className="px-2.5 py-1 rounded-lg bg-white/85 hover:bg-white border border-white/95 text-[11px] font-bold text-slate-700 hover:text-sky-900 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
+          className="px-2.5 py-1 rounded-lg bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white/95 dark:border-slate-700/85 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:text-sky-900 dark:hover:text-sky-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
         >
           <span>เกณฑ์ 7 ขั้น</span>
           {showFullTable ? (
@@ -282,7 +284,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
           {/* Left: Animated Baht Value + Tier Badge */}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10.5px] font-bold text-slate-600 whitespace-nowrap">
+              <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
                 {isSimulating ? 'ค่าน้ำมันที่จำลองได้' : 'ค่าน้ำมันที่ได้รับ'}
               </span>
               <span
@@ -306,8 +308,8 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                 <span
                   className={`text-[11px] font-extrabold tabular-nums whitespace-nowrap ${
                     summary.allowanceBaht > actualSummary.allowanceBaht
-                      ? 'text-emerald-700'
-                      : 'text-rose-600'
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-rose-600 dark:text-rose-300'
                   }`}
                 >
                   {summary.allowanceBaht > actualSummary.allowanceBaht ? '+' : '-'}
@@ -319,23 +321,23 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
 
           {/* Right: Contract Counter & Quick +/- Stepper */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center gap-1 bg-white/80 backdrop-blur-md p-1 rounded-xl border border-white/95 shadow-2xs">
+            <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-800/85 backdrop-blur-md p-1 rounded-xl border border-white/95 dark:border-slate-700/85 shadow-2xs">
               <button
                 type="button"
                 onClick={() => handleAdjustSimulated(-1)}
                 disabled={activeCount <= 0}
                 aria-label="ลดจำนวนสัญญาจำลอง"
                 title="ลด 1 สัญญา (ลองจำลองเป้า)"
-                className="w-7 h-7 rounded-lg bg-slate-100/80 hover:bg-sky-100 disabled:opacity-40 text-slate-700 flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed active:scale-95"
+                className="w-7 h-7 rounded-lg bg-slate-100/80 dark:bg-slate-700/80 hover:bg-sky-100 dark:hover:bg-sky-900/70 disabled:opacity-40 text-slate-700 dark:text-slate-100 flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed active:scale-95"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
 
               <div className="px-2 text-center min-w-[66px]">
-                <div className="text-sm sm:text-base font-black text-slate-900 tabular-nums leading-tight">
+                <div className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-50 tabular-nums leading-tight">
                   {activeCount}
                 </div>
-                <div className="text-[9.5px] font-bold text-slate-500 leading-none">
+                <div className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 leading-none">
                   สัญญา
                 </div>
               </div>
@@ -345,7 +347,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                 onClick={() => handleAdjustSimulated(1)}
                 aria-label="เพิ่มจำนวนสัญญาจำลอง"
                 title="เพิ่ม 1 สัญญา (ลองจำลองเป้า)"
-                className="w-7 h-7 rounded-lg bg-slate-100/80 hover:bg-sky-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+                className="w-7 h-7 rounded-lg bg-slate-100/80 dark:bg-slate-700/80 hover:bg-sky-100 dark:hover:bg-sky-900/70 text-slate-700 dark:text-slate-100 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -357,7 +359,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                 onClick={handleResetSimulator}
                 title={`กลับไปยอดจริง (${actualContractCount} สัญญา)`}
                 aria-label="กลับไปยอดจริง"
-                className="h-9 px-2 rounded-xl bg-white/85 hover:bg-white border border-sky-200 text-sky-700 font-bold text-[10.5px] flex items-center gap-1 shadow-2xs cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+                className="h-9 px-2 rounded-xl bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-sky-200 dark:border-sky-700/80 text-sky-700 dark:text-sky-300 font-bold text-[10.5px] flex items-center gap-1 shadow-2xs cursor-pointer transition-all active:scale-95 whitespace-nowrap"
               >
                 <RotateCcw className="w-3 h-3 shrink-0" />
                 <span className="hidden sm:inline">ยอดจริง</span>
@@ -370,7 +372,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
         <div className="space-y-1.5 pt-0.5">
           <div className="relative pt-1 pb-4">
             {/* Gauge Track */}
-            <div className="relative h-3 w-full rounded-full bg-white/75 border border-white/95 shadow-inner overflow-hidden">
+            <div className="relative h-3 w-full rounded-full bg-white/75 dark:bg-slate-800/90 border border-white/95 dark:border-slate-700/85 shadow-inner overflow-hidden">
               {/* Filled Liquid Bar */}
               <div
                 className={`h-full rounded-full bg-gradient-to-r ${theme.gaugeGradient} animate-fuel-shimmer transition-all duration-500 ease-out`}
@@ -410,10 +412,10 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                   <span
                     className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-200 ${
                       isCurrent
-                        ? 'bg-slate-900 border-white text-white scale-110 shadow-sm'
+                        ? 'bg-slate-900 dark:bg-sky-500 border-white text-white scale-110 shadow-sm'
                         : reached
                         ? 'bg-emerald-500 border-white text-white'
-                        : 'bg-white/90 border-slate-300 text-slate-400 group-hover:border-sky-400 group-hover:scale-110'
+                        : 'bg-white/90 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-400 group-hover:border-sky-400 group-hover:scale-110'
                     }`}
                   >
                     {reached ? (
@@ -425,10 +427,10 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                   <span
                     className={`mt-0.5 text-[9.5px] font-extrabold tabular-nums whitespace-nowrap transition-colors ${
                       isCurrent
-                        ? 'text-slate-900'
+                        ? 'text-slate-900 dark:text-sky-300'
                         : reached
-                        ? 'text-emerald-800'
-                        : 'text-slate-500 group-hover:text-sky-700'
+                        ? 'text-emerald-800 dark:text-emerald-300'
+                        : 'text-slate-500 dark:text-slate-400 group-hover:text-sky-700 dark:group-hover:text-sky-300'
                     }`}
                   >
                     {tier.minContracts}
@@ -452,19 +454,19 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                 onClick={() => handlePreviewTier(tier)}
                 className={`group rounded-xl px-2 py-1.5 text-center border transition-all duration-200 cursor-pointer active:scale-95 relative overflow-hidden ${
                   isCurrent
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/20 -translate-y-0.5'
+                    ? 'bg-slate-900 dark:bg-sky-600 text-white border-slate-900 dark:border-sky-400 shadow-md shadow-slate-900/20 -translate-y-0.5'
                     : reached
-                    ? 'bg-emerald-50/90 hover:bg-emerald-100/90 text-emerald-950 border-emerald-300/80'
-                    : 'bg-white/75 hover:bg-white text-slate-700 border-white/95 hover:border-sky-300'
+                    ? 'bg-emerald-50/90 hover:bg-emerald-100/90 text-emerald-950 border-emerald-300/80 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 dark:text-emerald-100 dark:border-emerald-700/75'
+                    : 'bg-white/75 hover:bg-white text-slate-700 border-white/95 hover:border-sky-300 dark:bg-slate-800/75 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700/80 dark:hover:border-sky-500/70'
                 }`}
               >
                 <div
                   className={`text-[9.5px] font-bold tabular-nums whitespace-nowrap ${
                     isCurrent
-                      ? 'text-amber-300'
+                      ? 'text-amber-300 dark:text-amber-200'
                       : reached
-                      ? 'text-emerald-700'
-                      : 'text-slate-500'
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {tier.shortRangeLabel} สัญญา
@@ -481,14 +483,14 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
       {/* Expandable Official 7-Tier Reference Table */}
       {showFullTable && (
         <div className="relative glass-mini-card rounded-xl overflow-hidden animate-tab-fade">
-          <div className="px-3 py-2 bg-slate-900 text-white flex items-center justify-between text-[11px] font-extrabold">
+          <div className="px-3 py-2 bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between text-[11px] font-extrabold">
             <span>เงื่อนไขการจ่ายค่าน้ำมัน</span>
             <span className="text-amber-300 text-[10px] font-bold">
               แตะแถวเพื่อทดลองคำนวณ
             </span>
           </div>
-          <div className="divide-y divide-white/80 text-[11px]">
-            <div className="grid grid-cols-2 px-3 py-1.5 bg-slate-100/80 text-[10px] font-extrabold text-slate-600">
+          <div className="divide-y divide-white/80 dark:divide-slate-800/80 text-[11px]">
+            <div className="grid grid-cols-2 px-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/85 text-[10px] font-extrabold text-slate-600 dark:text-slate-300">
               <span>จำนวนสัญญา (Tier of Agreement)</span>
               <span className="text-right">ค่าน้ำมันที่ได้รับ (บาท)</span>
             </div>
@@ -501,8 +503,8 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
                   onClick={() => handlePreviewTier(tier)}
                   className={`w-full grid grid-cols-2 items-center px-3 py-2 text-left transition-colors cursor-pointer ${
                     isCurrent
-                      ? 'bg-amber-100/85 font-extrabold text-amber-950'
-                      : 'hover:bg-sky-50/70 text-slate-700'
+                      ? 'bg-amber-100/85 dark:bg-amber-950/75 font-extrabold text-amber-950 dark:text-amber-200'
+                      : 'hover:bg-sky-50/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <span className="flex items-center gap-1.5 min-w-0">
@@ -527,29 +529,29 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
       )}
 
       {/* Motivational Next-Tier Footer */}
-      <div className="relative pt-1.5 border-t border-white/75 flex items-center justify-between gap-2 text-[11px]">
+      <div className="relative pt-1.5 border-t border-white/75 dark:border-slate-700/75 flex items-center justify-between gap-2 text-[11px]">
         <div className="min-w-0 flex-1">
           {summary.nextTier ? (
-            <MarqueeText className="font-semibold text-slate-700">
+            <MarqueeText className="font-semibold text-slate-700 dark:text-slate-200">
               <span className="inline-flex items-center gap-1">
                 <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span>
                   {isSimulating ? 'เป้าหมายนี้ต้องเพิ่มอีก ' : 'ทำเพิ่มอีก '}
-                  <strong className="text-slate-950 tabular-nums">
+                  <strong className="text-slate-950 dark:text-white tabular-nums">
                     {summary.contractsNeededForNext}
                   </strong>{' '}
                   สัญญา เพื่อรับ{' '}
-                  <strong className="text-amber-800 tabular-nums">
+                  <strong className="text-amber-800 dark:text-amber-300 tabular-nums">
                     {formatBaht(summary.nextTier.allowanceBaht)}
                   </strong>{' '}
-                  <span className="text-emerald-700 font-extrabold tabular-nums">
+                  <span className="text-emerald-700 dark:text-emerald-300 font-extrabold tabular-nums">
                     (+{formatBaht(summary.potentialGainBaht)})
                   </span>
                 </span>
               </span>
             </MarqueeText>
           ) : (
-            <MarqueeText className="font-bold text-emerald-700">
+            <MarqueeText className="font-bold text-emerald-700 dark:text-emerald-300">
               <span className="inline-flex items-center gap-1">
                 <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span>ยินดีด้วย! ถึงขั้นสูงสุด 51+ สัญญา (รับเต็ม ฿8,200) แล้ว</span>
@@ -565,7 +567,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
               triggerHaptic('light');
               onOpenSavedCases();
             }}
-            className="text-sky-700 hover:text-sky-900 font-bold flex items-center gap-0.5 whitespace-nowrap shrink-0 cursor-pointer"
+            className="text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 font-bold flex items-center gap-0.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
             <span>ดูเคสรับรถ</span>
             <ArrowRight className="w-3 h-3" />

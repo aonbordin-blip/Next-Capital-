@@ -91,46 +91,46 @@ const WeeklyChartTooltip: React.FC<WeeklyTooltipProps> = ({ active, payload }) =
   if (!datum) return null;
 
   return (
-    <div className="rounded-xl bg-white/95 backdrop-blur-md border border-sky-200/80 shadow-lg px-3 py-2.5 text-xs text-slate-800 min-w-[195px]">
-      <div className="font-bold text-slate-900 pb-1.5 border-b border-slate-100 flex items-center justify-between gap-3">
+    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-sky-200/80 dark:border-slate-700/85 shadow-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-100 min-w-[195px]">
+      <div className="font-bold text-slate-900 dark:text-slate-50 pb-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
         <span>
           {datum.fullLabel}
           {datum.isToday ? ' (วันนี้)' : ''}
         </span>
-        <span className="font-mono tabular-nums text-sky-700 font-extrabold shrink-0">
+        <span className="font-mono tabular-nums text-sky-700 dark:text-sky-300 font-extrabold shrink-0">
           {datum.count} เคส
         </span>
       </div>
       <div className="pt-1.5 space-y-1 text-[11px]">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-teal-700 font-medium">รับรถแล้ว</span>
-          <span className="font-mono tabular-nums font-semibold text-slate-900">
+          <span className="text-teal-700 dark:text-teal-300 font-medium">รับรถแล้ว</span>
+          <span className="font-mono tabular-nums font-semibold text-slate-900 dark:text-slate-100">
             {datum.delivered}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sky-700 font-medium">อนุมัติ (รอรับรถ)</span>
-          <span className="font-mono tabular-nums font-semibold text-slate-900">
+          <span className="text-sky-700 dark:text-sky-300 font-medium">อนุมัติ (รอรับรถ)</span>
+          <span className="font-mono tabular-nums font-semibold text-slate-900 dark:text-slate-100">
             {datum.approvedPendingDelivery}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-cyan-700 font-medium">รอผล / บันทึกไว้</span>
-          <span className="font-mono tabular-nums font-semibold text-slate-900">
+          <span className="text-cyan-700 dark:text-cyan-300 font-medium">รอผล / บันทึกไว้</span>
+          <span className="font-mono tabular-nums font-semibold text-slate-900 dark:text-slate-100">
             {datum.pending}
           </span>
         </div>
         {datum.closedOther > 0 && (
           <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500 font-medium">ไม่อนุมัติ / ยกเลิก</span>
-            <span className="font-mono tabular-nums font-semibold text-slate-700">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">ไม่อนุมัติ / ยกเลิก</span>
+            <span className="font-mono tabular-nums font-semibold text-slate-700 dark:text-slate-300">
               {datum.closedOther}
             </span>
           </div>
         )}
-        <div className="pt-1 mt-1 border-t border-slate-100 flex items-center justify-between gap-3">
-          <span className="text-slate-500">ยอดจัดรวม</span>
-          <span className="font-mono tabular-nums font-bold text-slate-900">
+        <div className="pt-1 mt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวม</span>
+          <span className="font-mono tabular-nums font-bold text-slate-900 dark:text-slate-100">
             {formatBaht(Math.round(datum.totalFinance))} บ.
           </span>
         </div>
@@ -249,25 +249,25 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
   return (
     <section className="glass-card-primary rounded-2xl p-3.5 sm:p-5 space-y-3.5 relative overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-cyan-300/35 to-transparent opacity-95"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none -right-12 -top-12 absolute w-40 h-40 rounded-full bg-cyan-300/25 blur-2xl"
+        className="pointer-events-none -right-12 -top-12 absolute w-40 h-40 rounded-full bg-cyan-300/25 dark:bg-cyan-500/15 blur-2xl"
         aria-hidden="true"
       />
 
       {/* Header Row */}
       <div className="relative flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-100/85 to-sky-50/80 border border-white/90 text-cyan-700 flex items-center justify-center shrink-0 shadow-2xs">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-100/85 to-sky-50/80 dark:from-cyan-500 dark:to-sky-600 border border-white/90 dark:border-cyan-300/30 text-cyan-700 dark:text-white flex items-center justify-center shrink-0 shadow-2xs">
             <CalendarDays className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <MarqueeText className="text-[13.5px] sm:text-base font-black text-slate-900 tracking-tight">
+            <MarqueeText className="text-[13.5px] sm:text-base font-black text-slate-900 dark:text-slate-50 tracking-tight">
               สถิติเคสที่สร้างรายวัน (7 วันล่าสุด)
             </MarqueeText>
-            <MarqueeText className="text-[11px] sm:text-xs text-slate-600 mt-0.5 tabular-nums">
+            <MarqueeText className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 tabular-nums">
               ช่วงวันที่ {rangeLabel} · เฉลี่ย {summaryStats.dailyAvg.toFixed(1)} เคส/วัน
             </MarqueeText>
           </div>
@@ -277,40 +277,46 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
       {/* 4-Column Weekly KPI Mini Strip */}
       <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
         <div className="glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/75">
+          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/75 dark:text-sky-200/90">
             เคสรวม 7 วันล่าสุด
           </MarqueeText>
-          <div className="text-base sm:text-xl font-black text-sky-950 font-mono tabular-nums whitespace-nowrap">
+          <div className="text-base sm:text-xl font-black text-sky-950 dark:text-sky-100 font-mono tabular-nums whitespace-nowrap">
             {summaryStats.weeklyTotal}
-            <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">เคส</span>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 ml-1 font-sans">
+              เคส
+            </span>
           </div>
         </div>
 
         <div className="glass-panel-cyan dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-cyan-900/75">
+          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-cyan-900/75 dark:text-cyan-200/90">
             เคสที่สร้างวันนี้
           </MarqueeText>
-          <div className="text-base sm:text-xl font-black text-cyan-950 font-mono tabular-nums whitespace-nowrap">
+          <div className="text-base sm:text-xl font-black text-cyan-950 dark:text-cyan-100 font-mono tabular-nums whitespace-nowrap">
             {summaryStats.todayCount}
-            <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">เคส</span>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 ml-1 font-sans">
+              เคส
+            </span>
           </div>
         </div>
 
         <div className="glass-panel-indigo dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-blue-900/75">
+          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-blue-900/75 dark:text-blue-200/90">
             เฉลี่ยต่อวัน (7 วัน)
           </MarqueeText>
-          <div className="text-base sm:text-xl font-black text-blue-800 font-mono tabular-nums whitespace-nowrap">
+          <div className="text-base sm:text-xl font-black text-blue-800 dark:text-blue-200 font-mono tabular-nums whitespace-nowrap">
             {summaryStats.dailyAvg.toFixed(1)}
-            <span className="text-[11px] font-semibold text-slate-500 ml-1 font-sans">เคส/วัน</span>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 ml-1 font-sans">
+              เคส/วัน
+            </span>
           </div>
         </div>
 
         <div className="glass-panel-teal dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/75">
+          <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/75 dark:text-teal-200/90">
             วันสร้างสูงสุด
           </MarqueeText>
-          <div className="text-base sm:text-xl font-black text-teal-800 font-mono tabular-nums whitespace-nowrap">
+          <div className="text-base sm:text-xl font-black text-teal-800 dark:text-teal-200 font-mono tabular-nums whitespace-nowrap">
             {summaryStats.peakDatum ? (
               <>
                 <span className="font-sans text-sm sm:text-base font-extrabold mr-1">
@@ -334,10 +340,10 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
             margin={{ top: 22, right: 10, left: -18, bottom: 8 }}
             barCategoryGap="24%"
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.3)" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
             <XAxis
               dataKey="shortLabel"
-              axisLine={{ stroke: 'rgba(148, 163, 184, 0.45)' }}
+              axisLine={{ stroke: 'var(--chart-axis)' }}
               tickLine={false}
               interval={0}
               tick={(tickProps: {
@@ -363,7 +369,13 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
                       y={0}
                       dy={13}
                       textAnchor="middle"
-                      fill={isSelected ? '#0369a1' : isToday ? '#0891b2' : '#475569'}
+                      fill={
+                        isSelected
+                          ? 'var(--chart-tick-active)'
+                          : isToday
+                          ? 'var(--chart-tick-today)'
+                          : 'var(--chart-tick-muted)'
+                      }
                       fontSize={11}
                       fontWeight={isSelected || isToday ? 800 : 600}
                     >
@@ -375,7 +387,7 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
                         y={0}
                         dy={25}
                         textAnchor="middle"
-                        fill="#0891b2"
+                        fill="var(--chart-tick-today)"
                         fontSize={9}
                         fontWeight={700}
                       >
@@ -388,7 +400,7 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
             />
             <YAxis
               allowDecimals={false}
-              tick={{ fontSize: 11, fill: '#64748b' }}
+              tick={{ fontSize: 11, fill: 'var(--chart-tick-muted)' }}
               axisLine={false}
               tickLine={false}
             />
@@ -415,7 +427,7 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
                 const isPeak = summaryStats.peakDatum?.dateKey === entry.dateKey && entry.count > 0;
                 const fillColor =
                   entry.count === 0
-                    ? 'rgba(203, 213, 225, 0.65)'
+                    ? 'var(--chart-zero-bar)'
                     : isSelected
                     ? '#0369a1'
                     : entry.isToday
@@ -435,7 +447,7 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
                     key={entry.dateKey}
                     fill={fillColor}
                     fillOpacity={fillOpacity}
-                    stroke={isSelected ? '#0c4a6e' : 'none'}
+                    stroke={isSelected ? '#38bdf8' : 'none'}
                     strokeWidth={isSelected ? 1.5 : 0}
                   />
                 );
@@ -445,7 +457,7 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
                 position="top"
                 formatter={(val: unknown) => (Number(val) > 0 ? String(val) : '')}
                 style={{
-                  fill: '#0c4a6e',
+                  fill: 'var(--chart-label)',
                   fontSize: 11,
                   fontWeight: 800,
                 }}
@@ -459,13 +471,15 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
       {selectedBucket ? (
         <div className="relative glass-panel-cyan rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
           <div className="min-w-0 flex-1">
-            <MarqueeText className="text-slate-700 tabular-nums">
-              <strong className="text-sky-950">
+            <MarqueeText className="text-slate-700 dark:text-slate-200 tabular-nums">
+              <strong className="text-sky-950 dark:text-sky-100">
                 {selectedBucket.fullLabel}
                 {selectedBucket.isToday ? ' (วันนี้)' : ''}
               </strong>
               {' · '}
-              <strong className="font-mono text-sky-900">{selectedBucket.count} เคส</strong>
+              <strong className="font-mono text-sky-900 dark:text-sky-200">
+                {selectedBucket.count} เคส
+              </strong>
               {selectedBucket.count > 0
                 ? ` · รับรถ ${selectedBucket.delivered} · อนุมัติรอรับ ${selectedBucket.approvedPendingDelivery} · รอผล ${selectedBucket.pending} · ยอดจัด ${formatBaht(Math.round(selectedBucket.totalFinance))} บ.`
                 : ' · ยังไม่มีเคสที่สร้างในวันนี้'}
@@ -477,14 +491,14 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
               triggerHaptic('light');
               setSelectedDateKey(null);
             }}
-            className="text-xs font-bold text-sky-700 hover:text-sky-900 underline cursor-pointer whitespace-nowrap shrink-0"
+            className="text-xs font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 underline cursor-pointer whitespace-nowrap shrink-0"
           >
             ล้างการเลือก
           </button>
         </div>
       ) : summaryStats.weeklyTotal === 0 ? (
         <div className="relative glass-panel-blue rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 text-[11px] sm:text-xs flex-wrap">
-          <MarqueeText className="text-slate-600 flex-1 min-w-0">
+          <MarqueeText className="text-slate-600 dark:text-slate-300 flex-1 min-w-0">
             ยังไม่มีเคสที่สร้างในช่วง 7 วันล่าสุด — บันทึกเคสใหม่เพื่อติดตามแนวโน้มรายวัน
           </MarqueeText>
           {onGoToCalculate && (
@@ -501,10 +515,10 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
           )}
         </div>
       ) : (
-        <div className="relative pt-2 border-t border-white/70 text-[11px] sm:text-xs">
-          <MarqueeText className="text-slate-600">
+        <div className="relative pt-2 border-t border-white/70 dark:border-slate-700/75 text-[11px] sm:text-xs">
+          <MarqueeText className="text-slate-600 dark:text-slate-400">
             แตะที่แท่งกราฟเพื่อดูสรุปรายวัน · ยอดจัดไฟแนนซ์รวม 7 วัน{' '}
-            <strong className="font-mono tabular-nums text-sky-950">
+            <strong className="font-mono tabular-nums text-sky-950 dark:text-sky-100">
               {formatBaht(Math.round(summaryStats.weeklyFinance))} บ.
             </strong>
           </MarqueeText>

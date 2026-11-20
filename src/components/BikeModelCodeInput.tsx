@@ -245,15 +245,15 @@ export const BikeModelCodeInput: React.FC<Props> = ({
     <div>
       {/* Label & Actions in Main Form */}
       <div className="flex justify-between items-center mb-1">
-        <label className="text-[11px] text-slate-700 font-bold flex items-center gap-1.5">
-          <Tag className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+        <label className="text-[11px] text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1.5">
+          <Tag className="w-3.5 h-3.5 text-blue-700 dark:text-sky-400 flex-shrink-0" />
           <span>รหัสรุ่นรถ (MODEL CODE)</span>
         </label>
         {value && (
           <button
             type="button"
             onClick={handleClear}
-            className="text-[10px] text-slate-400 hover:text-rose-600 flex items-center gap-0.5 cursor-pointer font-medium transition-colors"
+            className="text-[10px] text-slate-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-0.5 cursor-pointer font-medium transition-colors"
           >
             <X className="w-3 h-3" /> ล้างรหัส
           </button>
@@ -271,10 +271,10 @@ export const BikeModelCodeInput: React.FC<Props> = ({
             handleOpen();
           }
         }}
-        className="w-full glass-input-field rounded-xl px-3 py-2 flex items-center justify-between cursor-pointer group hover:border-blue-400 hover:bg-white/90 transition-all text-left select-none shadow-2xs"
+        className="w-full glass-input-field rounded-xl px-3 py-2 flex items-center justify-between cursor-pointer group hover:border-blue-400 dark:hover:border-sky-500 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all text-left select-none shadow-2xs"
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <Search className="w-3.5 h-3.5 text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
+          <Search className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400 shrink-0 group-hover:scale-110 transition-transform" />
 
           {value ? (
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
@@ -288,20 +288,20 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                 </span>
               )}
               {matchedModel?.isCustom && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 shrink-0">
                   ✨ บันทึกเอง
                 </span>
               )}
-              <span className="font-mono text-xs font-bold text-blue-950 uppercase tracking-wide shrink-0">
+              <span className="font-mono text-xs font-bold text-blue-950 dark:text-sky-200 uppercase tracking-wide shrink-0">
                 {value}
               </span>
-              <span className="text-slate-300 shrink-0">•</span>
-              <MarqueeText className="text-xs font-semibold text-slate-700 flex-1">
+              <span className="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+              <MarqueeText className="text-xs font-semibold text-slate-700 dark:text-slate-200 flex-1">
                 {matchedModel?.name || selectedModelName || 'รหัสรุ่นที่กำหนด'}
               </MarqueeText>
             </div>
           ) : (
-            <MarqueeText className="text-xs text-slate-400 group-hover:text-slate-600 flex-1">
+            <MarqueeText className="text-xs text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 flex-1">
               แตะเพื่อค้นหารหัสรุ่นรถ (GIORNO, WAVE, PCX, FAZZIO...)
             </MarqueeText>
           )}
@@ -309,11 +309,11 @@ export const BikeModelCodeInput: React.FC<Props> = ({
 
         <div className="flex items-center gap-1.5 shrink-0 ml-2">
           {matchedModel?.price && (
-            <span className="font-mono text-[11px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/80 hidden sm:inline-block">
+            <span className="font-mono text-[11px] font-bold text-blue-800 dark:text-sky-200 bg-blue-50 dark:bg-sky-950/70 px-2 py-0.5 rounded-md border border-blue-200/80 dark:border-sky-800/70 hidden sm:inline-block">
               ฿{matchedModel.price.toLocaleString()}
             </span>
           )}
-          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 group-hover:bg-blue-600 group-hover:text-white px-2 py-0.5 rounded-lg border border-blue-200 transition-colors flex items-center gap-0.5">
+          <span className="text-[10px] font-bold text-blue-700 dark:text-sky-300 bg-blue-50 dark:bg-sky-950/70 group-hover:bg-blue-600 group-hover:text-white px-2 py-0.5 rounded-lg border border-blue-200 dark:border-sky-800/70 transition-colors flex items-center gap-0.5">
             <span>{value ? 'เปลี่ยน' : 'ค้นหา'}</span>
             <ChevronRight className="w-3 h-3" />
           </span>
@@ -322,21 +322,21 @@ export const BikeModelCodeInput: React.FC<Props> = ({
 
       {/* Confirmed Model Status Badge */}
       {matchedModel && (
-        <div className="mt-1 px-2.5 py-1 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white rounded-lg border border-blue-200/70 flex items-center justify-between text-[10.5px]">
+        <div className="mt-1 px-2.5 py-1 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white dark:from-slate-800/90 dark:via-slate-800/70 dark:to-slate-900/90 rounded-lg border border-blue-200/70 dark:border-slate-700 flex items-center justify-between text-[10.5px]">
           <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-2">
-            <span className="text-emerald-700 font-semibold flex items-center gap-1 shrink-0">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> ตรวจพบ:
+            <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1 shrink-0">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> ตรวจพบ:
             </span>
-            <MarqueeText fitContent className="font-bold text-slate-800">
+            <MarqueeText fitContent className="font-bold text-slate-800 dark:text-slate-100">
               {matchedModel.name}
             </MarqueeText>
             {matchedModel.isCustom && (
-              <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 shrink-0">
+              <span className="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800/70 shrink-0">
                 บันทึกเอง
               </span>
             )}
             {matchedModel.price && (
-              <span className="font-mono font-bold text-blue-900 shrink-0">
+              <span className="font-mono font-bold text-blue-900 dark:text-sky-300 shrink-0">
                 (฿{matchedModel.price.toLocaleString()})
               </span>
             )}
@@ -344,7 +344,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
           <button
             type="button"
             onClick={handleOpen}
-            className="text-blue-700 font-semibold hover:underline cursor-pointer shrink-0 ml-2"
+            className="text-blue-700 dark:text-sky-400 font-semibold hover:underline cursor-pointer shrink-0 ml-2"
           >
             เลือกใหม่
           </button>
@@ -370,24 +370,24 @@ export const BikeModelCodeInput: React.FC<Props> = ({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 ${modelSheetAnimClass}`}
+              className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700/80 ${modelSheetAnimClass}`}
             >
               {/* iOS Top Pull Indicator */}
               <div className="pt-2.5 pb-1 flex justify-center shrink-0">
-                <div className="w-10 h-1 bg-slate-400/40 rounded-full" />
+                <div className="w-10 h-1 bg-slate-400/40 dark:bg-slate-600/60 rounded-full" />
               </div>
 
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-5 sm:px-6 py-3 border-b border-white/60 bg-white/40 backdrop-blur-xl shrink-0">
+              <div className="flex items-center justify-between px-5 sm:px-6 py-3 border-b border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/90 backdrop-blur-xl shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 ring-1 ring-white/50 shrink-0">
                     <Bike className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base sm:text-lg font-bold text-slate-800 tracking-tight flex items-center gap-1.5">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-1.5">
                       <span>{isAddFormOpen ? 'บันทึกรหัสรุ่นรถใหม่' : 'ค้นหารหัสรุ่นรถจักรยานยนต์'}</span>
                     </h2>
-                    <p className="text-[11px] sm:text-xs text-slate-500">
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                       {isAddFormOpen
                         ? 'บันทึกรหัสรุ่นรถ, ชื่อรถ และราคา เข้าระบบเพื่อเรียกใช้ได้ตลอดเวลา'
                         : 'ตารางรหัสรุ่นทางการ Next Capital • HONDA & YAMAHA'}
@@ -411,7 +411,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                     type="button"
                     onClick={handleClose}
                     aria-label="ปิดหน้าต่าง"
-                    className="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-300/80 active:scale-90 text-slate-600 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer ring-1 ring-white/70 shrink-0"
+                    className="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-800 hover:bg-slate-300/80 dark:hover:bg-slate-700 active:scale-90 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer ring-1 ring-white/70 dark:ring-slate-700 shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -423,19 +423,19 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                 /* ========================================================= */
                 /* VIEW 2: FORM TO ADD & SAVE NEW MOTORCYCLE MODEL (รหัส, ชื่อ, ราคา) */
                 /* ========================================================= */
-                <form noValidate onSubmit={handleSaveCustomModel} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-                  <div className="p-3.5 bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/40 rounded-2xl border border-blue-200/60 flex items-start gap-3">
-                    <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-                    <div className="text-xs text-slate-700">
-                      <p className="font-bold text-slate-900">เพิ่มรหัสรุ่นรถที่ไม่มีในฐานข้อมูล</p>
-                      <p className="text-slate-500 mt-0.5">
+                <form noValidate onSubmit={handleSaveCustomModel} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/60">
+                  <div className="p-3.5 bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/40 dark:from-blue-950/60 dark:via-indigo-950/50 dark:to-slate-900/80 rounded-2xl border border-blue-200/60 dark:border-indigo-800/60 flex items-start gap-3">
+                    <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                    <div className="text-xs text-slate-700 dark:text-slate-300">
+                      <p className="font-bold text-slate-900 dark:text-slate-100">เพิ่มรหัสรุ่นรถที่ไม่มีในฐานข้อมูล</p>
+                      <p className="text-slate-500 dark:text-slate-400 mt-0.5">
                         ระบบจะบันทึกข้อมูลไว้ในเครื่องของคุณ เพื่อให้สามารถค้นหาและนำไปคำนวณค่างวดได้ทันที
                       </p>
                     </div>
                   </div>
 
                   {formError && (
-                    <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+                    <div className="p-3 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70 rounded-xl text-xs font-semibold flex items-center gap-2">
                       <X className="w-4 h-4 shrink-0" />
                       <span>{formError}</span>
                     </div>
@@ -443,8 +443,8 @@ export const BikeModelCodeInput: React.FC<Props> = ({
 
                   {/* Field 1: Model Code */}
                   <div>
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
-                      <Tag className="w-3.5 h-3.5 text-blue-600" />
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                      <Tag className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
                       <span>รหัสรุ่นรถ (Model Code) *</span>
                     </label>
                     <input
@@ -455,17 +455,17 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                         setNewCode(e.target.value.toUpperCase());
                         setFormError('');
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-mono font-bold uppercase text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all tracking-wide"
+                      className="w-full px-3.5 py-2.5 bg-white/80 dark:bg-slate-800/90 focus:bg-white dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl text-sm font-mono font-bold uppercase text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all tracking-wide"
                     />
-                    <p className="text-[10px] text-slate-400 mt-1">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                       ระบบจะแปลงเป็นตัวพิมพ์ใหญ่ภาษาอังกฤษทั้งหมดให้อัตโนมัติ
                     </p>
                   </div>
 
                   {/* Field 2: Vehicle Name */}
                   <div>
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
-                      <Bike className="w-3.5 h-3.5 text-indigo-600" />
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                      <Bike className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                       <span>ชื่อรถ / รุ่นรถ (Vehicle Name) *</span>
                     </label>
                     <input
@@ -476,18 +476,18 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                         setNewName(e.target.value);
                         setFormError('');
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all"
+                      className="w-full px-3.5 py-2.5 bg-white/80 dark:bg-slate-800/90 focus:bg-white dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all"
                     />
                   </div>
 
                   {/* Field 3: Price */}
                   <div>
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>ราคารถตัวเปล่า / ราคา Max Tax (บาท) *</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 dark:text-slate-500 text-sm">
                         ฿
                       </span>
                       <input
@@ -501,11 +501,11 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                           setNewPrice(val);
                           setFormError('');
                         }}
-                        className="w-full pl-8 pr-3.5 py-2.5 bg-white/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-sm font-bold font-mono text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all"
+                        className="w-full pl-8 pr-3.5 py-2.5 bg-white/80 dark:bg-slate-800/90 focus:bg-white dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-xl text-sm font-bold font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:-translate-y-0.5 focus:shadow-md focus:shadow-blue-500/15 transition-all"
                       />
                     </div>
                     {newPrice && Number(newPrice) > 0 && (
-                      <p className="text-[11px] text-emerald-700 font-bold mt-1">
+                      <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-1">
                         = {Number(newPrice).toLocaleString()} บาท
                       </p>
                     )}
@@ -513,7 +513,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
 
                   {/* Field 4: Brand */}
                   <div>
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1.5">
                       <span>แบรนด์รถ (Brand)</span>
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -525,7 +525,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                           className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             newBrand === b
                               ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                              : 'bg-white/80 text-slate-700 border-slate-200 hover:bg-white'
+                              : 'bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700'
                           }`}
                         >
                           {b === 'HONDA' ? '🔴 HONDA' : b === 'YAMAHA' ? '🔵 YAMAHA' : '⚪ อื่นๆ'}
@@ -539,7 +539,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                     <button
                       type="button"
                       onClick={() => setIsAddFormOpen(false)}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                      className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>ย้อนกลับ</span>
@@ -559,23 +559,23 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                 /* ========================================================= */
                 <>
                   {/* Search & Filter - iOS Spotlight & Segmented Control */}
-                  <div className="px-4 sm:px-6 pb-3 pt-2.5 space-y-2.5 border-b border-white/50 bg-white/20 backdrop-blur-md shrink-0">
+                  <div className="px-4 sm:px-6 pb-3 pt-2.5 space-y-2.5 border-b border-white/50 dark:border-slate-800 bg-white/20 dark:bg-slate-900/80 backdrop-blur-md shrink-0">
                     {/* Search Input */}
                     <div className="relative">
-                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                       <input
                         ref={searchInputRef}
                         type="text"
                         placeholder="ค้นหารหัสหรือชื่อรุ่น เช่น ACF125, GIORNO, WAVE, PCX..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
-                        className="w-full pl-10 pr-9 py-2 bg-white/70 hover:bg-white/85 focus:bg-white backdrop-blur-md border border-white/80 rounded-2xl text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:-translate-y-0.5 focus:shadow-md focus:shadow-indigo-500/15 transition-all shadow-inner/5 tracking-wide uppercase"
+                        className="w-full pl-10 pr-9 py-2 bg-white/70 dark:bg-slate-800/90 hover:bg-white/85 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 backdrop-blur-md border border-white/80 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:-translate-y-0.5 focus:shadow-md focus:shadow-indigo-500/15 transition-all shadow-inner/5 tracking-wide uppercase"
                       />
                       {searchQuery && (
                         <button
                           type="button"
                           onClick={() => setSearchQuery('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200/60 cursor-pointer"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-700 cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -583,7 +583,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                     </div>
 
                     {/* iOS Segmented Control */}
-                    <div className="p-1 bg-slate-200/50 backdrop-blur-xl rounded-xl flex items-center gap-1 border border-white/60 overflow-x-auto no-scrollbar">
+                    <div className="p-1 bg-slate-200/50 dark:bg-slate-800/90 backdrop-blur-xl rounded-xl flex items-center gap-1 border border-white/60 dark:border-slate-700 overflow-x-auto no-scrollbar">
                       {[
                         { id: 'all', label: 'ทั้งหมด' },
                         { id: 'HONDA', label: '🔴 HONDA' },
@@ -599,8 +599,8 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                           onClick={() => setActiveBrand(tab.id as typeof activeBrand)}
                           className={`flex-1 min-w-[70px] py-1 px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer text-center ${
                             activeBrand === tab.id
-                              ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-black/5'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
+                              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-sky-300 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-700/50'
                           }`}
                         >
                           {tab.label}
@@ -610,7 +610,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
 
                     {/* Quick Search Chips */}
                     <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                      <span className="text-[10px] text-slate-400 font-semibold shrink-0 flex items-center gap-0.5">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold shrink-0 flex items-center gap-0.5">
                         <Sparkles className="w-3 h-3 text-amber-500" /> แตะค้นหาด่วน:
                       </span>
                       {QUICK_CHIPS.map((chip) => {
@@ -623,7 +623,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                             className={`text-[10.5px] px-2.5 py-0.5 rounded-full font-bold whitespace-nowrap transition-all cursor-pointer border ${
                               isActive
                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                                : 'bg-white/70 hover:bg-white text-slate-700 border-white/80'
+                                : 'bg-white/70 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-white/80 dark:border-slate-700'
                             }`}
                           >
                             {chip}
@@ -634,25 +634,25 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                   </div>
 
                   {/* Counter & Direct Action / Add button */}
-                  <div className="px-5 py-2 bg-white/30 backdrop-blur-md border-b border-white/40 flex items-center justify-between text-[11px] shrink-0">
-                    <span className="text-slate-500 font-medium flex items-center gap-1">
-                      <Filter className="w-3 h-3 text-indigo-600" />
-                      พบ <b className="text-slate-800 font-bold">{filteredModels.length}</b> รุ่น
+                  <div className="px-5 py-2 bg-white/30 dark:bg-slate-900/75 backdrop-blur-md border-b border-white/40 dark:border-slate-800 flex items-center justify-between text-[11px] shrink-0">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                      <Filter className="w-3 h-3 text-indigo-600 dark:text-sky-400" />
+                      พบ <b className="text-slate-800 dark:text-slate-100 font-bold">{filteredModels.length}</b> รุ่น
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleOpenAddForm(searchQuery)}
-                        className="text-indigo-700 font-bold hover:underline flex items-center gap-1 cursor-pointer bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200/70 shadow-2xs hover:bg-indigo-100 transition-colors"
+                        className="text-indigo-700 dark:text-indigo-300 font-bold hover:underline flex items-center gap-1 cursor-pointer bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-lg border border-indigo-200/70 dark:border-indigo-800/70 shadow-2xs hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors"
                       >
-                        <Plus className="w-3 h-3 text-indigo-600" />
+                        <Plus className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                         <span>บันทึกรหัสใหม่</span>
                       </button>
                       {searchQuery.trim() && (
                         <button
                           type="button"
                           onClick={handleUseCustomQuery}
-                          className="text-slate-600 font-medium hover:text-slate-900 flex items-center gap-1 cursor-pointer bg-white/80 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs"
+                          className="text-slate-600 dark:text-slate-200 font-medium hover:text-slate-900 dark:hover:text-white flex items-center gap-1 cursor-pointer bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs"
                         >
                           <span>ใช้รหัสนี้</span>
                           <ChevronRight className="w-3 h-3" />
@@ -662,7 +662,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                   </div>
 
                   {/* Models List - Compact, Elegant iOS Glass Rows */}
-                  <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-2">
+                  <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-2 bg-slate-50/40 dark:bg-slate-950/55">
                     {filteredModels.map((m) => {
                       const isSelected = value.trim().toUpperCase() === m.code.toUpperCase();
                       return (
@@ -671,8 +671,8 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                           onClick={() => handleSelect(m)}
                           className={`ios-glass-card rounded-2xl p-3 transition-all duration-200 cursor-pointer group flex items-center justify-between gap-3 text-left active:scale-[0.985] ${
                             isSelected
-                              ? 'bg-indigo-50/90 ring-2 ring-indigo-600 border-indigo-300 shadow-sm'
-                              : 'hover:bg-white/90'
+                              ? 'bg-indigo-50/90 dark:bg-indigo-950/60 ring-2 ring-indigo-600 dark:ring-sky-400 border-indigo-300 dark:border-sky-600 shadow-sm'
+                              : 'hover:bg-white/90 dark:hover:bg-slate-800/90'
                           }`}
                         >
                           {/* Left: Brand Badge & Monospace Code */}
@@ -682,7 +682,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                                 <span
                                   className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
                                     isSelected
-                                      ? 'bg-indigo-900 text-white'
+                                      ? 'bg-indigo-900 dark:bg-sky-700 text-white'
                                       : m.brand === 'YAMAHA'
                                       ? 'bg-blue-600 text-white'
                                       : 'bg-red-600 text-white'
@@ -692,24 +692,24 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                                 </span>
                               )}
                               {m.isCustom && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-0.5">
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 flex items-center gap-0.5">
                                   <Sparkles className="w-2.5 h-2.5" /> บันทึกเอง
                                 </span>
                               )}
                               <span
                                 className={`font-mono text-xs sm:text-[13px] font-black uppercase tracking-wide px-2 py-0.5 rounded-md ${
                                   isSelected
-                                    ? 'bg-indigo-700 text-white'
+                                    ? 'bg-indigo-700 dark:bg-sky-600 text-white'
                                     : m.isSpecial
-                                    ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                    : 'bg-slate-100 text-slate-800 border border-slate-200/70 group-hover:bg-indigo-50 group-hover:text-indigo-900'
+                                    ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700 group-hover:bg-indigo-50 dark:group-hover:bg-sky-950/60 group-hover:text-indigo-900 dark:group-hover:text-sky-200'
                                 }`}
                               >
                                 {m.code}
                               </span>
                             </div>
 
-                            <div className="font-bold text-xs sm:text-[13px] text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
+                            <div className="font-bold text-xs sm:text-[13px] text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-sky-300 transition-colors truncate">
                               {m.name}
                             </div>
                           </div>
@@ -718,8 +718,8 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                           <div className="text-right shrink-0 flex items-center gap-2">
                             {m.price ? (
                               <div>
-                                <div className="text-[9px] text-slate-400 font-medium">ราคา Max Tax</div>
-                                <div className="font-mono text-xs sm:text-sm font-black text-indigo-700">
+                                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">ราคา Max Tax</div>
+                                <div className="font-mono text-xs sm:text-sm font-black text-indigo-700 dark:text-sky-300">
                                   ฿{m.price.toLocaleString()}
                                 </div>
                               </div>
@@ -741,7 +741,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                                   type="button"
                                   onClick={(e) => handleDeleteCustomModel(e, m.id)}
                                   title="ลบรหัสรุ่นนี้"
-                                  className="w-6 h-6 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
+                                  className="w-6 h-6 rounded-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 flex items-center justify-center transition-colors cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -749,11 +749,11 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                             )}
 
                             {isSelected ? (
-                              <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                              <div className="w-6 h-6 rounded-full bg-indigo-600 dark:bg-sky-500 text-white flex items-center justify-center shadow-xs">
                                 <Check className="w-3.5 h-3.5" />
                               </div>
                             ) : (
-                              <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-400 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
+                              <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-50 dark:group-hover:bg-sky-950/70 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-sky-300 flex items-center justify-center transition-colors">
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </div>
                             )}
@@ -765,14 +765,14 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                     {/* Empty State when no models match search */}
                     {filteredModels.length === 0 && (
                       <div className="py-8 px-4 text-center space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-white/70 mx-auto flex items-center justify-center text-slate-400 border border-white/80 shadow-xs">
+                        <div className="w-12 h-12 rounded-2xl bg-white/70 dark:bg-slate-800 mx-auto flex items-center justify-center text-slate-400 dark:text-slate-500 border border-white/80 dark:border-slate-700 shadow-xs">
                           <Search className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className="font-bold text-slate-800 text-sm">
+                          <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                             ไม่พบรหัสรุ่น{searchQuery ? ` "${searchQuery}" ` : ' '}ในฐานข้อมูล
                           </p>
-                          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
                             คุณสามารถบันทึกรหัสรุ่นนี้พร้อมชื่อและราคาเพื่อใช้งานซ้ำได้ทันที
                           </p>
                         </div>
@@ -792,7 +792,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                             <button
                               type="button"
                               onClick={handleUseCustomQuery}
-                              className="w-full sm:w-auto px-3.5 py-2.5 bg-white/90 hover:bg-white text-slate-700 rounded-xl text-xs font-bold border border-slate-200/80 shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1"
+                              className="w-full sm:w-auto px-3.5 py-2.5 bg-white/90 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold border border-slate-200/80 dark:border-slate-700 shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1"
                             >
                               <span>ใช้รหัสนี้ชั่วคราว</span>
                               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -804,14 +804,14 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="px-5 py-3 border-t border-white/60 bg-white/40 backdrop-blur-xl flex items-center justify-between text-xs shrink-0">
-                    <span className="text-[11px] text-slate-500">
+                  <div className="px-5 py-3 border-t border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/90 backdrop-blur-xl flex items-center justify-between text-xs shrink-0">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       แตะเลือกรุ่นเพื่ออัปเดตราคาเข้าสู่การคำนวณทันที
                     </span>
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="px-4 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200/80 transition-colors cursor-pointer shadow-2xs"
+                      className="px-4 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs"
                     >
                       ปิด
                     </button>

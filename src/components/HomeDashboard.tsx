@@ -33,6 +33,7 @@ import { GasolineAllowanceCard } from './GasolineAllowanceCard';
 import { KpiSummaryChartCard } from './KpiSummaryChartCard';
 import { DealPipelineAndDealersChartCard } from './DealPipelineAndDealersChartCard';
 import { MarqueeText } from './MarqueeText';
+import { BoxThemeToggle } from './BoxThemeToggle';
 
 interface HomeDashboardProps {
   refreshTrigger?: number;
@@ -156,33 +157,38 @@ function getUnifiedStatus(record: SavedCaseRecord): {
       return {
         key: 'delivered',
         label: 'รับรถแล้ว',
-        className: 'bg-teal-50 text-teal-800 border-teal-300',
+        className:
+          'bg-teal-50 text-teal-800 border-teal-300 dark:bg-teal-950/75 dark:text-teal-200 dark:border-teal-700/70',
       };
     }
     return {
       key: 'approved',
       label: 'อนุมัติแล้ว',
-      className: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+      className:
+        'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/75 dark:text-emerald-200 dark:border-emerald-700/70',
     };
   }
   if (record.approvalStatus === 'rejected') {
     return {
       key: 'rejected',
       label: 'ไม่อนุมัติ',
-      className: 'bg-rose-50 text-rose-700 border-rose-300',
+      className:
+        'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/75 dark:text-rose-200 dark:border-rose-700/70',
     };
   }
   if (record.approvalStatus === 'cancelled') {
     return {
       key: 'cancelled',
       label: 'ยกเลิก',
-      className: 'bg-slate-100 text-slate-700 border-slate-300',
+      className:
+        'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/85 dark:text-slate-200 dark:border-slate-600/80',
     };
   }
   return {
     key: 'pending',
     label: 'รออนุมัติ',
-    className: 'bg-sky-50 text-sky-800 border-sky-200',
+    className:
+      'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/75 dark:text-sky-200 dark:border-sky-700/70',
   };
 }
 
@@ -445,11 +451,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       {/* Top Dashboard Command Bar */}
       <section className="glass-card-hero rounded-2xl p-3.5 sm:p-4.5 space-y-2.5 sm:space-y-3 relative overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent opacity-95"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none -right-12 -top-12 absolute w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl"
+          className="pointer-events-none -right-12 -top-12 absolute w-44 h-44 rounded-full bg-cyan-200/35 dark:bg-cyan-500/15 blur-2xl"
           aria-hidden="true"
         />
 
@@ -457,21 +463,21 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           {/* Top Row: Title (Left) + Month Switcher (Top-Right Corner) */}
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <MarqueeText className="text-[14px] sm:text-lg font-black text-slate-900 tracking-tight">
+              <MarqueeText className="text-[14px] sm:text-lg font-black text-slate-900 dark:text-slate-50 tracking-tight">
                 แดชบอร์ดภาพรวมผลงาน
               </MarqueeText>
             </div>
 
             {/* Top-Right Month Switcher */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex items-center gap-0.5 sm:gap-1 bg-white/55 backdrop-blur-md p-0.5 sm:p-1 rounded-xl border border-white/85 shadow-2xs">
+              <div className="flex items-center gap-0.5 sm:gap-1 bg-white/55 dark:bg-slate-800/75 backdrop-blur-md p-0.5 sm:p-1 rounded-xl border border-white/85 dark:border-slate-700/80 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
                     setSelectedMonth((prev) => shiftMonthKey(prev, -1));
                   }}
-                  className="p-1 sm:p-1.5 rounded-lg hover:bg-white/60 text-slate-600 hover:text-sky-800 transition-colors cursor-pointer"
+                  className="p-1 sm:p-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-slate-700/70 text-slate-600 dark:text-slate-300 hover:text-sky-800 dark:hover:text-sky-300 transition-colors cursor-pointer"
                   title="เดือนก่อนหน้า"
                   aria-label="เดือนก่อนหน้า"
                 >
@@ -486,7 +492,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                       triggerHaptic('light');
                       setSelectedMonth(e.target.value);
                     }}
-                    className="appearance-none bg-white/65 border border-white/90 rounded-lg pl-2 pr-5 sm:pl-2.5 sm:pr-7 py-0.5 sm:py-1 text-[11px] sm:text-xs font-extrabold text-slate-800 max-w-[122px] sm:max-w-none truncate focus:outline-none focus:ring-2 focus:ring-sky-500/25 cursor-pointer"
+                    className="appearance-none bg-white/65 dark:bg-slate-900/80 border border-white/90 dark:border-slate-700/80 rounded-lg pl-2 pr-5 sm:pl-2.5 sm:pr-7 py-0.5 sm:py-1 text-[11px] sm:text-xs font-extrabold text-slate-800 dark:text-slate-100 max-w-[122px] sm:max-w-none truncate focus:outline-none focus:ring-2 focus:ring-sky-500/25 cursor-pointer"
                   >
                     <option value="all">ทุกช่วงเวลา (ทั้งหมด)</option>
                     {availableMonths.map((ym) => (
@@ -495,7 +501,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 pointer-events-none absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2" />
+                  <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 dark:text-slate-400 pointer-events-none absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2" />
                 </div>
 
                 <button
@@ -504,7 +510,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                     triggerHaptic('light');
                     setSelectedMonth((prev) => shiftMonthKey(prev, 1));
                   }}
-                  className="p-1 sm:p-1.5 rounded-lg hover:bg-white/60 text-slate-600 hover:text-sky-800 transition-colors cursor-pointer"
+                  className="p-1 sm:p-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-slate-700/70 text-slate-600 dark:text-slate-300 hover:text-sky-800 dark:hover:text-sky-300 transition-colors cursor-pointer"
                   title="เดือนถัดไป"
                   aria-label="เดือนถัดไป"
                 >
@@ -519,7 +525,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                     triggerHaptic('light');
                     setSelectedMonth(currentMonthKey);
                   }}
-                  className="p-1.5 sm:p-2 rounded-xl bg-white/55 hover:bg-white/80 backdrop-blur-md text-sky-700 border border-white/85 shadow-2xs transition-colors cursor-pointer shrink-0"
+                  className="p-1.5 sm:p-2 rounded-xl bg-white/55 dark:bg-slate-800/75 hover:bg-white/80 dark:hover:bg-slate-700 backdrop-blur-md text-sky-700 dark:text-sky-300 border border-white/85 dark:border-slate-700/80 shadow-2xs transition-colors cursor-pointer shrink-0"
                   title="กลับไปยังเดือนปัจจุบัน"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -529,15 +535,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </div>
 
           {/* Officer Identity Row (1 tidy line; long metadata glides RTL) */}
-          <div className="flex items-center justify-between gap-2 text-[11px] text-slate-600">
+          <div className="flex items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-slate-300">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <UserCheck className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              <UserCheck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
               <MarqueeText className="min-w-0 flex-1">
-                <span className="text-slate-800 font-semibold">
+                <span className="text-slate-800 dark:text-slate-100 font-semibold">
                   {officerName.trim() || 'ยังไม่ระบุชื่อเจ้าหน้าที่'}
                 </span>
                 {officerCode.trim() && (
-                  <span className="font-mono text-sky-800 font-bold">
+                  <span className="font-mono text-sky-800 dark:text-sky-300 font-bold">
                     {` · รหัส ${officerCode.trim()}`}
                   </span>
                 )}
@@ -553,15 +559,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 triggerHaptic('light');
                 onNavigateToOfficerSetup();
               }}
-              className="text-sky-700 hover:text-sky-900 font-bold underline cursor-pointer whitespace-nowrap shrink-0"
+              className="text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 font-bold underline cursor-pointer whitespace-nowrap shrink-0"
             >
               แก้ไขข้อมูลเจ้าหน้าที่
             </button>
           </div>
         </div>
 
-        {/* Primary Action Strip + Active Draft Resume */}
-        <div className="relative space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2 pt-0.5">
+        {/* Primary Action Strip + Box Color Theme Toggle */}
+        <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 pt-0.5">
           <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:shrink-0">
             <button
               type="button"
@@ -583,11 +589,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 triggerHaptic('selection');
                 onOpenSavedCases();
               }}
-              className="px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 hover:bg-white text-slate-800 font-bold text-[11.5px] sm:text-xs flex items-center justify-center gap-1.5 border border-white/95 shadow-xs transition-all hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer min-w-0"
+              className="px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-[11.5px] sm:text-xs flex items-center justify-center gap-1.5 border border-white/95 dark:border-slate-700/85 shadow-xs transition-all hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer min-w-0"
             >
-              <FolderArchive className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              <FolderArchive className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
               <MarqueeText fitContent>ตารางเคสทั้งหมด ({savedCases.length})</MarqueeText>
             </button>
+          </div>
+
+          <div className="flex items-center justify-end sm:ml-auto">
+            <BoxThemeToggle showLabel />
           </div>
         </div>
       </section>
@@ -614,7 +624,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         {/* Card A: Checker Insurance Commission Summary */}
         <div className="order-1 glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
           <div
-            className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
+            className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-amber-300/35 to-transparent opacity-90"
             aria-hidden="true"
           />
           <div
@@ -629,14 +639,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <div className="relative space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 border border-white/60 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/25">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 border border-white/60 dark:border-amber-200/30 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/25">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <MarqueeText className="text-xs sm:text-sm font-black text-slate-900">
+                  <MarqueeText className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-50">
                     ยอดสรุปค่าคอมประกัน Checker
                   </MarqueeText>
-                  <MarqueeText className="text-[10.5px] text-slate-500">
+                  <MarqueeText className="text-[10.5px] text-slate-500 dark:text-slate-400">
                     {formatMonthLabel(selectedMonth)} · เฉพาะเคสอนุมัติและรับรถแล้ว
                   </MarqueeText>
                 </div>
@@ -647,7 +657,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   triggerHaptic('light');
                   onNavigateToCheckerCommission();
                 }}
-                className="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-white/95 text-[11px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-white/95 dark:border-slate-700/85 text-[11px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
               >
                 <span>ตารางเต็ม</span>
                 <ArrowRight className="w-3 h-3" />
@@ -656,10 +666,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
             {commissionSummary.totalDeliveredContracts === 0 ? (
               <div className="py-6 px-3 rounded-xl glass-panel-amber text-center space-y-1">
-                <p className="text-xs font-bold text-amber-950">
+                <p className="text-xs font-bold text-amber-950 dark:text-amber-200">
                   ยังไม่มีเคสที่ "อนุมัติและรับรถแล้ว" ในงวดนี้
                 </p>
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300">
                   ระบบจะคำนวณยอดค่าคอมประกันและระดับ Tier ให้อัตโนมัติเมื่อมีการอัปเดตสถานะรับรถ
                 </p>
               </div>
@@ -669,10 +679,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <div className="glass-panel-amber rounded-xl p-3 space-y-2">
                   <div className="flex items-baseline justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="text-[10.5px] font-semibold text-amber-950/75 block whitespace-nowrap">
+                      <span className="text-[10.5px] font-semibold text-amber-950/75 dark:text-amber-200/85 block whitespace-nowrap">
                         ค่าคอมมิชชั่นที่คาดว่าจะได้รับ
                       </span>
-                      <span className="text-2xl font-black text-amber-950 tabular-nums whitespace-nowrap">
+                      <span className="text-2xl font-black text-amber-950 dark:text-amber-200 tabular-nums whitespace-nowrap">
                         {formatBaht(commissionSummary.totalCommissionBaht)}
                       </span>
                     </div>
@@ -680,15 +690,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                       <span
                         className={`inline-block text-[11px] font-extrabold px-2 py-0.5 rounded-lg border whitespace-nowrap ${
                           commissionSummary.tier === 3
-                            ? 'bg-emerald-50/85 text-emerald-800 border-emerald-300/80'
+                            ? 'bg-emerald-50/85 text-emerald-800 border-emerald-300/80 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700/75'
                             : commissionSummary.tier === 2
-                            ? 'bg-sky-50/85 text-sky-800 border-sky-200/80'
-                            : 'bg-white/75 text-amber-800 border-amber-300/80'
+                            ? 'bg-sky-50/85 text-sky-800 border-sky-200/80 dark:bg-sky-950/80 dark:text-sky-200 dark:border-sky-700/75'
+                            : 'bg-white/75 text-amber-800 border-amber-300/80 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700/75'
                         }`}
                       >
                         {commissionSummary.tierRule.label}
                       </span>
-                      <div className="text-[11px] font-bold text-slate-700 tabular-nums mt-0.5 whitespace-nowrap">
+                      <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 tabular-nums mt-0.5 whitespace-nowrap">
                         Achievement {commissionSummary.achievementPercent.toFixed(2)}%
                       </div>
                     </div>
@@ -697,7 +707,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   {/* Achievement Progress Bar with Tier thresholds */}
                   <div className="space-y-1 pt-0.5">
                     <div className="relative py-1">
-                      <div className="relative h-2.5 w-full rounded-full bg-white/75 border border-white/95 shadow-inner overflow-hidden">
+                      <div className="relative h-2.5 w-full rounded-full bg-white/75 dark:bg-slate-800/85 border border-white/95 dark:border-slate-700/80 shadow-inner overflow-hidden">
                         <div
                           className={`h-full rounded-full animate-fuel-shimmer transition-all duration-500 ease-out ${
                             commissionSummary.tier === 3
@@ -711,12 +721,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                       </div>
                       {/* Threshold divider ticks at 60% & 75% */}
                       <span
-                        className="pointer-events-none absolute top-1 h-2.5 w-0.5 bg-slate-400/55 rounded-full"
+                        className="pointer-events-none absolute top-1 h-2.5 w-0.5 bg-slate-400/55 dark:bg-slate-400/70 rounded-full"
                         style={{ left: '60%' }}
                         aria-hidden="true"
                       />
                       <span
-                        className="pointer-events-none absolute top-1 h-2.5 w-0.5 bg-slate-400/55 rounded-full"
+                        className="pointer-events-none absolute top-1 h-2.5 w-0.5 bg-slate-400/55 dark:bg-slate-400/70 rounded-full"
                         style={{ left: '75%' }}
                         aria-hidden="true"
                       />
@@ -739,7 +749,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center justify-between text-[9.5px] text-slate-600 tabular-nums whitespace-nowrap">
+                    <div className="flex items-center justify-between text-[9.5px] text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap">
                       <span>0% (Tier 1)</span>
                       <span>60.01% (Tier 2)</span>
                       <span>75.01%+ (Tier 3)</span>
@@ -750,13 +760,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 {/* PA Breakdown Grid */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="glass-panel-blue dashboard-card-lift p-2.5 rounded-xl min-w-0">
-                    <MarqueeText className="text-[10px] font-semibold text-sky-900/80">
+                    <MarqueeText className="text-[10px] font-semibold text-sky-900/80 dark:text-sky-200">
                       PA ปกติ
                     </MarqueeText>
-                    <div className="text-base font-black text-sky-800 tabular-nums mt-0.5 whitespace-nowrap">
+                    <div className="text-base font-black text-sky-800 dark:text-sky-200 tabular-nums mt-0.5 whitespace-nowrap">
                       {commissionSummary.paCount}
                     </div>
-                    <div className="text-[9.5px] text-slate-600 tabular-nums whitespace-nowrap">
+                    <div className="text-[9.5px] text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap">
                       {formatBaht(
                         commissionSummary.breakdown.pa[1].total +
                           commissionSummary.breakdown.pa[2].total +
@@ -765,13 +775,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                     </div>
                   </div>
                   <div className="glass-panel-amber dashboard-card-lift p-2.5 rounded-xl min-w-0">
-                    <MarqueeText className="text-[10px] font-semibold text-amber-900/80">
+                    <MarqueeText className="text-[10px] font-semibold text-amber-900/80 dark:text-amber-200">
                       PA Plus
                     </MarqueeText>
-                    <div className="text-base font-black text-amber-800 tabular-nums mt-0.5 whitespace-nowrap">
+                    <div className="text-base font-black text-amber-800 dark:text-amber-200 tabular-nums mt-0.5 whitespace-nowrap">
                       {commissionSummary.paPlusCount}
                     </div>
-                    <div className="text-[9.5px] text-slate-600 tabular-nums whitespace-nowrap">
+                    <div className="text-[9.5px] text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap">
                       {formatBaht(
                         commissionSummary.breakdown.pa_plus[1].total +
                           commissionSummary.breakdown.pa_plus[2].total +
@@ -780,13 +790,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                     </div>
                   </div>
                   <div className="glass-mini-card dashboard-card-lift p-2.5 rounded-xl min-w-0">
-                    <MarqueeText className="text-[10px] font-semibold text-slate-600">
+                    <MarqueeText className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                       ไม่ทำประกัน
                     </MarqueeText>
-                    <div className="text-base font-black text-slate-700 tabular-nums mt-0.5 whitespace-nowrap">
+                    <div className="text-base font-black text-slate-700 dark:text-slate-100 tabular-nums mt-0.5 whitespace-nowrap">
                       {commissionSummary.totalNoInsuranceContracts}
                     </div>
-                    <MarqueeText className="text-[9.5px] text-slate-500 tabular-nums">
+                    <MarqueeText className="text-[9.5px] text-slate-500 dark:text-slate-400 tabular-nums">
                       รวม {commissionSummary.totalDeliveredContracts} สัญญา
                     </MarqueeText>
                   </div>
@@ -797,21 +807,21 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
           {/* Tier Advice Footer */}
           {commissionSummary.totalDeliveredContracts > 0 && (
-            <div className="relative pt-2 border-t border-white/75 text-[11px] min-w-0">
+            <div className="relative pt-2 border-t border-white/75 dark:border-slate-700/75 text-[11px] min-w-0">
               {commissionSummary.nextTierNeeded ? (
-                <MarqueeText className="text-amber-800 font-semibold">
+                <MarqueeText className="text-amber-800 dark:text-amber-300 font-semibold">
                   ขาย PA เพิ่มอีก{' '}
                   <strong className="tabular-nums">
                     {commissionSummary.nextTierNeeded.additionalInsuredNeeded}
                   </strong>{' '}
                   คัน เพื่อขึ้น Tier {commissionSummary.nextTierNeeded.nextTier} (เพิ่ม{' '}
-                  <strong className="tabular-nums text-emerald-700">
+                  <strong className="tabular-nums text-emerald-700 dark:text-emerald-300">
                     +{formatBaht(commissionSummary.nextTierNeeded.potentialCommissionIncrease)}
                   </strong>
                   )
                 </MarqueeText>
               ) : (
-                <MarqueeText className="text-emerald-700 font-semibold">
+                <MarqueeText className="text-emerald-700 dark:text-emerald-300 font-semibold">
                   <span className="inline-flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span>บรรลุเป้าหมาย Tier 3 สูงสุดเรียบร้อย</span>
@@ -844,19 +854,19 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       {/* Recent Deals Table with Unified Status Column */}
       <section className="glass-card-primary rounded-2xl overflow-hidden relative">
         <div
-          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent opacity-90"
           aria-hidden="true"
         />
-        <div className="px-3.5 sm:px-4 py-3 border-b border-white/75 flex items-center justify-between gap-2.5 bg-gradient-to-r from-sky-100/35 via-transparent to-cyan-100/35">
+        <div className="px-3.5 sm:px-4 py-3 border-b border-white/75 dark:border-slate-700/80 flex items-center justify-between gap-2.5 bg-gradient-to-r from-sky-100/35 via-transparent to-cyan-100/35 dark:from-sky-950/50 dark:via-transparent dark:to-cyan-950/40">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 border border-white/60 text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/25">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 border border-white/60 dark:border-sky-300/30 text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/25">
               <FileText className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <MarqueeText className="text-xs sm:text-sm font-black text-slate-900">
+              <MarqueeText className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-50">
                 รายการเคสล่าสุด ({formatMonthLabel(selectedMonth)})
               </MarqueeText>
-              <MarqueeText className="text-[10.5px] text-slate-500">
+              <MarqueeText className="text-[10.5px] text-slate-500 dark:text-slate-400">
                 แตะที่รายการเพื่อโหลดข้อมูลค่างวด หรือกดเปิดดูตารางเคสทั้งหมดเพื่ออัปเดตสถานะ
               </MarqueeText>
             </div>
@@ -867,7 +877,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               triggerHaptic('selection');
               onOpenSavedCases();
             }}
-            className="px-2.5 py-1 rounded-lg bg-white/75 hover:bg-sky-50 border border-white/90 text-[11px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-0.5 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/75 dark:bg-slate-800/85 hover:bg-sky-50 dark:hover:bg-slate-700 border border-white/90 dark:border-slate-700/85 text-[11px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 flex items-center gap-0.5 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
           >
             <span>ดูทั้งหมด</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -875,9 +885,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {recentCases.length === 0 ? (
-          <div className="p-6 text-center space-y-1.5 bg-gradient-to-b from-white/30 to-sky-50/35">
-            <p className="text-xs font-bold text-slate-700">ยังไม่มีรายการเคสในงวดที่เลือก</p>
-            <p className="text-[11px] text-slate-500">
+          <div className="p-6 text-center space-y-1.5 bg-gradient-to-b from-white/30 to-sky-50/35 dark:from-slate-900/40 dark:to-sky-950/30">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              ยังไม่มีรายการเคสในงวดที่เลือก
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               กด "คำนวณ / บันทึกเคสใหม่" เพื่อเริ่มต้นสร้างดีลหรือเลือกดู "ทุกช่วงเวลา"
             </p>
           </div>
@@ -885,14 +897,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-left border-collapse min-w-[540px]">
               <thead>
-                <tr className="bg-sky-50/60 border-b border-white/80 text-[10.5px] font-extrabold text-slate-600">
+                <tr className="bg-sky-50/60 dark:bg-slate-800/75 border-b border-white/80 dark:border-slate-700/80 text-[10.5px] font-extrabold text-slate-600 dark:text-slate-300">
                   <th className="py-2 px-3.5 whitespace-nowrap">ชื่อลูกค้า / รุ่นรถ</th>
                   <th className="py-2 px-2.5 whitespace-nowrap">สถานะ</th>
                   <th className="py-2 px-2.5 text-right whitespace-nowrap">ค่างวด / งวด</th>
                   <th className="py-2 px-3.5 text-right whitespace-nowrap">วันที่บันทึก</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/75 text-[11px]">
+              <tbody className="divide-y divide-white/75 dark:divide-slate-800/80 text-[11px]">
                 {recentCases.map((c) => {
                   const status = getUnifiedStatus(c);
                   return (
@@ -902,13 +914,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                         triggerHaptic('light');
                         onLoadCase(c);
                       }}
-                      className="hover:bg-sky-50/65 transition-colors cursor-pointer"
+                      className="hover:bg-sky-50/65 dark:hover:bg-slate-800/65 transition-colors cursor-pointer"
                     >
                       <td className="py-2.5 px-3.5 max-w-[230px]">
-                        <MarqueeText className="font-bold text-slate-900">
+                        <MarqueeText className="font-bold text-slate-900 dark:text-slate-100">
                           {c.customerName?.trim() || c.caseTitle || 'คุณลูกค้า'}
                         </MarqueeText>
-                        <MarqueeText className="text-[10px] text-slate-500 mt-0.5">
+                        <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                           {c.bikeModelName || c.snapshot?.proposalCode || '-'}
                           {c.dealerName ? ` · ${c.dealerName}` : ''}
                         </MarqueeText>
@@ -926,12 +938,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                         </span>
                       </td>
                       <td className="py-2.5 px-2.5 text-right tabular-nums whitespace-nowrap">
-                        <span className="font-extrabold text-sky-700">
+                        <span className="font-extrabold text-sky-700 dark:text-sky-300">
                           {formatBaht(c.snapshot?.monthlyInstallment || 0)}
                         </span>
-                        <span className="text-[10px] text-slate-500"> · {c.term} งวด</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                          {' '}
+                          · {c.term} งวด
+                        </span>
                       </td>
-                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[10.5px] text-slate-500 whitespace-nowrap">
+                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[10.5px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         {formatThaiShortDate(c.createdAt)}
                       </td>
                     </tr>
@@ -954,16 +969,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           className="group glass-panel-blue dashboard-card-lift p-3 sm:p-3.5 rounded-2xl text-left cursor-pointer space-y-1.5 relative overflow-hidden min-w-0"
         >
           <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent opacity-95"
             aria-hidden="true"
           />
-          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white border border-white/60 flex items-center justify-center shadow-sm shadow-sky-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
+          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white border border-white/60 dark:border-sky-300/30 flex items-center justify-center shadow-sm shadow-sky-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
             <CalendarDays className="w-3.5 h-3.5" />
           </span>
-          <MarqueeText className="text-xs font-extrabold text-sky-950">
+          <MarqueeText className="text-xs font-extrabold text-sky-950 dark:text-sky-100">
             ปิดยอด 1-15 / สิ้นเดือน
           </MarqueeText>
-          <MarqueeText className="text-[10px] text-slate-600">
+          <MarqueeText className="text-[10px] text-slate-600 dark:text-slate-300">
             สรุปยอด Approve & รับรถ
           </MarqueeText>
         </button>
@@ -977,16 +992,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           className="group glass-panel-amber dashboard-card-lift p-3 sm:p-3.5 rounded-2xl text-left cursor-pointer space-y-1.5 relative overflow-hidden min-w-0"
         >
           <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white dark:via-amber-300/35 to-transparent opacity-95"
             aria-hidden="true"
           />
-          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white border border-white/60 flex items-center justify-center shadow-sm shadow-amber-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
+          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white border border-white/60 dark:border-amber-200/30 flex items-center justify-center shadow-sm shadow-amber-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
             <Award className="w-3.5 h-3.5" />
           </span>
-          <MarqueeText className="text-xs font-extrabold text-amber-950">
+          <MarqueeText className="text-xs font-extrabold text-amber-950 dark:text-amber-100">
             คำนวณค่าคอมประกัน
           </MarqueeText>
-          <MarqueeText className="text-[10px] text-slate-600">
+          <MarqueeText className="text-[10px] text-slate-600 dark:text-slate-300">
             รายงาน Tier 1-3 & ส่งไลน์
           </MarqueeText>
         </button>
@@ -1000,16 +1015,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           className="group glass-panel-teal dashboard-card-lift p-3 sm:p-3.5 rounded-2xl text-left cursor-pointer space-y-1.5 relative overflow-hidden min-w-0"
         >
           <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white dark:via-teal-300/35 to-transparent opacity-95"
             aria-hidden="true"
           />
-          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white border border-white/60 flex items-center justify-center shadow-sm shadow-teal-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
+          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white border border-white/60 dark:border-teal-300/30 flex items-center justify-center shadow-sm shadow-teal-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
             <FileText className="w-3.5 h-3.5" />
           </span>
-          <MarqueeText className="text-xs font-extrabold text-teal-950">
+          <MarqueeText className="text-xs font-extrabold text-teal-950 dark:text-teal-100">
             เอกสาร & ขออนุมัติ DV
           </MarqueeText>
-          <MarqueeText className="text-[10px] text-slate-600">
+          <MarqueeText className="text-[10px] text-slate-600 dark:text-slate-300">
             ใบเสนอราคา & แผน PA
           </MarqueeText>
         </button>
@@ -1023,16 +1038,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           className="group glass-panel-indigo dashboard-card-lift p-3 sm:p-3.5 rounded-2xl text-left cursor-pointer space-y-1.5 relative overflow-hidden min-w-0"
         >
           <div
-            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+            className="pointer-events-none inset-x-4 top-0 absolute h-px bg-gradient-to-r from-transparent via-white dark:via-indigo-300/35 to-transparent opacity-95"
             aria-hidden="true"
           />
-          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white border border-white/60 flex items-center justify-center shadow-sm shadow-indigo-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
+          <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white border border-white/60 dark:border-indigo-300/30 flex items-center justify-center shadow-sm shadow-indigo-500/25 transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
             <CalendarClock className="w-3.5 h-3.5" />
           </span>
-          <MarqueeText className="text-xs font-extrabold text-indigo-950">
+          <MarqueeText className="text-xs font-extrabold text-indigo-950 dark:text-indigo-100">
             ติดตามกำหนดชำระ
           </MarqueeText>
-          <MarqueeText className="text-[10px] text-slate-600">
+          <MarqueeText className="text-[10px] text-slate-600 dark:text-slate-300">
             ตารางงวดที่ 1-9 รายเดือน
           </MarqueeText>
         </button>

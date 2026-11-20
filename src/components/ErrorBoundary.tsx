@@ -46,22 +46,22 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 text-slate-800">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-xl border border-slate-200 text-center space-y-4">
+        <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-800 dark:text-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-700/80 text-center space-y-4">
             <div className="flex justify-center">
               <NextCapitalLogo size={48} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 Next Capital MotoLease
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 เกิดข้อผิดพลาดในการแสดงผลชั่วคราว
               </p>
             </div>
 
             {this.state.error && (
-              <div className="bg-rose-50 text-rose-800 text-[11px] p-3 rounded-xl border border-rose-200 text-left overflow-x-auto font-mono">
+              <div className="bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 text-[11px] p-3 rounded-xl border border-rose-200 dark:border-rose-800/70 text-left overflow-x-auto font-mono">
                 {this.state.error.message || 'Unknown error'}
               </div>
             )}
@@ -78,7 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs rounded-xl transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 ล้างข้อมูลชั่วคราวแล้วโหลดใหม่

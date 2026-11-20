@@ -38,7 +38,7 @@ export const CardModalOverlay: React.FC<Props> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`relative bg-white rounded-3xl w-full ${maxWidthClass} max-h-[94vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 my-auto ${sheetAnimClass}`}
+        className={`relative bg-white dark:bg-slate-900 rounded-3xl w-full ${maxWidthClass} max-h-[94vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 my-auto ${sheetAnimClass}`}
       >
         {accentBarClass && (
           <div className={`absolute inset-x-0 top-0 h-[3px] z-20 ${accentBarClass}`} />

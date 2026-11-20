@@ -394,10 +394,10 @@ export const CheckerCommissionCard: React.FC<Props> = ({
   return (
     <>
       <div
-        className={`bg-white rounded-[24px] border shadow-md shadow-emerald-950/5 overflow-hidden transition-all duration-300 h-full flex flex-col ${
+        className={`bg-white dark:bg-slate-900/90 rounded-[24px] border shadow-md shadow-emerald-950/5 dark:shadow-slate-950/40 overflow-hidden transition-all duration-300 h-full flex flex-col ${
           isExpanded
-            ? 'border-emerald-400 ring-2 ring-emerald-400/40'
-            : 'border-emerald-100 hover:border-emerald-200'
+            ? 'border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-400/40'
+            : 'border-emerald-100 dark:border-emerald-800/60 hover:border-emerald-200 dark:hover:border-emerald-700'
         }`}
       >
         <button
@@ -406,28 +406,28 @@ export const CheckerCommissionCard: React.FC<Props> = ({
             triggerHaptic('light');
             onToggleExpand();
           }}
-          className="w-full text-left bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white hover:bg-emerald-50/90 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
+          className="w-full text-left bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white dark:from-emerald-950/70 dark:via-slate-900/90 dark:to-slate-900 hover:bg-emerald-50/90 dark:hover:bg-emerald-950/85 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
         >
           <div className="w-full flex items-center justify-between gap-1.5 min-w-0">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-emerald-500/25">
                 <Award className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight min-w-0 flex-1">
+              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 leading-tight min-w-0 flex-1">
                 <MarqueeText>สรุปค่าคอมฯ</MarqueeText>
               </h3>
             </div>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 shadow-2xs">
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="space-y-1 min-w-0 w-full">
-            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200">
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70">
               <MarqueeText fitContent>
                 ฿{summary.totalCommissionBaht.toLocaleString()} • Tier {summary.tier}
               </MarqueeText>
             </span>
-            <MarqueeText className="text-[10px] text-slate-500 font-medium">
+            <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
               คำนวณค่าแนะนำ PA & PA PLUS
             </MarqueeText>
           </div>
@@ -444,21 +444,21 @@ export const CheckerCommissionCard: React.FC<Props> = ({
         accentBarClass="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500"
       >
         {/* Sticky Modal Header matching QuotationModal */}
-        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl shadow-md shadow-emerald-500/20 flex-shrink-0">
               <Award className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight min-w-0">
                   <MarqueeText fitContent>สรุปค่าคอมมิชชั่นค่าแนะนำขายประกัน</MarqueeText>
                 </h2>
-                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200 shrink-0 hidden sm:inline-block">
+                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70 shrink-0 hidden sm:inline-block">
                   Checker Commission
                 </span>
               </div>
-              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 คำนวณจากเคสที่อนุมัติและรับรถแล้ว ตามเกณฑ์ PA & PA PLUS
               </MarqueeText>
             </div>
@@ -466,10 +466,10 @@ export const CheckerCommissionCard: React.FC<Props> = ({
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className="text-right hidden xs:block">
-              <div className="text-xs sm:text-sm font-extrabold text-emerald-700 whitespace-nowrap">
+              <div className="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
                 ฿{summary.totalCommissionBaht.toLocaleString()} บ.
               </div>
-              <div className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">
+              <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 Tier {summary.tier} ({summary.achievementPercent.toFixed(1)}%)
               </div>
             </div>
@@ -479,7 +479,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                 triggerHaptic('light');
                 onToggleExpand();
               }}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
               title="ปิดหน้าต่าง"
               aria-label="Close"
             >
@@ -489,13 +489,13 @@ export const CheckerCommissionCard: React.FC<Props> = ({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {/* Controls Bar: Period selector, criteria toggle, copy line */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
             {/* Period Selector */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-xs font-semibold text-slate-700 shrink-0">
-                <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <div className="flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-200 shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span className="whitespace-nowrap">งวด:</span>
               </div>
               <select
@@ -504,7 +504,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   triggerHaptic('selection');
                   setSelectedPeriod(e.target.value);
                 }}
-                className="text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+                className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
               >
                 {availablePeriods.map((ym) => {
                   const [yStr, mStr] = ym.split('-');
@@ -525,7 +525,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   triggerHaptic('light');
                   reloadCases();
                 }}
-                className="p-1.5 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer shrink-0"
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors cursor-pointer shrink-0"
                 title="รีเฟรชข้อมูลเคสล่าสุด"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -540,16 +540,16 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   triggerHaptic('light');
                   setShowCriteriaModal((prev) => !prev);
                 }}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-sky-200 bg-sky-50/80 hover:bg-sky-100 text-sky-800 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-sky-200 dark:border-sky-800/70 bg-sky-50/80 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-800 dark:text-sky-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
               >
-                <Info className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                <Info className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
                 <span>{showCriteriaModal ? 'ซ่อนเกณฑ์' : 'ดูเกณฑ์คำนวณ'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleCopyReport}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl border border-emerald-300 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
               >
                 {copied ? (
                   <>
@@ -568,85 +568,85 @@ export const CheckerCommissionCard: React.FC<Props> = ({
 
           {/* Collapsible Criteria Reference Box */}
           {showCriteriaModal && (
-            <div className="p-3 sm:p-4 bg-sky-50/60 rounded-2xl border border-sky-200/80 space-y-2.5 animate-in fade-in duration-200">
+            <div className="p-3 sm:p-4 bg-sky-50/60 dark:bg-sky-950/40 rounded-2xl border border-sky-200/80 dark:border-sky-800/60 space-y-2.5 animate-in fade-in duration-200">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <ShieldCheck className="w-4 h-4 text-sky-700 shrink-0" />
-                  <span className="text-xs sm:text-sm font-bold text-sky-950 truncate">
+                  <ShieldCheck className="w-4 h-4 text-sky-700 dark:text-sky-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold text-sky-950 dark:text-sky-100 truncate">
                     เกณฑ์การจ่ายค่าแนะนำสำหรับ Checker
                   </span>
                 </div>
-                <span className="text-[9.5px] bg-white px-2 py-0.5 rounded-full font-semibold text-sky-700 border border-sky-200 shrink-0 whitespace-nowrap">
+                <span className="text-[9.5px] bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full font-semibold text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/70 shrink-0 whitespace-nowrap">
                   ประกาศทางการ
                 </span>
               </div>
 
-              <p className="text-[11px] text-sky-900 leading-relaxed">
+              <p className="text-[11px] text-sky-900 dark:text-sky-200 leading-relaxed">
                 <strong>สูตรคำนวณ Target Achievement %:</strong>
                 <br />(จำนวนสัญญาที่ซื้อประกัน PA + PA Plus) ÷ (จำนวนสัญญาทั้งหมดที่ [อนุมัติและรับรถแล้ว]) × 100
               </p>
 
               {/* Criteria Table mirroring Image 1 */}
-              <div className="overflow-x-auto rounded-xl border border-sky-200 bg-white">
+              <div className="overflow-x-auto rounded-xl border border-sky-200 dark:border-sky-800/70 bg-white dark:bg-slate-900">
                 <table className="w-full text-[10.5px] sm:text-[11px] text-center border-collapse whitespace-nowrap">
                   <thead>
-                    <tr className="bg-sky-100/70 text-sky-900 font-bold border-b border-sky-200">
-                      <th rowSpan={2} className="p-2 border-r border-sky-200">Tier</th>
-                      <th rowSpan={2} className="p-2 border-r border-sky-200">Target %</th>
-                      <th colSpan={3} className="p-1.5 border-r border-sky-200 bg-emerald-50 text-emerald-900">
+                    <tr className="bg-sky-100/70 dark:bg-sky-950/80 text-sky-900 dark:text-sky-200 font-bold border-b border-sky-200 dark:border-sky-800">
+                      <th rowSpan={2} className="p-2 border-r border-sky-200 dark:border-sky-800">Tier</th>
+                      <th rowSpan={2} className="p-2 border-r border-sky-200 dark:border-sky-800">Target %</th>
+                      <th colSpan={3} className="p-1.5 border-r border-sky-200 dark:border-sky-800 bg-emerald-50 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200">
                         อัตราจ่าย PA (ปกติ)
                       </th>
-                      <th colSpan={3} className="p-1.5 bg-indigo-50 text-indigo-900">
+                      <th colSpan={3} className="p-1.5 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-900 dark:text-indigo-200">
                         อัตราจ่าย PA PLUS
                       </th>
                     </tr>
-                    <tr className="bg-slate-50 text-slate-700 font-semibold border-b border-sky-200 text-[10px]">
-                      <th className="p-1 border-r border-sky-200">1 ปี</th>
-                      <th className="p-1 border-r border-sky-200">2 ปี</th>
-                      <th className="p-1 border-r border-sky-200">3 ปี</th>
-                      <th className="p-1 border-r border-sky-200">1 ปี</th>
-                      <th className="p-1 border-r border-sky-200">2 ปี</th>
+                    <tr className="bg-slate-50 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-semibold border-b border-sky-200 dark:border-sky-800 text-[10px]">
+                      <th className="p-1 border-r border-sky-200 dark:border-sky-800">1 ปี</th>
+                      <th className="p-1 border-r border-sky-200 dark:border-sky-800">2 ปี</th>
+                      <th className="p-1 border-r border-sky-200 dark:border-sky-800">3 ปี</th>
+                      <th className="p-1 border-r border-sky-200 dark:border-sky-800">1 ปี</th>
+                      <th className="p-1 border-r border-sky-200 dark:border-sky-800">2 ปี</th>
                       <th className="p-1">3 ปี</th>
                     </tr>
                   </thead>
                   <tbody>
                     {/* Tier 1 */}
-                    <tr className={`border-b border-slate-100 ${summary.tier === 1 ? 'bg-amber-50/80 font-bold text-amber-950' : 'text-slate-700'}`}>
-                      <td className="p-2 border-r border-slate-200 font-bold">1</td>
-                      <td className="p-2 border-r border-slate-200 text-left pl-2">≤ 60.00%</td>
-                      <td className="p-1.5 border-r border-slate-200">50 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">75 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">100 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">70 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">125 ฿</td>
+                    <tr className={`border-b border-slate-100 dark:border-slate-800 ${summary.tier === 1 ? 'bg-amber-50/80 dark:bg-amber-950/50 font-bold text-amber-950 dark:text-amber-200' : 'text-slate-700 dark:text-slate-300'}`}>
+                      <td className="p-2 border-r border-slate-200 dark:border-slate-800 font-bold">1</td>
+                      <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-left pl-2">≤ 60.00%</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">50 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">75 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">100 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">70 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">125 ฿</td>
                       <td className="p-1.5">180 ฿</td>
                     </tr>
                     {/* Tier 2 */}
-                    <tr className={`border-b border-slate-100 ${summary.tier === 2 ? 'bg-sky-100/90 font-bold text-sky-950' : 'text-slate-700'}`}>
-                      <td className="p-2 border-r border-slate-200 font-bold">2</td>
-                      <td className="p-2 border-r border-slate-200 text-left pl-2">60.01% - 75.00%</td>
-                      <td className="p-1.5 border-r border-slate-200">70 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">150 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">250 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">120 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">250 ฿</td>
+                    <tr className={`border-b border-slate-100 dark:border-slate-800 ${summary.tier === 2 ? 'bg-sky-100/90 dark:bg-sky-950/60 font-bold text-sky-950 dark:text-sky-200' : 'text-slate-700 dark:text-slate-300'}`}>
+                      <td className="p-2 border-r border-slate-200 dark:border-slate-800 font-bold">2</td>
+                      <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-left pl-2">60.01% - 75.00%</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">70 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">150 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">250 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">120 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">250 ฿</td>
                       <td className="p-1.5">400 ฿</td>
                     </tr>
                     {/* Tier 3 */}
-                    <tr className={`${summary.tier === 3 ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-700'}`}>
-                      <td className="p-2 border-r border-slate-200 font-bold">3</td>
-                      <td className="p-2 border-r border-slate-200 text-left pl-2">≥ 75.01% (สูงสุด)</td>
-                      <td className="p-1.5 border-r border-slate-200">90 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">200 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">350 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">170 ฿</td>
-                      <td className="p-1.5 border-r border-slate-200">350 ฿</td>
-                      <td className="p-1.5 font-bold text-emerald-700">550 ฿</td>
+                    <tr className={`${summary.tier === 3 ? 'bg-emerald-100 dark:bg-emerald-950/60 font-bold text-emerald-950 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-300'}`}>
+                      <td className="p-2 border-r border-slate-200 dark:border-slate-800 font-bold">3</td>
+                      <td className="p-2 border-r border-slate-200 dark:border-slate-800 text-left pl-2">≥ 75.01% (สูงสุด)</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">90 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">200 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">350 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">170 ฿</td>
+                      <td className="p-1.5 border-r border-slate-200 dark:border-slate-800">350 ฿</td>
+                      <td className="p-1.5 font-bold text-emerald-700 dark:text-emerald-300">550 ฿</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div className="text-[10px] text-slate-500 italic">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 italic">
                 *ระบบเน้นแถบสีของ Tier ปัจจุบันที่คุณได้รับโดยอัตโนมัติ
               </div>
             </div>
@@ -655,64 +655,64 @@ export const CheckerCommissionCard: React.FC<Props> = ({
           {/* 4 Main KPI Dashboard Cards (ปรับปรุงไม่ให้ข้อความตกบรรทัด) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             {/* Card 1: สัญญารับรถทั้งหมด */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 shadow-2xs min-w-0">
-              <div className="text-[10.5px] sm:text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 min-w-0">
-                <Car className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-900 border border-slate-200 dark:border-slate-700/80 shadow-2xs min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 min-w-0">
+                <Car className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />
                 <MarqueeText>รับรถแล้วทั้งหมด</MarqueeText>
               </div>
               <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-xl sm:text-2xl font-black text-slate-900">
+                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
                   {summary.totalDeliveredContracts}
                 </span>
-                <span className="text-xs font-semibold text-slate-500">คัน</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">คัน</span>
               </div>
-              <MarqueeText className="text-[10px] text-slate-400 mt-0.5">
+              <MarqueeText className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
                 อนุมัติ & รับรถแล้ว
               </MarqueeText>
             </div>
 
             {/* Card 2: สัญญาที่ซื้อประกัน */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 to-white border border-blue-200/80 shadow-2xs min-w-0">
-              <div className="text-[10.5px] sm:text-[11px] font-semibold text-blue-800 flex items-center gap-1.5 min-w-0">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 to-white dark:from-blue-950/60 dark:to-slate-900 border border-blue-200/80 dark:border-blue-800/60 shadow-2xs min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-semibold text-blue-800 dark:text-sky-200 flex items-center gap-1.5 min-w-0">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400 shrink-0" />
                 <MarqueeText>ซื้อประกัน (PA+PA+)</MarqueeText>
               </div>
               <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-xl sm:text-2xl font-black text-blue-900">
+                <span className="text-xl sm:text-2xl font-black text-blue-900 dark:text-sky-100">
                   {summary.totalInsuredContracts}
                 </span>
-                <span className="text-xs font-semibold text-blue-700">คัน</span>
+                <span className="text-xs font-semibold text-blue-700 dark:text-sky-300">คัน</span>
               </div>
-              <MarqueeText className="text-[10px] text-blue-600/90 font-medium mt-0.5">
+              <MarqueeText className="text-[10px] text-blue-600/90 dark:text-sky-300/90 font-medium mt-0.5">
                 PA: {summary.paCount} | PA+: {summary.paPlusCount}
               </MarqueeText>
             </div>
 
             {/* Card 3: Target Achievement % */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/70 to-white border border-teal-200/80 shadow-2xs min-w-0">
-              <div className="text-[10.5px] sm:text-[11px] font-semibold text-teal-800 flex items-center justify-between gap-1 min-w-0">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/70 to-white dark:from-teal-950/60 dark:to-slate-900 border border-teal-200/80 dark:border-teal-800/60 shadow-2xs min-w-0">
+              <div className="text-[10.5px] sm:text-[11px] font-semibold text-teal-800 dark:text-teal-200 flex items-center justify-between gap-1 min-w-0">
                 <div className="flex items-center gap-1 min-w-0 flex-1">
-                  <Target className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                  <Target className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
                   <MarqueeText>Achievement</MarqueeText>
                 </div>
                 <span
                   className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold whitespace-nowrap shrink-0 ${
                     summary.tier === 3
-                      ? 'bg-emerald-100 text-emerald-800'
+                      ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200'
                       : summary.tier === 2
-                      ? 'bg-sky-100 text-sky-800'
-                      : 'bg-amber-100 text-amber-800'
+                      ? 'bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-200'
+                      : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200'
                   }`}
                 >
                   Tier {summary.tier}
                 </span>
               </div>
               <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-xl sm:text-2xl font-black text-teal-900">
+                <span className="text-xl sm:text-2xl font-black text-teal-900 dark:text-teal-100">
                   {summary.achievementPercent.toFixed(1)}%
                 </span>
               </div>
-              <MarqueeText className="text-[10px] text-teal-700 font-medium mt-0.5">
+              <MarqueeText className="text-[10px] text-teal-700 dark:text-teal-300 font-medium mt-0.5">
                 {summary.tierRule.label}
               </MarqueeText>
             </div>
@@ -736,13 +736,13 @@ export const CheckerCommissionCard: React.FC<Props> = ({
           </div>
 
           {/* Tier Progress Bar & Incentive Badge */}
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 space-y-2.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700/80 space-y-2.5">
             <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-xs">
-              <div className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0 flex-1">
-                <TrendingUp className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 min-w-0 flex-1">
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <MarqueeText>ระดับผลงานเป้าหมาย (Tier Achievement)</MarqueeText>
               </div>
-              <div className="text-[11px] sm:text-xs font-extrabold text-emerald-700 whitespace-nowrap self-start xs:self-auto bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0">
+              <div className="text-[11px] sm:text-xs font-extrabold text-emerald-700 dark:text-emerald-300 whitespace-nowrap self-start xs:self-auto bg-emerald-50 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/70 shrink-0">
                 ปัจจุบัน: Tier {summary.tier} ({summary.achievementPercent.toFixed(2)}%)
               </div>
             </div>
@@ -750,7 +750,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
             {/* Progress Track */}
             <div className="relative pt-2 pb-1">
               <div className="relative py-1">
-                <div className="w-full bg-slate-100/90 h-3 rounded-full overflow-hidden relative border border-slate-200/90 shadow-inner">
+                <div className="w-full bg-slate-100/90 dark:bg-slate-800 h-3 rounded-full overflow-hidden relative border border-slate-200/90 dark:border-slate-700 shadow-inner">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ease-out ${
                       summary.achievementPercent > 0 ? 'animate-fuel-shimmer' : ''
@@ -772,12 +772,12 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                 </div>
                 {/* Tier 2 & Tier 3 Threshold Pins */}
                 <span
-                  className="pointer-events-none absolute top-1 h-3 w-0.5 bg-slate-400/60 rounded-full"
+                  className="pointer-events-none absolute top-1 h-3 w-0.5 bg-slate-400/60 dark:bg-slate-500/70 rounded-full"
                   style={{ left: '60%' }}
                   aria-hidden="true"
                 />
                 <span
-                  className="pointer-events-none absolute top-1 h-3 w-0.5 bg-slate-400/60 rounded-full"
+                  className="pointer-events-none absolute top-1 h-3 w-0.5 bg-slate-400/60 dark:bg-slate-500/70 rounded-full"
                   style={{ left: '75%' }}
                   aria-hidden="true"
                 />
@@ -804,28 +804,28 @@ export const CheckerCommissionCard: React.FC<Props> = ({
               </div>
 
               {/* Tier Threshold Markers */}
-              <div className="relative w-full flex justify-between text-[10px] text-slate-400 font-semibold mt-1 whitespace-nowrap">
+              <div className="relative w-full flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1 whitespace-nowrap">
                 <span>0%</span>
                 <span className="text-center">
-                  <span className="font-bold text-amber-700">Tier 1</span> (≤60%)
+                  <span className="font-bold text-amber-700 dark:text-amber-400">Tier 1</span> (≤60%)
                 </span>
                 <span className="text-center">
-                  <span className="font-bold text-sky-700">Tier 2</span> (60.01-75%)
+                  <span className="font-bold text-sky-700 dark:text-sky-400">Tier 2</span> (60.01-75%)
                 </span>
                 <span className="text-right">
-                  <span className="font-bold text-emerald-700">Tier 3</span> (≥75.01%)
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">Tier 3</span> (≥75.01%)
                 </span>
               </div>
             </div>
 
             {/* Next Tier Upgrade Guidance Banner */}
             {summary.nextTierNeeded ? (
-              <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start sm:items-center justify-between gap-2 flex-wrap">
+              <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 flex items-start sm:items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
                   <span>
                     อีกเพียง{' '}
-                    <strong className="text-amber-950 font-black underline decoration-amber-400">
+                    <strong className="text-amber-950 dark:text-amber-100 font-black underline decoration-amber-400">
                       {summary.nextTierNeeded.additionalInsuredNeeded} คัน
                     </strong>{' '}
                     เพื่อเลื่อนขั้นสู่ <strong>Tier {summary.nextTierNeeded.nextTier}</strong> (เป้า{' '}
@@ -833,14 +833,14 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   </span>
                 </div>
                 {summary.nextTierNeeded.potentialCommissionIncrease > 0 && (
-                  <span className="text-[10.5px] font-bold bg-amber-200/70 text-amber-950 px-2 py-0.5 rounded-lg border border-amber-300 whitespace-nowrap">
+                  <span className="text-[10.5px] font-bold bg-amber-200/70 dark:bg-amber-900/70 text-amber-950 dark:text-amber-100 px-2 py-0.5 rounded-lg border border-amber-300 dark:border-amber-700 whitespace-nowrap">
                     ปลดล็อกเงินเพิ่ม +฿{summary.nextTierNeeded.potentialCommissionIncrease.toLocaleString()} บ.
                   </span>
                 )}
               </div>
             ) : summary.totalDeliveredContracts > 0 ? (
-              <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span className="font-bold">
                   ยอดเยี่ยมมาก! คุณบรรลุ Tier 3 สูงสุดแล้ว ได้รับอัตราจ่ายค่าแนะนำสูงสุดทุกแผน (สูงสุด 550 บ./คัน)
                 </span>
@@ -849,51 +849,51 @@ export const CheckerCommissionCard: React.FC<Props> = ({
           </div>
 
           {/* Breakdown Table: ปรับตารางใหม่ให้พอดี ไม่ตกบรรทัด อ่านง่าย เป็นระเบียบ */}
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 space-y-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700/80 space-y-3">
             <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1">
-              <h4 className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5 min-w-0">
-                <FileSpreadsheet className="w-4 h-4 text-slate-600 shrink-0" />
+              <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
+                <FileSpreadsheet className="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" />
                 <span className="truncate">สรุปยอดขายแยกตามแผนประกัน</span>
               </h4>
-              <span className="text-[10.5px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 self-start xs:self-auto shrink-0 whitespace-nowrap">
+              <span className="text-[10.5px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/70 self-start xs:self-auto shrink-0 whitespace-nowrap">
                 อัตราจ่ายตาม Tier {summary.tier}
               </span>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700/80">
               <table className="w-full text-xs text-left border-collapse whitespace-nowrap">
                 <thead>
-                  <tr className="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200 text-[11px] sm:text-xs">
+                  <tr className="bg-slate-100/80 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 font-bold border-b border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs">
                     <th className="py-2.5 px-3">แผนความคุ้มครอง</th>
                     <th className="py-2.5 px-2.5 text-center">จำนวนสัญญา</th>
                     <th className="py-2.5 px-2.5 text-right">อัตรา/คัน</th>
                     <th className="py-2.5 px-3 text-right font-black">รวมเงิน</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {/* PA 1, 2, 3 Years */}
                   {([1, 2, 3] as InsuranceYears[]).map((y) => {
                     const row = summary.breakdown.pa[y];
                     return (
                       <tr
                         key={`pa-${y}`}
-                        className={row.count > 0 ? 'bg-emerald-50/30 font-medium' : 'text-slate-500'}
+                        className={row.count > 0 ? 'bg-emerald-50/30 dark:bg-emerald-950/30 font-medium' : 'text-slate-500 dark:text-slate-400'}
                       >
                         <td className="py-2 px-3">
                           <div className="flex items-center gap-1.5">
-                            <span className="inline-block px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 text-[9.5px] font-bold shrink-0">
+                            <span className="inline-block px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 text-[9.5px] font-bold shrink-0">
                               PA
                             </span>
-                            <span className="font-semibold text-slate-800">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
                               แผนปกติ ({y} ปี)
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2.5 text-center font-bold text-slate-800">
+                        <td className="py-2 px-2.5 text-center font-bold text-slate-800 dark:text-slate-200">
                           {row.count > 0 ? `${row.count} คัน` : '-'}
                         </td>
-                        <td className="py-2 px-2.5 text-right text-slate-600">฿{row.unitRate}</td>
-                        <td className="py-2 px-3 text-right font-bold text-slate-900">
+                        <td className="py-2 px-2.5 text-right text-slate-600 dark:text-slate-400">฿{row.unitRate}</td>
+                        <td className="py-2 px-3 text-right font-bold text-slate-900 dark:text-slate-100">
                           {row.total > 0 ? `฿${row.total.toLocaleString()}` : '0'}
                         </td>
                       </tr>
@@ -906,23 +906,23 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                     return (
                       <tr
                         key={`pa-plus-${y}`}
-                        className={row.count > 0 ? 'bg-indigo-50/30 font-medium' : 'text-slate-500'}
+                        className={row.count > 0 ? 'bg-indigo-50/30 dark:bg-indigo-950/30 font-medium' : 'text-slate-500 dark:text-slate-400'}
                       >
                         <td className="py-2 px-3">
                           <div className="flex items-center gap-1.5">
-                            <span className="inline-block px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-800 text-[9.5px] font-bold shrink-0">
+                            <span className="inline-block px-1.5 py-0.2 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-200 text-[9.5px] font-bold shrink-0">
                               PA+
                             </span>
-                            <span className="font-semibold text-slate-800">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
                               แผนพลัส ({y} ปี)
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 px-2.5 text-center font-bold text-slate-800">
+                        <td className="py-2 px-2.5 text-center font-bold text-slate-800 dark:text-slate-200">
                           {row.count > 0 ? `${row.count} คัน` : '-'}
                         </td>
-                        <td className="py-2 px-2.5 text-right text-slate-600">฿{row.unitRate}</td>
-                        <td className="py-2 px-3 text-right font-bold text-slate-900">
+                        <td className="py-2 px-2.5 text-right text-slate-600 dark:text-slate-400">฿{row.unitRate}</td>
+                        <td className="py-2 px-3 text-right font-bold text-slate-900 dark:text-slate-100">
                           {row.total > 0 ? `฿${row.total.toLocaleString()}` : '0'}
                         </td>
                       </tr>
@@ -930,10 +930,10 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   })}
 
                   {/* No Insurance */}
-                  <tr className="text-slate-400 bg-slate-50/40">
+                  <tr className="text-slate-400 dark:text-slate-500 bg-slate-50/40 dark:bg-slate-800/40">
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-1.5">
-                        <span className="inline-block px-1.5 py-0.2 rounded-md bg-slate-200 text-slate-600 text-[9.5px] font-semibold shrink-0">
+                        <span className="inline-block px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9.5px] font-semibold shrink-0">
                           -
                         </span>
                         <span>ไม่รับประกัน</span>
@@ -947,17 +947,17 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   </tr>
 
                   {/* Grand Total Row */}
-                  <tr className="bg-emerald-100/60 font-black text-slate-900 border-t-2 border-emerald-300">
-                    <td className="py-2.5 px-3 text-emerald-950 font-bold">
+                  <tr className="bg-emerald-100/60 dark:bg-emerald-950/70 font-black text-slate-900 dark:text-emerald-100 border-t-2 border-emerald-300 dark:border-emerald-700">
+                    <td className="py-2.5 px-3 text-emerald-950 dark:text-emerald-100 font-bold">
                       รวมค่าแนะนำทั้งสิ้น
                     </td>
-                    <td className="py-2.5 px-2.5 text-center text-emerald-950 font-bold">
+                    <td className="py-2.5 px-2.5 text-center text-emerald-950 dark:text-emerald-100 font-bold">
                       {summary.totalInsuredContracts} / {summary.totalDeliveredContracts} คัน
                     </td>
-                    <td className="py-2.5 px-2.5 text-right text-emerald-900 font-semibold">
+                    <td className="py-2.5 px-2.5 text-right text-emerald-900 dark:text-emerald-200 font-semibold">
                       Tier {summary.tier}
                     </td>
-                    <td className="py-2.5 px-3 text-right text-emerald-900 text-xs sm:text-sm font-black">
+                    <td className="py-2.5 px-3 text-right text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-black">
                       ฿{summary.totalCommissionBaht.toLocaleString()} บ.
                     </td>
                   </tr>
@@ -967,11 +967,11 @@ export const CheckerCommissionCard: React.FC<Props> = ({
           </div>
 
           {/* List of Approved & Delivered Cases for Transparency (ปรับการตัดบรรทัดและวันที่ให้ชัดเจน) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 space-y-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700/80 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <h4 className="text-xs sm:text-sm font-bold text-slate-800 truncate">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                   รายชื่อสัญญาที่นำมาคำนวณ ({summary.cases.length} เคส)
                 </h4>
               </div>
@@ -982,7 +982,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                     triggerHaptic('light');
                     onOpenSavedCases();
                   }}
-                  className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
+                  className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
                 >
                   <span>จัดการเคส</span>
                   <ExternalLink className="w-3 h-3" />
@@ -991,14 +991,14 @@ export const CheckerCommissionCard: React.FC<Props> = ({
             </div>
 
             {summary.cases.length === 0 ? (
-              <div className="py-8 px-4 text-center rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 space-y-2">
-                <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+              <div className="py-8 px-4 text-center rounded-2xl bg-slate-50/70 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
                   <Car className="w-5 h-5" />
                 </div>
-                <div className="text-xs font-bold text-slate-700">
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-200">
                   ยังไม่พบเคสที่มีสถานะ "อนุมัติและรับรถแล้ว" ในงวดนี้
                 </div>
-                <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                   ระบบจะดึงเคสที่สถานะอนุมัติ (Approved) และรับรถแล้ว (Delivered)
                   จากเมนูเคสที่บันทึกไว้มาคำนวณค่าแนะนำให้โดยอัตโนมัติ
                 </p>
@@ -1010,7 +1010,7 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                         triggerHaptic('selection');
                         onOpenSavedCases();
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
                     >
                       <span>เปิดดูรายการเคสที่บันทึกไว้</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -1019,9 +1019,9 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={handleSeedDemoCases}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/70 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800/70 text-xs font-bold transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>โหลดเคสตัวอย่างสำหรับทดสอบ</span>
                   </button>
                 </div>
@@ -1034,24 +1034,24 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                   return (
                     <div
                       key={record.id}
-                      className="p-2.5 sm:p-3 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50/90 transition-colors flex items-center justify-between gap-2.5 text-xs"
+                      className="p-2.5 sm:p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 hover:bg-slate-50/90 dark:hover:bg-slate-800 transition-colors flex items-center justify-between gap-2.5 text-xs"
                     >
                       {/* Left: Customer name & Bike info & Date without overflowing or cutting off */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <MarqueeText fitContent className="font-bold text-slate-900">
+                          <MarqueeText fitContent className="font-bold text-slate-900 dark:text-slate-100">
                             {record.customerName || 'คุณลูกค้า'}
                           </MarqueeText>
-                          <span className="text-[9px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.2 rounded-full border border-emerald-200 shrink-0 whitespace-nowrap">
+                          <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 font-semibold px-1.5 py-0.2 rounded-full border border-emerald-200 dark:border-emerald-800/70 shrink-0 whitespace-nowrap">
                             รับรถแล้ว
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5 min-w-0">
-                          <MarqueeText fitContent className="text-slate-600">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5 min-w-0">
+                          <MarqueeText fitContent className="text-slate-600 dark:text-slate-300">
                             {record.bikeModelName || record.bikeModelCode || 'รถจักรยานยนต์'}
                           </MarqueeText>
-                          <span className="text-slate-300 shrink-0">•</span>
-                          <span className="text-slate-400 shrink-0 whitespace-nowrap text-[10.5px]">
+                          <span className="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+                          <span className="text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap text-[10.5px]">
                             {shortDate}
                           </span>
                         </div>
@@ -1064,23 +1064,23 @@ export const CheckerCommissionCard: React.FC<Props> = ({
                             <span
                               className={`text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
                                 planType === 'pa_plus'
-                                  ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                  ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800/70'
+                                  : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70'
                               }`}
                             >
                               {planType === 'pa_plus' ? `PA+ (${insuranceYears}ปี)` : `PA (${insuranceYears}ปี)`}
                             </span>
                           ) : (
-                            <span className="text-[9.5px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 whitespace-nowrap">
+                            <span className="text-[9.5px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                               ไม่ทำประกัน
                             </span>
                           )}
                         </div>
                         <div className="mt-0.5 text-xs font-black whitespace-nowrap">
                           {isInsured ? (
-                            <span className="text-emerald-700">+฿{commissionAmount}</span>
+                            <span className="text-emerald-700 dark:text-emerald-300">+฿{commissionAmount}</span>
                           ) : (
-                            <span className="text-slate-400">฿0</span>
+                            <span className="text-slate-400 dark:text-slate-500">฿0</span>
                           )}
                         </div>
                       </div>

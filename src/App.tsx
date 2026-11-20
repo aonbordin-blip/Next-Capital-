@@ -105,8 +105,11 @@ import { useFirebase } from './contexts/FirebaseContext';
 import { CloudSyncCard } from './components/CloudSyncCard';
 import { HomeDashboard } from './components/HomeDashboard';
 import { YearsMonthsInput } from './components/YearsMonthsInput';
+import { BoxThemeToggle } from './components/BoxThemeToggle';
+import { useBoxTheme } from './utils/boxTheme';
 
 export default function App() {
+  useBoxTheme();
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
   const [showCloudSyncModal, setShowCloudSyncModal] = useState<boolean>(false);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
@@ -1370,31 +1373,33 @@ export default function App() {
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden bg-white text-slate-800 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
+    <div className="fixed inset-0 w-full h-full overflow-hidden outer-canvas-bg text-slate-800 dark:text-slate-100 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
 
-      {/* Top Floating View Mode Switcher on Desktop */}
-      <div className="no-print hidden sm:flex items-center gap-2 mb-2 bg-white/70 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm shadow-sky-900/10 text-xs z-10 shrink-0">
-        <span className="text-slate-500 font-medium">มุมมอง:</span>
+      {/* Top Floating View Mode & Theme Switcher on Desktop */}
+      <div className="no-print hidden sm:flex items-center gap-2 mb-2 bg-white/75 dark:bg-slate-900/80 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 dark:border-slate-700/80 shadow-sm shadow-sky-900/10 dark:shadow-slate-950/50 text-xs z-10 shrink-0">
+        <span className="text-slate-500 dark:text-slate-400 font-medium">มุมมอง:</span>
         <button
           onClick={() => setViewMode('mobile')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             viewMode === 'mobile'
               ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/70'
           }`}
         >
           <Smartphone className="w-3.5 h-3.5" /> จำลองมือถือ
         </button>
         <button
           onClick={() => setViewMode('dashboard')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             viewMode === 'dashboard'
               ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/70'
           }`}
         >
           <Monitor className="w-3.5 h-3.5" /> แดชบอร์ดเต็มจอ
         </button>
+        <div className="h-4 w-px bg-slate-300/70 dark:bg-slate-700/80 mx-0.5 shrink-0" aria-hidden="true" />
+        <BoxThemeToggle compact />
       </div>
 
       {/* Main Container - Soft Neo-Morphic Glass Frame matching Reference UI */}
@@ -1576,13 +1581,13 @@ export default function App() {
           {(selectedBike || bikeModelCode) && (
             <div className="mx-0 sm:mx-1 mt-1 px-3 sm:px-3.5 py-2 glass-panel-cyan rounded-2xl flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-600 flex-shrink-0" />
-                <span className="text-slate-500 font-medium shrink-0">รุ่นที่เลือก:</span>
-                <MarqueeText fitContent className="font-bold text-sky-950">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 flex-shrink-0" />
+                <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">รุ่นที่เลือก:</span>
+                <MarqueeText fitContent className="font-bold text-sky-950 dark:text-sky-100">
                   {selectedBike?.name || 'รถจักรยานยนต์'}
                 </MarqueeText>
                 {bikeModelCode && (
-                  <span className="font-mono text-[10px] font-bold text-sky-800 bg-white px-2 py-0.5 rounded-full border border-sky-200 ml-1 shrink-0">
+                  <span className="font-mono text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-white dark:bg-slate-800/90 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-700/80 ml-1 shrink-0">
                     {bikeModelCode}
                   </span>
                 )}
@@ -1592,7 +1597,7 @@ export default function App() {
                   setSelectedBike(null);
                   setBikeModelCode('');
                 }}
-                className="text-[11px] text-slate-400 hover:text-rose-600 ml-2 font-medium cursor-pointer"
+                className="text-[11px] text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 ml-2 font-medium cursor-pointer shrink-0"
               >
                 ล้าง
               </button>
@@ -1608,17 +1613,17 @@ export default function App() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                    <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/70 shrink-0">
                       ข้อมูลเคสที่ดึงมาใช้
                     </span>
-                    <MarqueeText fitContent className="font-bold text-slate-800 text-[11.5px]">
+                    <MarqueeText fitContent className="font-bold text-slate-800 dark:text-slate-100 text-[11.5px]">
                       {activeCaseRecord.customerName || activeCaseRecord.caseTitle}
                     </MarqueeText>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-slate-600 mt-0.5">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">
                     <span>
                       วันทำสัญญา/บันทึก:{' '}
-                      <strong className="text-slate-800">
+                      <strong className="text-slate-800 dark:text-slate-100">
                         {formatThaiShortDateWithTime(
                           activeCaseRecord.approvalDate || activeCaseRecord.createdAt,
                           activeCaseRecord.createdAt
@@ -1626,7 +1631,7 @@ export default function App() {
                       </strong>
                     </span>
                     {(activeCaseRecord.deliveryStatus === 'delivered' || activeCaseRecord.deliveryDate) && (
-                      <span className="text-emerald-700 font-semibold">
+                      <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
                         • รับรถ:{' '}
                         <strong>
                           {activeCaseRecord.deliveryConfirmedAt || activeCaseRecord.deliveryDate
@@ -1648,7 +1653,7 @@ export default function App() {
                   setActiveCaseId(null);
                   triggerToast('ล้างการอ้างอิงวันที่เคสที่บันทึกแล้ว (กลับไปใช้วันที่ปัจจุบัน)');
                 }}
-                className="text-[10.5px] text-slate-500 hover:text-rose-600 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                className="text-[10.5px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer shrink-0"
                 title="ล้างการอ้างอิงวันที่จากเคสที่บันทึก"
               >
                 ล้างเคส
@@ -1798,13 +1803,13 @@ export default function App() {
           <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
             {/* Step Header Badge */}
             <div className="flex items-center justify-between px-1 text-xs">
-              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+              <span className="font-extrabold text-sky-950 dark:text-sky-100 flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
                   1
                 </span>
                 ข้อมูลเคส รถ ประกัน PA & เงินดาวน์
               </span>
-              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+              <span className="text-[10px] text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/70 px-2.5 py-0.5 rounded-full font-bold border border-sky-200 dark:border-sky-700/70">
                 ขั้นตอน 1 / 3
               </span>
             </div>
@@ -1817,7 +1822,7 @@ export default function App() {
                     className={`flex-1 py-2 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 border shadow-2xs transition-all cursor-pointer active:scale-98 ${
                       editingCaseId
                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400 shadow-amber-500/20 hover:from-amber-600 hover:to-orange-600'
-                        : 'bg-white/90 hover:bg-white text-sky-850 border-sky-200/90'
+                        : 'bg-white/90 hover:bg-white dark:bg-slate-800/85 dark:hover:bg-slate-800 text-sky-900 dark:text-sky-100 border-sky-200/90 dark:border-sky-700/70'
                     }`}
                     title={editingCaseId ? 'บันทึกการแก้ไขเคสที่กำลังเปิดอยู่นี้' : 'บันทึกข้อมูลเคสปัจจุบันเก็บไว้ในอุปกรณ์'}
                   >
@@ -1828,7 +1833,7 @@ export default function App() {
                       </>
                     ) : (
                       <>
-                        <BookmarkPlus className="w-3.5 h-3.5 text-sky-600" />
+                        <BookmarkPlus className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                         <span>{firebaseUser ? 'บันทึกเคส & ซิงค์ Cloud' : 'บันทึกเคสนี้ลงเครื่อง'}</span>
                       </>
                     )}
@@ -1837,10 +1842,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => handleSaveCurrentCase(true)}
-                      className="py-2 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1 border border-slate-200/90 shadow-2xs transition-all cursor-pointer active:scale-98"
+                      className="py-2 px-3 rounded-2xl bg-white/90 hover:bg-white dark:bg-slate-800/85 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1 border border-slate-200/90 dark:border-slate-700 shadow-2xs transition-all cursor-pointer active:scale-98"
                       title="บันทึกข้อมูลนี้เป็นเคสใหม่โดยไม่เขียนทับเคสเดิม"
                     >
-                      <BookmarkPlus className="w-3.5 h-3.5 text-slate-500" />
+                      <BookmarkPlus className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                       <span>บันทึกเป็นเคสใหม่</span>
                     </button>
                   )}
@@ -1850,10 +1855,10 @@ export default function App() {
                       triggerHaptic('selection');
                       setShowSavedCases(true);
                     }}
-                    className="py-2 px-3.5 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-900 font-bold text-xs flex items-center gap-1.5 border border-sky-200/90 shadow-2xs transition-all cursor-pointer active:scale-98 shrink-0"
+                    className="py-2 px-3.5 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/70 dark:hover:bg-sky-900/70 text-sky-900 dark:text-sky-100 font-bold text-xs flex items-center gap-1.5 border border-sky-200/90 dark:border-sky-700/70 shadow-2xs transition-all cursor-pointer active:scale-98 shrink-0"
                     title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
                   >
-                    <FolderArchive className="w-3.5 h-3.5 text-sky-700" />
+                    <FolderArchive className="w-3.5 h-3.5 text-sky-700 dark:text-sky-400" />
                     <span>เคสที่บันทึก ({savedCasesCount})</span>
                   </button>
                 </div>
@@ -1867,19 +1872,19 @@ export default function App() {
                 data-card-id="customer"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald"
               >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-emerald-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+                  <label className="text-[11px] text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
                     <span>ข้อมูลลูกค้า</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-emerald-800 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-emerald-200/80 shadow-2xs">
+                  <span className="text-[9.5px] font-bold text-emerald-800 dark:text-emerald-200 bg-white/80 dark:bg-emerald-950/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-emerald-200/80 dark:border-emerald-700/60 shadow-2xs">
                     แสดงในใบเสนอราคา & LINE
                   </span>
                 </div>
                 <div className="grid grid-cols-12 gap-2">
                   <div className="col-span-7 sm:col-span-7">
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
                       ชื่อลูกค้า
                     </label>
                     <input
@@ -1887,11 +1892,11 @@ export default function App() {
                       value={customerName}
                       onChange={(e) => handleCustomerNameChange(e.target.value)}
                       placeholder="ใส่ชื่อลูกค้า (เช่น คุณสมชาย)"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
                     />
                   </div>
                   <div className="col-span-5 sm:col-span-5">
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
                       <Phone className="w-2.5 h-2.5 text-slate-400" /> เบอร์โทรศัพท์
                     </label>
                     <input
@@ -1899,41 +1904,41 @@ export default function App() {
                       value={customerPhone}
                       onChange={(e) => handleCustomerPhoneChange(e.target.value)}
                       placeholder="08X-XXX-XXXX"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold font-mono outline-none"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-bold font-mono outline-none"
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 text-[10px] text-slate-500 pt-0.5">
+                <div className="flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
                   <span className="text-slate-400 shrink-0">แสดงในเอกสาร:</span>
-                  <MarqueeText fitContent className="font-semibold text-emerald-950 text-right">
+                  <MarqueeText fitContent className="font-semibold text-emerald-950 dark:text-emerald-200 text-right">
                     {customerDisplay}
                   </MarqueeText>
                 </div>
 
                 {/* Extra Customer Eligibility Inputs (เชื่อมเกณฑ์คุณสมบัติ & ลิงก์ไปขอ DV) */}
-                <div className="pt-2.5 border-t border-emerald-200/70 space-y-2">
+                <div className="pt-2.5 border-t border-emerald-200/70 dark:border-emerald-800/60 space-y-2">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-[10.5px] font-bold text-emerald-950 flex items-center gap-1">
-                      <ClipboardCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                    <span className="text-[10.5px] font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-1">
+                      <ClipboardCheck className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
                       <span>คุณสมบัติลูกค้า (เช็คเกณฑ์ & ลิงก์ไปขอ DV)</span>
                     </span>
                     {customerEligibilityEval.failedTopics.length > 0 ? (
                       <button
                         type="button"
                         onClick={handleOpenDvWithLinkedData}
-                        className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 hover:bg-rose-200/80 text-rose-800 border border-rose-300 flex items-center gap-1 cursor-pointer transition-colors"
+                        className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 hover:bg-rose-200/80 dark:bg-rose-950/70 dark:hover:bg-rose-900/70 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-700/70 flex items-center gap-1 cursor-pointer transition-colors"
                         title="คลิกเพื่อเปิดหน้าขออนุมัติ DV พร้อมดึงหัวข้อที่ไม่ผ่านอัตโนมัติ"
                       >
-                        <XCircle className="w-3 h-3 text-rose-600" />
+                        <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                         <span>ขอ DV: {customerEligibilityEval.failedTopics.map((f) => f.code).join(', ')}</span>
                       </button>
                     ) : customerEligibilityEval.checkedCount > 0 && customerEligibilityEval.aceWarnings.length === 0 ? (
-                      <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700/70 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                         <span>ผ่านเกณฑ์ {customerEligibilityEval.tier.salesChannel} ✓</span>
                       </span>
                     ) : (
-                      <span className="text-[9.5px] font-semibold text-slate-500 bg-white/70 px-2 py-0.5 rounded-full border border-slate-200/80">
+                      <span className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-300 bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-700">
                         เกณฑ์: {customerEligibilityEval.tier.salesChannel}
                       </span>
                     )}
@@ -1943,7 +1948,7 @@ export default function App() {
                   <div className="space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        <label className="block text-[10px] text-slate-600 dark:text-slate-300 font-medium mb-1">
                           อายุ (ปี){' '}
                           <span className="text-[9px] text-slate-400">
                             ({customerEligibilityEval.tier.ageLabel})
@@ -1958,16 +1963,16 @@ export default function App() {
                           placeholder={`เช่น ${customerEligibilityEval.tier.minAge}`}
                           className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
                             customerEligibilityEval.fieldStatus.age === 'fail'
-                              ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                              ? 'border-rose-400 dark:border-rose-500/80 bg-rose-50/60 dark:bg-rose-950/50 text-rose-900 dark:text-rose-200'
                               : customerEligibilityEval.fieldStatus.age === 'pass'
-                              ? 'border-emerald-400 text-emerald-950'
-                              : 'text-slate-900'
+                              ? 'border-emerald-400 dark:border-emerald-500/80 text-emerald-950 dark:text-emerald-200'
+                              : 'text-slate-900 dark:text-slate-100'
                           }`}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-600 font-medium mb-1">
+                        <label className="block text-[10px] text-slate-600 dark:text-slate-300 font-medium mb-1">
                           รายได้/เดือน{' '}
                           <span className="text-[9px] text-slate-400">
                             (≥{customerEligibilityEval.tier.incomeLabel})
@@ -1982,10 +1987,10 @@ export default function App() {
                           placeholder={`≥ ${customerEligibilityEval.tier.incomeLabel}`}
                           className={`w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs font-bold outline-none ${
                             customerEligibilityEval.fieldStatus.income === 'fail'
-                              ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+                              ? 'border-rose-400 dark:border-rose-500/80 bg-rose-50/60 dark:bg-rose-950/50 text-rose-900 dark:text-rose-200'
                               : customerEligibilityEval.fieldStatus.income === 'pass'
-                              ? 'border-emerald-400 text-emerald-950'
-                              : 'text-slate-900'
+                              ? 'border-emerald-400 dark:border-emerald-500/80 text-emerald-950 dark:text-emerald-200'
+                              : 'text-slate-900 dark:text-slate-100'
                           }`}
                         />
                       </div>
@@ -2013,7 +2018,7 @@ export default function App() {
                   {/* Occupation + ACE Toggle Row */}
                   <div className="grid grid-cols-12 gap-2 items-end">
                     <div className="col-span-7 sm:col-span-8">
-                      <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                      <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
                         อาชีพ (ซิงก์ไปหน้า DV)
                       </label>
                       <input
@@ -2021,7 +2026,7 @@ export default function App() {
                         value={customerOccupation}
                         onChange={(e) => handleCustomerOccupationChange(e.target.value)}
                         placeholder="เช่น พนักงานประจำ, ค้าขาย, ไรเดอร์"
-                        className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-semibold outline-none"
+                        className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-semibold outline-none"
                       />
                     </div>
                     <div className="col-span-5 sm:col-span-4">
@@ -2034,12 +2039,12 @@ export default function App() {
                         className={`w-full py-1.5 px-2.5 rounded-xl text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                           isAceCustomer
                             ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                            : 'bg-white/85 hover:bg-amber-50 text-slate-700 border-slate-200/90'
+                            : 'bg-white/85 dark:bg-slate-800/85 hover:bg-amber-50 dark:hover:bg-amber-950/50 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700'
                         }`}
                       >
                         <ShieldAlert
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isAceCustomer ? 'text-white' : 'text-amber-600'
+                            isAceCustomer ? 'text-white' : 'text-amber-600 dark:text-amber-400'
                           }`}
                         />
                         <span>ลูกค้า ACE</span>
@@ -2049,13 +2054,13 @@ export default function App() {
 
                   {/* ACE Warning Strip */}
                   {(isAceCustomer || proposalKey === 'aec') && (
-                    <div className="p-2 rounded-xl bg-amber-50/90 border border-amber-300/90 text-[10px] text-amber-950 space-y-1">
+                    <div className="p-2 rounded-xl bg-amber-50/90 dark:bg-amber-950/55 border border-amber-300/90 dark:border-amber-700/70 text-[10px] text-amber-950 dark:text-amber-200 space-y-1">
                       <div className="font-bold flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span>{ACE_FULL_NOTE}</span>
                       </div>
                       {customerEligibilityEval.aceWarnings.map((warn) => (
-                        <div key={warn} className="text-rose-700 font-extrabold pl-4">
+                        <div key={warn} className="text-rose-700 dark:text-rose-300 font-extrabold pl-4">
                           • {warn}
                         </div>
                       ))}
@@ -2064,8 +2069,8 @@ export default function App() {
 
                   {/* Failed Criteria -> Quick Link to DV */}
                   {customerEligibilityEval.failedTopics.length > 0 && (
-                    <div className="p-2 rounded-xl bg-rose-50/90 border border-rose-200 flex items-center justify-between gap-2 flex-wrap">
-                      <div className="text-[10px] font-bold text-rose-800 space-y-0.5">
+                    <div className="p-2 rounded-xl bg-rose-50/90 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/70 flex items-center justify-between gap-2 flex-wrap">
+                      <div className="text-[10px] font-bold text-rose-800 dark:text-rose-200 space-y-0.5">
                         <div>
                           ไม่ผ่านเกณฑ์ {customerEligibilityEval.tier.shortTitle}:
                         </div>
@@ -2073,7 +2078,7 @@ export default function App() {
                           {customerEligibilityEval.failedTopics.map((f) => (
                             <span
                               key={f.code}
-                              className="px-1.5 py-0.5 rounded bg-white border border-rose-200 text-rose-800 font-bold"
+                              className="px-1.5 py-0.5 rounded bg-white dark:bg-rose-900/60 border border-rose-200 dark:border-rose-700/70 text-rose-800 dark:text-rose-100 font-bold"
                             >
                               {f.dvTopic}
                             </span>
@@ -2098,13 +2103,13 @@ export default function App() {
                 data-card-id="dealer"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-sky-700 flex-shrink-0" />
+                  <label className="text-[11px] text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-sky-700 dark:text-sky-400 flex-shrink-0" />
                     <span>ร้านตัวแทนจำหน่าย (Dealer)</span>
                   </label>
-                  <span className="text-[9.5px] font-bold text-sky-700 bg-white/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-sky-200/80 shadow-2xs shrink-0">
+                  <span className="text-[9.5px] font-bold text-sky-700 dark:text-sky-200 bg-white/80 dark:bg-sky-950/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-sky-200/80 dark:border-sky-700/60 shadow-2xs shrink-0">
                     ลิงก์ใบเสนอราคา / อนุมัติ / DV
                   </span>
                 </div>
@@ -2114,7 +2119,7 @@ export default function App() {
                     value={dealerName}
                     onChange={(e) => handleDealerNameChange(e.target.value)}
                     placeholder="ใส่ชื่อ Dealer (เช่น ป.ยานยนต์(สนญ.), แสงชัยพาณิชย์...)"
-                    className="w-full glass-input-field rounded-xl pl-3 pr-8 py-2 text-xs text-slate-900 font-bold outline-none"
+                    className="w-full glass-input-field rounded-xl pl-3 pr-8 py-2 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
                   />
                   {dealerName && (
                     <button
@@ -2123,7 +2128,7 @@ export default function App() {
                         triggerHaptic('light');
                         handleDealerNameChange('');
                       }}
-                      className="absolute right-2 w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                      className="absolute right-2 w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
                       title="ล้างชื่อ Dealer"
                     >
                       <X className="w-3 h-3" />
@@ -2131,7 +2136,7 @@ export default function App() {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                  <span className="text-[10px] text-slate-500 font-medium shrink-0">เลือกด่วน:</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium shrink-0">เลือกด่วน:</span>
                   {COMMON_DEALER_SUGGESTIONS.slice(0, 5).map((preset) => {
                     const isSelected = dealerName.trim() === preset;
                     return (
@@ -2145,7 +2150,7 @@ export default function App() {
                         className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold whitespace-nowrap border transition-all cursor-pointer shrink-0 ${
                           isSelected
                             ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
-                            : 'bg-white/80 hover:bg-sky-50 text-slate-700 border-sky-200/80'
+                            : 'bg-white/80 hover:bg-sky-50 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border-sky-200/80 dark:border-sky-800/60'
                         }`}
                       >
                         {preset}
@@ -2160,10 +2165,10 @@ export default function App() {
                 data-card-id="pricing"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <label className="text-[11px] text-slate-800 font-bold flex items-center gap-1.5">
-                    <Bike className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+                  <label className="text-[11px] text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5">
+                    <Bike className="w-3.5 h-3.5 text-blue-700 dark:text-sky-400 flex-shrink-0" />
                     <span>ข้อมูลรถและเงื่อนไขข้อเสนอ</span>
                   </label>
                   <button
@@ -2172,10 +2177,10 @@ export default function App() {
                       triggerHaptic('light');
                       setShowEligibilityCriteriaModal(true);
                     }}
-                    className="text-[10px] font-extrabold text-sky-800 bg-white/95 hover:bg-sky-50 px-2.5 py-1 rounded-full border border-sky-300/90 shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                    className="text-[10px] font-extrabold text-sky-800 dark:text-sky-200 bg-white/95 hover:bg-sky-50 dark:bg-sky-950/70 dark:hover:bg-sky-900/70 px-2.5 py-1 rounded-full border border-sky-300/90 dark:border-sky-700/70 shadow-2xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                     title="เปิดดูตารางเกณฑ์คุณสมบัติ ช่องทางการขาย และเงื่อนไข ACE"
                   >
-                    <ClipboardCheck className="w-3 h-3 text-sky-600" />
+                    <ClipboardCheck className="w-3 h-3 text-sky-600 dark:text-sky-400" />
                     <span>เกณฑ์คุณสมบัติ ({customerEligibilityEval.tier.salesChannel})</span>
                   </button>
                 </div>
@@ -2183,7 +2188,7 @@ export default function App() {
                 {/* Proposal Select */}
                 <div>
                   <div className="flex justify-between items-center mb-1 gap-2">
-                    <label className="text-[11px] text-slate-600 font-semibold flex items-center gap-1">
+                    <label className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold flex items-center gap-1">
                       เลือกประเภทข้อเสนอ (Proposal) *
                     </label>
                     <div className="flex items-center gap-2.5">
@@ -2193,14 +2198,14 @@ export default function App() {
                           triggerHaptic('light');
                           setShowEligibilityCriteriaModal(true);
                         }}
-                        className="text-[10px] text-sky-700 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
+                        className="text-[10px] text-sky-700 dark:text-sky-400 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
                       >
                         <Table className="w-3 h-3" /> ตารางเกณฑ์
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowProposalInfo(true)}
-                        className="text-[10px] text-blue-700 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
+                        className="text-[10px] text-blue-700 dark:text-sky-300 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
                       >
                         <Info className="w-3 h-3" /> ดูเงื่อนไข
                       </button>
@@ -2211,13 +2216,13 @@ export default function App() {
                       type="button"
                       id="proposal-select-trigger"
                       onClick={() => setShowProposalSelector(true)}
-                      className="w-full glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-semibold outline-none flex items-center justify-between cursor-pointer hover:border-blue-400 transition-colors text-left"
+                      className="w-full glass-input-field rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-semibold outline-none flex items-center justify-between cursor-pointer hover:border-blue-400 transition-colors text-left"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-                        <MarqueeText fitContent className="text-xs font-bold text-slate-900">
+                        <MarqueeText fitContent className="text-xs font-bold text-slate-900 dark:text-slate-100">
                           {currentProposal.name}
                         </MarqueeText>
-                        <span className="font-mono text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/60 whitespace-nowrap flex-shrink-0">
+                        <span className="font-mono text-[10px] text-blue-700 dark:text-sky-300 font-bold bg-blue-50 dark:bg-sky-950/70 px-1.5 py-0.5 rounded border border-blue-200/60 dark:border-sky-700/60 whitespace-nowrap flex-shrink-0">
                           ({currentProposal.code})
                         </span>
                       </div>
@@ -2255,11 +2260,11 @@ export default function App() {
                 {/* Price and Base Price Display */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-[11px] text-slate-600 font-semibold">
+                    <label className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">
                       ราคารถตัวเปล่า (บาท) *
                     </label>
                     {currentCalculation.insuranceTotalWithVat > 0 && (
-                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                      <span className="text-[10px] font-bold text-blue-700 dark:text-sky-300 bg-blue-50 dark:bg-sky-950/70 px-2 py-0.5 rounded-full border border-blue-200 dark:border-sky-700/60">
                         + ประกันรวม VAT: {formatBaht(currentCalculation.insuranceTotalWithVat, true)}
                       </span>
                     )}
@@ -2270,7 +2275,7 @@ export default function App() {
                     step="500"
                     value={vehiclePrice || ''}
                     onChange={(e) => setVehiclePrice(Number(e.target.value))}
-                    className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
+                    className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
                     placeholder="เช่น 65000"
                   />
                 </div>
@@ -2281,11 +2286,11 @@ export default function App() {
                 data-card-id="insurance"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
               >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-amber-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-blue-700" />
-                    <span className="text-xs font-bold text-slate-800">
+                    <ShieldCheck className="w-4 h-4 text-blue-700 dark:text-amber-400" />
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                       ความคุ้มครองประกันภัย (Group PA)
                     </span>
                   </div>
@@ -2293,7 +2298,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setShowInsuranceModal(true)}
-                      className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-0.5 cursor-pointer"
+                      className="text-[10px] font-bold text-blue-700 dark:text-sky-400 hover:underline flex items-center gap-0.5 cursor-pointer"
                     >
                       <Info className="w-3 h-3" /> เปรียบเทียบ
                     </button>
@@ -2308,7 +2313,7 @@ export default function App() {
                     className={`py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
                       insurancePlan === 'none'
                         ? 'bg-slate-700 text-white shadow-xs'
-                        : 'glass-pill text-slate-600 hover:bg-white/80'
+                        : 'glass-pill text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-800/80'
                     }`}
                   >
                     ไม่รับประกัน
@@ -2319,7 +2324,7 @@ export default function App() {
                     className={`py-1.5 px-2 rounded-lg font-bold transition-all cursor-pointer ${
                       insurancePlan === 'plan_a'
                         ? 'bg-blue-700 text-white shadow-xs ring-2 ring-blue-700/20'
-                        : 'glass-pill text-blue-900 hover:bg-white/80'
+                        : 'glass-pill text-blue-900 dark:text-sky-200 hover:bg-white/80 dark:hover:bg-slate-800/80'
                     }`}
                   >
                     แผน A (PA)
@@ -2330,7 +2335,7 @@ export default function App() {
                     className={`py-1.5 px-2 rounded-lg font-bold transition-all cursor-pointer relative ${
                       insurancePlan === 'plan_b'
                         ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs ring-2 ring-amber-500/20'
-                        : 'glass-pill text-amber-900 hover:bg-white/80'
+                        : 'glass-pill text-amber-900 dark:text-amber-300 hover:bg-white/80 dark:hover:bg-slate-800/80'
                     }`}
                   >
                     แผน B (PA+)
@@ -2339,10 +2344,10 @@ export default function App() {
 
                 {/* If Plan A or Plan B Selected: Years Selection & Price Breakdown */}
                 {insurancePlan !== 'none' && activeInsurancePlan && (
-                  <div className="pt-1.5 border-t border-slate-200/60 space-y-2 text-xs">
+                  <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2 text-xs">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-600 font-medium">เลือกระยะเวลาคุ้มครอง:</span>
-                      <span className="text-[10px] text-blue-800 font-semibold">
+                      <span className="text-slate-600 dark:text-slate-300 font-medium">เลือกระยะเวลาคุ้มครอง:</span>
+                      <span className="text-[10px] text-blue-800 dark:text-sky-300 font-semibold">
                         โครงการ PA advised by LOCKTON
                       </span>
                     </div>
@@ -2355,8 +2360,8 @@ export default function App() {
                           onClick={() => setInsuranceYears(y)}
                           className={`py-1.5 px-2 rounded-lg font-bold transition-all cursor-pointer ${
                             insuranceYears === y
-                              ? 'bg-blue-900 text-white shadow-xs'
-                              : 'glass-pill text-slate-700 hover:bg-white/80'
+                              ? 'bg-blue-900 dark:bg-sky-600 text-white shadow-xs'
+                              : 'glass-pill text-slate-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-800/80'
                           }`}
                         >
                           <div>{y} ปี</div>
@@ -2367,16 +2372,16 @@ export default function App() {
                       ))}
                     </div>
 
-                    <div className="p-2.5 rounded-xl glass-mini-card text-[11px] text-blue-950 space-y-1">
+                    <div className="p-2.5 rounded-xl glass-mini-card text-[11px] text-blue-950 dark:text-slate-100 space-y-1">
                       <div className="flex justify-between items-center font-bold">
                         <span>{currentCalculation.insurancePlanName}:</span>
-                        <span className="text-blue-700 font-extrabold">
+                        <span className="text-blue-700 dark:text-sky-300 font-extrabold">
                           +{formatBaht(currentCalculation.insuranceTotalWithVat, true)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/50">
+                      <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/50 dark:border-slate-700/60">
                         <span>เบี้ยสุทธิ {formatBaht(currentCalculation.insuranceBasePremium)} + VAT 7% ({formatBaht(currentCalculation.insuranceVat, true)})</span>
-                        <span className="text-blue-800 font-medium">รวมในยอดจัดไฟแนนซ์</span>
+                        <span className="text-blue-800 dark:text-sky-300 font-medium">รวมในยอดจัดไฟแนนซ์</span>
                       </div>
                     </div>
 
@@ -2390,7 +2395,7 @@ export default function App() {
               data-card-id="financing"
                 className="p-3 sm:p-3.5 rounded-2xl glass-panel-indigo relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
               >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-indigo-400/20 to-transparent opacity-90 pointer-events-none" />
 
                 {/* Collapsible Header: นำป้าย 'ยอดจัด & ระยะเวลาผ่อน' ออกตามที่ระบุในรูป */}
                 <div
@@ -2400,30 +2405,30 @@ export default function App() {
                     setExpandedCard((prev) => (prev === 'financing' ? null : 'financing'));
                   }}
                   className={`flex items-center justify-between gap-2 cursor-pointer select-none transition-all ${
-                    expandedCard === 'financing' ? 'pb-2.5 border-b border-blue-200/60' : 'pb-0'
+                    expandedCard === 'financing' ? 'pb-2.5 border-b border-blue-200/60 dark:border-indigo-700/60' : 'pb-0'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-2xs shrink-0">
-                      <Banknote className="w-4 h-4 text-blue-700" />
+                    <div className="w-7 h-7 rounded-xl bg-blue-100 dark:bg-indigo-950/80 text-blue-700 dark:text-indigo-300 flex items-center justify-center shadow-2xs shrink-0">
+                      <Banknote className="w-4 h-4 text-blue-700 dark:text-indigo-300" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <label className="text-[11px] sm:text-xs text-slate-800 font-bold flex items-center gap-1.5 cursor-pointer">
+                        <label className="text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5 cursor-pointer">
                           <span>ข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์</span>
                         </label>
                       </div>
                       {expandedCard !== 'financing' && (
-                        <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-600 mt-0.5 font-medium">
-                          <span className="text-emerald-700 font-bold">
+                        <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-medium">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-bold">
                             ดาวน์ {formatBaht(currentCalculation.downAmount)} ({currentCalculation.downPercent.toFixed(1)}%)
                           </span>
                           <span className="text-slate-400">•</span>
-                          <span className="text-blue-800 font-bold">
+                          <span className="text-blue-800 dark:text-sky-300 font-bold">
                             ผ่อน {term} งวด
                           </span>
                           <span className="text-slate-400">•</span>
-                          <span className="text-slate-700 font-bold">
+                          <span className="text-slate-700 dark:text-slate-200 font-bold">
                             จัด {formatBaht(currentCalculation.financeAmount, true)}
                           </span>
                         </div>
@@ -2438,7 +2443,7 @@ export default function App() {
                       triggerHaptic('light');
                       setExpandedCard((prev) => (prev === 'financing' ? null : 'financing'));
                     }}
-                    className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs shrink-0"
+                    className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700 shadow-2xs shrink-0"
                     title={expandedCard === 'financing' ? 'ย่อกล่อง' : 'ขยายกล่อง'}
                   >
                     {expandedCard === 'financing' ? (
@@ -2455,7 +2460,7 @@ export default function App() {
                 {/* Down Payment Section */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-[11px] text-slate-600 font-semibold">
+                    <label className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">
                       เงินดาวน์ {downMode === 'percent' ? '(%)' : '(บาท)'} *
                     </label>
                     {/* Toggle Mode */}
@@ -2474,7 +2479,7 @@ export default function App() {
                           setDownValue(Math.round(amt));
                         }
                       }}
-                      className="text-[10px] font-bold text-blue-700 hover:text-blue-900 bg-white/80 backdrop-blur-md px-2 py-0.5 rounded-lg border border-blue-200/60 transition-colors cursor-pointer shadow-2xs"
+                      className="text-[10px] font-bold text-blue-700 hover:text-blue-900 dark:text-sky-300 dark:hover:text-sky-200 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-2 py-0.5 rounded-lg border border-blue-200/60 dark:border-sky-700/60 transition-colors cursor-pointer shadow-2xs"
                       title="สลับโหมดใส่เป็นบาท หรือ %"
                     >
                       สลับเป็น {downMode === 'amount' ? '%' : 'บาท'}
@@ -2491,7 +2496,7 @@ export default function App() {
                       setDownValue(isNaN(val) ? 0 : val);
                     }}
                     placeholder="0"
-                    className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none"
+                    className="w-full glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
                   />
                 </div>
 
@@ -2499,7 +2504,7 @@ export default function App() {
                 <div className="pt-0.5">
                   <div className="text-[10px] text-slate-400 mb-1 flex justify-between font-medium">
                     <span>เลือกเงินดาวน์ด่วน:</span>
-                    <span className="font-semibold text-slate-700">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
                       คิดเป็น {currentCalculation.downPercent.toFixed(1)}% (
                       {formatBaht(currentCalculation.downAmount)})
                     </span>
@@ -2514,7 +2519,7 @@ export default function App() {
                           className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer ${
                             downValue === amt
                               ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-xs'
-                              : 'glass-pill text-slate-600 hover:text-slate-900'
+                              : 'glass-pill text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
                           {amt === 0 ? 'ฟรีดาวน์' : `฿${amt.toLocaleString()}`}
@@ -2531,7 +2536,7 @@ export default function App() {
                           className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer ${
                             downValue === pct
                               ? 'bg-gradient-to-r from-blue-700 to-indigo-600 text-white shadow-xs'
-                              : 'glass-pill text-slate-600 hover:text-slate-900'
+                              : 'glass-pill text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
                           {pct}%
@@ -2544,18 +2549,18 @@ export default function App() {
                 {/* ราคายอดจัด (คำนวณและแสดงผลชัดเจนทันทีหลังใส่เงินดาวน์) */}
                 <div className="p-2.5 rounded-xl glass-mini-card space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10.5px] font-bold text-slate-700 flex items-center gap-1.5">
-                      <Banknote className="w-3.5 h-3.5 text-blue-700" />
+                    <span className="text-[10.5px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                      <Banknote className="w-3.5 h-3.5 text-blue-700 dark:text-sky-400" />
                       <span>ราคายอดจัด (หลังหักเงินดาวน์):</span>
                     </span>
-                    <span className="text-sm font-black text-blue-900 font-mono">
+                    <span className="text-sm font-black text-blue-900 dark:text-sky-300 font-mono">
                       {formatBaht(currentCalculation.vehicleFinanceAmount)}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/50 text-[10px]">
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-700/60 text-[10px]">
                     <div className="min-w-0">
                       <span className="text-slate-400 block">ยอดจัดเฉพาะตัวรถ:</span>
-                      <span className="font-bold text-slate-800">
+                      <span className="font-bold text-slate-800 dark:text-slate-100">
                         {formatBaht(currentCalculation.vehicleFinanceAmount)}
                       </span>
                       <MarqueeText className="text-[9px] text-slate-400">
@@ -2564,10 +2569,10 @@ export default function App() {
                     </div>
                     <div className="text-right">
                       <span className="text-slate-400 block">ยอดจัดไฟแนนซ์รวม:</span>
-                      <span className="font-extrabold text-blue-700">
+                      <span className="font-extrabold text-blue-700 dark:text-sky-300">
                         {formatBaht(currentCalculation.financeAmount, true)}
                       </span>
-                      <span className="text-[9px] text-blue-600 block">
+                      <span className="text-[9px] text-blue-600 dark:text-sky-400 block">
                         {currentCalculation.insuranceTotalWithVat > 0 ? '(รวม PA+VAT)' : '(ยอดจัดสุทธิ)'}
                       </span>
                     </div>
@@ -2577,7 +2582,7 @@ export default function App() {
                 {/* Visual Ratio Bar (เงินดาวน์ vs ยอดจัด) */}
                 <div className="pt-0.5 space-y-1">
                   <div className="relative py-0.5">
-                    <div className="h-2.5 w-full bg-slate-200/80 rounded-full overflow-hidden flex p-0.5 border border-white/90 shadow-inner">
+                    <div className="h-2.5 w-full bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden flex p-0.5 border border-white/90 dark:border-slate-700/80 shadow-inner">
                       <div
                         style={{
                           width: `${Math.min(Math.max(currentCalculation.downPercent, 0), 100)}%`,
@@ -2607,12 +2612,12 @@ export default function App() {
                       </div>
                     )}
                   </div>
-                  <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 px-0.5">
-                    <span className="flex items-center gap-1 text-emerald-800">
+                  <div className="flex justify-between items-center text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 px-0.5">
+                    <span className="flex items-center gap-1 text-emerald-800 dark:text-emerald-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                       ดาวน์ {currentCalculation.downPercent.toFixed(1)}% ({formatBaht(currentCalculation.downAmount)})
                     </span>
-                    <span className="flex items-center gap-1 text-blue-900">
+                    <span className="flex items-center gap-1 text-blue-900 dark:text-sky-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
                       จัด {(100 - currentCalculation.downPercent).toFixed(1)}% ({formatBaht(currentCalculation.vehicleFinanceAmount)})
                     </span>
@@ -2622,13 +2627,13 @@ export default function App() {
                 {/* Term Selection */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] text-slate-600 font-semibold">
+                    <label className="block text-[11px] text-slate-600 dark:text-slate-300 font-semibold">
                       ระยะเวลาผ่อน (งวด) *
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowEirInfo(true)}
-                      className="text-[10px] text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      className="text-[10px] text-blue-700 hover:text-blue-900 dark:text-sky-300 dark:hover:text-sky-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Scale className="w-3 h-3 text-amber-500" />
                       เกณฑ์ดอกเบี้ย EIR 23%
@@ -2639,10 +2644,10 @@ export default function App() {
                       id="term-select"
                       value={term}
                       onChange={(e) => setTerm(Number(e.target.value))}
-                      className="w-full appearance-none glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none pr-7 cursor-pointer"
+                      className="w-full appearance-none glass-input-field rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none pr-7 cursor-pointer"
                     >
                       {currentProposal.validTerms.map((t) => (
-                        <option key={t} value={t}>
+                        <option key={t} value={t} className="dark:bg-slate-900 dark:text-slate-100">
                           {t} งวด ({formatTermYearMonth(t)})
                         </option>
                       ))}
@@ -2655,12 +2660,12 @@ export default function App() {
                 <div className="space-y-2 pt-0.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <label className="block text-[11px] text-slate-700 font-bold">
+                      <label className="block text-[11px] text-slate-700 dark:text-slate-200 font-bold">
                         หลักเกณฑ์อัตราดอกเบี้ยที่ใช้
                       </label>
                       {isCustomRateEnabled && (
-                        <span className="text-[9.5px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.5 rounded-full border border-amber-300 flex items-center gap-0.5 shadow-2xs">
-                          <Pencil className="w-2.5 h-2.5 text-amber-700" /> ระบุเอง
+                        <span className="text-[9.5px] bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 font-bold px-1.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-700/70 flex items-center gap-0.5 shadow-2xs">
+                          <Pencil className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" /> ระบุเอง
                         </span>
                       )}
                     </div>
@@ -2669,7 +2674,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={handleResetToProposalRate}
-                          className="text-[10px] text-amber-800 hover:text-amber-950 font-bold px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                          className="text-[10px] text-amber-800 hover:text-amber-950 dark:text-amber-200 dark:hover:text-white font-bold px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/70 border border-amber-300 dark:border-amber-700/70 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                           title="รีเซ็ตกลับเป็นอัตราตามเงื่อนไข Proposal เดิม"
                         >
                           <RotateCcw className="w-2.5 h-2.5" />
@@ -2679,7 +2684,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={handleToggleCustomRate}
-                          className="text-[10px] text-blue-700 hover:text-blue-900 font-bold px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                          className="text-[10px] text-blue-700 hover:text-blue-900 dark:text-sky-300 dark:hover:text-sky-200 font-bold px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-sky-950/70 dark:hover:bg-sky-900/70 border border-blue-200 dark:border-sky-700/70 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                           title="คลิกเพื่อแก้ไขอัตราดอกเบี้ยให้ตรงกับระบบบริษัท"
                         >
                           <Pencil className="w-2.5 h-2.5" />
@@ -2691,31 +2696,31 @@ export default function App() {
 
                   {/* Panel แก้ไขอัตราดอกเบี้ยเมื่อเปิดใช้งาน (Custom Interest Rate Editor) */}
                   {isCustomRateEnabled && (
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/90 to-amber-100/60 border-2 border-amber-400/90 shadow-sm space-y-2.5 animate-fade-in elevated-data-box elevated-box-amber">
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/90 to-amber-100/60 dark:from-amber-950/80 dark:via-slate-900/90 dark:to-amber-950/60 border-2 border-amber-400/90 dark:border-amber-600/70 shadow-sm space-y-2.5 animate-fade-in elevated-data-box elevated-box-amber">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
                             %
                           </div>
                           <div className="min-w-0 flex-1">
-                            <MarqueeText className="text-[11.5px] font-bold text-amber-950">
+                            <MarqueeText className="text-[11.5px] font-bold text-amber-950 dark:text-amber-100">
                               แก้ไขดอกเบี้ยให้ตรงระบบบริษัท
                             </MarqueeText>
-                            <MarqueeText className="text-[9.5px] text-amber-800">
+                            <MarqueeText className="text-[9.5px] text-amber-800 dark:text-amber-300">
                               ปรับเรทดอกเบี้ยสำหรับเคสพิเศษหรือระบบบริษัทที่ตัวเลขไม่ตรง
                             </MarqueeText>
                           </div>
                         </div>
 
                         {/* Switch Type: % ต่อเดือน vs % ต่อปี */}
-                        <div className="flex items-center p-0.5 bg-amber-200/70 rounded-xl border border-amber-300/80 text-[10px] shrink-0">
+                        <div className="flex items-center p-0.5 bg-amber-200/70 dark:bg-amber-950/80 rounded-xl border border-amber-300/80 dark:border-amber-700/70 text-[10px] shrink-0">
                           <button
                             type="button"
                             onClick={() => handleCustomRateTypeChange('monthly')}
                             className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
                               customRateType === 'monthly'
-                                ? 'bg-white text-amber-950 shadow-xs'
-                                : 'text-amber-800 hover:text-amber-950'
+                                ? 'bg-white dark:bg-amber-500 text-amber-950 dark:text-white shadow-xs'
+                                : 'text-amber-800 dark:text-amber-200 hover:text-amber-950 dark:hover:text-white'
                             }`}
                           >
                             % ต่อเดือน
@@ -2725,8 +2730,8 @@ export default function App() {
                             onClick={() => handleCustomRateTypeChange('annual')}
                             className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
                               customRateType === 'annual'
-                                ? 'bg-white text-amber-950 shadow-xs'
-                                : 'text-amber-800 hover:text-amber-950'
+                                ? 'bg-white dark:bg-amber-500 text-amber-950 dark:text-white shadow-xs'
+                                : 'text-amber-800 dark:text-amber-200 hover:text-amber-950 dark:hover:text-white'
                             }`}
                           >
                             % ต่อปี
@@ -2736,8 +2741,8 @@ export default function App() {
 
                       {/* Number Input - ปรับปรุงโครงสร้างให้กว้าง ไม่ซ้อนทับกัน */}
                       <div className="space-y-1.5">
-                        <div className="flex items-center bg-white rounded-xl border-2 border-amber-400 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-300 shadow-inner px-3 py-1.5 transition-all">
-                          <label className="text-xs font-bold text-amber-900 mr-2 shrink-0 select-none">
+                        <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl border-2 border-amber-400 dark:border-amber-600 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-300 shadow-inner px-3 py-1.5 transition-all">
+                          <label className="text-xs font-bold text-amber-900 dark:text-amber-200 mr-2 shrink-0 select-none">
                             อัตราดอกเบี้ย:
                           </label>
                           <input
@@ -2748,9 +2753,9 @@ export default function App() {
                             value={customRateInput}
                             onChange={(e) => handleCustomRateChange(e.target.value)}
                             placeholder={customRateType === 'monthly' ? '1.10' : '6.50'}
-                            className="flex-1 text-center text-lg font-black text-slate-900 outline-none bg-transparent min-w-0"
+                            className="flex-1 text-center text-lg font-black text-slate-900 dark:text-white outline-none bg-transparent min-w-0"
                           />
-                          <span className="text-xs font-bold text-amber-900 bg-amber-100/90 px-2.5 py-1 rounded-lg border border-amber-300/80 shrink-0 ml-2 select-none whitespace-nowrap">
+                          <span className="text-xs font-bold text-amber-900 dark:text-amber-200 bg-amber-100/90 dark:bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-300/80 dark:border-amber-700/70 shrink-0 ml-2 select-none whitespace-nowrap">
                             {customRateType === 'monthly' ? '% ต่อเดือน' : '% ต่อปี'}
                           </span>
                         </div>
@@ -2761,7 +2766,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(-0.05)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="ลดลง 0.05%"
                             >
                               -0.05%
@@ -2769,14 +2774,14 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(-0.01)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="ลดลง 0.01%"
                             >
                               -0.01%
                             </button>
                           </div>
 
-                          <span className="text-[10px] text-amber-800 font-medium select-none">
+                          <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium select-none">
                             ปุ่มปรับละเอียด
                           </span>
 
@@ -2784,7 +2789,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(0.01)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="เพิ่มขึ้น 0.01%"
                             >
                               +0.01%
@@ -2792,7 +2797,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(0.05)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 active:scale-95 border border-amber-300 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="เพิ่มขึ้น 0.05%"
                             >
                               +0.05%
@@ -2803,9 +2808,9 @@ export default function App() {
 
                       {/* Quick Preset Chips */}
                       <div className="space-y-1">
-                        <div className="text-[10px] text-amber-900 font-semibold flex items-center justify-between">
+                        <div className="text-[10px] text-amber-900 dark:text-amber-200 font-semibold flex items-center justify-between">
                           <span>แตะเพื่อเลือกเรทดอกเบี้ยยอดนิยม:</span>
-                          <span className="text-[9.5px] text-amber-800">
+                          <span className="text-[9.5px] text-amber-800 dark:text-amber-300">
                             {customRateType === 'monthly' ? 'Flat Rate รายเดือน' : 'อัตราต่อปี'}
                           </span>
                         </div>
@@ -2823,7 +2828,7 @@ export default function App() {
                                 className={`text-[10px] px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
                                   isSelected
                                     ? 'bg-amber-600 text-white shadow-2xs scale-105'
-                                    : 'bg-white hover:bg-amber-100/90 text-amber-900 border border-amber-200'
+                                    : 'bg-white hover:bg-amber-100/90 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-700/60'
                                 }`}
                               >
                                 {presetRate.toFixed(2)}%
@@ -2834,17 +2839,17 @@ export default function App() {
                       </div>
 
                       {/* Compliance & EIR Information */}
-                      <div className="pt-1.5 border-t border-amber-200/80 flex flex-wrap items-center justify-between gap-1 text-[10px]">
-                        <span className="text-amber-950 font-medium">
-                          EIR สัญญานี้: <strong className="text-amber-950 font-black">{currentCalculation.eirAnnualPercent.toFixed(2)}% ต่อปี</strong>{' '}
+                      <div className="pt-1.5 border-t border-amber-200/80 dark:border-amber-800/60 flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                        <span className="text-amber-950 dark:text-amber-100 font-medium">
+                          EIR สัญญานี้: <strong className="text-amber-950 dark:text-amber-100 font-black">{currentCalculation.eirAnnualPercent.toFixed(2)}% ต่อปี</strong>{' '}
                           {currentCalculation.eirAnnualPercent <= 23 ? (
-                            <span className="text-emerald-700 font-bold">(✓ ไม่เกิน 23%)</span>
+                            <span className="text-emerald-700 dark:text-emerald-400 font-bold">(✓ ไม่เกิน 23%)</span>
                           ) : (
-                            <span className="text-amber-800 font-bold">(คำนวณตามเรทที่ระบุ)</span>
+                            <span className="text-amber-800 dark:text-amber-300 font-bold">(คำนวณตามเรทที่ระบุ)</span>
                           )}
                         </span>
                         <div className="flex items-center gap-2">
-                          <label className="flex items-center gap-1 cursor-pointer text-amber-950 font-medium">
+                          <label className="flex items-center gap-1 cursor-pointer text-amber-950 dark:text-amber-100 font-medium">
                             <input
                               type="checkbox"
                               checked={enforceEirCap}
@@ -2856,7 +2861,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={handleResetToProposalRate}
-                            className="text-amber-800 underline hover:text-amber-950 font-bold cursor-pointer"
+                            className="text-amber-800 dark:text-amber-300 underline hover:text-amber-950 dark:hover:text-white font-bold cursor-pointer"
                           >
                             ยกเลิก
                           </button>
@@ -2876,26 +2881,26 @@ export default function App() {
                           : 'glass-mini-card'
                       }`}
                     >
-                      <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug">
+                      <div className="text-[10.5px] font-semibold text-slate-700 dark:text-slate-200 mb-1 leading-snug">
                         อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
-                        <span className="text-amber-600 font-bold">ตาม Proposal ดั้งเดิม</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">ตาม Proposal ดั้งเดิม</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="text-base font-black text-slate-800">
+                        <div className="text-base font-black text-slate-800 dark:text-slate-100">
                           {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}
-                          <span className="text-[11px] font-normal text-slate-500 ml-1">% / เดือน</span>
+                          <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 ml-1">% / เดือน</span>
                         </div>
                         {isCustomRateEnabled ? (
-                          <span className="text-slate-600 text-[9.5px] bg-slate-200/80 px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-slate-600 dark:text-slate-300 text-[9.5px] bg-slate-200/80 dark:bg-slate-700/80 px-1.5 py-0.5 rounded font-bold">
                             เรทเดิม
                           </span>
                         ) : currentCalculation.isCappedByEir ? (
-                          <span className="text-amber-800 text-[9.5px] bg-amber-200/80 px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-amber-800 dark:text-amber-200 text-[9.5px] bg-amber-200/80 dark:bg-amber-900/70 px-1.5 py-0.5 rounded font-bold">
                             เกินเพดาน
                           </span>
                         ) : null}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                         {isCustomRateEnabled
                           ? 'ระบบคำนวณตามเรทที่คุณระบุเองด้านขวาแทน'
                           : `ขออัตรา ${(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% ตามเงื่อนไข Proposal`}
@@ -2912,10 +2917,10 @@ export default function App() {
                           : 'glass-panel-blue'
                       }`}
                     >
-                      <div className="text-[10.5px] font-semibold text-slate-700 mb-1 leading-snug flex items-center justify-between">
+                      <div className="text-[10.5px] font-semibold text-slate-700 dark:text-slate-200 mb-1 leading-snug flex items-center justify-between">
                         <span>
                           อัตราดอกเบี้ย (%) <span className="text-rose-500">*</span>{' '}
-                          <span className={isCustomRateEnabled ? 'text-amber-800 font-bold' : 'text-amber-600 font-bold'}>
+                          <span className={isCustomRateEnabled ? 'text-amber-800 dark:text-amber-300 font-bold' : 'text-amber-600 dark:text-amber-400 font-bold'}>
                             {isCustomRateEnabled ? 'กำหนดเอง (ระบบบริษัท)' : currentCalculation.eirMaxMessage}
                           </span>
                         </span>
@@ -2923,7 +2928,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={handleToggleCustomRate}
-                            className="text-[9.5px] text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
+                            className="text-[9.5px] text-blue-700 hover:text-blue-900 dark:text-sky-300 dark:hover:text-sky-200 font-bold underline cursor-pointer"
                           >
                             แก้ไขเรท
                           </button>
@@ -2932,18 +2937,18 @@ export default function App() {
                       <div className="flex items-center justify-between">
                         <div
                           className={`text-base font-black flex items-center gap-1 ${
-                            isCustomRateEnabled ? 'text-amber-950' : 'text-emerald-700'
+                            isCustomRateEnabled ? 'text-amber-950 dark:text-amber-200' : 'text-emerald-700 dark:text-emerald-400'
                           }`}
                         >
                           {isCustomRateEnabled ? (
-                            <Pencil className="w-3.5 h-3.5 text-amber-600 inline" />
+                            <Pencil className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 inline" />
                           ) : (
-                            <Lock className="w-3.5 h-3.5 text-emerald-600 inline" />
+                            <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 inline" />
                           )}
                           {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}
                           <span
                             className={`text-[11px] font-normal ml-1 ${
-                              isCustomRateEnabled ? 'text-amber-800' : 'text-emerald-800'
+                              isCustomRateEnabled ? 'text-amber-800 dark:text-amber-300' : 'text-emerald-800 dark:text-emerald-300'
                             }`}
                           >
                             % / เดือน
@@ -2952,8 +2957,8 @@ export default function App() {
                         <span
                           className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
                             isCustomRateEnabled
-                              ? 'bg-amber-200 text-amber-950'
-                              : 'bg-emerald-200 text-emerald-900'
+                              ? 'bg-amber-200 dark:bg-amber-900/70 text-amber-950 dark:text-amber-100'
+                              : 'bg-emerald-200 dark:bg-emerald-900/70 text-emerald-900 dark:text-emerald-100'
                           }`}
                         >
                           {isCustomRateEnabled ? 'ใช้คำนวณจริง' : 'บังคับใช้จริง'}
@@ -2961,7 +2966,7 @@ export default function App() {
                       </div>
                       <div
                         className={`text-[10px] font-medium mt-0.5 ${
-                          isCustomRateEnabled ? 'text-amber-900 font-semibold' : 'text-emerald-800'
+                          isCustomRateEnabled ? 'text-amber-900 dark:text-amber-200 font-semibold' : 'text-emerald-800 dark:text-emerald-300'
                         }`}
                       >
                         {isCustomRateEnabled
@@ -2973,22 +2978,22 @@ export default function App() {
 
                   {/* Explanation Callout when Capped (only if not customized or if enforceEirCap is on) */}
                   {currentCalculation.isCappedByEir && (
-                    <div className="p-2.5 rounded-xl glass-panel-amber text-[11px] text-amber-950 space-y-1 shadow-xs animate-fade-in">
-                      <div className="flex items-start gap-1.5 font-bold text-amber-900">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="p-2.5 rounded-xl glass-panel-amber text-[11px] text-amber-950 dark:text-amber-100 space-y-1 shadow-xs animate-fade-in">
+                      <div className="flex items-start gap-1.5 font-bold text-amber-900 dark:text-amber-200">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                         <span>ทำไมถึงต้องใช้ {(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}% :</span>
                       </div>
-                      <p className="text-[10.5px] text-amber-900/90 leading-relaxed pl-5">
-                        เนื่องจากตามเงื่อนไขของเคสนี้ (ราคารถ {formatBaht(currentCalculation.baseVehiclePrice)}, เงินดาวน์ {formatBaht(currentCalculation.downAmount)} และระยะเวลาผ่อน {term} งวด) หากใช้ดอกเบี้ย {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% จะทำให้อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR) สูงเกินเพดานกฎหมายกำหนด (ไม่เกิน 23% ต่อปี) ระบบจึงทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย คือ <strong className="text-emerald-800 underline font-bold">{(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}%</strong> แทน เพื่อให้ชุดข้อมูลชุดนี้ผ่านเกณฑ์การอนุมัติครับ
+                      <p className="text-[10.5px] text-amber-900/90 dark:text-amber-200/90 leading-relaxed pl-5">
+                        เนื่องจากตามเงื่อนไขของเคสนี้ (ราคารถ {formatBaht(currentCalculation.baseVehiclePrice)}, เงินดาวน์ {formatBaht(currentCalculation.downAmount)} และระยะเวลาผ่อน {term} งวด) หากใช้ดอกเบี้ย {(currentCalculation.proposalMonthlyRate * 100).toFixed(3)}% จะทำให้อัตราดอกเบี้ยที่แท้จริงต่อปี (EIR) สูงเกินเพดานกฎหมายกำหนด (ไม่เกิน 23% ต่อปี) ระบบจึงทำการล็อกและบังคับให้ใช้อัตราสูงสุดที่ไม่ผิดกฎหมาย คือ <strong className="text-emerald-800 dark:text-emerald-300 underline font-bold">{(currentCalculation.effectiveMonthlyRate * 100).toFixed(3)}%</strong> แทน เพื่อให้ชุดข้อมูลชุดนี้ผ่านเกณฑ์การอนุมัติครับ
                       </p>
                       <div className="pl-5 pt-0.5 flex items-center justify-between">
-                        <span className="text-[10px] text-amber-800 font-medium">
+                        <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium">
                           EIR สัญญานี้: {currentCalculation.eirAnnualPercent.toFixed(2)}% ต่อปี (ผ่านเกณฑ์)
                         </span>
                         <button
                           type="button"
                           onClick={() => setShowEirInfo(true)}
-                          className="text-[10px] text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer"
+                          className="text-[10px] text-blue-700 hover:text-blue-900 dark:text-sky-300 dark:hover:text-sky-200 font-bold underline cursor-pointer"
                         >
                           อ่านเกณฑ์ควบคุมทั้งหมด →
                         </button>
@@ -3002,13 +3007,13 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIncludeDeliveryFees(!includeDeliveryFees)}
-                    className="w-full flex items-center justify-between py-1.5 px-2.5 glass-pill rounded-xl text-[11px] font-medium text-slate-600 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between py-1.5 px-2.5 glass-pill rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Receipt className="w-3.5 h-3.5 text-blue-700" />
+                      <Receipt className="w-3.5 h-3.5 text-blue-700 dark:text-sky-400" />
                       ค่าใช้จ่ายวันออกรถ (พ.ร.บ. / ทะเบียน / ประกันรถหาย)
                     </span>
-                    <span className="text-[10px] text-blue-700 font-bold">
+                    <span className="text-[10px] text-blue-700 dark:text-sky-400 font-bold">
                       {includeDeliveryFees ? 'ซ่อน' : '+ เพิ่ม'}
                     </span>
                   </button>
@@ -3017,31 +3022,31 @@ export default function App() {
                     <div className="mt-2 p-2.5 glass-mini-card text-xs space-y-2 elevated-data-box">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] text-slate-500 font-medium">
+                          <label className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                             ค่าจดทะเบียน + พ.ร.บ.
                           </label>
                           <input
                             type="number"
                             value={registrationFee}
                             onChange={(e) => setRegistrationFee(Number(e.target.value))}
-                            className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold"
+                            className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold text-slate-900 dark:text-slate-100"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-500 font-medium">
+                          <label className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                             ประกันรถหาย (1-2 ปี)
                           </label>
                           <input
                             type="number"
                             value={theftInsuranceFee}
                             onChange={(e) => setTheftInsuranceFee(Number(e.target.value))}
-                            className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold"
+                            className="w-full glass-input-field px-2 py-1 rounded-lg text-xs font-semibold text-slate-900 dark:text-slate-100"
                           />
                         </div>
                       </div>
-                      <div className="text-[10px] text-slate-500 flex justify-between pt-1 border-t border-slate-200/50">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 flex justify-between pt-1 border-t border-slate-200/50 dark:border-slate-700/60">
                         <span>รวมค่าใช้จ่ายส่วนเพิ่ม:</span>
-                        <span className="font-bold text-slate-800">
+                        <span className="font-bold text-slate-800 dark:text-slate-100">
                           {formatBaht(registrationFee + theftInsuranceFee)}
                         </span>
                       </div>
@@ -3057,7 +3062,7 @@ export default function App() {
               data-card-id="officer"
               className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
             >
-              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
               <div
                 data-card-toggle="true"
                 onClick={() => {
@@ -3065,19 +3070,19 @@ export default function App() {
                   setIsOfficerExpanded((prev) => !prev);
                 }}
                 className={`flex items-center justify-between gap-2 cursor-pointer select-none ${
-                  isOfficerExpanded ? 'pb-2 border-b border-blue-200/60' : ''
+                  isOfficerExpanded ? 'pb-2 border-b border-blue-200/60 dark:border-sky-700/60' : ''
                 }`}
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-2xs shrink-0">
-                    <UserCheck className="w-4 h-4 text-blue-700" />
+                  <div className="w-7 h-7 rounded-xl bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center shadow-2xs shrink-0">
+                    <UserCheck className="w-4 h-4 text-blue-700 dark:text-sky-300" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[11px] sm:text-xs text-slate-800 font-bold block">
+                    <span className="text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 font-bold block">
                       ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา
                     </span>
                     {!isOfficerExpanded && (
-                      <span className="text-[10px] text-slate-600 block truncate">
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 block truncate">
                         {officerName.trim() || 'ยังไม่ระบุชื่อ'}
                         {officerCode.trim() ? ` · รหัส ${officerCode.trim()}` : ''}
                         {officerLicense.trim() ? ` · นายหน้า ${officerLicense.trim()}` : ''}
@@ -3092,7 +3097,7 @@ export default function App() {
                     triggerHaptic('light');
                     setIsOfficerExpanded((prev) => !prev);
                   }}
-                  className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs shrink-0"
+                  className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700 shadow-2xs shrink-0"
                   title={isOfficerExpanded ? 'ย่อกล่อง' : 'แก้ไขข้อมูลเจ้าหน้าที่'}
                 >
                   {isOfficerExpanded ? (
@@ -3106,7 +3111,7 @@ export default function App() {
               {isOfficerExpanded && (
                 <div className="grid grid-cols-12 gap-2 pt-0.5 animate-fade-in">
                   <div className="col-span-7 sm:col-span-8">
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
                       ชื่อเจ้าหน้าที่
                     </label>
                     <input
@@ -3114,11 +3119,11 @@ export default function App() {
                       value={officerName}
                       onChange={(e) => handleOfficerNameChange(e.target.value)}
                       placeholder="ใส่ชื่อเจ้าหน้าที่"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold outline-none"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
                     />
                   </div>
                   <div className="col-span-5 sm:col-span-4">
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
                       โค้ด / รหัส
                     </label>
                     <input
@@ -3126,13 +3131,13 @@ export default function App() {
                       value={officerCode}
                       onChange={(e) => handleOfficerCodeChange(e.target.value)}
                       placeholder="ใส่โค้ด"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 font-bold font-mono outline-none"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 dark:text-sky-200 font-bold font-mono outline-none"
                     />
                   </div>
                   <div className="col-span-12">
-                    <label className="block text-[10px] text-slate-600 font-medium mb-1 flex items-center justify-between">
-                      <span className="flex items-center gap-1 font-semibold text-blue-950">
-                        <Award className="w-3 h-3 text-amber-600" />
+                    <label className="block text-[10px] text-slate-600 dark:text-slate-300 font-medium mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1 font-semibold text-blue-950 dark:text-sky-200">
+                        <Award className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                         เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
                       </span>
                       <span className="text-[9px] text-slate-400 font-normal">
@@ -3144,7 +3149,7 @@ export default function App() {
                       value={officerLicense}
                       onChange={(e) => handleOfficerLicenseChange(e.target.value)}
                       placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 font-semibold font-mono outline-none"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 dark:text-sky-200 font-semibold font-mono outline-none"
                     />
                   </div>
                 </div>
@@ -3156,9 +3161,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => handleTabChange('home')}
-                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer whitespace-nowrap"
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 dark:border-slate-700 shadow-2xs transition-all cursor-pointer whitespace-nowrap"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-500 shrink-0" />
+                <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span>โฮมเพจ</span>
               </button>
               <button
@@ -3180,13 +3185,13 @@ export default function App() {
           <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
             {/* Step Header Badge */}
             <div className="flex items-center justify-between px-1 text-xs">
-              <span className="font-extrabold text-sky-950 flex items-center gap-1.5">
+              <span className="font-extrabold text-sky-950 dark:text-sky-100 flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs">
                   2
                 </span>
                 สรุปผลค่างวด & ตารางเปรียบเทียบ
               </span>
-              <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200">
+              <span className="text-[10px] text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/70 px-2.5 py-0.5 rounded-full font-bold border border-sky-200 dark:border-sky-700/70">
                 ขั้นตอน 2 / 3
               </span>
             </div>
@@ -3194,44 +3199,44 @@ export default function App() {
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece matching Reference UI */}
             <div data-card-id="result" className="glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden">
               {/* Subtle top specular sheen */}
-              <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95 pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/25 to-transparent opacity-95 pointer-events-none" />
 
               {/* Proposal Code Badge & Insurance Badge */}
               <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1.5">
-                <span className="inline-block bg-white/85 backdrop-blur-md text-sky-800 border border-sky-200/80 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
+                <span className="inline-block bg-white/85 dark:bg-sky-950/75 backdrop-blur-md text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-700/70 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
                   {currentCalculation.proposalCode}
                 </span>
                 {currentCalculation.insurancePremium > 0 && (
-                  <span className="inline-flex items-center gap-1 bg-amber-50/85 backdrop-blur-md text-amber-800 border border-amber-200 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
-                    <ShieldCheck className="w-3 h-3 text-amber-600" />
+                  <span className="inline-flex items-center gap-1 bg-amber-50/85 dark:bg-amber-950/70 backdrop-blur-md text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700/70 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
+                    <ShieldCheck className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                     {currentCalculation.insurancePlanName}
                   </span>
                 )}
                 {isCustomRateEnabled && (
-                  <span className="inline-flex items-center gap-1 bg-amber-100/90 backdrop-blur-md text-amber-950 border border-amber-300 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
-                    <Pencil className="w-2.5 h-2.5 text-amber-700" />
+                  <span className="inline-flex items-center gap-1 bg-amber-100/90 dark:bg-amber-950/80 backdrop-blur-md text-amber-950 dark:text-amber-100 border border-amber-300 dark:border-amber-700/70 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-2xs">
+                    <Pencil className="w-2.5 h-2.5 text-amber-700 dark:text-amber-300" />
                     ดอกเบี้ยกำหนดเอง: {currentCalculation.rateDisplayText}
                   </span>
                 )}
                 {currentCalculation.minInterestApplied && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-rose-700 bg-rose-50/85 backdrop-blur-md border border-rose-200 px-2.5 py-0.5 rounded-full font-semibold">
+                  <span className="inline-flex items-center gap-0.5 text-[10px] text-rose-700 dark:text-rose-200 bg-rose-50/85 dark:bg-rose-950/70 backdrop-blur-md border border-rose-200 dark:border-rose-700/70 px-2.5 py-0.5 rounded-full font-semibold">
                     <ShieldAlert className="w-3 h-3" /> ดอกเบี้ยขั้นต่ำ
                   </span>
                 )}
               </div>
 
-              <p className="text-[11px] text-slate-500 font-medium tracking-wide">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
                 ค่างวดต่อเดือน (รวมภาษีมูลค่าเพิ่ม 7%)
               </p>
 
               {/* Monthly Installment Highlight with Cyan-Blue Accent */}
-              <div className="text-3xl sm:text-4xl font-black text-[#0284c7] my-1.5 tracking-tight drop-shadow-xs">
+              <div className="text-3xl sm:text-4xl font-black text-[#0284c7] dark:text-sky-400 my-1.5 tracking-tight drop-shadow-xs">
                 {formatBaht(currentCalculation.monthlyInstallment)}
-                <span className="text-xs font-normal text-slate-500 ml-1.5">/เดือน</span>
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1.5">/เดือน</span>
               </div>
 
               {/* Installment Rounding Badge */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/70 backdrop-blur-md border border-cyan-200/80 text-[10px] text-cyan-900 font-semibold mb-1 shadow-2xs">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/70 dark:bg-cyan-950/70 backdrop-blur-md border border-cyan-200/80 dark:border-cyan-700/60 text-[10px] text-cyan-900 dark:text-cyan-200 font-semibold mb-1 shadow-2xs">
                 <span>ปัดเศษลงท้าย 0 หรือ 5 (ระบบ Next Capital)</span>
                 {currentCalculation.rawMonthlyInstallment !== currentCalculation.monthlyInstallment && (
                   <span className="text-slate-400 font-normal">
@@ -3240,51 +3245,51 @@ export default function App() {
                 )}
               </div>
 
-              <MarqueeText className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto text-center">
+              <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 font-medium max-w-xs mx-auto text-center">
                 {currentCalculation.remarkText}
               </MarqueeText>
 
               {/* Summary Grid - Translucent Glass Mini Cards */}
-              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-sky-100/80 text-left text-[11px]">
+              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-sky-100/80 dark:border-slate-700/70 text-left text-[11px]">
                 <div className="glass-mini-card p-2.5 rounded-2xl min-w-0">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดจัดไฟแนนซ์รวม:</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.financeAmount, true)}
                   </span>
                   {currentCalculation.insuranceTotalWithVat > 0 ? (
-                    <MarqueeText className="text-[9px] text-sky-700 font-semibold">
+                    <MarqueeText className="text-[9px] text-sky-700 dark:text-sky-300 font-semibold">
                       (รถ {formatBaht(currentCalculation.vehicleFinanceAmount)} + PA+VAT {formatBaht(currentCalculation.insuranceTotalWithVat, true)})
                     </MarqueeText>
                   ) : (
-                    <div className="text-[9px] text-slate-500">
+                    <div className="text-[9px] text-slate-500 dark:text-slate-400">
                       (ยอดจัดตัวรถ)
                     </div>
                   )}
                 </div>
                 <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ดอกเบี้ยรายเดือน:</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.monthlyInterest, true)} /งวด
                   </span>
-                  <div className="text-[9px] text-slate-500">
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400">
                     รวมทั้งสัญญา: {formatBaht(currentCalculation.totalInterest, true)}
                   </div>
                 </div>
                 <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดรวมทั้งสัญญา:</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.totalWithVat, true)}
                   </span>
-                  <div className="text-[9px] text-slate-500">
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400">
                     (ยอดจัด + ดอกเบี้ยรวม)
                   </div>
                 </div>
                 <div className="glass-mini-card p-2.5 rounded-2xl">
                   <div className="text-[10px] text-slate-400 font-medium">ภาษีมูลค่าเพิ่มในสัญญา (7%):</div>
-                  <span className="font-bold text-slate-900 text-xs">
+                  <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.vatAmount, true)}
                   </span>
-                  <div className="text-[9px] text-slate-500">
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400">
                     ยอดก่อน VAT: {formatBaht(currentCalculation.totalBeforeVat, true)}
                   </div>
                 </div>
@@ -3294,21 +3299,21 @@ export default function App() {
               {includeDeliveryFees && (
                 <div className="mt-2.5 p-2.5 glass-panel-amber rounded-2xl text-left flex justify-between items-center text-xs shadow-2xs">
                   <div>
-                    <span className="font-bold text-amber-950 text-[11px] block">
+                    <span className="font-bold text-amber-950 dark:text-amber-100 text-[11px] block">
                       เงินพร้อมออกรถ (วันรับรถ):
                     </span>
-                    <span className="text-[10px] text-amber-800">
+                    <span className="text-[10px] text-amber-800 dark:text-amber-300">
                       ดาวน์ {formatBaht(currentCalculation.downAmount)} + ทะเบียน พรบ. ประกัน
                     </span>
                   </div>
-                  <span className="text-sm font-extrabold text-amber-900">
+                  <span className="text-sm font-extrabold text-amber-900 dark:text-amber-200">
                     {formatBaht(currentCalculation.totalDriveAwayCost)}
                   </span>
                 </div>
               )}
 
               {/* Save Case & Native Share Actions inside Hero card */}
-              <div className="mt-3 pt-3 border-t border-sky-100/80 space-y-2">
+              <div className="mt-3 pt-3 border-t border-sky-100/80 dark:border-slate-700/70 space-y-2">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -3338,10 +3343,10 @@ export default function App() {
                       triggerHaptic('selection');
                       setShowSavedCases(true);
                     }}
-                    className="py-2 px-3 rounded-xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs active:scale-98 transition-all cursor-pointer"
+                    className="py-2 px-3 rounded-xl bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/90 dark:border-slate-700 shadow-2xs active:scale-98 transition-all cursor-pointer"
                     title="เปิดดูรายการเคสที่บันทึกไว้ในอุปกรณ์"
                   >
-                    <FolderArchive className="w-3.5 h-3.5 text-slate-500" />
+                    <FolderArchive className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>ดูเคสทั้งหมด ({savedCasesCount})</span>
                   </button>
                 </div>
@@ -3349,14 +3354,14 @@ export default function App() {
                 {/* Share Format Selector & Preview Toggle */}
                 <div className="pt-1 space-y-2">
                   {/* Format Style Segmented Control */}
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-sky-100/55 backdrop-blur-sm border border-white/85 rounded-xl shadow-2xs">
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-sky-100/55 dark:bg-slate-800/80 backdrop-blur-sm border border-white/85 dark:border-slate-700/80 rounded-xl shadow-2xs">
                     <button
                       type="button"
                       onClick={() => handleShareStyleChange('card')}
                       className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
                         shareTextStyle === 'card'
-                          ? 'bg-white text-emerald-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <span>✨</span>
@@ -3367,8 +3372,8 @@ export default function App() {
                       onClick={() => handleShareStyleChange('compare')}
                       className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
                         shareTextStyle === 'compare'
-                          ? 'bg-white text-emerald-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <span>📊</span>
@@ -3379,8 +3384,8 @@ export default function App() {
                       onClick={() => handleShareStyleChange('compact')}
                       className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${
                         shareTextStyle === 'compact'
-                          ? 'bg-white text-emerald-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <span>⚡</span>
@@ -3398,8 +3403,8 @@ export default function App() {
                       }}
                       className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-98 whitespace-nowrap shadow-2xs ${
                         showSharePreview
-                          ? 'bg-sky-50 text-sky-800 border-sky-300'
-                          : 'bg-white/90 text-slate-700 border-slate-200/90 hover:bg-white'
+                          ? 'bg-sky-50 dark:bg-sky-950/70 text-sky-800 dark:text-sky-200 border-sky-300 dark:border-sky-700'
+                          : 'bg-white/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800'
                       }`}
                       title="ดูตัวอย่างข้อความก่อนแชร์"
                     >
@@ -3411,15 +3416,15 @@ export default function App() {
                       onClick={handleQuickCopy}
                       className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-98 whitespace-nowrap shadow-2xs ${
                         copyFeedback
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          : 'bg-white/90 hover:bg-white text-slate-700 border-slate-200/90'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
+                          : 'bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700'
                       }`}
                       title="คัดลอกข้อความลงคลิปบอร์ด"
                     >
                       {copyFeedback ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                       )}
                       <span>{copyFeedback ? 'คัดลอกแล้ว!' : 'คัดลอก'}</span>
                     </button>
@@ -3427,7 +3432,7 @@ export default function App() {
 
                   {/* Optional Collapsible Preview Box */}
                   {showSharePreview && (
-                    <pre className="text-left font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-slate-800 bg-white/95 border border-emerald-200 rounded-xl p-3 shadow-inner max-h-56 overflow-y-auto select-text">
+                    <pre className="text-left font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100 bg-white/95 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-800/70 rounded-xl p-3 shadow-inner max-h-56 overflow-y-auto select-text">
                       {buildInstallmentSummaryText()}
                     </pre>
                   )}
@@ -3489,9 +3494,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => handleTabChange('financing')}
-                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 <span>ย้อนกลับ</span>
               </button>
               <button
@@ -3682,9 +3687,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => handleTabChange('calculation')}
-                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 shadow-2xs transition-all cursor-pointer"
+                className="flex-1 py-3 px-3 rounded-2xl bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-slate-200/90 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 <span>ย้อนกลับ: ตารางค่างวด</span>
               </button>
               <button
@@ -3784,7 +3789,7 @@ export default function App() {
                     className={`group relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-2.5 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 overflow-hidden ${
                       isActive
                         ? 'text-white font-extrabold drop-shadow-[0_1px_2px_rgba(12,74,110,0.65)]'
-                        : 'text-slate-900 hover:text-sky-950 hover:bg-white/20 font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)]'
+                        : 'text-slate-900 dark:text-slate-100 hover:text-sky-950 dark:hover:text-white hover:bg-white/20 dark:hover:bg-slate-700/40 font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)] dark:drop-shadow-none'
                     }`}
                   >
                     {/* Tactile Crystal Ripple Wave on Tap */}
@@ -3800,7 +3805,7 @@ export default function App() {
                       className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
                         isActive
                           ? 'text-white animate-tab-icon -translate-y-0.5 drop-shadow-[0_2px_6px_rgba(255,255,255,0.55)]'
-                          : 'text-slate-900 group-hover:-translate-y-0.5 group-hover:scale-110'
+                          : 'text-slate-900 dark:text-slate-200 group-hover:-translate-y-0.5 group-hover:scale-110'
                       }`}
                     />
                     <span
@@ -4021,23 +4026,23 @@ export default function App() {
       {/* Cloud Sync & Google Account Modal */}
       {showCloudSyncModal && (
         <div
-          className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm animate-fade-in"
           onClick={() => setShowCloudSyncModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white shadow-2xl border border-sky-100 p-4 sm:p-5 space-y-3"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-sky-100 dark:border-slate-700/80 p-4 sm:p-5 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 flex items-center justify-center">
                   <Cloud className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                     ซิงค์ข้อมูล Cloud อัตโนมัติ
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     เชื่อมต่อบัญชี Google เพื่อซิงค์ข้อมูลข้ามอุปกรณ์แบบเรียลไทม์
                   </p>
                 </div>
@@ -4045,7 +4050,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowCloudSyncModal(false)}
-                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer"
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
                 aria-label="ปิดหน้าต่าง Cloud Sync"
               >
                 <X className="w-4 h-4" />
@@ -4058,7 +4063,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowCloudSyncModal(false)}
-                className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+                className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer"
               >
                 ปิดหน้าต่าง
               </button>

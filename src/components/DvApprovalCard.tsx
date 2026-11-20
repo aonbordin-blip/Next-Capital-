@@ -747,10 +747,10 @@ export function DvApprovalCard({
         data-card-id="dv"
         data-card-toggle="true"
         onClick={handleToggle}
-        className={`glass-card-primary rounded-[24px] p-3 sm:p-4 h-full flex flex-col justify-between relative overflow-hidden elevated-data-box border shadow-md cursor-pointer select-none transition-all ${
+        className={`glass-card-primary rounded-[24px] p-3 sm:p-4 h-full flex flex-col justify-between relative overflow-hidden elevated-data-box border shadow-md cursor-pointer select-none transition-all dark:bg-slate-900/90 dark:bg-gradient-to-br dark:from-slate-900 dark:via-emerald-950/45 dark:to-sky-950/55 ${
           isExpanded
-            ? 'border-emerald-400 ring-2 ring-emerald-400/40'
-            : 'border-sky-200/80 hover:border-emerald-300'
+            ? 'border-emerald-400 ring-2 ring-emerald-400/40 dark:border-emerald-500'
+            : 'border-sky-200/80 hover:border-emerald-300 dark:border-emerald-800/60 dark:hover:border-emerald-600'
         } ${className}`}
       >
         {/* Top Gradient Header Accent Bar */}
@@ -762,31 +762,31 @@ export function DvApprovalCard({
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs shadow-emerald-500/30 shrink-0">
                 <FileCheck2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight min-w-0 flex-1">
+              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 dark:text-slate-100 leading-tight min-w-0 flex-1">
                 <MarqueeText>ขออนุมัติ DV</MarqueeText>
               </h3>
             </div>
-            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 shrink-0 shadow-2xs">
               <ArrowUpRight className="w-3.5 h-3.5" />
             </span>
           </div>
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-1 flex-wrap">
-              <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80">
+              <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700/70">
                 <MarqueeText fitContent>Dealer Verification</MarqueeText>
               </span>
               {dvRequests.length > 0 && (
-                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
+                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700/70 tabular-nums">
                   บันทึก {dvRequests.length}
                 </span>
               )}
               {eligibilityEval.failedTopics.length > 0 && (
-                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700/70">
                   {eligibilityEval.failedTopics.map((f) => f.code).join(', ')}
                 </span>
               )}
             </div>
-            <MarqueeText className="text-[10px] text-slate-500 font-medium">
+            <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
               {eligibilityEval.failedTopics.length > 0
                 ? `ดึงเงื่อนไขขอ DV อัตโนมัติ (${eligibilityEval.failedTopics.length} หัวข้อ)`
                 : dvRequests.length > 0
@@ -804,21 +804,21 @@ export function DvApprovalCard({
         accentBarClass="bg-gradient-to-r from-teal-400 via-emerald-500 to-sky-500"
       >
         {/* Sticky Modal Header matching QuotationModal */}
-        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 text-white rounded-2xl shadow-md shadow-emerald-500/20 flex-shrink-0">
               <FileCheck2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight min-w-0">
                   <MarqueeText fitContent>ขออนุมัติเคส DV</MarqueeText>
                 </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 shrink-0">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700/70 shrink-0">
                   Dealer Verification
                 </span>
               </div>
-              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 ดึงชื่อลูกค้า, รุ่นรถ, และชื่อเจ้าหน้าที่ (CK) อัตโนมัติ พร้อมส่งออกเข้า LINE ทันที
               </MarqueeText>
             </div>
@@ -828,16 +828,16 @@ export function DvApprovalCard({
             <button
               type="button"
               onClick={handleSyncFromCurrent}
-              className="p-1.5 sm:px-2.5 rounded-xl bg-white hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200 text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+              className="p-1.5 sm:px-2.5 rounded-xl bg-white hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:hover:text-sky-300 dark:border-slate-700 text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
               title="ดึงข้อมูลลูกค้า รุ่นรถ เงินดาวน์ และเจ้าหน้าที่ล่าสุด"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
+              <RefreshCw className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span className="hidden sm:inline text-[10.5px]">ดึงข้อมูลล่าสุด</span>
             </button>
             <button
               type="button"
               onClick={handleToggle}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
               title="ปิดหน้าต่าง"
               aria-label="Close"
             >
@@ -847,8 +847,8 @@ export function DvApprovalCard({
         </div>
 
         {/* Segmented Tab Switcher: Form vs Saved DV Requests */}
-        <div className="shrink-0 px-3 sm:px-5 py-2 bg-white border-b border-slate-200/80 flex items-center gap-2">
-          <div className="flex-1 grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl">
+        <div className="shrink-0 px-3 sm:px-5 py-2 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-2">
+          <div className="flex-1 grid grid-cols-2 gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             <button
               type="button"
               onClick={() => {
@@ -857,8 +857,8 @@ export function DvApprovalCard({
               }}
               className={`py-1.5 px-2.5 rounded-lg text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 modalTab === 'form'
-                  ? 'bg-white text-emerald-800 shadow-2xs border border-emerald-200/80'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-emerald-800 shadow-2xs border border-emerald-200/80 dark:bg-slate-900 dark:text-emerald-300 dark:border-emerald-700/70'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
               }`}
             >
               <FileCheck2 className="w-3.5 h-3.5 shrink-0" />
@@ -872,17 +872,17 @@ export function DvApprovalCard({
               }}
               className={`py-1.5 px-2.5 rounded-lg text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 modalTab === 'saved'
-                  ? 'bg-white text-sky-900 shadow-2xs border border-sky-200/80'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-sky-900 shadow-2xs border border-sky-200/80 dark:bg-slate-900 dark:text-sky-300 dark:border-sky-700/70'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
               }`}
             >
               <Database className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">รายการที่บันทึก</span>
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[9.5px] font-extrabold ${
+                className={`px-1.5 py-0.2 rounded-full text-[9.5px] font-extrabold tabular-nums ${
                   modalTab === 'saved'
                     ? 'bg-sky-600 text-white'
-                    : 'bg-slate-200 text-slate-700'
+                    : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
                 }`}
               >
                 {dvRequests.length}
@@ -892,20 +892,20 @@ export function DvApprovalCard({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {modalTab === 'saved' ? (
             <div className="space-y-3">
               {/* Cloud Status + Search Bar */}
-              <div className="p-3 rounded-2xl bg-white border border-sky-200/80 shadow-2xs space-y-2.5">
+              <div className="p-3 rounded-2xl bg-white dark:bg-slate-900/90 border border-sky-200/80 dark:border-sky-800/60 shadow-2xs space-y-2.5">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-                    <Cloud className="w-4 h-4 text-sky-600 shrink-0" />
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                    <Cloud className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
                     {firebaseUser ? (
-                      <span className="text-emerald-700">
+                      <span className="text-emerald-700 dark:text-emerald-400">
                         ซิงก์ Realtime Database อัตโนมัติ ({firebaseUser.email})
                       </span>
                     ) : (
-                      <span className="text-amber-800">
+                      <span className="text-amber-800 dark:text-amber-300">
                         ยังไม่เข้าสู่ระบบ Google (ข้อมูลเก็บไว้ในเครื่อง)
                       </span>
                     )}
@@ -918,7 +918,7 @@ export function DvApprovalCard({
                         void signInWithGoogle();
                       }}
                       disabled={isSigningIn}
-                      className="text-[10.5px] font-bold px-2.5 py-1 rounded-xl bg-sky-600 hover:bg-sky-700 text-white cursor-pointer transition-colors disabled:opacity-60"
+                      className="text-[10.5px] font-bold px-2.5 py-1 rounded-xl bg-sky-600 hover:bg-sky-700 text-white cursor-pointer transition-colors disabled:opacity-60 whitespace-nowrap"
                     >
                       {isSigningIn ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ Google'}
                     </button>
@@ -926,13 +926,13 @@ export function DvApprovalCard({
                 </div>
 
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
                     value={savedSearch}
                     onChange={(e) => setSavedSearch(e.target.value)}
                     placeholder="ค้นหาชื่อลูกค้า, รุ่นรถ, ดีลเลอร์ หรือหัวข้อ DV..."
-                    className="w-full glass-input-field rounded-xl pl-8 pr-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none"
+                    className="w-full glass-input-field rounded-xl pl-8 pr-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
                   />
                 </div>
 
@@ -961,10 +961,10 @@ export function DvApprovalCard({
                         triggerHaptic('selection');
                         setSavedStatusFilter(f.key);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition-all cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition-all cursor-pointer tabular-nums ${
                         savedStatusFilter === f.key
                           ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
-                          : 'bg-slate-50 hover:bg-sky-50 text-slate-600 border-slate-200'
+                          : 'bg-slate-50 hover:bg-sky-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300 dark:border-slate-700'
                       }`}
                     >
                       {f.label}
@@ -975,14 +975,14 @@ export function DvApprovalCard({
 
               {/* Saved DV Requests List */}
               {filteredSavedDvRequests.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white border border-slate-200/80 text-center space-y-2">
-                  <Database className="w-8 h-8 text-slate-300 mx-auto" />
-                  <p className="text-xs font-bold text-slate-700">
+                <div className="p-8 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 text-center space-y-2">
+                  <Database className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     {dvRequests.length === 0
                       ? 'ยังไม่มีลูกค้าขอ DV ที่บันทึกไว้'
                       : 'ไม่พบรายการที่ตรงกับคำค้นหา'}
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {dvRequests.length === 0
                       ? 'กรอกข้อมูลในแท็บ "แบบฟอร์มขอ DV" แล้วกดปุ่มบันทึกข้อมูลลูกค้าขอ DV เพื่อกลับมาดูภายหลังได้เลย'
                       : 'ลองเปลี่ยนคำค้นหาหรือตัวกรองสถานะด้านบน'}
@@ -1006,21 +1006,21 @@ export function DvApprovalCard({
                     return (
                       <div
                         key={item.id}
-                        className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5"
+                        className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <h4 className="text-sm font-extrabold text-slate-900 truncate">
+                              <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
                                 {item.customerName}
                               </h4>
                               <span
                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                                   item.status === 'approved'
-                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700/70'
                                     : item.status === 'rejected'
-                                    ? 'bg-rose-100 text-rose-800 border-rose-300'
-                                    : 'bg-amber-100 text-amber-800 border-amber-300'
+                                    ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700/70'
+                                    : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700/70'
                                 }`}
                               >
                                 {item.status === 'approved'
@@ -1030,7 +1030,7 @@ export function DvApprovalCard({
                                   : 'รออนุมัติ DV'}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10.5px] text-slate-500 mt-0.5">
+                            <div className="flex items-center gap-1.5 text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
                               <Clock className="w-3 h-3 shrink-0" />
                               <span>อัปเดต {formatSavedDateTime(item.updatedAt)}</span>
                               {item.dealer && <span>• {item.dealer}</span>}
@@ -1059,7 +1059,7 @@ export function DvApprovalCard({
                                       : st.val === 'rejected'
                                       ? 'bg-rose-600 text-white border-rose-600'
                                       : 'bg-amber-500 text-white border-amber-500'
-                                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
                                 }`}
                               >
                                 {st.label}
@@ -1068,28 +1068,28 @@ export function DvApprovalCard({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-50/90 p-2.5 rounded-xl border border-slate-100">
+                        <div className="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-50/90 dark:bg-slate-800/70 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/80">
                           <div className="truncate">
-                            <span className="text-slate-400">รุ่นรถ: </span>
-                            <span className="font-bold text-slate-800">
+                            <span className="text-slate-400 dark:text-slate-400">รุ่นรถ: </span>
+                            <span className="font-bold text-slate-800 dark:text-slate-100">
                               {item.bikeModel || '-'}
                             </span>
                           </div>
                           <div className="truncate">
-                            <span className="text-slate-400">เงินดาวน์: </span>
-                            <span className="font-bold text-slate-800">
+                            <span className="text-slate-400 dark:text-slate-400">เงินดาวน์: </span>
+                            <span className="font-bold text-slate-800 dark:text-slate-100">
                               {item.downPayment || '-'}
                             </span>
                           </div>
                           <div className="truncate">
-                            <span className="text-slate-400">รายได้: </span>
-                            <span className="font-bold text-slate-800">
+                            <span className="text-slate-400 dark:text-slate-400">รายได้: </span>
+                            <span className="font-bold text-slate-800 dark:text-slate-100">
                               {item.income || '-'}
                             </span>
                           </div>
                           <div className="truncate">
-                            <span className="text-slate-400">NCB: </span>
-                            <span className="font-bold text-slate-800">{item.ncb || '-'}</span>
+                            <span className="text-slate-400 dark:text-slate-400">NCB: </span>
+                            <span className="font-bold text-slate-800 dark:text-slate-100">{item.ncb || '-'}</span>
                           </div>
                         </div>
 
@@ -1098,7 +1098,7 @@ export function DvApprovalCard({
                             {item.topics.map((t, i) => (
                               <span
                                 key={`${item.id}-t-${i}`}
-                                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/80"
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/80 dark:bg-indigo-950/70 dark:text-indigo-200 dark:border-indigo-800/70"
                               >
                                 {t}
                               </span>
@@ -1107,7 +1107,7 @@ export function DvApprovalCard({
                         )}
 
                         {item.remark && (
-                          <p className="text-[11px] text-slate-600 bg-amber-50/60 border border-amber-200/60 rounded-xl px-2.5 py-1.5 whitespace-pre-line">
+                          <p className="text-[11px] text-slate-600 dark:text-amber-100 bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/60 rounded-xl px-2.5 py-1.5 whitespace-pre-line">
                             {item.remark}
                           </p>
                         )}
@@ -1117,7 +1117,7 @@ export function DvApprovalCard({
                             <button
                               type="button"
                               onClick={() => handleLoadSavedDv(item)}
-                              className="px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                              className="px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 dark:bg-sky-950/70 dark:hover:bg-sky-900/80 dark:text-sky-200 dark:border-sky-800/70 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                             >
                               <RotateCcw className="w-3 h-3" />
                               <span>เปิดดู / แก้ไข</span>
@@ -1134,12 +1134,12 @@ export function DvApprovalCard({
                                   // ignore
                                 }
                               }}
-                              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                             >
                               {isItemCopied ? (
                                 <>
-                                  <Check className="w-3 h-3 text-emerald-600" />
-                                  <span className="text-emerald-700">คัดลอกแล้ว</span>
+                                  <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                  <span className="text-emerald-700 dark:text-emerald-300">คัดลอกแล้ว</span>
                                 </>
                               ) : (
                                 <>
@@ -1181,7 +1181,7 @@ export function DvApprovalCard({
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteDvId(null)}
-                                className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer"
+                                className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-bold cursor-pointer"
                               >
                                 ยกเลิก
                               </button>
@@ -1190,7 +1190,7 @@ export function DvApprovalCard({
                             <button
                               type="button"
                               onClick={() => setConfirmDeleteDvId(item.id)}
-                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 cursor-pointer transition-colors"
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 dark:border-rose-800/70 cursor-pointer transition-colors"
                               title="ลบรายการนี้"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1206,14 +1206,14 @@ export function DvApprovalCard({
           ) : (
             <>
               {editingDvId && (
-                <div className="p-2.5 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-[11px] font-bold text-sky-900">
+                <div className="p-2.5 rounded-2xl bg-sky-50 border border-sky-200 dark:bg-sky-950/60 dark:border-sky-800/70 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200">
                     กำลังแก้ไขเคสที่บันทึกไว้: {dvCustomerName}
                   </span>
                   <button
                     type="button"
                     onClick={handleStartNewDvForm}
-                    className="text-[10.5px] font-bold px-2.5 py-1 rounded-xl bg-white hover:bg-sky-100 text-sky-800 border border-sky-200 cursor-pointer"
+                    className="text-[10.5px] font-bold px-2.5 py-1 rounded-xl bg-white hover:bg-sky-100 text-sky-800 border border-sky-200 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-sky-300 dark:border-sky-700/70 cursor-pointer"
                   >
                     + สร้างเคสใหม่จากข้อมูลปัจจุบัน
                   </button>
@@ -1222,712 +1222,712 @@ export function DvApprovalCard({
 
               {/* Linked Customer Eligibility Status Banner */}
               <div
-            className={`p-3 rounded-2xl border shadow-2xs space-y-2 ${
-              eligibilityEval.failedTopics.length > 0 || eligibilityEval.aceWarnings.length > 0
-                ? 'bg-gradient-to-r from-rose-50/90 via-amber-50/70 to-white border-rose-200'
-                : eligibilityEval.hasAnyInput
-                ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border-emerald-200'
-                : 'bg-gradient-to-r from-sky-50/80 to-white border-sky-200/80'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Sparkles className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                <span className="text-[11px] font-extrabold text-slate-800">
-                  ลิงก์ข้อมูลลูกค้า & เกณฑ์: {eligibilityEval.tier.shortTitle}
-                </span>
-                <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white shrink-0">
-                  {eligibilityEval.tier.salesChannel}
-                </span>
-                {isAceCustomer && (
-                  <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
-                    ACE
-                  </span>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleSyncFromCurrent}
-                className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 shadow-2xs flex items-center gap-1 cursor-pointer"
+                className={`p-3 rounded-2xl border shadow-2xs space-y-2 ${
+                  eligibilityEval.failedTopics.length > 0 || eligibilityEval.aceWarnings.length > 0
+                    ? 'bg-gradient-to-r from-rose-50/90 via-amber-50/70 to-white border-rose-200 dark:from-rose-950/60 dark:via-amber-950/40 dark:to-slate-900/90 dark:border-rose-800/70'
+                    : eligibilityEval.hasAnyInput
+                    ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border-emerald-200 dark:from-emerald-950/60 dark:via-teal-950/40 dark:to-slate-900/90 dark:border-emerald-800/70'
+                    : 'bg-gradient-to-r from-sky-50/80 to-white border-sky-200/80 dark:from-sky-950/60 dark:to-slate-900/90 dark:border-sky-800/70'
+                }`}
               >
-                <RefreshCw className="w-3 h-3" />
-                <span>ซิงค์ข้อมูลลูกค้าเข้า DV</span>
-              </button>
-            </div>
-
-            {eligibilityEval.hasAnyInput ? (
-              <div className="flex flex-wrap gap-1.5 text-[10px]">
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
-                    eligibilityEval.fieldStatus.age === 'fail'
-                      ? 'bg-rose-100 text-rose-800 border-rose-300'
-                      : eligibilityEval.fieldStatus.age === 'pass'
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : 'bg-white text-slate-500 border-slate-200'
-                  }`}
-                >
-                  {eligibilityEval.fieldStatus.age === 'fail' ? (
-                    <XCircle className="w-3 h-3" />
-                  ) : eligibilityEval.fieldStatus.age === 'pass' ? (
-                    <CheckCircle2 className="w-3 h-3" />
-                  ) : null}
-                  อายุ: {customerAge?.trim() ? `${customerAge} ปี` : '-'} (เกณฑ์ {eligibilityEval.tier.ageLabel})
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
-                    eligibilityEval.fieldStatus.workMonths === 'fail'
-                      ? 'bg-rose-100 text-rose-800 border-rose-300'
-                      : eligibilityEval.fieldStatus.workMonths === 'pass'
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : 'bg-white text-slate-500 border-slate-200'
-                  }`}
-                >
-                  {eligibilityEval.fieldStatus.workMonths === 'fail' ? (
-                    <XCircle className="w-3 h-3" />
-                  ) : eligibilityEval.fieldStatus.workMonths === 'pass' ? (
-                    <CheckCircle2 className="w-3 h-3" />
-                  ) : null}
-                  อายุงาน: {customerWorkMonths?.trim() ? formatTenureThai(customerWorkMonths, true) : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
-                    eligibilityEval.fieldStatus.income === 'fail'
-                      ? 'bg-rose-100 text-rose-800 border-rose-300'
-                      : eligibilityEval.fieldStatus.income === 'pass'
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : 'bg-white text-slate-500 border-slate-200'
-                  }`}
-                >
-                  {eligibilityEval.fieldStatus.income === 'fail' ? (
-                    <XCircle className="w-3 h-3" />
-                  ) : eligibilityEval.fieldStatus.income === 'pass' ? (
-                    <CheckCircle2 className="w-3 h-3" />
-                  ) : null}
-                  รายได้: {customerIncome?.trim() ? Number(customerIncome).toLocaleString('th-TH') : '-'} (≥{eligibilityEval.tier.incomeLabel})
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
-                    eligibilityEval.fieldStatus.residenceMonths === 'fail'
-                      ? 'bg-rose-100 text-rose-800 border-rose-300'
-                      : eligibilityEval.fieldStatus.residenceMonths === 'pass'
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : 'bg-white text-slate-500 border-slate-200'
-                  }`}
-                >
-                  {eligibilityEval.fieldStatus.residenceMonths === 'fail' ? (
-                    <XCircle className="w-3 h-3" />
-                  ) : eligibilityEval.fieldStatus.residenceMonths === 'pass' ? (
-                    <CheckCircle2 className="w-3 h-3" />
-                  ) : null}
-                  พักอาศัย: {customerResidenceMonths?.trim() ? formatTenureThai(customerResidenceMonths, true) : '-'} (≥{eligibilityEval.tier.residenceLabel})
-                </span>
-              </div>
-            ) : (
-              <p className="text-[10.5px] text-slate-500">
-                สามารถกรอก อายุ / อายุงาน / รายได้ / ระยะเวลาพักอาศัย ในกล่อง "ข้อมูลลูกค้า" หน้าโฮมเพจ เพื่อดึงและเทียบเกณฑ์ขอ DV อัตโนมัติ
-              </p>
-            )}
-
-            {(isAceCustomer || proposalKey === 'aec') && (
-              <div className="text-[10px] font-bold text-amber-900 bg-amber-100/70 border border-amber-300 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                <span>{ACE_FULL_NOTE}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Main 2-Column Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* COLUMN 1 (Left) */}
-            <div className="space-y-3.5">
-              {/* 1. ชื่อลูกค้า (Auto-populated) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-blue border border-sky-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-sky-600" />
-                    <span>ชื่อลูกค้า</span>
-                  </label>
-                  <span className="text-[9px] text-sky-700 bg-sky-50 border border-sky-200/70 px-1.5 py-0.5 rounded font-semibold">
-                    ดึงอัตโนมัติ
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={dvCustomerName}
-                  onChange={(e) => {
-                    setDvCustomerName(e.target.value);
-                    if (onUpdateCustomerName) {
-                      onUpdateCustomerName(e.target.value);
-                    }
-                  }}
-                  placeholder="ระบุชื่อ-นามสกุลลูกค้า"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
-                />
-              </div>
-
-              {/* 2. หัวข้อ (รองรับหลายหัวข้อ + ปุ่มเพิ่มหัวข้อ + ตัดทางลัดออก) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-purple border border-indigo-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                    <label className="text-[11px] font-bold text-slate-700">
-                      หัวข้อขออนุมัติ DV
-                    </label>
-                    {topics.length > 1 && (
-                      <span className="text-[9.5px] px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-700 font-bold">
-                        {topics.length} ข้อ
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                    <span className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100">
+                      ลิงก์ข้อมูลลูกค้า & เกณฑ์: {eligibilityEval.tier.shortTitle}
+                    </span>
+                    <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white shrink-0">
+                      {eligibilityEval.tier.salesChannel}
+                    </span>
+                    {isAceCustomer && (
+                      <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
+                        ACE
                       </span>
                     )}
                   </div>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveTopicIndexForModal(null);
-                      setShowAllTopicsModal(true);
-                    }}
-                    className="text-[9.5px] text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 px-2 py-0.5 rounded-lg font-semibold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                    onClick={handleSyncFromCurrent}
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-sky-300 dark:border-sky-700/70 shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap"
                   >
-                    <Tag className="w-3 h-3 text-indigo-600" />
-                    <span>ดูตาราง 18 หัวข้อ</span>
+                    <RefreshCw className="w-3 h-3" />
+                    <span>ซิงค์ข้อมูลลูกค้าเข้า DV</span>
                   </button>
                 </div>
 
-                {/* Topic Rows */}
-                <div className="space-y-2.5">
-                  {topics.map((itemTopic, idx) => {
-                    const matchedCode =
-                      DV_TOPICS.find((t) => itemTopic.startsWith(t.code))?.code || '';
-                    return (
-                      <div
-                        key={idx}
-                        className="p-2 sm:p-2.5 rounded-xl bg-indigo-50/40 border border-indigo-100 space-y-1.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-indigo-900 flex items-center gap-1">
-                            <span className="w-4 h-4 rounded-full bg-indigo-200/80 text-indigo-800 flex items-center justify-center text-[9px] font-extrabold">
-                              {idx + 1}
-                            </span>
-                            <span>หัวข้อที่ {idx + 1}</span>
-                          </span>
-
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveTopicIndexForModal(idx);
-                                setShowAllTopicsModal(true);
-                              }}
-                              className="text-[9px] text-indigo-600 hover:text-indigo-800 px-1.5 py-0.5 rounded hover:bg-indigo-100 transition-colors cursor-pointer"
-                              title="เลือกจากตาราง 18 ข้อ"
-                            >
-                              เลือกจากตาราง
-                            </button>
-                            {topics.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTopic(idx)}
-                                className="text-[9.5px] text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer flex items-center gap-0.5"
-                                title="ลบหัวข้อนี้"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Dropdown Select from 18 codes */}
-                        <select
-                          value={matchedCode}
-                          onChange={(e) => {
-                            const found = DV_TOPICS.find((t) => t.code === e.target.value);
-                            if (found) {
-                              handleTopicChange(idx, `${found.code} : ${found.label}`);
-                            }
-                          }}
-                          className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-bold text-indigo-950 bg-white/95 border border-indigo-200/90 cursor-pointer shadow-2xs"
-                        >
-                          <option value="" disabled>
-                            -- เลือกหัวข้อที่ {idx + 1} (18 รหัส) --
-                          </option>
-                          {Object.entries(groupedTopics).map(([groupName, items]) => (
-                            <optgroup key={groupName} label={`📌 ${groupName}`}>
-                              {items.map((item) => (
-                                <option key={item.code} value={item.code}>
-                                  {item.code} : {item.label}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))}
-                        </select>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Add Topic Button */}
-                <button
-                  type="button"
-                  onClick={() => handleAddTopic()}
-                  className="mt-2.5 w-full py-2 px-3 rounded-xl border border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.99] cursor-pointer shadow-2xs"
-                >
-                  <Plus className="w-4 h-4 text-indigo-600" />
-                  <span>เพิ่มหัวข้อขออนุมัติ DV</span>
-                </button>
-              </div>
-
-              {/* 3. NCB (Only 4 options: Normal, Not Found, Default 1, Default 2) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-emerald border border-emerald-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>NCB (เครดิตบูโร)</span>
-                  </label>
-                  <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded font-semibold">
-                    4 ตัวเลือก
-                  </span>
-                </div>
-
-                {/* Text input */}
-                <input
-                  type="text"
-                  value={ncb}
-                  onChange={(e) => setNcb(e.target.value)}
-                  placeholder="Normal / Not Found / Default 1 / Default 2"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 mb-2"
-                />
-
-                {/* 4 Exact Button Options */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                  {NCB_OPTIONS.map((opt) => {
-                    const isSelected = ncb.trim().toLowerCase() === opt.toLowerCase();
-                    let activeStyles = 'bg-emerald-600 text-white border-emerald-600 shadow-2xs';
-                    let inactiveStyles =
-                      'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200/80';
-
-                    if (opt === 'Not Found') {
-                      activeStyles = 'bg-amber-500 text-white border-amber-500 shadow-2xs';
-                      inactiveStyles =
-                        'bg-white hover:bg-amber-50 text-amber-800 border-amber-200/80';
-                    } else if (opt === 'Default 1') {
-                      activeStyles = 'bg-orange-500 text-white border-orange-500 shadow-2xs';
-                      inactiveStyles =
-                        'bg-white hover:bg-orange-50 text-orange-800 border-orange-200/80';
-                    } else if (opt === 'Default 2') {
-                      activeStyles = 'bg-rose-600 text-white border-rose-600 shadow-2xs';
-                      inactiveStyles =
-                        'bg-white hover:bg-rose-50 text-rose-800 border-rose-200/80';
-                    }
-
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setNcb(opt);
-                        }}
-                        className={`text-[10px] py-1.5 px-2 rounded-xl border font-bold transition-all text-center cursor-pointer ${
-                          isSelected ? activeStyles : inactiveStyles
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 4. Dealer */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box border border-sky-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Dealer (ชื่อร้านตัวแทนจำหน่าย)</span>
-                  </label>
-                  <span className="text-[9px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">
-                    จำค่าอัตโนมัติ
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={dealer}
-                  onChange={(e) => handleDealerChange(e.target.value)}
-                  placeholder="เช่น สหพานิช, ฮอนด้าแสงชัย, ดีลเลอร์ กทม."
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
-                />
-              </div>
-
-              {/* 5. อาชีพ */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box border border-sky-100/90 shadow-2xs">
-                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 mb-1">
-                  <Briefcase className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>อาชีพ</span>
-                </label>
-                <input
-                  type="text"
-                  value={occupation}
-                  onChange={(e) => setOccupation(e.target.value)}
-                  placeholder="เช่น พนักงานประจำ, ค้าขาย, ไรเดอร์"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 mb-1.5"
-                />
-                <div className="flex flex-wrap gap-1">
-                  {OCCUPATION_PRESETS.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setOccupation(p);
-                      }}
-                      className={`text-[9.5px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
-                        occupation === p
-                          ? 'bg-indigo-600 text-white border-indigo-600 font-bold'
-                          : 'bg-white hover:bg-indigo-50 text-slate-600 border-slate-200/80 font-medium'
+                {eligibilityEval.hasAnyInput ? (
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                        eligibilityEval.fieldStatus.age === 'fail'
+                          ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-800/70'
+                          : eligibilityEval.fieldStatus.age === 'pass'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-800/70'
+                          : 'bg-white text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                       }`}
                     >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 6. เอกสารการเงิน (สลิปเงินเดือน, หนังสือรับรองเงินเดือน, Statement 4 เดือน, Statement 6 เดือน, ไม่มีเอกสาร) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-blue border border-sky-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600" />
-                    <span>เอกสารการเงิน</span>
-                  </label>
-                  <span className="text-[9px] text-blue-700 bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-semibold">
-                    5 ตัวเลือก
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={financialDocs}
-                  onChange={(e) => setFinancialDocs(e.target.value)}
-                  placeholder="เลือกหรือพิมพ์เอกสารการเงิน"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 mb-1.5"
-                />
-                <div className="flex flex-wrap gap-1">
-                  {FINANCIAL_DOCS_OPTIONS.map((doc) => {
-                    const isSelected = financialDocs === doc;
-                    return (
-                      <button
-                        key={doc}
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setFinancialDocs(doc);
-                        }}
-                        className={`text-[9.5px] px-2 py-1 rounded-lg border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-2xs'
-                            : 'bg-white hover:bg-blue-50 text-slate-700 border-slate-200/80 font-medium'
-                        }`}
-                      >
-                        {doc}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* COLUMN 2 (Right) */}
-            <div className="space-y-3.5">
-              {/* 7. รุ่นรถ (Auto-populated) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-blue border border-sky-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <Bike className="w-3.5 h-3.5 text-sky-600" />
-                    <span>รุ่นรถ</span>
-                  </label>
-                  <span className="text-[9px] text-sky-700 bg-sky-50 border border-sky-200/70 px-1.5 py-0.5 rounded font-semibold">
-                    ดึงอัตโนมัติ
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={bikeModel}
-                  onChange={(e) => setBikeModel(e.target.value)}
-                  placeholder="ระบุชื่อรุ่นรถ เช่น Honda Wave 110i"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
-                />
-              </div>
-
-              {/* 7.1 รหัสรุ่นรถ (NEW: แยกจากรุ่นรถชัดเจนตามความต้องการ) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-indigo border border-indigo-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>รหัสรุ่นรถ</span>
-                  </label>
-                  <span className="text-[9px] text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded font-semibold">
-                    ดึงอัตโนมัติ
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={bikeCode}
-                  onChange={(e) => setBikeCode(e.target.value)}
-                  placeholder="ระบุรหัสรุ่นรถ เช่น AFS110"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
-                />
-              </div>
-
-              {/* 8. เงินดาวน์ (Auto-populated) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-emerald border border-emerald-100/90 shadow-2xs">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <Coins className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>เงินดาวน์</span>
-                  </label>
-                  <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-1.5 py-0.5 rounded font-semibold">
-                    ดึงจากค่างวด
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={downPayment}
-                  onChange={(e) => setDownPayment(e.target.value)}
-                  placeholder="เช่น 0 บาท (ฟรีดาวน์ 0%) หรือ 10,000 บาท (15%)"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
-                />
-              </div>
-
-              {/* 9. หมายเหตุ (วางไว้ใต้เงินดาวน์โดยตรง) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-amber border border-amber-200/90 bg-gradient-to-br from-amber-50/40 via-white to-white shadow-2xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
-                    <MessageSquareText className="w-3.5 h-3.5 text-amber-600" />
-                    <span>หมายเหตุ</span>
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    {remark && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setRemark('');
-                        }}
-                        className="text-[9.5px] px-2 py-0.5 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/70 border border-amber-300/60 transition-colors"
-                        title="ล้างหมายเหตุ"
-                      >
-                        ล้างข้อมูล
-                      </button>
-                    )}
-                    <span className="text-[9px] text-amber-800 bg-amber-100/80 border border-amber-300/70 px-1.5 py-0.5 rounded font-semibold">
-                      ข้อมูลเพิ่มเติม
+                      {eligibilityEval.fieldStatus.age === 'fail' ? (
+                        <XCircle className="w-3 h-3" />
+                      ) : eligibilityEval.fieldStatus.age === 'pass' ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                      ) : null}
+                      อายุ: {customerAge?.trim() ? `${customerAge} ปี` : '-'} (เกณฑ์ {eligibilityEval.tier.ageLabel})
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                        eligibilityEval.fieldStatus.workMonths === 'fail'
+                          ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-800/70'
+                          : eligibilityEval.fieldStatus.workMonths === 'pass'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-800/70'
+                          : 'bg-white text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                      }`}
+                    >
+                      {eligibilityEval.fieldStatus.workMonths === 'fail' ? (
+                        <XCircle className="w-3 h-3" />
+                      ) : eligibilityEval.fieldStatus.workMonths === 'pass' ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                      ) : null}
+                      อายุงาน: {customerWorkMonths?.trim() ? formatTenureThai(customerWorkMonths, true) : '-'} (≥{eligibilityEval.tier.workMonthsLabel})
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                        eligibilityEval.fieldStatus.income === 'fail'
+                          ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-800/70'
+                          : eligibilityEval.fieldStatus.income === 'pass'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-800/70'
+                          : 'bg-white text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                      }`}
+                    >
+                      {eligibilityEval.fieldStatus.income === 'fail' ? (
+                        <XCircle className="w-3 h-3" />
+                      ) : eligibilityEval.fieldStatus.income === 'pass' ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                      ) : null}
+                      รายได้: {customerIncome?.trim() ? Number(customerIncome).toLocaleString('th-TH') : '-'} (≥{eligibilityEval.tier.incomeLabel})
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border font-bold ${
+                        eligibilityEval.fieldStatus.residenceMonths === 'fail'
+                          ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-800/70'
+                          : eligibilityEval.fieldStatus.residenceMonths === 'pass'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-800/70'
+                          : 'bg-white text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                      }`}
+                    >
+                      {eligibilityEval.fieldStatus.residenceMonths === 'fail' ? (
+                        <XCircle className="w-3 h-3" />
+                      ) : eligibilityEval.fieldStatus.residenceMonths === 'pass' ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                      ) : null}
+                      พักอาศัย: {customerResidenceMonths?.trim() ? formatTenureThai(customerResidenceMonths, true) : '-'} (≥{eligibilityEval.tier.residenceLabel})
                     </span>
                   </div>
-                </div>
-                <textarea
-                  value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
-                  rows={3}
-                  placeholder="ระบุข้อมูลเพิ่มเติม เช่น มีผู้ค้ำประกัน, ที่อยู่จัดส่งเอกสาร หรือเงื่อนไขพิเศษ"
-                  className="w-full glass-input-field px-3 py-2 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 leading-relaxed min-h-[78px] resize-y outline-none transition-all focus:ring-1 focus:ring-amber-500/40"
-                />
+                ) : (
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                    สามารถกรอก อายุ / อายุงาน / รายได้ / ระยะเวลาพักอาศัย ในกล่อง "ข้อมูลลูกค้า" หน้าโฮมเพจ เพื่อดึงและเทียบเกณฑ์ขอ DV อัตโนมัติ
+                  </p>
+                )}
+
+                {(isAceCustomer || proposalKey === 'aec') && (
+                  <div className="text-[10px] font-bold text-amber-900 bg-amber-100/70 border border-amber-300 dark:text-amber-200 dark:bg-amber-950/50 dark:border-amber-800/70 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" />
+                    <span>{ACE_FULL_NOTE}</span>
+                  </div>
+                )}
               </div>
 
-              {/* 10. รายได้ */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box border border-sky-100/90 shadow-2xs">
-                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 mb-1">
-                  <Wallet className="w-3.5 h-3.5 text-teal-600" />
-                  <span>รายได้</span>
-                </label>
-                <input
-                  type="text"
-                  value={income}
-                  onChange={(e) => setIncome(e.target.value)}
-                  placeholder="เช่น 18,000 บาท/เดือน"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 mb-1.5"
-                />
-                <div className="flex flex-wrap gap-1">
-                  {INCOME_PRESETS.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setIncome(p);
+              {/* Main 2-Column Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* COLUMN 1 (Left) */}
+                <div className="space-y-3.5">
+                  {/* 1. ชื่อลูกค้า (Auto-populated) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-blue border border-sky-100/90 dark:border-sky-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                        <span>ชื่อลูกค้า</span>
+                      </label>
+                      <span className="text-[9px] text-sky-700 bg-sky-50 border border-sky-200/70 dark:text-sky-300 dark:bg-sky-950/70 dark:border-sky-800/70 px-1.5 py-0.5 rounded font-semibold">
+                        ดึงอัตโนมัติ
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={dvCustomerName}
+                      onChange={(e) => {
+                        setDvCustomerName(e.target.value);
+                        if (onUpdateCustomerName) {
+                          onUpdateCustomerName(e.target.value);
+                        }
                       }}
-                      className={`text-[9.5px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
-                        income === p
-                          ? 'bg-teal-600 text-white border-teal-600 font-bold'
-                          : 'bg-white hover:bg-teal-50 text-slate-600 border-slate-200/80 font-medium'
-                      }`}
+                      placeholder="ระบุชื่อ-นามสกุลลูกค้า"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+
+                  {/* 2. หัวข้อ (รองรับหลายหัวข้อ + ปุ่มเพิ่มหัวข้อ + ตัดทางลัดออก) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-purple border border-indigo-100/90 dark:border-indigo-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                          หัวข้อขออนุมัติ DV
+                        </label>
+                        {topics.length > 1 && (
+                          <span className="text-[9.5px] px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/70 dark:text-indigo-200 font-bold tabular-nums">
+                            {topics.length} ข้อ
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTopicIndexForModal(null);
+                          setShowAllTopicsModal(true);
+                        }}
+                        className="text-[9.5px] text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 dark:text-indigo-300 dark:hover:text-indigo-100 dark:bg-indigo-950/70 dark:hover:bg-indigo-900/80 dark:border-indigo-800/70 px-2 py-0.5 rounded-lg font-semibold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                      >
+                        <Tag className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                        <span>ดูตาราง 18 หัวข้อ</span>
+                      </button>
+                    </div>
+
+                    {/* Topic Rows */}
+                    <div className="space-y-2.5">
+                      {topics.map((itemTopic, idx) => {
+                        const matchedCode =
+                          DV_TOPICS.find((t) => itemTopic.startsWith(t.code))?.code || '';
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2 sm:p-2.5 rounded-xl bg-indigo-50/40 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/60 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1">
+                                <span className="w-4 h-4 rounded-full bg-indigo-200/80 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200 flex items-center justify-center text-[9px] font-extrabold tabular-nums">
+                                  {idx + 1}
+                                </span>
+                                <span>หัวข้อที่ {idx + 1}</span>
+                              </span>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveTopicIndexForModal(idx);
+                                    setShowAllTopicsModal(true);
+                                  }}
+                                  className="text-[9px] text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-100 px-1.5 py-0.5 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                                  title="เลือกจากตาราง 18 ข้อ"
+                                >
+                                  เลือกจากตาราง
+                                </button>
+                                {topics.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveTopic(idx)}
+                                    className="text-[9.5px] text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer flex items-center gap-0.5"
+                                    title="ลบหัวข้อนี้"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Dropdown Select from 18 codes */}
+                            <select
+                              value={matchedCode}
+                              onChange={(e) => {
+                                const found = DV_TOPICS.find((t) => t.code === e.target.value);
+                                if (found) {
+                                  handleTopicChange(idx, `${found.code} : ${found.label}`);
+                                }
+                              }}
+                              className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-bold text-indigo-950 dark:text-indigo-100 bg-white/95 dark:bg-slate-900 border border-indigo-200/90 dark:border-indigo-800/70 dark:[color-scheme:dark] cursor-pointer shadow-2xs"
+                            >
+                              <option value="" disabled>
+                                -- เลือกหัวข้อที่ {idx + 1} (18 รหัส) --
+                              </option>
+                              {Object.entries(groupedTopics).map(([groupName, items]) => (
+                                <optgroup key={groupName} label={`📌 ${groupName}`}>
+                                  {items.map((item) => (
+                                    <option key={item.code} value={item.code}>
+                                      {item.code} : {item.label}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Add Topic Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleAddTopic()}
+                      className="mt-2.5 w-full py-2 px-3 rounded-xl border border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 dark:border-indigo-700/80 dark:hover:border-indigo-500 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.99] cursor-pointer shadow-2xs"
                     >
-                      {p}
+                      <Plus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <span>เพิ่มหัวข้อขออนุมัติ DV</span>
                     </button>
-                  ))}
+                  </div>
+
+                  {/* 3. NCB (Only 4 options: Normal, Not Found, Default 1, Default 2) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-emerald border border-emerald-100/90 dark:border-emerald-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>NCB (เครดิตบูโร)</span>
+                      </label>
+                      <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 dark:text-emerald-300 dark:bg-emerald-950/70 dark:border-emerald-800/70 px-1.5 py-0.5 rounded font-semibold">
+                        4 ตัวเลือก
+                      </span>
+                    </div>
+
+                    {/* Text input */}
+                    <input
+                      type="text"
+                      value={ncb}
+                      onChange={(e) => setNcb(e.target.value)}
+                      placeholder="Normal / Not Found / Default 1 / Default 2"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 mb-2"
+                    />
+
+                    {/* 4 Exact Button Options */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {NCB_OPTIONS.map((opt) => {
+                        const isSelected = ncb.trim().toLowerCase() === opt.toLowerCase();
+                        let activeStyles = 'bg-emerald-600 text-white border-emerald-600 shadow-2xs';
+                        let inactiveStyles =
+                          'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-slate-800/90 dark:hover:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60';
+
+                        if (opt === 'Not Found') {
+                          activeStyles = 'bg-amber-500 text-white border-amber-500 shadow-2xs';
+                          inactiveStyles =
+                            'bg-white hover:bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-slate-800/90 dark:hover:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60';
+                        } else if (opt === 'Default 1') {
+                          activeStyles = 'bg-orange-500 text-white border-orange-500 shadow-2xs';
+                          inactiveStyles =
+                            'bg-white hover:bg-orange-50 text-orange-800 border-orange-200/80 dark:bg-slate-800/90 dark:hover:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800/60';
+                        } else if (opt === 'Default 2') {
+                          activeStyles = 'bg-rose-600 text-white border-rose-600 shadow-2xs';
+                          inactiveStyles =
+                            'bg-white hover:bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-slate-800/90 dark:hover:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60';
+                        }
+
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setNcb(opt);
+                            }}
+                            className={`text-[10px] py-1.5 px-2 rounded-xl border font-bold transition-all text-center cursor-pointer ${
+                              isSelected ? activeStyles : inactiveStyles
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 4. Dealer */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box border border-sky-100/90 dark:border-sky-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>Dealer (ชื่อร้านตัวแทนจำหน่าย)</span>
+                      </label>
+                      <span className="text-[9px] text-slate-500 bg-slate-100 dark:text-slate-300 dark:bg-slate-800 px-1.5 py-0.5 rounded font-medium">
+                        จำค่าอัตโนมัติ
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={dealer}
+                      onChange={(e) => handleDealerChange(e.target.value)}
+                      placeholder="เช่น สหพานิช, ฮอนด้าแสงชัย, ดีลเลอร์ กทม."
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+
+                  {/* 5. อาชีพ */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box border border-sky-100/90 dark:border-sky-800/50 shadow-2xs">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                      <Briefcase className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span>อาชีพ</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={occupation}
+                      onChange={(e) => setOccupation(e.target.value)}
+                      placeholder="เช่น พนักงานประจำ, ค้าขาย, ไรเดอร์"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 mb-1.5"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {OCCUPATION_PRESETS.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('light');
+                            setOccupation(p);
+                          }}
+                          className={`text-[9.5px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                            occupation === p
+                              ? 'bg-indigo-600 text-white border-indigo-600 font-bold'
+                              : 'bg-white hover:bg-indigo-50 text-slate-600 border-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-indigo-950/60 dark:text-slate-300 dark:border-slate-700 font-medium'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 6. เอกสารการเงิน */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-blue border border-sky-100/90 dark:border-sky-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>เอกสารการเงิน</span>
+                      </label>
+                      <span className="text-[9px] text-blue-700 bg-blue-50 border border-blue-200/80 dark:text-blue-300 dark:bg-blue-950/70 dark:border-blue-800/70 px-1.5 py-0.5 rounded font-semibold">
+                        5 ตัวเลือก
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={financialDocs}
+                      onChange={(e) => setFinancialDocs(e.target.value)}
+                      placeholder="เลือกหรือพิมพ์เอกสารการเงิน"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 mb-1.5"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {FINANCIAL_DOCS_OPTIONS.map((doc) => {
+                        const isSelected = financialDocs === doc;
+                        return (
+                          <button
+                            key={doc}
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setFinancialDocs(doc);
+                            }}
+                            className={`text-[9.5px] px-2 py-1 rounded-lg border transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-2xs'
+                                : 'bg-white hover:bg-blue-50 text-slate-700 border-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-blue-950/60 dark:text-slate-300 dark:border-slate-700 font-medium'
+                            }`}
+                          >
+                            {doc}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* COLUMN 2 (Right) */}
+                <div className="space-y-3.5">
+                  {/* 7. รุ่นรถ (Auto-populated) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-blue border border-sky-100/90 dark:border-sky-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Bike className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                        <span>รุ่นรถ</span>
+                      </label>
+                      <span className="text-[9px] text-sky-700 bg-sky-50 border border-sky-200/70 dark:text-sky-300 dark:bg-sky-950/70 dark:border-sky-800/70 px-1.5 py-0.5 rounded font-semibold">
+                        ดึงอัตโนมัติ
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={bikeModel}
+                      onChange={(e) => setBikeModel(e.target.value)}
+                      placeholder="ระบุชื่อรุ่นรถ เช่น Honda Wave 110i"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+
+                  {/* 7.1 รหัสรุ่นรถ */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-indigo border border-indigo-100/90 dark:border-indigo-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span>รหัสรุ่นรถ</span>
+                      </label>
+                      <span className="text-[9px] text-indigo-700 bg-indigo-50 border border-indigo-200/70 dark:text-indigo-300 dark:bg-indigo-950/70 dark:border-indigo-800/70 px-1.5 py-0.5 rounded font-semibold">
+                        ดึงอัตโนมัติ
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={bikeCode}
+                      onChange={(e) => setBikeCode(e.target.value)}
+                      placeholder="ระบุรหัสรุ่นรถ เช่น AFS110"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+
+                  {/* 8. เงินดาวน์ (Auto-populated) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-emerald border border-emerald-100/90 dark:border-emerald-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Coins className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>เงินดาวน์</span>
+                      </label>
+                      <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200/70 dark:text-emerald-300 dark:bg-emerald-950/70 dark:border-emerald-800/70 px-1.5 py-0.5 rounded font-semibold">
+                        ดึงจากค่างวด
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={downPayment}
+                      onChange={(e) => setDownPayment(e.target.value)}
+                      placeholder="เช่น 0 บาท (ฟรีดาวน์ 0%) หรือ 10,000 บาท (15%)"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                  </div>
+
+                  {/* 9. หมายเหตุ (วางไว้ใต้เงินดาวน์โดยตรง) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-amber border border-amber-200/90 dark:border-amber-800/60 bg-gradient-to-br from-amber-50/40 via-white to-white dark:from-amber-950/35 dark:via-slate-900 dark:to-slate-900 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                        <MessageSquareText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                        <span>หมายเหตุ</span>
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        {remark && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setRemark('');
+                            }}
+                            className="text-[9.5px] px-2 py-0.5 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/70 border border-amber-300/60 dark:text-amber-300 dark:hover:text-amber-100 dark:hover:bg-amber-900/40 dark:border-amber-700/60 transition-colors cursor-pointer"
+                            title="ล้างหมายเหตุ"
+                          >
+                            ล้างข้อมูล
+                          </button>
+                        )}
+                        <span className="text-[9px] text-amber-800 bg-amber-100/80 border border-amber-300/70 dark:text-amber-200 dark:bg-amber-950/70 dark:border-amber-800/70 px-1.5 py-0.5 rounded font-semibold">
+                          ข้อมูลเพิ่มเติม
+                        </span>
+                      </div>
+                    </div>
+                    <textarea
+                      value={remark}
+                      onChange={(e) => setRemark(e.target.value)}
+                      rows={3}
+                      placeholder="ระบุข้อมูลเพิ่มเติม เช่น มีผู้ค้ำประกัน, ที่อยู่จัดส่งเอกสาร หรือเงื่อนไขพิเศษ"
+                      className="w-full glass-input-field px-3 py-2 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 leading-relaxed min-h-[78px] resize-y outline-none transition-all focus:ring-1 focus:ring-amber-500/40"
+                    />
+                  </div>
+
+                  {/* 10. รายได้ */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box border border-sky-100/90 dark:border-sky-800/50 shadow-2xs">
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                      <Wallet className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                      <span>รายได้</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={income}
+                      onChange={(e) => setIncome(e.target.value)}
+                      placeholder="เช่น 18,000 บาท/เดือน"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 mb-1.5"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {INCOME_PRESETS.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('light');
+                            setIncome(p);
+                          }}
+                          className={`text-[9.5px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                            income === p
+                              ? 'bg-teal-600 text-white border-teal-600 font-bold'
+                              : 'bg-white hover:bg-teal-50 text-slate-600 border-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-teal-950/60 dark:text-slate-300 dark:border-slate-700 font-medium'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 11. CK (ดึงเอาชื่อเจ้าหน้าที่มาอัตโนมัติ) */}
+                  <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-teal border border-teal-100/90 dark:border-teal-800/50 shadow-2xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                        <span>CK (เจ้าหน้าที่ตรวจสอบ / ผู้เสนอราคา)</span>
+                      </label>
+                    </div>
+                    <input
+                      type="text"
+                      value={ck}
+                      onChange={(e) => setCk(e.target.value)}
+                      placeholder="ชื่อเจ้าหน้าที่ตรวจสอบ เช่น บดินทร์ (6683)"
+                      className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    />
+                    <p className="text-[9.5px] text-slate-500 dark:text-slate-400 mt-1">
+                      ดึงจากข้อมูลผู้เสนอราคา ({resolvedOfficer}) สามารถแก้ไขหรือพิมพ์เพิ่มเติมได้
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* 11. CK (ดึงเอาชื่อเจ้าหน้าที่มาอัตโนมัติ) */}
-              <div className="glass-panel-white p-3 rounded-2xl elevated-data-box elevated-box-teal border border-teal-100/90 shadow-2xs">
+              {/* 12. YOD1-9% (Span Full Width) */}
+              <div className="glass-panel-white p-3.5 rounded-2xl elevated-data-box elevated-box-amber border border-amber-200/80 dark:border-amber-800/50 shadow-2xs">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-teal-600" />
-                    <span>CK (เจ้าหน้าที่ตรวจสอบ / ผู้เสนอราคา)</span>
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <Percent className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>YOD1-9%</span>
                   </label>
                 </div>
                 <input
                   type="text"
-                  value={ck}
-                  onChange={(e) => setCk(e.target.value)}
-                  placeholder="ชื่อเจ้าหน้าที่ตรวจสอบ เช่น บดินทร์ (6683)"
-                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
+                  value={yodRate}
+                  onChange={(e) => setYodRate(e.target.value)}
+                  placeholder="เช่น หัก 3%, หัก 5% หรือระบุเงื่อนไข"
+                  className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                 />
-                <p className="text-[9.5px] text-slate-500 mt-1">
-                  ดึงจากข้อมูลผู้เสนอราคา ({resolvedOfficer}) สามารถแก้ไขหรือพิมพ์เพิ่มเติมได้
-                </p>
               </div>
-            </div>
-          </div>
 
-          {/* 12. YOD1-9% (Span Full Width) */}
-          <div className="glass-panel-white p-3.5 rounded-2xl elevated-data-box elevated-box-amber border border-amber-200/80 shadow-2xs">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                <Percent className="w-3.5 h-3.5 text-amber-600" />
-                <span>YOD1-9%</span>
-              </label>
-            </div>
-            <input
-              type="text"
-              value={yodRate}
-              onChange={(e) => setYodRate(e.target.value)}
-              placeholder="เช่น หัก 3%, หัก 5% หรือระบุเงื่อนไข"
-              className="w-full glass-input-field px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400"
-            />
-          </div>
-
-          {/* Live LINE Message Preview Box (ปรับสีให้อ่อน สว่าง สบายตา สไตล์ LINE) */}
-          <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-sky-50/60 border border-emerald-200/80 shadow-2xs">
-            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 text-[11px]">
-              <span className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse shrink-0" />
-                <span>ตัวอย่างข้อความขออนุมัติเคส DV ที่จะส่งเข้า LINE :</span>
-              </span>
-              <span className="text-[10px] text-emerald-800 font-semibold bg-white/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap shrink-0 tabular-nums">
-                {generateDvText().length} ตัวอักษร
-              </span>
-            </div>
-            <pre className="font-sans text-[11.5px] leading-[1.6] whitespace-pre-wrap text-slate-800 select-text bg-white/95 p-3.5 rounded-xl border border-emerald-200/70 shadow-2xs">
-              {generateDvText()}
-            </pre>
-          </div>
-
-          {/* Save to Firebase Realtime Database Section */}
-          <div className="pt-2 space-y-2">
-            <button
-              type="button"
-              onClick={handleSaveDvToDatabase}
-              disabled={isSavingDv}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-sm shadow-sky-500/25 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-60"
-            >
-              {isSavingDv ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>กำลังบันทึกข้อมูล...</span>
-                </>
-              ) : editingDvId ? (
-                <>
-                  <BookmarkCheck className="w-4 h-4" />
-                  <span>อัปเดตข้อมูลลูกค้าขอ DV</span>
-                </>
-              ) : (
-                <>
-                  <Database className="w-4 h-4" />
-                  <span>บันทึกข้อมูลลูกค้าขอ DV</span>
-                </>
-              )}
-            </button>
-
-            {dvSaveFeedback && (
-              <div
-                className={`p-2.5 rounded-xl border text-[11px] font-bold flex items-center justify-between gap-2 flex-wrap ${
-                  dvSaveFeedback.type === 'cloud'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    : dvSaveFeedback.type === 'error'
-                    ? 'bg-rose-50 border-rose-200 text-rose-800'
-                    : 'bg-amber-50 border-amber-200 text-amber-900'
-                }`}
-              >
-                <span className="flex items-center gap-1.5 min-w-0 flex-1">
-                  {dvSaveFeedback.type === 'cloud' ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                  )}
-                  <span>{dvSaveFeedback.text}</span>
-                </span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {!firebaseUser && (
-                    <button
-                      type="button"
-                      onClick={() => void signInWithGoogle()}
-                      className="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-[10.5px] font-bold cursor-pointer"
-                    >
-                      เข้าสู่ระบบ Google
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setModalTab('saved')}
-                    className="px-2.5 py-1 rounded-lg bg-white border border-current/25 text-[10.5px] font-bold cursor-pointer"
-                  >
-                    ดูรายการที่บันทึก ({dvRequests.length}) →
-                  </button>
+              {/* Live LINE Message Preview Box */}
+              <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-sky-50/60 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-sky-950/50 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
+                <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 dark:border-emerald-800/60 text-[11px]">
+                  <span className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse shrink-0" />
+                    <span>ตัวอย่างข้อความขออนุมัติเคส DV ที่จะส่งเข้า LINE :</span>
+                  </span>
+                  <span className="text-[10px] text-emerald-800 bg-white/90 border border-emerald-200/80 dark:text-emerald-300 dark:bg-slate-900 dark:border-emerald-800/70 font-semibold px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap shrink-0 tabular-nums">
+                    {generateDvText().length} ตัวอักษร
+                  </span>
                 </div>
+                <pre className="font-sans text-[11.5px] leading-[1.6] whitespace-pre-wrap text-slate-800 dark:text-slate-100 select-text bg-white/95 dark:bg-slate-900/95 p-3.5 rounded-xl border border-emerald-200/70 dark:border-emerald-800/60 shadow-2xs">
+                  {generateDvText()}
+                </pre>
               </div>
-            )}
-          </div>
 
-          {/* Action Buttons: ปุ่มคัดลอกข้อความและส่ง Line ให้อยู่แถวเดียวกันในตำแหน่งกึ่งกลาง */}
-          <div className="pt-1 flex flex-row items-center justify-center gap-3 sm:gap-4 w-full">
-            {/* Copy Text Button */}
-            <button
-              type="button"
-              onClick={handleCopyText}
-              className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-4 py-2.5 rounded-xl bg-sky-50 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 text-xs font-bold flex items-center gap-2 shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
-            >
-              {isCopied ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  <span className="text-emerald-700 font-bold">คัดลอกเรียบร้อย!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-sky-700" />
-                  <span>คัดลอกข้อความ</span>
-                </>
-              )}
-            </button>
+              {/* Save to Firebase Realtime Database Section */}
+              <div className="pt-2 space-y-2">
+                <button
+                  type="button"
+                  onClick={handleSaveDvToDatabase}
+                  disabled={isSavingDv}
+                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-sm shadow-sky-500/25 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-60"
+                >
+                  {isSavingDv ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>กำลังบันทึกข้อมูล...</span>
+                    </>
+                  ) : editingDvId ? (
+                    <>
+                      <BookmarkCheck className="w-4 h-4" />
+                      <span>อัปเดตข้อมูลลูกค้าขอ DV</span>
+                    </>
+                  ) : (
+                    <>
+                      <Database className="w-4 h-4" />
+                      <span>บันทึกข้อมูลลูกค้าขอ DV</span>
+                    </>
+                  )}
+                </button>
 
-            {/* Send to LINE Button */}
-            <button
-              type="button"
-              onClick={handleSendLine}
-              className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-[#06c755] to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-extrabold flex items-center gap-2 shadow-sm shadow-emerald-500/30 transition-all active:scale-95 cursor-pointer"
-            >
-              {lineSentFeedback ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>คัดลอก & กำลังส่ง LINE!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4 text-white" />
-                  <span>ส่ง Line</span>
-                  <ExternalLink className="w-3 h-3 text-emerald-200" />
-                </>
-              )}
-            </button>
-          </div>
+                {dvSaveFeedback && (
+                  <div
+                    className={`p-2.5 rounded-xl border text-[11px] font-bold flex items-center justify-between gap-2 flex-wrap ${
+                      dvSaveFeedback.type === 'cloud'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800/70 dark:text-emerald-200'
+                        : dvSaveFeedback.type === 'error'
+                        ? 'bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/60 dark:border-rose-800/70 dark:text-rose-200'
+                        : 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/60 dark:border-amber-800/70 dark:text-amber-200'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5 min-w-0 flex-1">
+                      {dvSaveFeedback.type === 'cloud' ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                      )}
+                      <span>{dvSaveFeedback.text}</span>
+                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {!firebaseUser && (
+                        <button
+                          type="button"
+                          onClick={() => void signInWithGoogle()}
+                          className="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-[10.5px] font-bold cursor-pointer"
+                        >
+                          เข้าสู่ระบบ Google
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setModalTab('saved')}
+                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-current/25 text-[10.5px] font-bold cursor-pointer"
+                      >
+                        ดูรายการที่บันทึก ({dvRequests.length}) →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons: ปุ่มคัดลอกข้อความและส่ง Line */}
+              <div className="pt-1 flex flex-row items-center justify-center gap-3 sm:gap-4 w-full">
+                {/* Copy Text Button */}
+                <button
+                  type="button"
+                  onClick={handleCopyText}
+                  className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-4 py-2.5 rounded-xl bg-sky-50 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 dark:bg-sky-950/70 dark:hover:bg-sky-900/80 dark:text-sky-200 dark:border-sky-800/70 text-xs font-bold flex items-center gap-2 shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-700 dark:text-emerald-300 font-bold">คัดลอกเรียบร้อย!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 text-sky-700 dark:text-sky-400" />
+                      <span>คัดลอกข้อความ</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Send to LINE Button */}
+                <button
+                  type="button"
+                  onClick={handleSendLine}
+                  className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-[#06c755] to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-extrabold flex items-center gap-2 shadow-sm shadow-emerald-500/30 transition-all active:scale-95 cursor-pointer"
+                >
+                  {lineSentFeedback ? (
+                    <>
+                      <Check className="w-4 h-4 text-white" />
+                      <span>คัดลอก & กำลังส่ง LINE!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-4 h-4 text-white" />
+                      <span>ส่ง Line</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-200" />
+                    </>
+                  )}
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -1951,115 +1951,115 @@ export function DvApprovalCard({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-indigo-100 max-h-[85vh] flex flex-col ${topicsSheetAnimClass}`}
+              className={`bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-indigo-100 dark:border-indigo-800/60 max-h-[85vh] flex flex-col ${topicsSheetAnimClass}`}
             >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700">
-                  <Tag className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-slate-800">
-                    ตารางหัวข้อขออนุมัติ DV (ทั้งหมด 18 หัวข้อ)
-                  </h4>
-                  <p className="text-[11px] text-slate-500">
-                    {activeTopicIndexForModal !== null
-                      ? `คลิกเลือกเพื่อใส่แทนใน "หัวข้อที่ ${activeTopicIndexForModal + 1}" หรือกด "+ เพิ่ม" เป็นหัวข้อใหม่`
-                      : 'คลิกเพื่อเลือกหัวข้อที่ต้องการ หรือกดปุ่ม "+ เพิ่ม" เพื่อเพิ่มลงในรายการ'}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAllTopicsModal(false);
-                  setActiveTopicIndexForModal(null);
-                }}
-                className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="overflow-y-auto py-3 space-y-4 flex-1 pr-1">
-              {Object.entries(groupedTopics).map(([category, items]) => (
-                <div key={category} className="space-y-1.5">
-                  <h5 className="text-[11px] font-bold text-slate-600 px-1 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                    {category}
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {items.map((item) => {
-                      const isSelected = topics.some((t) => t.startsWith(item.code));
-                      return (
-                        <div
-                          key={item.code}
-                          className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 ${
-                            isSelected
-                              ? 'bg-indigo-50/80 border-indigo-300 text-indigo-950 font-semibold shadow-2xs'
-                              : 'bg-slate-50/70 hover:bg-white hover:border-indigo-200 text-slate-700 border-slate-200/80 font-medium'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                            <span
-                              className={`text-[11px] font-mono px-2 py-0.5 rounded-md font-bold shrink-0 ${
-                                isSelected
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'bg-indigo-100 text-indigo-800'
-                              }`}
-                            >
-                              {item.code}
-                            </span>
-                            <MarqueeText className="text-xs">{item.label}</MarqueeText>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleSelectTopic(item, activeTopicIndexForModal ?? undefined)}
-                              className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-all cursor-pointer shadow-2xs active:scale-95"
-                            >
-                              {activeTopicIndexForModal !== null
-                                ? `ใส่ข้อที่ ${activeTopicIndexForModal + 1}`
-                                : 'เลือก'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleAddTopic(`${item.code} : ${item.label}`);
-                                setShowAllTopicsModal(false);
-                                setActiveTopicIndexForModal(null);
-                              }}
-                              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 transition-all cursor-pointer flex items-center gap-0.5 active:scale-95"
-                              title="เพิ่มเป็นหัวข้อใหม่"
-                            >
-                              <Plus className="w-3 h-3 text-indigo-600" />
-                              <span>เพิ่ม</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 flex items-center justify-center text-indigo-700 dark:text-indigo-300">
+                    <Tag className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">
+                      ตารางหัวข้อขออนุมัติ DV (ทั้งหมด 18 หัวข้อ)
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {activeTopicIndexForModal !== null
+                        ? `คลิกเลือกเพื่อใส่แทนใน "หัวข้อที่ ${activeTopicIndexForModal + 1}" หรือกด "+ เพิ่ม" เป็นหัวข้อใหม่`
+                        : 'คลิกเพื่อเลือกหัวข้อที่ต้องการ หรือกดปุ่ม "+ เพิ่ม" เพื่อเพิ่มลงในรายการ'}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAllTopicsModal(false);
+                    setActiveTopicIndexForModal(null);
+                  }}
+                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
 
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">
-                เลือกแล้ว {topics.filter((t) => t.trim()).length} หัวข้อ
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAllTopicsModal(false);
-                  setActiveTopicIndexForModal(null);
-                }}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-              >
-                ปิดหน้าต่าง
-              </button>
-            </div>
+              <div className="overflow-y-auto py-3 space-y-4 flex-1 pr-1">
+                {Object.entries(groupedTopics).map(([category, items]) => (
+                  <div key={category} className="space-y-1.5">
+                    <h5 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 px-1 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                      {category}
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {items.map((item) => {
+                        const isSelected = topics.some((t) => t.startsWith(item.code));
+                        return (
+                          <div
+                            key={item.code}
+                            className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? 'bg-indigo-50/80 border-indigo-300 text-indigo-950 dark:bg-indigo-950/70 dark:border-indigo-700 dark:text-indigo-100 font-semibold shadow-2xs'
+                                : 'bg-slate-50/70 hover:bg-white hover:border-indigo-200 text-slate-700 border-slate-200/80 dark:bg-slate-800/70 dark:hover:bg-slate-800 dark:hover:border-indigo-700/80 dark:text-slate-200 dark:border-slate-700 font-medium'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                              <span
+                                className={`text-[11px] font-mono px-2 py-0.5 rounded-md font-bold shrink-0 ${
+                                  isSelected
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200'
+                                }`}
+                              >
+                                {item.code}
+                              </span>
+                              <MarqueeText className="text-xs">{item.label}</MarqueeText>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleSelectTopic(item, activeTopicIndexForModal ?? undefined)}
+                                className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-all cursor-pointer shadow-2xs active:scale-95"
+                              >
+                                {activeTopicIndexForModal !== null
+                                  ? `ใส่ข้อที่ ${activeTopicIndexForModal + 1}`
+                                  : 'เลือก'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleAddTopic(`${item.code} : ${item.label}`);
+                                  setShowAllTopicsModal(false);
+                                  setActiveTopicIndexForModal(null);
+                                }}
+                                className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-slate-900 dark:hover:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-700/70 transition-all cursor-pointer flex items-center gap-0.5 active:scale-95"
+                                title="เพิ่มเป็นหัวข้อใหม่"
+                              >
+                                <Plus className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                                <span>เพิ่ม</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                  เลือกแล้ว {topics.filter((t) => t.trim()).length} หัวข้อ
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAllTopicsModal(false);
+                    setActiveTopicIndexForModal(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  ปิดหน้าต่าง
+                </button>
+              </div>
             </div>
           </div>,
           document.body

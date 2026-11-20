@@ -390,10 +390,10 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
   return (
     <>
       <div
-        className={`bg-white rounded-[24px] border shadow-md shadow-indigo-950/5 overflow-hidden transition-all duration-300 h-full flex flex-col ${
+        className={`bg-white dark:bg-slate-900/90 rounded-[24px] border shadow-md shadow-indigo-950/5 dark:shadow-slate-950/40 overflow-hidden transition-all duration-300 h-full flex flex-col ${
           isExpanded
-            ? 'border-indigo-400 ring-2 ring-indigo-400/40'
-            : 'border-indigo-100 hover:border-indigo-200'
+            ? 'border-indigo-400 dark:border-indigo-500 ring-2 ring-indigo-400/40'
+            : 'border-indigo-100 dark:border-indigo-800/60 hover:border-indigo-200 dark:hover:border-indigo-700'
         }`}
       >
         <button
@@ -402,28 +402,28 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
             triggerHaptic('light');
             onToggleExpand();
           }}
-          className="w-full text-left bg-gradient-to-r from-indigo-50/80 via-sky-50/40 to-white hover:bg-indigo-50/90 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
+          className="w-full text-left bg-gradient-to-r from-indigo-50/80 via-sky-50/40 to-white dark:from-indigo-950/70 dark:via-slate-900/90 dark:to-slate-900 hover:bg-indigo-50/90 dark:hover:bg-indigo-950/85 transition-colors cursor-pointer select-none p-3 sm:p-4 flex-1 flex flex-col justify-between gap-2.5"
         >
           <div className="w-full flex items-center justify-between gap-1.5 min-w-0">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white flex items-center justify-center shrink-0 shadow-xs shadow-indigo-500/25">
                 <ClipboardCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 leading-tight min-w-0 flex-1">
+              <h3 className="text-[11.5px] sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 leading-tight min-w-0 flex-1">
                 <MarqueeText>สรุปยอดปิด</MarqueeText>
               </h3>
             </div>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 shadow-2xs">
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="space-y-1 min-w-0 w-full">
-            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 border border-indigo-200">
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800/70">
               <MarqueeText fitContent>
                 Approve {effectiveApproveCount} • ยกยอด {effectivePendingCount}
               </MarqueeText>
             </span>
-            <MarqueeText className="text-[10px] text-slate-500 font-medium">
+            <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
               ยอดอนุมัติ รับรถ และรายชื่อรอรับ
             </MarqueeText>
           </div>
@@ -440,21 +440,21 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
         accentBarClass="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500"
       >
         {/* Sticky Modal Header matching QuotationModal */}
-        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 text-white rounded-2xl shadow-md shadow-indigo-500/20 flex-shrink-0">
               <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight min-w-0">
                   <MarqueeText fitContent>สรุปปิดยอด 15 / สิ้นเดือน</MarqueeText>
                 </h2>
-                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 border border-indigo-200 shrink-0 hidden sm:inline-block">
+                <span className="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100/90 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800/70 shrink-0 hidden sm:inline-block">
                   Approve • รับรถ • ยกยอด
                 </span>
               </div>
-              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 รายงานปิดยอด 1-15 และ 16-สิ้นเดือน พร้อมรายชื่อลูกค้าที่รอรับรถ
               </MarqueeText>
             </div>
@@ -462,10 +462,10 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className="text-right hidden xs:block">
-              <div className="text-xs sm:text-sm font-extrabold text-indigo-700 whitespace-nowrap">
+              <div className="text-xs sm:text-sm font-extrabold text-indigo-700 dark:text-indigo-300 whitespace-nowrap">
                 Approve {effectiveApproveCount} • รับ {effectiveDeliveredCount}
               </div>
-              <div className="text-[10px] font-semibold text-amber-700 whitespace-nowrap">
+              <div className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap">
                 ยกยอด {effectivePendingCount} คัน
               </div>
             </div>
@@ -475,7 +475,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                 triggerHaptic('light');
                 onToggleExpand();
               }}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
               title="ปิดหน้าต่าง"
               aria-label="Close"
             >
@@ -485,13 +485,13 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {/* Top Controls: Month, Period Cycle (1-15 / 16-สิ้นเดือน / ทั้งเดือน), Refresh */}
-          <div className="flex flex-col gap-2.5 pb-3 border-b border-slate-100">
+          <div className="flex flex-col gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 text-xs font-semibold text-slate-700 shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <div className="flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-200 shrink-0">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                   <span>เดือน:</span>
                 </div>
                 <select
@@ -500,7 +500,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                     triggerHaptic('selection');
                     setSelectedYM(e.target.value);
                   }}
-                  className="text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+                  className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-2xs"
                 >
                   {availableMonths.map((ym) => {
                     const [yStr, mStr] = ym.split('-');
@@ -520,7 +520,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                     triggerHaptic('light');
                     reloadCases();
                   }}
-                  className="p-1.5 text-slate-500 hover:text-indigo-700 bg-white hover:bg-indigo-50 border border-slate-200 rounded-xl transition-colors cursor-pointer shrink-0"
+                  className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors cursor-pointer shrink-0"
                   title="รีเฟรชข้อมูลเคสล่าสุด"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -528,7 +528,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
               </div>
 
               {/* Cycle Pills */}
-              <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+              <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => {
@@ -538,7 +538,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     periodCycle === 'first_half'
                       ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   1–15
@@ -552,7 +552,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     periodCycle === 'second_half'
                       ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   16–สิ้นเดือน
@@ -566,7 +566,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     periodCycle === 'full_month'
                       ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   ทั้งเดือน
@@ -576,7 +576,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
 
             {/* Secondary Controls: Carry-over switch + Edit Toggle + Saved Cases shortcut */}
             <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-              <label className="inline-flex items-center gap-1.5 text-slate-700 font-semibold cursor-pointer select-none">
+              <label className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-semibold cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={includeCarryOver}
@@ -594,7 +594,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={enterManualMode}
-                    className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 font-bold flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <Pencil className="w-3 h-3" />
                     <span>ปรับตัวเลข / รายชื่อเอง</span>
@@ -603,7 +603,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={resetToAutoMode}
-                    className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/70 font-bold flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-3 h-3" />
                     <span>ซิงก์จากเคสที่บันทึก</span>
@@ -617,7 +617,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       triggerHaptic('light');
                       onOpenSavedCases();
                     }}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <ExternalLink className="w-3 h-3" />
                     <span>จัดการเคส ({savedCases.length})</span>
@@ -629,55 +629,55 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
 
           {/* 3 Summary KPI Cards */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 text-center">
-              <div className="text-[10px] sm:text-[11px] font-bold text-indigo-700">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/55 border border-indigo-200/80 dark:border-indigo-800/60 text-center">
+              <div className="text-[10px] sm:text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
                 Approve
               </div>
-              <div className="text-xl sm:text-2xl font-black text-indigo-950 mt-0.5">
+              <div className="text-xl sm:text-2xl font-black text-indigo-950 dark:text-indigo-100 mt-0.5">
                 {effectiveApproveCount}
               </div>
-              <div className="text-[10px] text-indigo-600 font-medium">คัน</div>
+              <div className="text-[10px] text-indigo-600 dark:text-indigo-300 font-medium">คัน</div>
             </div>
 
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 text-center">
-              <div className="text-[10px] sm:text-[11px] font-bold text-emerald-700 flex items-center justify-center gap-1">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/55 border border-emerald-200/80 dark:border-emerald-800/60 text-center">
+              <div className="text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1">
                 <CheckCircle2 className="w-3 h-3 shrink-0" />
                 <span>รับรถแล้ว</span>
               </div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">
+              <div className="text-xl sm:text-2xl font-black text-emerald-900 dark:text-emerald-100 mt-0.5">
                 {effectiveDeliveredCount}
               </div>
-              <div className="text-[10px] text-emerald-600 font-medium">คัน</div>
+              <div className="text-[10px] text-emerald-600 dark:text-emerald-300 font-medium">คัน</div>
             </div>
 
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-center">
-              <div className="text-[10px] sm:text-[11px] font-bold text-amber-800 flex items-center justify-center gap-1">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/55 border border-amber-200/80 dark:border-amber-800/60 text-center">
+              <div className="text-[10px] sm:text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1">
                 <Clock className="w-3 h-3 shrink-0" />
                 <span>ยกยอด (รอรับ)</span>
               </div>
-              <div className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">
+              <div className="text-xl sm:text-2xl font-black text-amber-900 dark:text-amber-100 mt-0.5">
                 {effectivePendingCount}
               </div>
-              <div className="text-[10px] text-amber-700 font-medium">คัน</div>
+              <div className="text-[10px] text-amber-700 dark:text-amber-300 font-medium">คัน</div>
             </div>
           </div>
 
           {/* Manual Adjustment Editor (shown when user toggles manual mode) */}
           {isManualMode && (
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-                  <Pencil className="w-3.5 h-3.5 text-amber-700" />
+                <span className="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                  <Pencil className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                   แก้ไขตัวเลขและรายชื่อลูกค้ายกยอดเอง
                 </span>
-                <span className="text-[10px] text-amber-700 font-semibold">
+                <span className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">
                   โหมดปรับแก้ด่วน
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                  <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     รหัส/ชื่อพนักงาน (หัวรายงาน)
                   </label>
                   <input
@@ -685,11 +685,11 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                     value={officerTagOverride}
                     onChange={(e) => setOfficerTagOverride(e.target.value)}
                     placeholder={defaultOfficerTag}
-                    className="w-full bg-white border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800/70 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                  <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     จำนวน Approve (คัน)
                   </label>
                   <input
@@ -697,11 +697,11 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                     min={0}
                     value={manualApproveCount}
                     onChange={(e) => setManualApproveCount(e.target.value)}
-                    className="w-full bg-white border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-indigo-900 outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800/70 rounded-xl px-2.5 py-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200 outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                  <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     จำนวนรับรถแล้ว (คัน)
                   </label>
                   <input
@@ -709,20 +709,20 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                     min={0}
                     value={manualDeliveredCount}
                     onChange={(e) => setManualDeliveredCount(e.target.value)}
-                    className="w-full bg-white border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-emerald-900 outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800/70 rounded-xl px-2.5 py-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-200 outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
               </div>
 
               {/* Editable Pending Names List */}
               <div className="space-y-1.5">
-                <label className="block text-[10.5px] font-bold text-slate-700">
+                <label className="block text-[10.5px] font-bold text-slate-700 dark:text-slate-200">
                   รายชื่อลูกค้ายกยอด / รอรับรถ ({manualPendingNames.length} คน):
                 </label>
 
                 {manualPendingNames.map((name, idx) => (
                   <div key={idx} className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-amber-800 w-5 text-right shrink-0">
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-300 w-5 text-right shrink-0">
                       {idx + 1}.
                     </span>
                     <input
@@ -730,12 +730,12 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       value={name}
                       onChange={(e) => handleUpdateManualCustomer(idx, e.target.value)}
                       placeholder="ชื่อ-นามสกุล ลูกค้า"
-                      className="flex-1 bg-white border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-amber-400"
+                      className="flex-1 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800/70 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-amber-400"
                     />
                     <button
                       type="button"
                       onClick={() => handleRemoveManualCustomer(idx)}
-                      className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-rose-500 border border-rose-200 transition-colors cursor-pointer shrink-0"
+                      className="p-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-rose-500 border border-rose-200 dark:border-rose-800/70 transition-colors cursor-pointer shrink-0"
                       title="ลบรายชื่อนี้"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -755,7 +755,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       }
                     }}
                     placeholder="เพิ่มชื่อ-สกุล ลูกค้าที่รอรับรถ..."
-                    className="flex-1 bg-white border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-amber-400"
+                    className="flex-1 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800/70 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-amber-400"
                   />
                   <button
                     type="button"
@@ -774,8 +774,8 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
           {!isManualMode && (
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   รายชื่อลูกค้าที่รอรับรถ / ยกยอด ({autoStats.pendingCount} คน)
                 </span>
                 {autoStats.deliveredCount > 0 && (
@@ -785,7 +785,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       triggerHaptic('light');
                       setShowDeliveredList((prev) => !prev);
                     }}
-                    className="text-[10.5px] font-bold text-emerald-700 hover:underline cursor-pointer"
+                    className="text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
                   >
                     {showDeliveredList
                       ? 'ซ่อนรายชื่อรับรถแล้ว'
@@ -795,35 +795,35 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
               </div>
 
               {autoStats.pendingCases.length > 0 ? (
-                <div className="rounded-2xl bg-amber-50/50 border border-amber-200/70 divide-y divide-amber-100">
+                <div className="rounded-2xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/60 divide-y divide-amber-100 dark:divide-amber-900/50">
                   {autoStats.pendingCases.map((c, idx) => (
                     <div
                       key={c.id}
                       className="px-3 py-2 flex items-center justify-between gap-2 text-xs"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10.5px] flex items-center justify-center shrink-0">
+                        <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200 font-bold text-[10.5px] flex items-center justify-center shrink-0">
                           {idx + 1}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <MarqueeText className="font-bold text-slate-900">
+                          <MarqueeText className="font-bold text-slate-900 dark:text-slate-100">
                             {getCleanCustomerName(c)}
                           </MarqueeText>
                           {(c.bikeModelName || c.dealerName) && (
-                            <MarqueeText className="text-[10px] text-slate-500">
+                            <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400">
                               {[c.bikeModelName, c.dealerName].filter(Boolean).join(' • ')}
                             </MarqueeText>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white text-amber-800 border border-amber-200 shrink-0">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70 shrink-0">
                         รอรับรถ
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center text-[11px] text-slate-500">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 text-center text-[11px] text-slate-500 dark:text-slate-400">
                   ยังไม่มีเคสสถานะ &ldquo;อนุมัติ / รอรับรถ&rdquo; ในงวด {periodShortLabel}{' '}
                   (สามารถกด &ldquo;ปรับตัวเลข / รายชื่อเอง&rdquo; หรือบันทึกเคสเพิ่มเติมได้)
                 </div>
@@ -831,8 +831,8 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
 
               {/* Optional Delivered List Preview */}
               {showDeliveredList && autoStats.deliveredCases.length > 0 && (
-                <div className="rounded-2xl bg-emerald-50/50 border border-emerald-200/70 divide-y divide-emerald-100">
-                  <div className="px-3 py-1.5 text-[10.5px] font-bold text-emerald-800 bg-emerald-100/50 rounded-t-2xl">
+                <div className="rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/60 divide-y divide-emerald-100 dark:divide-emerald-900/50">
+                  <div className="px-3 py-1.5 text-[10.5px] font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-100/50 dark:bg-emerald-950/60 rounded-t-2xl">
                     เคสที่รับรถแล้วในงวดนี้ ({autoStats.deliveredCases.length} คัน)
                   </div>
                   {autoStats.deliveredCases.map((c, idx) => (
@@ -840,10 +840,10 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
                       key={c.id}
                       className="px-3 py-1.5 flex items-center justify-between gap-2 text-[11.5px]"
                     >
-                      <MarqueeText className="font-semibold text-slate-800 flex-1">
+                      <MarqueeText className="font-semibold text-slate-800 dark:text-slate-200 flex-1">
                         {idx + 1}. {getCleanCustomerName(c)}
                       </MarqueeText>
-                      <span className="text-[10px] font-semibold text-emerald-700 shrink-0">
+                      <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
                         รับรถแล้ว {c.deliveryDate ? c.deliveryDate.slice(8, 10) + '/' + c.deliveryDate.slice(5, 7) : ''}
                       </span>
                     </div>
@@ -854,17 +854,17 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
           )}
 
           {/* Live LINE Preview Box */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-sky-50/60 border border-emerald-200/80 shadow-2xs">
-            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 text-[11px]">
-              <span className="font-bold text-slate-800 flex items-center gap-1.5 min-w-0">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-sky-50/60 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-slate-900/90 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
+            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 dark:border-emerald-800/60 text-[11px]">
+              <span className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
                 <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse shrink-0" />
                 <span>ตัวอย่างข้อความส่งสรุปปิดยอด (LINE) :</span>
               </span>
-              <span className="text-[10px] text-emerald-800 font-semibold bg-white/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap shrink-0 tabular-nums">
+              <span className="text-[10px] text-emerald-800 dark:text-emerald-200 font-semibold bg-white/90 dark:bg-slate-800 border border-emerald-200/80 dark:border-emerald-800/70 px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap shrink-0 tabular-nums">
                 งวด {periodShortLabel}
               </span>
             </div>
-            <pre className="font-sans text-[11.5px] leading-[1.6] whitespace-pre-wrap text-slate-800 select-all bg-white/95 p-3.5 rounded-xl border border-emerald-200/70 shadow-2xs">
+            <pre className="font-sans text-[11.5px] leading-[1.6] whitespace-pre-wrap text-slate-800 dark:text-slate-100 select-all bg-white/95 dark:bg-slate-900/95 p-3.5 rounded-xl border border-emerald-200/70 dark:border-slate-700 shadow-2xs">
               {reportText}
             </pre>
           </div>
@@ -874,16 +874,16 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
             <button
               type="button"
               onClick={handleCopyReport}
-              className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-4 py-2.5 rounded-xl bg-sky-50 hover:bg-sky-100/90 text-sky-900 border border-sky-200/90 text-xs font-bold flex items-center gap-2 shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="flex-1 sm:flex-initial sm:min-w-[175px] justify-center px-4 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100/90 dark:hover:bg-sky-900/70 text-sky-900 dark:text-sky-200 border border-sky-200/90 dark:border-sky-800/70 text-xs font-bold flex items-center gap-2 shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="text-emerald-700 font-bold">คัดลอกเรียบร้อย!</span>
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-emerald-700 dark:text-emerald-300 font-bold">คัดลอกเรียบร้อย!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4 text-sky-700 shrink-0" />
+                  <Copy className="w-4 h-4 text-sky-700 dark:text-sky-400 shrink-0" />
                   <span>คัดลอกข้อความ</span>
                 </>
               )}

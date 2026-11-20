@@ -840,8 +840,8 @@ export function DailyFinanceReportCard({
         onClick={handleToggle}
         className={`glass-card-primary rounded-[24px] p-3 sm:p-4 h-full flex flex-col justify-between relative overflow-hidden elevated-data-box border shadow-md cursor-pointer select-none transition-all ${
           isExpanded
-            ? 'border-violet-400 ring-2 ring-violet-400/40'
-            : 'border-violet-200/80 hover:border-violet-300'
+            ? 'border-violet-400 dark:border-violet-500 ring-2 ring-violet-400/40'
+            : 'border-violet-200/80 dark:border-violet-800/60 hover:border-violet-300 dark:hover:border-violet-700'
         } ${className}`}
       >
         {/* Top Gradient Header Accent Bar */}
@@ -853,21 +853,21 @@ export function DailyFinanceReportCard({
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs shadow-violet-500/30 shrink-0">
                 <BarChart3 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
-              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 leading-tight min-w-0 flex-1">
+              <h3 className="font-extrabold text-[11.5px] sm:text-sm text-slate-800 dark:text-slate-100 leading-tight min-w-0 flex-1">
                 <MarqueeText>รายงานประจำวัน</MarqueeText>
               </h3>
             </div>
-            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0 shadow-2xs">
+            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 shadow-2xs">
               <ArrowUpRight className="w-3.5 h-3.5" />
             </span>
           </div>
           <div className="space-y-1 min-w-0">
-            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80">
+            <span className="inline-block max-w-full text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 dark:bg-violet-950/80 text-violet-800 dark:text-violet-200 border border-violet-200/80 dark:border-violet-800/70">
               <MarqueeText fitContent>
                 {dealers.length} ดีลเลอร์ • {summary.totalNumericCases} เคส
               </MarqueeText>
             </span>
-            <MarqueeText className="text-[10px] text-slate-500 font-medium">
+            <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
               สรุปยอดไฟแนนซ์ราย Dealer ส่ง LINE
             </MarqueeText>
           </div>
@@ -881,21 +881,21 @@ export function DailyFinanceReportCard({
         accentBarClass="bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500"
       >
         {/* Sticky Modal Header matching QuotationModal */}
-        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="p-2 sm:p-2.5 bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-md shadow-violet-500/20 flex-shrink-0">
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight min-w-0">
                   <MarqueeText fitContent>รายงานประจำวันยอดเคสไฟแนนซ์</MarqueeText>
                 </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 text-violet-800 border border-violet-200/80 shrink-0 hidden xs:inline-block">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100/90 dark:bg-violet-950/80 text-violet-800 dark:text-violet-200 border border-violet-200/80 dark:border-violet-800/70 shrink-0 hidden xs:inline-block">
                   Daily Finance Report
                 </span>
               </div>
-              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              <MarqueeText className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 สรุปยอดแต่ละไฟแนนซ์แยกราย Dealer เพิ่ม-ลบได้ไม่จำกัด พร้อมคัดลอกส่งเข้า LINE ประจำวัน
               </MarqueeText>
             </div>
@@ -908,11 +908,11 @@ export function DailyFinanceReportCard({
               className={`p-1.5 sm:px-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer shadow-2xs ${
                 isCopied
                   ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white hover:bg-violet-50 text-slate-700 hover:text-violet-700 border-slate-200'
+                  : 'bg-white dark:bg-slate-800 hover:bg-violet-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-violet-700 dark:hover:text-violet-300 border-slate-200 dark:border-slate-700'
               }`}
               title="คัดลอกข้อความรายงาน"
             >
-              {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-violet-600" />}
+              {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />}
               <span className="hidden sm:inline text-[10.5px]">
                 {isCopied ? 'คัดลอกแล้ว' : 'คัดลอก'}
               </span>
@@ -921,7 +921,7 @@ export function DailyFinanceReportCard({
             <button
               type="button"
               onClick={handleToggle}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer flex-shrink-0 -mr-1"
               title="ปิดหน้าต่าง"
               aria-label="Close"
             >
@@ -931,28 +931,28 @@ export function DailyFinanceReportCard({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 space-y-4">
+        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {/* Quick Date and Officer Subheader Bar */}
-          <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-50/70 via-indigo-50/50 to-white border border-violet-100 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-50/70 via-indigo-50/50 to-white dark:from-violet-950/60 dark:via-indigo-950/50 dark:to-slate-900/90 border border-violet-100 dark:border-violet-800/60 flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-violet-200/80 shadow-2xs">
-                <Calendar className="w-3.5 h-3.5 text-violet-600" />
-                <span className="text-[11px] font-bold text-slate-700">วันที่:</span>
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-violet-200/80 dark:border-violet-800/70 shadow-2xs">
+                <Calendar className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">วันที่:</span>
                 <input
                   type="date"
                   value={reportDate}
                   onChange={(e) => setReportDate(e.target.value)}
-                  className="text-xs font-semibold text-violet-950 bg-transparent outline-none cursor-pointer"
+                  className="text-xs font-semibold text-violet-950 dark:text-violet-200 bg-transparent outline-none cursor-pointer dark:[color-scheme:dark]"
                 />
-                <span className="text-[10px] text-violet-700 font-bold bg-violet-50 px-1.5 py-0.5 rounded border border-violet-200/60 whitespace-nowrap">
+                <span className="text-[10px] text-violet-700 dark:text-violet-300 font-bold bg-violet-50 dark:bg-violet-950/80 px-1.5 py-0.5 rounded border border-violet-200/60 dark:border-violet-800/60 whitespace-nowrap">
                   ({thaiFormattedDate})
                 </span>
               </div>
 
               {formatOfficerShort(officerName, officerCode, officerDisplay) && (
-                <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-violet-200/80 shadow-2xs text-[11px] font-semibold text-slate-700">
-                  <User className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>เจ้าหน้าที่: <strong className="text-indigo-900">{formatOfficerShort(officerName, officerCode, officerDisplay)}</strong></span>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-violet-200/80 dark:border-violet-800/70 shadow-2xs text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                  <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>เจ้าหน้าที่: <strong className="text-indigo-900 dark:text-indigo-200">{formatOfficerShort(officerName, officerCode, officerDisplay)}</strong></span>
                 </div>
               )}
             </div>
@@ -966,8 +966,8 @@ export function DailyFinanceReportCard({
                 รวม {summary.totalNumericCases} เคส
               </span>
               {pendingConfirmAction === 'reset' ? (
-                <div className="inline-flex items-center gap-1 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-lg">
-                  <span className="text-[10px] font-bold text-rose-800">รีเซ็ตยอดเป็น 0?</span>
+                <div className="inline-flex items-center gap-1 bg-rose-50 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800 px-2 py-0.5 rounded-lg">
+                  <span className="text-[10px] font-bold text-rose-800 dark:text-rose-200">รีเซ็ตยอดเป็น 0?</span>
                   <button
                     type="button"
                     onClick={executeResetCountsToZero}
@@ -978,7 +978,7 @@ export function DailyFinanceReportCard({
                   <button
                     type="button"
                     onClick={() => setPendingConfirmAction(null)}
-                    className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 text-[9.5px] font-semibold cursor-pointer"
+                    className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[9.5px] font-semibold cursor-pointer"
                   >
                     ยกเลิก
                   </button>
@@ -987,7 +987,7 @@ export function DailyFinanceReportCard({
                 <button
                   type="button"
                   onClick={handleResetCountsToZero}
-                  className="text-[9.5px] font-semibold text-slate-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                  className="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1"
                   title="รีเซ็ตจำนวนเคสเป็น 0"
                 >
                   <RotateCcw className="w-2.5 h-2.5" />
@@ -1010,12 +1010,12 @@ export function DailyFinanceReportCard({
               return (
                 <div
                   key={dealer.id}
-                  className="glass-panel-white p-3.5 sm:p-4 rounded-2xl elevated-data-box border border-violet-100/90 shadow-2xs space-y-3"
+                  className="glass-panel-white p-3.5 sm:p-4 rounded-2xl elevated-data-box border border-violet-100/90 dark:border-violet-800/60 shadow-2xs space-y-3"
                 >
                   {/* Dealer Header */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      <div className="w-6 h-6 rounded-lg bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 flex items-center justify-center text-xs font-bold shrink-0">
                         {dIdx + 1}
                       </div>
                       <div className="flex-1 min-w-[180px]">
@@ -1024,19 +1024,19 @@ export function DailyFinanceReportCard({
                           value={dealer.dealerName}
                           onChange={(e) => handleUpdateDealerName(dealer.id, e.target.value)}
                           placeholder="ชื่อ Dealer (เช่น ป.ยานยนต์(สนญ.))"
-                          className="w-full text-xs sm:text-sm font-bold text-slate-900 bg-transparent border-b border-transparent hover:border-violet-300 focus:border-violet-500 outline-none px-1 py-0.5 transition-colors"
+                          className="w-full text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 bg-transparent border-b border-transparent hover:border-violet-300 dark:hover:border-violet-600 focus:border-violet-500 outline-none px-1 py-0.5 transition-colors"
                         />
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70">
                         รวม {dealerSubtotal} เคส
                       </span>
                       <button
                         type="button"
                         onClick={() => handleDuplicateDealer(dealer)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                        className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors"
                         title="คัดลอกเป็นดีลเลอร์ใหม่"
                       >
                         <Layers className="w-3.5 h-3.5" />
@@ -1045,7 +1045,7 @@ export function DailyFinanceReportCard({
                         <button
                           type="button"
                           onClick={() => handleRemoveDealer(dealer.id)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
                           title="ลบดีลเลอร์นี้"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1056,7 +1056,7 @@ export function DailyFinanceReportCard({
 
                   {/* Dealer Suggestions Quick Pills */}
                   <div className="flex items-center gap-1 flex-wrap">
-                    <span className="text-[9px] text-slate-400 font-medium">ชื่อแนะนำ:</span>
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">ชื่อแนะนำ:</span>
                     {activeDealerName?.trim() &&
                       !COMMON_DEALER_SUGGESTIONS.slice(0, 4).includes(activeDealerName.trim()) && (
                         <button
@@ -1068,7 +1068,7 @@ export function DailyFinanceReportCard({
                           className={`text-[9px] px-1.5 py-0.5 rounded-md border transition-all ${
                             dealer.dealerName === activeDealerName.trim()
                               ? 'bg-sky-600 text-white border-sky-600 font-bold'
-                              : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300 font-semibold'
+                              : 'bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100 dark:hover:bg-sky-900/70 text-sky-800 dark:text-sky-200 border-sky-300 dark:border-sky-800 font-semibold'
                           }`}
                           title="ใช้ชื่อดีลเลอร์จากหน้าโฮม"
                         >
@@ -1086,7 +1086,7 @@ export function DailyFinanceReportCard({
                         className={`text-[9px] px-1.5 py-0.5 rounded-md border transition-all ${
                           dealer.dealerName === sug
                             ? 'bg-violet-600 text-white border-violet-600 font-bold'
-                            : 'bg-white hover:bg-violet-50 text-slate-600 border-slate-200'
+                            : 'bg-white dark:bg-slate-800 hover:bg-violet-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {sug}
@@ -1106,8 +1106,8 @@ export function DailyFinanceReportCard({
                           key={f.id}
                           className={`flex items-center gap-2 p-1.5 sm:p-2 rounded-xl border transition-all ${
                             isNextCapital
-                              ? 'bg-gradient-to-r from-sky-50/70 via-indigo-50/40 to-white border-sky-200/90 shadow-2xs'
-                              : 'bg-slate-50/60 hover:bg-slate-50 border-slate-200/70'
+                              ? 'bg-gradient-to-r from-sky-50/70 via-indigo-50/40 to-white dark:from-sky-950/60 dark:via-indigo-950/40 dark:to-slate-900/90 border-sky-200/90 dark:border-sky-800/70 shadow-2xs'
+                              : 'bg-slate-50/60 dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/70 dark:border-slate-700/80'
                           }`}
                         >
                           {/* Finance Name */}
@@ -1115,8 +1115,8 @@ export function DailyFinanceReportCard({
                             <span
                               className={`w-2 h-2 rounded-full shrink-0 ${
                                 isNextCapital
-                                  ? 'bg-sky-500 ring-2 ring-sky-200'
-                                  : 'bg-slate-400'
+                                  ? 'bg-sky-500 ring-2 ring-sky-200 dark:ring-sky-800'
+                                  : 'bg-slate-400 dark:bg-slate-500'
                               }`}
                             />
                             <input
@@ -1140,13 +1140,13 @@ export function DailyFinanceReportCard({
                                 );
                               }}
                               className={`text-xs font-bold outline-none bg-transparent w-full ${
-                                isNextCapital ? 'text-sky-900 font-extrabold' : 'text-slate-800'
+                                isNextCapital ? 'text-sky-900 dark:text-sky-200 font-extrabold' : 'text-slate-800 dark:text-slate-100'
                               }`}
                               placeholder="ชื่อไฟแนนซ์"
                             />
                           </div>
 
-                          <span className="text-slate-300 font-semibold text-xs">=</span>
+                          <span className="text-slate-300 dark:text-slate-600 font-semibold text-xs">=</span>
 
                           {/* Count Input */}
                           <div className="flex-1 max-w-[110px]">
@@ -1159,8 +1159,8 @@ export function DailyFinanceReportCard({
                               placeholder="0 หรือ 1A"
                               className={`w-full text-center px-2 py-1 rounded-lg text-xs font-bold border transition-all ${
                                 f.count !== '0' && f.count !== ''
-                                  ? 'bg-white text-indigo-950 border-indigo-300 shadow-2xs ring-1 ring-indigo-200/50'
-                                  : 'bg-white/80 text-slate-500 border-slate-200'
+                                  ? 'bg-white dark:bg-slate-900 text-indigo-950 dark:text-sky-200 border-indigo-300 dark:border-sky-600 shadow-2xs ring-1 ring-indigo-200/50 dark:ring-sky-500/30'
+                                  : 'bg-white/80 dark:bg-slate-900/70 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                               }`}
                             />
                           </div>
@@ -1178,7 +1178,7 @@ export function DailyFinanceReportCard({
                                 className={`text-[9.5px] px-1.5 py-0.5 rounded border transition-colors ${
                                   f.count === val
                                     ? 'bg-indigo-600 text-white border-indigo-600 font-bold'
-                                    : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
+                                    : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                                 }`}
                               >
                                 {val}
@@ -1190,7 +1190,7 @@ export function DailyFinanceReportCard({
                           <button
                             type="button"
                             onClick={() => handleRemoveFinance(dealer.id, f.id)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-auto"
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors ml-auto"
                             title="ลบแถวไฟแนนซ์นี้"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1202,15 +1202,15 @@ export function DailyFinanceReportCard({
 
                   {/* Add Finance Button / Quick Add to this Dealer */}
                   {addingFinanceToDealerId === dealer.id ? (
-                    <div className="p-2.5 rounded-xl bg-violet-50/80 border border-violet-200 space-y-2">
+                    <div className="p-2.5 rounded-xl bg-violet-50/80 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/60 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-violet-900">
+                        <span className="text-[10px] font-bold text-violet-900 dark:text-violet-200">
                           เลือกไฟแนนซ์ที่ต้องการเพิ่ม:
                         </span>
                         <button
                           type="button"
                           onClick={() => setAddingFinanceToDealerId(null)}
-                          className="text-[10px] text-slate-500 hover:text-slate-800"
+                          className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                         >
                           ยกเลิก
                         </button>
@@ -1233,7 +1233,7 @@ export function DailyFinanceReportCard({
                                 type="button"
                                 onClick={() => handleAddFinance(dealer.id, finName)}
                                 title={desc ? `${finName} (${desc})` : finName}
-                                className="text-[10px] px-2 py-0.5 rounded-md bg-white hover:bg-violet-600 hover:text-white text-violet-800 border border-violet-200 font-bold transition-all shadow-2xs hover:shadow-xs flex items-center gap-1 active:scale-95 cursor-pointer"
+                                className="text-[10px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-violet-600 hover:text-white text-violet-800 dark:text-violet-200 border border-violet-200 dark:border-violet-800/70 font-bold transition-all shadow-2xs hover:shadow-xs flex items-center gap-1 active:scale-95 cursor-pointer"
                               >
                                 <span>+ {finName}</span>
                                 {desc && (
@@ -1258,7 +1258,7 @@ export function DailyFinanceReportCard({
                             }
                           }}
                           placeholder="พิมพ์ชื่อไฟแนนซ์อื่นๆ แล้วกดเพิ่ม"
-                          className="flex-1 px-2 py-1 rounded-lg text-xs border border-violet-200 bg-white outline-none font-medium"
+                          className="flex-1 px-2 py-1 rounded-lg text-xs border border-violet-200 dark:border-violet-800/70 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none font-medium"
                         />
                         <button
                           type="button"
@@ -1277,14 +1277,14 @@ export function DailyFinanceReportCard({
                           triggerHaptic('light');
                           setAddingFinanceToDealerId(dealer.id);
                         }}
-                        className="text-[10.5px] font-semibold text-violet-700 hover:text-violet-900 bg-violet-50 hover:bg-violet-100/80 px-2.5 py-1 rounded-xl border border-violet-200 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                        className="text-[10.5px] font-semibold text-violet-700 dark:text-violet-300 hover:text-violet-900 dark:hover:text-violet-100 bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100/80 dark:hover:bg-violet-900/60 px-2.5 py-1 rounded-xl border border-violet-200 dark:border-violet-800/70 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                       >
-                        <Plus className="w-3.5 h-3.5 text-violet-600" />
+                        <Plus className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
                         <span>เพิ่มไฟแนนซ์ในดีลเลอร์นี้</span>
                       </button>
 
                       {/* Mobile quick shortcut buttons for all finances */}
-                      <div className="flex sm:hidden items-center gap-1 text-[9px] text-slate-400">
+                      <div className="flex sm:hidden items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500">
                         <span>แตะช่องเพื่อพิมพ์ 0 หรือ 1A</span>
                       </div>
                     </div>
@@ -1306,8 +1306,8 @@ export function DailyFinanceReportCard({
             </button>
 
             {pendingConfirmAction === 'restore' ? (
-              <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-xl">
-                <span className="text-[10.5px] font-bold text-amber-900">กู้คืนตัวอย่าง ป.ยานยนต์?</span>
+              <div className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 px-2.5 py-1 rounded-xl">
+                <span className="text-[10.5px] font-bold text-amber-900 dark:text-amber-200">กู้คืนตัวอย่าง ป.ยานยนต์?</span>
                 <button
                   type="button"
                   onClick={executeRestoreDefaultTemplate}
@@ -1318,7 +1318,7 @@ export function DailyFinanceReportCard({
                 <button
                   type="button"
                   onClick={() => setPendingConfirmAction(null)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-semibold cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-[10px] font-semibold cursor-pointer"
                 >
                   ยกเลิก
                 </button>
@@ -1327,7 +1327,7 @@ export function DailyFinanceReportCard({
               <button
                 type="button"
                 onClick={handleRestoreDefaultTemplate}
-                className="text-[10.5px] text-slate-500 hover:text-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="text-[10.5px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 title="รีเซ็ตกลับเป็นตัวอย่าง ป.ยานยนต์ เริ่มต้น"
               >
                 กู้คืนตัวอย่าง ป.ยานยนต์
@@ -1336,12 +1336,12 @@ export function DailyFinanceReportCard({
           </div>
 
           {/* Live Preview Box with Alignment Controls (ปรับสีสว่างเหมือนกล่องขออนุมัติเคส DV) */}
-          <div className="glass-panel-white p-3.5 rounded-2xl elevated-data-box border border-violet-200/90 bg-gradient-to-br from-violet-50/40 via-white to-white shadow-2xs space-y-3">
+          <div className="glass-panel-white p-3.5 rounded-2xl elevated-data-box border border-violet-200/90 dark:border-violet-800/60 bg-gradient-to-br from-violet-50/40 via-white to-white dark:from-violet-950/40 dark:via-slate-900/90 dark:to-slate-900/95 shadow-2xs space-y-3">
             {/* Header & Quick Action */}
-            <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-violet-100">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-violet-100 dark:border-violet-800/60">
               <div className="flex items-center gap-1.5">
-                <SlidersHorizontal className="w-4 h-4 text-violet-600" />
-                <span className="text-xs font-bold text-slate-800">
+                <SlidersHorizontal className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                   ตัวอย่างข้อความรายงานที่จะส่งเข้า LINE :
                 </span>
               </div>
@@ -1350,16 +1350,16 @@ export function DailyFinanceReportCard({
               <button
                 type="button"
                 onClick={handleCopyText}
-                className="text-[11px] font-bold text-violet-700 hover:text-violet-900 flex items-center gap-1 hover:underline cursor-pointer bg-white/90 hover:bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200 shadow-2xs transition-colors"
+                className="text-[11px] font-bold text-violet-700 dark:text-violet-300 hover:text-violet-900 dark:hover:text-violet-100 flex items-center gap-1 hover:underline cursor-pointer bg-white/90 dark:bg-slate-800 hover:bg-violet-50 dark:hover:bg-slate-700 px-2.5 py-1 rounded-lg border border-violet-200 dark:border-violet-800/70 shadow-2xs transition-colors"
               >
                 {isCopied ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700 font-bold">คัดลอกแล้ว!</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-emerald-700 dark:text-emerald-300 font-bold">คัดลอกแล้ว!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3 h-3 text-violet-600" />
+                    <Copy className="w-3 h-3 text-violet-600 dark:text-violet-400" />
                     <span>คัดลอกด่วน</span>
                   </>
                 )}
@@ -1369,10 +1369,10 @@ export function DailyFinanceReportCard({
             {/* Style Selector Tabs */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-semibold text-slate-600">
+                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
                   เลือกสไตล์การจัดแนว:
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
                   {formatOptions.style === 'modern_dots' && '• จุดไข่ปลาเชื่อมตัวเลขตรงดิ่ง (ยอดนิยม)'}
                   {formatOptions.style === 'tree' && '• แผนผังกิ่งไม้สวยงามเป็นระเบียบ'}
                   {formatOptions.style === 'spaced' && '• จัดคอลัมน์ด้วยช่องว่างตรงบรรทัด'}
@@ -1400,14 +1400,14 @@ export function DailyFinanceReportCard({
                       }}
                       className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all text-center border cursor-pointer ${
                         isActive
-                          ? 'bg-violet-600 text-white border-violet-600 shadow-xs shadow-violet-500/25 ring-2 ring-violet-200'
-                          : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                          ? 'bg-violet-600 text-white border-violet-600 shadow-xs shadow-violet-500/25 ring-2 ring-violet-200 dark:ring-violet-500/40'
+                          : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       <div className="leading-tight">{s.label}</div>
                       <div
                         className={`text-[9px] font-normal ${
-                          isActive ? 'text-violet-100' : 'text-slate-400'
+                          isActive ? 'text-violet-100' : 'text-slate-400 dark:text-slate-500'
                         }`}
                       >
                         {s.sub}
@@ -1419,17 +1419,17 @@ export function DailyFinanceReportCard({
             </div>
 
             {/* Customization Options Bar */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-violet-100">
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-violet-100 dark:border-violet-800/60">
               {/* Separator toggle */}
-              <div className="flex items-center rounded-lg bg-white p-0.5 border border-violet-200 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 px-1.5">คั่น:</span>
+              <div className="flex items-center rounded-lg bg-white dark:bg-slate-800 p-0.5 border border-violet-200 dark:border-violet-800/70 shadow-2xs">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1.5">คั่น:</span>
                 <button
                   type="button"
                   onClick={() => setFormatOptions((prev) => ({ ...prev, separator: '=' }))}
                   className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-md transition-colors ${
                     formatOptions.separator === '='
                       ? 'bg-violet-600 text-white shadow-2xs font-extrabold'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   =
@@ -1440,7 +1440,7 @@ export function DailyFinanceReportCard({
                   className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-md transition-colors ${
                     formatOptions.separator === ':'
                       ? 'bg-violet-600 text-white shadow-2xs font-extrabold'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   :
@@ -1448,7 +1448,7 @@ export function DailyFinanceReportCard({
               </div>
 
               {/* Pin Icon Toggle */}
-              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-violet-50/60 border border-violet-200/80 cursor-pointer text-[10.5px] text-slate-700 select-none shadow-2xs">
+              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-violet-50/60 dark:hover:bg-slate-700 border border-violet-200/80 dark:border-violet-800/70 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-200 select-none shadow-2xs">
                 <input
                   type="checkbox"
                   checked={formatOptions.includeDealerIcon}
@@ -1461,7 +1461,7 @@ export function DailyFinanceReportCard({
               </label>
 
               {/* Grand Total Toggle */}
-              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-violet-50/60 border border-violet-200/80 cursor-pointer text-[10.5px] text-slate-700 select-none shadow-2xs">
+              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-violet-50/60 dark:hover:bg-slate-700 border border-violet-200/80 dark:border-violet-800/70 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-200 select-none shadow-2xs">
                 <input
                   type="checkbox"
                   checked={formatOptions.includeGrandTotal}
@@ -1474,7 +1474,7 @@ export function DailyFinanceReportCard({
               </label>
 
               {/* Subtotal per dealer */}
-              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-violet-50/60 border border-violet-200/80 cursor-pointer text-[10.5px] text-slate-700 select-none shadow-2xs">
+              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-violet-50/60 dark:hover:bg-slate-700 border border-violet-200/80 dark:border-violet-800/70 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-200 select-none shadow-2xs">
                 <input
                   type="checkbox"
                   checked={formatOptions.includeSubtotal}
@@ -1487,7 +1487,7 @@ export function DailyFinanceReportCard({
               </label>
 
               {/* Unit 'เคส' */}
-              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-violet-50/60 border border-violet-200/80 cursor-pointer text-[10.5px] text-slate-700 select-none shadow-2xs">
+              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-violet-50/60 dark:hover:bg-slate-700 border border-violet-200/80 dark:border-violet-800/70 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-200 select-none shadow-2xs">
                 <input
                   type="checkbox"
                   checked={formatOptions.includeUnit}
@@ -1500,7 +1500,7 @@ export function DailyFinanceReportCard({
               </label>
 
               {/* Header Toggle */}
-              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-violet-50/60 border border-violet-200/80 cursor-pointer text-[10.5px] text-slate-700 select-none shadow-2xs">
+              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-violet-50/60 dark:hover:bg-slate-700 border border-violet-200/80 dark:border-violet-800/70 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-200 select-none shadow-2xs">
                 <input
                   type="checkbox"
                   checked={formatOptions.includeHeader}
@@ -1513,7 +1513,7 @@ export function DailyFinanceReportCard({
               </label>
 
               {/* Code block toggle */}
-              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-violet-50/60 border border-violet-200/80 cursor-pointer text-[10.5px] text-slate-700 select-none shadow-2xs">
+              <label className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-violet-50/60 dark:hover:bg-slate-700 border border-violet-200/80 dark:border-violet-800/70 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-200 select-none shadow-2xs">
                 <input
                   type="checkbox"
                   checked={formatOptions.useCodeBlock}
@@ -1528,7 +1528,7 @@ export function DailyFinanceReportCard({
 
             {/* Live Text Preview Box: ปรับสีสว่าง (Light Theme) เหมือนกล่องขออนุมัติเคส DV */}
             <div className="relative">
-              <pre className="font-sans text-[11.5px] leading-relaxed whitespace-pre-wrap text-slate-800 select-text bg-white/95 p-3.5 rounded-xl border border-violet-200/80 shadow-2xs max-h-[220px] overflow-y-auto">
+              <pre className="font-sans text-[11.5px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100 select-text bg-white/95 dark:bg-slate-900/95 p-3.5 rounded-xl border border-violet-200/80 dark:border-slate-700 shadow-2xs max-h-[220px] overflow-y-auto">
                 {generateReportText()}
               </pre>
             </div>
@@ -1542,7 +1542,7 @@ export function DailyFinanceReportCard({
               className={`w-full py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
                 isCopied
                   ? 'bg-emerald-600 text-white shadow-emerald-600/30'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/90 hover:border-slate-300 shadow-slate-200/50'
+                  : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-slate-200/50 dark:shadow-slate-950/30'
               }`}
             >
               {isCopied ? (
@@ -1552,7 +1552,7 @@ export function DailyFinanceReportCard({
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4 text-violet-600" />
+                  <Copy className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                   <span>คัดลอกข้อความรายงาน</span>
                 </>
               )}

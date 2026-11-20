@@ -105,17 +105,17 @@ export const YearsMonthsInput: React.FC<YearsMonthsInputProps> = ({
 
   const borderStatusClass =
     status === 'fail'
-      ? 'border-rose-400 bg-rose-50/60 text-rose-900'
+      ? 'border-rose-400 dark:border-rose-500/80 bg-rose-50/60 dark:bg-rose-950/50 text-rose-900 dark:text-rose-200'
       : status === 'pass'
-      ? 'border-emerald-400 text-emerald-950'
-      : 'text-slate-900';
+      ? 'border-emerald-400 dark:border-emerald-500/80 text-emerald-950 dark:text-emerald-200'
+      : 'text-slate-900 dark:text-slate-100';
 
   const summaryBadgeClass =
     status === 'fail'
-      ? 'text-rose-700'
+      ? 'text-rose-700 dark:text-rose-400'
       : status === 'pass'
-      ? 'text-emerald-700'
-      : 'text-slate-500';
+      ? 'text-emerald-700 dark:text-emerald-400'
+      : 'text-slate-500 dark:text-slate-400';
 
   const summaryLabel =
     externalTotal !== null
@@ -127,7 +127,7 @@ export const YearsMonthsInput: React.FC<YearsMonthsInputProps> = ({
   return (
     <div>
       <div className="flex items-center justify-between gap-1.5 mb-1">
-        <label className="text-[10px] text-slate-600 font-medium truncate">
+        <label className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">
           {label}{' '}
           <span className="text-[9px] text-slate-400">({criteriaHint})</span>
         </label>

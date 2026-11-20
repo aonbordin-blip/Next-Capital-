@@ -80,15 +80,15 @@ const THAI_MONTH_SHORTS = [
 function getBrandBadgeStyle(brand: string): string {
   const upper = brand.toUpperCase();
   if (upper.includes('HONDA')) {
-    return 'bg-rose-50 text-rose-700 border-rose-200';
+    return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-800/70';
   }
   if (upper.includes('YAMAHA')) {
-    return 'bg-blue-50 text-blue-700 border-blue-200';
+    return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/70 dark:text-blue-200 dark:border-blue-800/70';
   }
   if (upper.includes('VESPA') || upper.includes('LAMBRETTA')) {
-    return 'bg-teal-50 text-teal-700 border-teal-200';
+    return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/70 dark:text-teal-200 dark:border-teal-800/70';
   }
-  return 'bg-slate-100 text-slate-700 border-slate-200';
+  return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700';
 }
 
 function parseDateSafe(input?: string | number): Date | null {
@@ -678,15 +678,15 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
       {/* Step Header Badge */}
       <div className="flex items-center justify-between px-1 text-xs gap-2">
-        <span className="font-extrabold text-sky-950 flex items-center gap-1.5 min-w-0 flex-1">
+        <span className="font-extrabold text-sky-950 dark:text-slate-100 flex items-center gap-1.5 min-w-0 flex-1">
           <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] font-bold shadow-2xs shrink-0">
             5
           </span>
-          <MarqueeText className="font-extrabold text-sky-950">
+          <MarqueeText className="font-extrabold text-sky-950 dark:text-slate-100">
             รายชื่อลูกค้าจัดกลุ่มตามกำหนดชำระเดือนแรก (งวด 1 - 9)
           </MarqueeText>
         </span>
-        <span className="text-[10px] text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded-full font-bold border border-sky-200 shrink-0 whitespace-nowrap">
+        <span className="text-[10px] text-sky-800 bg-sky-50 dark:text-sky-200 dark:bg-sky-950/70 px-2.5 py-0.5 rounded-full font-bold border border-sky-200 dark:border-sky-800/70 shrink-0 whitespace-nowrap">
           กลุ่มงวดแรก
         </span>
       </div>
@@ -698,10 +698,10 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       <div className="glass-card-primary rounded-2xl p-3 sm:p-3.5 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-7 h-7 rounded-xl bg-sky-100/90 text-sky-700 flex items-center justify-center shrink-0 shadow-2xs">
+            <div className="w-7 h-7 rounded-xl bg-sky-100/90 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300 flex items-center justify-center shrink-0 shadow-2xs">
               <CalendarDays className="w-3.5 h-3.5" />
             </div>
-            <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-800 leading-tight truncate">
+            <h4 className="text-xs sm:text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-tight truncate">
               เลือกกลุ่มเดือนกำหนดชำระงวดแรก
             </h4>
           </div>
@@ -709,10 +709,10 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => handleSelectFirstDueMonth('ALL')}
-            className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer shrink-0 whitespace-nowrap tabular-nums ${
               selectedFirstDueMonth === 'ALL'
                 ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-sky-500 shadow-2xs'
-                : 'bg-white/75 hover:bg-white text-sky-800 border-white/90 shadow-2xs'
+                : 'bg-white/75 hover:bg-white text-sky-800 border-white/90 dark:bg-slate-800/90 dark:hover:bg-slate-700 dark:text-sky-200 dark:border-slate-700 shadow-2xs'
             }`}
           >
             ทั้งหมด ({enrichedList.length})
@@ -725,7 +725,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => handleStepFirstDueMonth(-1)}
-              className="w-10 h-10 rounded-xl bg-white/75 hover:bg-white backdrop-blur-sm border border-white/90 text-slate-700 hover:text-sky-700 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs flex items-center justify-center"
+              className="w-10 h-10 rounded-xl bg-white/75 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-700 backdrop-blur-sm border border-white/90 dark:border-slate-700 text-slate-700 hover:text-sky-700 dark:text-slate-200 dark:hover:text-sky-300 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs flex items-center justify-center"
               title="กลุ่มเดือนก่อนหน้า"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -736,7 +736,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 aria-label="เลือกกลุ่มเดือนกำหนดชำระงวดแรก"
                 value={selectedFirstDueMonth}
                 onChange={(e) => handleSelectFirstDueMonth(e.target.value)}
-                className="w-full h-10 appearance-none rounded-xl bg-white/75 backdrop-blur-md border border-white/95 focus:border-sky-500 pl-3 pr-8 text-xs sm:text-sm font-bold text-sky-950 text-center truncate outline-none cursor-pointer shadow-2xs transition-colors"
+                className="w-full h-10 appearance-none rounded-xl bg-white/75 dark:bg-slate-900/90 backdrop-blur-md border border-white/95 dark:border-slate-700 focus:border-sky-500 pl-3 pr-8 text-xs sm:text-sm font-bold text-sky-950 dark:text-slate-100 dark:[color-scheme:dark] text-center truncate outline-none cursor-pointer shadow-2xs transition-colors"
               >
                 <option value="ALL">
                   ทุกกลุ่มเดือนงวดแรก ({enrichedList.length} ราย)
@@ -747,13 +747,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-sky-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-sky-600 dark:text-sky-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             <button
               type="button"
               onClick={() => handleStepFirstDueMonth(1)}
-              className="w-10 h-10 rounded-xl bg-white/75 hover:bg-white backdrop-blur-sm border border-white/90 text-slate-700 hover:text-sky-700 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs flex items-center justify-center"
+              className="w-10 h-10 rounded-xl bg-white/75 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-700 backdrop-blur-sm border border-white/90 dark:border-slate-700 text-slate-700 hover:text-sky-700 dark:text-slate-200 dark:hover:text-sky-300 active:scale-95 transition-all cursor-pointer shrink-0 shadow-2xs flex items-center justify-center"
               title="กลุ่มเดือนถัดไป"
             >
               <ChevronRight className="w-4 h-4" />
@@ -766,10 +766,10 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => handleSelectFirstDueMonth('ALL')}
-            className={`px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center gap-1.5 tabular-nums ${
               selectedFirstDueMonth === 'ALL'
                 ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-sky-500 shadow-xs'
-                : 'bg-white/55 hover:bg-white/80 text-slate-700 border-white/85'
+                : 'bg-white/55 hover:bg-white/80 text-slate-700 border-white/85 dark:bg-slate-800/80 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700'
             }`}
           >
             <span>ทุกกลุ่มเดือน</span>
@@ -777,7 +777,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
               className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
                 selectedFirstDueMonth === 'ALL'
                   ? 'bg-white/25 text-white'
-                  : 'bg-slate-100 text-slate-600'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200'
               }`}
             >
               {enrichedList.length}
@@ -791,16 +791,16 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 key={m.monthKey}
                 type="button"
                 onClick={() => handleSelectFirstDueMonth(m.monthKey)}
-                className={`px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                className={`px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 flex items-center gap-1.5 tabular-nums ${
                   isSelected
                     ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-sky-600 shadow-sm shadow-sky-500/20'
-                    : 'bg-white hover:bg-sky-50 text-slate-800 border-sky-200/80'
+                    : 'bg-white hover:bg-sky-50 text-slate-800 border-sky-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700'
                 }`}
               >
                 <span>งวดแรก {m.short}</span>
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
-                    isSelected ? 'bg-white/25 text-white' : 'bg-sky-100 text-sky-800'
+                    isSelected ? 'bg-white/25 text-white' : 'bg-sky-100 text-sky-800 dark:bg-sky-900/70 dark:text-sky-200'
                   }`}
                 >
                   {m.count} ราย
@@ -810,19 +810,19 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           })}
         </div>
 
-        {/* Verification Info Note: Explains cutoff rule + non-delivered cases cleanly */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-sky-100 text-[10px] text-slate-600 flex-wrap">
+        {/* Verification Info Note */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-sky-100 dark:border-slate-700/70 text-[10px] text-slate-600 dark:text-slate-300 flex-wrap">
           <span className="flex items-center gap-1 min-w-0">
-            <Info className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+            <Info className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
             <span>
-              แสดงเฉพาะเคสที่ <strong>อนุมัติและรับรถแล้ว</strong> (รับรถ 1-10 จ่าย 2 เดือนถัดไป • รับรถ 11+ จ่าย 2 อีก 2 เดือนถัดไป)
+              แสดงเฉพาะเคสที่ <strong className="dark:text-slate-100">อนุมัติและรับรถแล้ว</strong> (รับรถ 1-10 จ่าย 2 เดือนถัดไป • รับรถ 11+ จ่าย 2 อีก 2 เดือนถัดไป)
             </span>
           </span>
           {(pendingDeliveryCount > 0 || otherStatusCount > 0) && (
             <button
               type="button"
               onClick={onOpenSavedCases}
-              className="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-lg border border-sky-200 cursor-pointer shrink-0 whitespace-nowrap"
+              className="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 dark:text-sky-300 dark:hover:text-sky-200 dark:bg-sky-950/70 dark:hover:bg-sky-900/80 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800/70 cursor-pointer shrink-0 whitespace-nowrap"
             >
               เคสอื่นยังไม่รับรถ {pendingDeliveryCount + otherStatusCount} ราย →
             </button>
@@ -830,80 +830,80 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Clean KPI Summary Grid (No ✓ / ✗ counters) */}
+      {/* Clean KPI Summary Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-sky-200/80 min-w-0">
-          <div className="text-[10px] font-semibold text-slate-500 flex items-center gap-1 min-w-0">
-            <User className="w-3 h-3 text-sky-600 shrink-0" />
+        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-sky-200/80 dark:border-sky-800/60 min-w-0">
+          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 min-w-0">
+            <User className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
             <MarqueeText>
               {activeMonthMeta ? `ลูกค้างวดแรก (${activeMonthMeta.short})` : 'ลูกค้าที่มีกำหนดงวดแรก'}
             </MarqueeText>
           </div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-black text-slate-900">
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {summaryStats.customerCount}
             </span>
-            <span className="text-[11px] font-semibold text-slate-500">ราย</span>
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">ราย</span>
           </div>
         </div>
 
-        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-indigo-200/80 bg-indigo-50/40 min-w-0">
-          <div className="text-[10px] font-semibold text-indigo-800 flex items-center gap-1 min-w-0">
-            <CalendarDays className="w-3 h-3 text-indigo-600 shrink-0" />
+        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-indigo-200/80 bg-indigo-50/40 dark:border-indigo-800/60 dark:bg-indigo-950/35 min-w-0">
+          <div className="text-[10px] font-semibold text-indigo-800 dark:text-indigo-200 flex items-center gap-1 min-w-0">
+            <CalendarDays className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
             <MarqueeText>จำนวนกลุ่มเดือนงวดแรก</MarqueeText>
           </div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-black text-indigo-700">
+            <span className="text-lg sm:text-xl font-black text-indigo-700 dark:text-indigo-300 tabular-nums">
               {summaryStats.groupCount}
             </span>
-            <span className="text-[11px] font-semibold text-indigo-600">เดือน</span>
+            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">เดือน</span>
           </div>
         </div>
 
-        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-emerald-200/80 bg-emerald-50/40 min-w-0">
-          <div className="text-[10px] font-semibold text-emerald-800 flex items-center gap-1 min-w-0">
-            <Banknote className="w-3 h-3 text-emerald-600 shrink-0" />
+        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-emerald-200/80 bg-emerald-50/40 dark:border-emerald-800/60 dark:bg-emerald-950/35 min-w-0">
+          <div className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-1 min-w-0">
+            <Banknote className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <MarqueeText>รวมยอดค่างวด/เดือน</MarqueeText>
           </div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-base sm:text-lg font-black text-emerald-700 truncate">
+            <span className="text-base sm:text-lg font-black text-emerald-700 dark:text-emerald-300 truncate tabular-nums">
               {formatBaht(summaryStats.totalMonthlySum)}
             </span>
-            <span className="text-[11px] font-semibold text-emerald-600 shrink-0">บ.</span>
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">บ.</span>
           </div>
         </div>
 
-        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-amber-200/80 bg-amber-50/40 min-w-0">
-          <div className="text-[10px] font-semibold text-amber-800 flex items-center gap-1 min-w-0">
-            <Bike className="w-3 h-3 text-amber-600 shrink-0" />
+        <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-amber-200/80 bg-amber-50/40 dark:border-amber-800/60 dark:bg-amber-950/35 min-w-0">
+          <div className="text-[10px] font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-1 min-w-0">
+            <Bike className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
             <MarqueeText>อนุมัติ/รอรับรถ</MarqueeText>
           </div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-black text-amber-700">
+            <span className="text-lg sm:text-xl font-black text-amber-700 dark:text-amber-300 tabular-nums">
               {summaryStats.pendingCount}
             </span>
-            <span className="text-[11px] font-semibold text-amber-600">ราย</span>
+            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">ราย</span>
           </div>
         </div>
       </div>
 
       {/* Search, Brand Filter & View Switcher Toolbar */}
-      <div className="glass-card-primary rounded-2xl p-3 space-y-2.5 border border-sky-200/80">
+      <div className="glass-card-primary rounded-2xl p-3 space-y-2.5 border border-sky-200/80 dark:border-slate-700/80">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[180px]">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาชื่อลูกค้า, ยี่ห้อ, รุ่นรถ, รหัสรถ, วันงวดแรก..."
-              className="w-full glass-input-field rounded-xl pl-8 pr-7 py-2 text-xs text-slate-900 font-semibold outline-none"
+              className="w-full glass-input-field rounded-xl pl-8 pr-7 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 font-semibold outline-none"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 dark:hover:text-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 title="ล้างคำค้นหา"
               >
                 <X className="w-3.5 h-3.5" />
@@ -935,7 +935,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   brandFilter === b
                     ? 'bg-sky-600 text-white border-sky-600 shadow-2xs'
-                    : 'bg-white/80 hover:bg-white text-slate-600 border-slate-200'
+                    : 'bg-white/80 hover:bg-white text-slate-600 border-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
                 }`}
               >
                 {b === 'ALL' ? 'ทุกยี่ห้อ' : b}
@@ -951,20 +951,20 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 className={`px-2.5 py-1 rounded-xl border text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                   copiedAll
                     ? 'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-white hover:bg-sky-50 text-slate-700 border-slate-200'
+                    : 'bg-white hover:bg-sky-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700'
                 }`}
                 title="คัดลอกสรุปกลุ่มงวดแรกส่ง LINE"
               >
                 {copiedAll ? (
                   <Check className="w-3 h-3" />
                 ) : (
-                  <Copy className="w-3 h-3 text-sky-600" />
+                  <Copy className="w-3 h-3 text-sky-600 dark:text-sky-400" />
                 )}
                 <span>{copiedAll ? 'คัดลอกแล้ว' : 'คัดลอกสรุป'}</span>
               </button>
             )}
 
-            <div className="flex items-center p-0.5 rounded-xl bg-slate-200/70 border border-slate-200">
+            <div className="flex items-center p-0.5 rounded-xl bg-slate-200/70 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => {
@@ -973,8 +973,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 }}
                 className={`px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
                   viewStyle === 'cards'
-                    ? 'bg-white text-sky-700 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-sky-700 dark:bg-slate-900 dark:text-sky-300 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
                 }`}
                 title="มุมมองการ์ดแบ่งกลุ่ม"
               >
@@ -989,8 +989,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 }}
                 className={`px-2 py-1 rounded-lg text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
                   viewStyle === 'table'
-                    ? 'bg-white text-sky-700 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-sky-700 dark:bg-slate-900 dark:text-sky-300 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
                 }`}
                 title="มุมมองตารางแบ่งกลุ่ม"
               >
@@ -1004,19 +1004,19 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
       {/* Empty State */}
       {groupedByFirstDue.length === 0 ? (
-        <div className="glass-card-primary rounded-2xl p-6 text-center space-y-3 border border-sky-200/80">
-          <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center mx-auto shadow-2xs">
+        <div className="glass-card-primary rounded-2xl p-6 text-center space-y-3 border border-sky-200/80 dark:border-slate-700/80">
+          <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-950/80 dark:text-sky-300 flex items-center justify-center mx-auto shadow-2xs">
             <Calendar className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-extrabold text-slate-800">
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
               {cases.length === 0
                 ? 'ยังไม่มีรายชื่อลูกค้าที่บันทึกไว้'
                 : eligibleCases.length === 0
                 ? `มีเคสที่บันทึก ${cases.length} ราย แต่ยังไม่มีเคสที่รับรถแล้ว`
                 : 'ไม่พบรายชื่อลูกค้าที่ตรงกับตัวกรอง'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {cases.length === 0
                 ? 'กดเพิ่มลูกค้า หรือบันทึกเคสแล้วอัปเดตสถานะ "อนุมัติและรับรถแล้ว" ระบบจะจัดกลุ่มตามกำหนดชำระงวดแรกให้อัตโนมัติ'
                 : eligibleCases.length === 0
@@ -1041,7 +1041,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                   setBrandFilter('ALL');
                   setSelectedFirstDueMonth('ALL');
                 }}
-                className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>ล้างตัวกรอง</span>
@@ -1050,7 +1050,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenSavedCases}
-              className="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold text-xs flex items-center gap-1.5 border border-sky-200 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold text-xs flex items-center gap-1.5 border border-sky-200 dark:bg-sky-950/70 dark:hover:bg-sky-900/80 dark:text-sky-200 dark:border-sky-800/70 cursor-pointer"
             >
               <FolderArchive className="w-3.5 h-3.5" />
               <span>เปิดเคสที่บันทึก</span>
@@ -1065,7 +1065,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           {groupedByFirstDue.map((group) => (
             <section key={group.monthKey} className="space-y-2.5">
               {/* Group Section Header */}
-              <div className="rounded-2xl bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-600 text-white px-3.5 py-2.5 shadow-sm border border-white/30 flex items-center justify-between gap-2">
+              <div className="rounded-2xl bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-600 text-white px-3.5 py-2.5 shadow-sm border border-white/30 dark:border-sky-400/20 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
                     <CalendarDays className="w-4 h-4 text-white" />
@@ -1079,7 +1079,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                     </MarqueeText>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-white text-sky-800 font-black text-[11px] shrink-0 shadow-2xs whitespace-nowrap">
+                <span className="px-2.5 py-1 rounded-full bg-white text-sky-800 dark:bg-slate-900 dark:text-sky-200 font-black text-[11px] shrink-0 shadow-2xs whitespace-nowrap tabular-nums">
                   {group.items.length} ราย
                 </span>
               </div>
@@ -1105,21 +1105,21 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                   return (
                     <div
                       key={record.id}
-                      className="glass-card-primary rounded-2xl p-3 sm:p-3.5 border border-sky-200/80 shadow-xs space-y-2.5 relative overflow-hidden"
+                      className="glass-card-primary rounded-2xl p-3 sm:p-3.5 border border-sky-200/80 dark:border-slate-700/80 shadow-xs space-y-2.5 relative overflow-hidden"
                     >
                       {/* Customer Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                          <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                          <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-2xs mt-0.5 tabular-nums">
                             {idx + 1}
                           </span>
 
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <MarqueeText fitContent className="text-xs sm:text-sm font-extrabold text-slate-900">
+                              <MarqueeText fitContent className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100">
                                 {customerName}
                               </MarqueeText>
-                              <span className="text-[9.5px] font-bold px-2 py-0.2 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shrink-0 whitespace-nowrap">
+                              <span className="text-[9.5px] font-bold px-2 py-0.2 rounded-full bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/70 dark:text-teal-200 dark:border-teal-800/70 shrink-0 whitespace-nowrap">
                                 รับรถ {deliveryDateShort}
                               </span>
                             </div>
@@ -1134,8 +1134,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                 ยี่ห้อ: {brand}
                               </span>
                               <div className="flex items-center gap-1 min-w-0 flex-1">
-                                <Bike className="w-3 h-3 text-slate-400 shrink-0" />
-                                <MarqueeText fitContent className="font-bold text-slate-800">
+                                <Bike className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
+                                <MarqueeText fitContent className="font-bold text-slate-800 dark:text-slate-200">
                                   {modelName}
                                 </MarqueeText>
                               </div>
@@ -1143,25 +1143,25 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
                             {/* Model Code, Phone, Monthly Amount */}
                             <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
-                              <span className="inline-flex items-center gap-1 font-mono font-bold text-blue-900 bg-blue-50/90 px-2 py-0.5 rounded-md border border-blue-200/80 max-w-full">
-                                <Tag className="w-2.5 h-2.5 text-blue-600 shrink-0" />
+                              <span className="inline-flex items-center gap-1 font-mono font-bold text-blue-900 bg-blue-50/90 border border-blue-200/80 dark:text-blue-200 dark:bg-blue-950/70 dark:border-blue-800/70 px-2 py-0.5 rounded-md max-w-full">
+                                <Tag className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400 shrink-0" />
                                 <MarqueeText fitContent>รหัสรถ: {modelCode}</MarqueeText>
                               </span>
 
                               {record.customerPhone && (
-                                <span className="inline-flex items-center gap-1 text-slate-600 font-medium">
-                                  <Phone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium">
+                                  <Phone className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500 shrink-0" />
                                   {record.customerPhone}
                                 </span>
                               )}
 
                               {record.snapshot?.monthlyInstallment > 0 && (
-                                <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/80">
+                                <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 dark:text-emerald-200 dark:bg-emerald-950/70 dark:border-emerald-800/70 px-2 py-0.5 rounded-md tabular-nums">
                                   {formatBaht(record.snapshot.monthlyInstallment)} บ./ด.
                                 </span>
                               )}
 
-                              {/* Open Saved Customer Location Link Button (ดูที่อยู่ -> เปิด Google Maps ทันที) */}
+                              {/* Open Saved Customer Location Link Button */}
                               {item.mapsUrl ? (
                                 <a
                                   href={item.mapsUrl}
@@ -1183,7 +1183,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                     onNotify('ยังไม่มีลิงก์ที่อยู่ในเคสที่บันทึก กรุณาวางลิงก์ในช่องด้านล่าง');
                                     handleOpenEditModal(item);
                                   }}
-                                  className="inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-sky-700 bg-slate-100/90 hover:bg-sky-50 px-2 py-0.5 rounded-md border border-slate-200/90 transition-all cursor-pointer"
+                                  className="inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-sky-700 bg-slate-100/90 hover:bg-sky-50 border border-slate-200/90 dark:text-slate-300 dark:hover:text-sky-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 px-2 py-0.5 rounded-md transition-all cursor-pointer"
                                   title="ยังไม่มีลิงก์ที่อยู่ แตะเพื่อเพิ่มลิงก์ Google Maps"
                                 >
                                   <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
@@ -1202,7 +1202,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                             className={`p-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer ${
                               isCopied
                                 ? 'bg-emerald-600 text-white border-emerald-600'
-                                : 'bg-white/90 hover:bg-sky-50 text-slate-600 hover:text-sky-700 border-slate-200'
+                                : 'bg-white/90 hover:bg-sky-50 text-slate-600 hover:text-sky-700 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-sky-300 dark:border-slate-700'
                             }`}
                             title="คัดลอกกำหนดชำระงวด 1-9 ส่ง LINE"
                           >
@@ -1215,7 +1215,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(item)}
-                            className="p-1.5 rounded-xl bg-white/90 hover:bg-amber-50 text-slate-600 hover:text-amber-700 border border-slate-200 transition-all cursor-pointer"
+                            className="p-1.5 rounded-xl bg-white/90 hover:bg-amber-50 text-slate-600 hover:text-amber-700 border border-slate-200 dark:bg-slate-800 dark:hover:bg-amber-950/60 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700 transition-all cursor-pointer"
                             title="แก้ไขข้อมูลลูกค้า / วันรับรถ / วันกำหนดชำระ / ตำแหน่งที่อยู่"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -1224,23 +1224,23 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                       </div>
 
                       {/* Clean Read-Only First Payment Highlight Strip */}
-                      <div className="rounded-xl bg-gradient-to-r from-sky-50/90 via-white to-cyan-50/80 border border-sky-200/90 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                      <div className="rounded-xl bg-gradient-to-r from-sky-50/90 via-white to-cyan-50/80 dark:from-sky-950/60 dark:via-slate-900 dark:to-cyan-950/50 border border-sky-200/90 dark:border-sky-800/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-[11px]">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="px-2 py-0.5 rounded-md bg-sky-600 text-white font-black text-[10px] shrink-0">
                             งวดแรก
                           </span>
-                          <span className="font-extrabold text-sky-950 whitespace-nowrap">
+                          <span className="font-extrabold text-sky-950 dark:text-sky-100 whitespace-nowrap">
                             {firstDueLabelShort}
                           </span>
-                          <span className="text-[10px] text-slate-500 truncate">
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                             ({cycleRangeText})
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
                           {ninthSlot && (
-                            <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">
-                              ถึงงวด 9: <strong className="text-slate-800">{ninthSlot.formattedShort}</strong>
+                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                              ถึงงวด 9: <strong className="text-slate-800 dark:text-slate-200">{ninthSlot.formattedShort}</strong>
                             </span>
                           )}
                           <button
@@ -1251,7 +1251,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                 [record.id]: !prev[record.id],
                               }))
                             }
-                            className="px-2 py-0.5 rounded-lg bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 font-bold text-[10px] flex items-center gap-0.5 cursor-pointer"
+                            className="px-2 py-0.5 rounded-lg bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-sky-300 dark:border-sky-700/70 font-bold text-[10px] flex items-center gap-0.5 cursor-pointer"
                           >
                             <span>{isExpanded ? 'ซ่อนงวด 1-9' : 'ดูงวด 1-9'}</span>
                             {isExpanded ? (
@@ -1263,7 +1263,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                         </div>
                       </div>
 
-                      {/* Read-Only 9-Installment Due Dates Grid (No ✓ / ✗ checkmarks) */}
+                      {/* Read-Only 9-Installment Due Dates Grid */}
                       {isExpanded && (
                         <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-0.5 animate-fade-in">
                           {schedule.map((slot) => (
@@ -1271,13 +1271,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                               key={slot.installmentNo}
                               className={`rounded-xl px-2.5 py-2 border flex flex-col gap-0.5 ${
                                 slot.installmentNo === 1
-                                  ? 'bg-sky-50/90 border-sky-300'
-                                  : 'bg-white/85 border-slate-200/80'
+                                  ? 'bg-sky-50/90 border-sky-300 dark:bg-sky-950/70 dark:border-sky-700'
+                                  : 'bg-white/85 border-slate-200/80 dark:bg-slate-800/80 dark:border-slate-700'
                               }`}
                             >
                               <span
                                 className={`text-[9.5px] font-extrabold ${
-                                  slot.installmentNo === 1 ? 'text-sky-700' : 'text-slate-500'
+                                  slot.installmentNo === 1 ? 'text-sky-700 dark:text-sky-300' : 'text-slate-500 dark:text-slate-400'
                                 }`}
                               >
                                 งวดที่ {slot.installmentNo}
@@ -1285,7 +1285,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                               </span>
                               <span
                                 className={`text-[11px] font-extrabold tracking-tight ${
-                                  slot.installmentNo === 1 ? 'text-sky-950' : 'text-slate-800'
+                                  slot.installmentNo === 1 ? 'text-sky-950 dark:text-sky-100' : 'text-slate-800 dark:text-slate-100'
                                 }`}
                               >
                                 {slot.formattedShort}
@@ -1309,7 +1309,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           {groupedByFirstDue.map((group) => (
             <div
               key={group.monthKey}
-              className="glass-card-primary rounded-2xl border border-sky-200/80 overflow-hidden shadow-xs"
+              className="glass-card-primary rounded-2xl border border-sky-200/80 dark:border-slate-700/80 overflow-hidden shadow-xs"
             >
               {/* Cohort Table Header Banner */}
               <div className="bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-600 text-white px-3.5 py-2 flex items-center justify-between gap-2">
@@ -1322,7 +1322,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                     ({group.cycleRangeText})
                   </span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-white text-sky-800 font-black text-[10px] shrink-0">
+                <span className="px-2 py-0.5 rounded-full bg-white dark:bg-slate-900/90 text-sky-800 dark:text-sky-300 font-black text-[10px] shrink-0 tabular-nums">
                   {group.items.length} ราย
                 </span>
               </div>
@@ -1330,8 +1330,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
               <div className="overflow-x-auto scrollbar-thin">
                 <table className="w-full text-left border-collapse min-w-[1080px]">
                   <thead>
-                    <tr className="bg-slate-100/90 border-b border-slate-200 text-[10.5px] font-extrabold text-slate-700">
-                      <th className="sticky left-0 z-10 bg-slate-100/95 backdrop-blur-sm py-2.5 px-3 border-r border-slate-200 min-w-[150px]">
+                    <tr className="bg-slate-100/90 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 text-[10.5px] font-extrabold text-slate-700 dark:text-slate-200">
+                      <th className="sticky left-0 z-10 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-sm py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 min-w-[150px]">
                         รายชื่อลูกค้า
                       </th>
                       <th className="py-2.5 px-2.5 whitespace-nowrap">ยี่ห้อ</th>
@@ -1342,7 +1342,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                         <th
                           key={n}
                           className={`py-2.5 px-2 text-center whitespace-nowrap min-w-[82px] ${
-                            n === 1 ? 'bg-sky-50/90 text-sky-800' : ''
+                            n === 1 ? 'bg-sky-50/90 dark:bg-sky-950/70 text-sky-800 dark:text-sky-200' : ''
                           }`}
                         >
                           งวดที่ {n}
@@ -1351,7 +1351,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                       <th className="py-2.5 px-2 text-center whitespace-nowrap">จัดการ</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200/70 text-[11px] bg-white/75">
+                  <tbody className="divide-y divide-slate-200/70 dark:divide-slate-700/70 text-[11px] bg-white/75 dark:bg-slate-900/80">
                     {group.items.map((item, idx) => {
                       const {
                         record,
@@ -1363,18 +1363,18 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                         schedule,
                       } = item;
                       return (
-                        <tr key={record.id} className="hover:bg-sky-50/40 transition-colors">
-                          <td className="sticky left-0 z-10 bg-white/95 backdrop-blur-sm py-2.5 px-3 border-r border-slate-200/80 max-w-[170px]">
+                        <tr key={record.id} className="hover:bg-sky-50/40 dark:hover:bg-sky-950/40 transition-colors">
+                          <td className="sticky left-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-700/80 max-w-[170px]">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 shrink-0 tabular-nums">
                                 {idx + 1}.
                               </span>
-                              <MarqueeText className="font-bold text-slate-900">
+                              <MarqueeText className="font-bold text-slate-900 dark:text-slate-100">
                                 {customerName}
                               </MarqueeText>
                             </div>
                             {record.snapshot?.monthlyInstallment > 0 && (
-                              <div className="text-[9.5px] text-emerald-700 font-semibold mt-0.5">
+                              <div className="text-[9.5px] text-emerald-700 dark:text-emerald-400 font-semibold mt-0.5 tabular-nums">
                                 {formatBaht(record.snapshot.monthlyInstallment)} บ./ด.
                               </div>
                             )}
@@ -1391,28 +1391,28 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                           </td>
 
                           <td className="py-2.5 px-2.5 max-w-[160px]">
-                            <MarqueeText className="font-semibold text-slate-800">
+                            <MarqueeText className="font-semibold text-slate-800 dark:text-slate-200">
                               {modelName}
                             </MarqueeText>
                           </td>
 
                           <td className="py-2.5 px-2.5 whitespace-nowrap">
-                            <span className="font-mono text-[10px] font-bold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                            <span className="font-mono text-[10px] font-bold text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/70 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800/70">
                               {modelCode}
                             </span>
                           </td>
 
-                          <td className="py-2.5 px-2.5 whitespace-nowrap text-center text-[10.5px] font-semibold text-teal-800">
+                          <td className="py-2.5 px-2.5 whitespace-nowrap text-center text-[10.5px] font-semibold text-teal-800 dark:text-teal-300 tabular-nums">
                             {deliveryDateShort}
                           </td>
 
                           {schedule.map((slot) => (
                             <td
                               key={slot.installmentNo}
-                              className={`py-2 px-1.5 text-center whitespace-nowrap font-bold ${
+                              className={`py-2 px-1.5 text-center whitespace-nowrap font-bold tabular-nums ${
                                 slot.installmentNo === 1
-                                  ? 'bg-sky-50/60 text-sky-900'
-                                  : 'text-slate-700'
+                                  ? 'bg-sky-50/60 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200'
+                                  : 'text-slate-700 dark:text-slate-300'
                               }`}
                             >
                               <span className="text-[10px]">{slot.formattedShort}</span>
@@ -1441,7 +1441,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                     onNotify('ยังไม่ได้บันทึกลิงก์ที่อยู่ของลูกค้ารายนี้ สามารถเพิ่มได้ที่ช่องด้านล่าง');
                                     handleOpenEditModal(item);
                                   }}
-                                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 font-semibold text-[10px] cursor-pointer inline-flex items-center justify-center gap-1"
+                                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100 font-semibold text-[10px] cursor-pointer inline-flex items-center justify-center gap-1"
                                   title="ยังไม่มีลิงก์ที่อยู่ (กดเพื่อเพิ่ม)"
                                 >
                                   <MapPin className="w-3 h-3 shrink-0" />
@@ -1451,7 +1451,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(item)}
-                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 cursor-pointer"
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-amber-900/50 text-slate-600 hover:text-amber-800 dark:text-slate-300 dark:hover:text-amber-300 cursor-pointer"
                                 title="แก้ไขข้อมูล"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -1459,7 +1459,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                               <button
                                 type="button"
                                 onClick={() => handleCopyCustomerSummary(item)}
-                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-800 cursor-pointer"
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-sky-900/50 text-slate-600 hover:text-sky-800 dark:text-slate-300 dark:hover:text-sky-300 cursor-pointer"
                                 title="คัดลอก"
                               >
                                 <Copy className="w-3.5 h-3.5" />
@@ -1483,20 +1483,20 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         onClose={() => setIsFormModalOpen(false)}
         accentBarClass="bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-500"
       >
-        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2.5">
+        <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="p-2 bg-gradient-to-br from-sky-500 to-cyan-600 text-white rounded-2xl shadow-sm shrink-0">
               <CalendarDays className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+              <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight">
                 <MarqueeText>
                   {editingRecordId
                     ? 'แก้ไขข้อมูลลูกค้าและวันรับรถ'
                     : 'เพิ่มรายชื่อลูกค้าตามกำหนดชำระงวดแรก'}
                 </MarqueeText>
               </h2>
-              <MarqueeText className="text-[11px] text-slate-500 mt-0.5">
+              <MarqueeText className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 ระบุชื่อลูกค้า ยี่ห้อ รุ่น รหัสรถ และวันรับรถ เพื่อจัดกลุ่มตามกำหนดชำระงวดแรกอัตโนมัติ
               </MarqueeText>
             </div>
@@ -1504,7 +1504,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setIsFormModalOpen(false)}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 rounded-full transition-colors cursor-pointer shrink-0"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer shrink-0"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -1513,17 +1513,17 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
         <form
           onSubmit={handleSaveForm}
-          className="overflow-y-auto flex-1 overscroll-contain p-4 sm:p-5 bg-slate-50/60 space-y-3 text-xs"
+          className="overflow-y-auto flex-1 overscroll-contain p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-3 text-xs"
         >
           {formError && (
-            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs">
+            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/60 dark:border-rose-800/70 dark:text-rose-200 font-bold text-xs">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 ชื่อลูกค้า *
               </label>
               <input
@@ -1531,12 +1531,12 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 value={formCustomerName}
                 onChange={(e) => setFormCustomerName(e.target.value)}
                 placeholder="เช่น คุณสมชาย ใจดี"
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-3 py-2 font-bold text-slate-900 outline-none"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-3 py-2 font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 เบอร์โทรศัพท์
               </label>
               <input
@@ -1544,14 +1544,14 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 value={formCustomerPhone}
                 onChange={(e) => setFormCustomerPhone(e.target.value)}
                 placeholder="08X-XXX-XXXX"
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-3 py-2 font-bold font-mono text-slate-900 outline-none"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-3 py-2 font-bold font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
               />
             </div>
           </div>
 
           {/* Brand Quick Pills + Custom Input */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
               ยี่ห้อรถ *
             </label>
             <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
@@ -1563,7 +1563,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                   className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border cursor-pointer transition-all ${
                     formBrand.toUpperCase() === b
                       ? 'bg-sky-600 text-white border-sky-600'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
                   }`}
                 >
                   {b}
@@ -1575,13 +1575,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
               value={formBrand}
               onChange={(e) => setFormBrand(e.target.value)}
               placeholder="ระบุยี่ห้อ เช่น HONDA, YAMAHA, VESPA"
-              className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-3 py-2 font-bold text-slate-900 uppercase outline-none"
+              className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-3 py-2 font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 รหัสรถ (Model Code)
               </label>
               <input
@@ -1589,12 +1589,12 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 value={formModelCode}
                 onChange={(e) => handleFormModelCodeChange(e.target.value)}
                 placeholder="เช่น ACF125CAT TH"
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-3 py-2 font-bold font-mono uppercase text-slate-900 outline-none"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-3 py-2 font-bold font-mono uppercase text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 ชื่อรุ่นรถ
               </label>
               <input
@@ -1602,26 +1602,26 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 value={formModelName}
                 onChange={(e) => setFormModelName(e.target.value)}
                 placeholder="เช่น HONDA GIORNO+ ABS"
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-3 py-2 font-bold text-slate-900 outline-none"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-3 py-2 font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2.5">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 วันที่รับรถ
               </label>
               <input
                 type="date"
                 value={formDeliveryDate}
                 onChange={(e) => setFormDeliveryDate(e.target.value)}
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-2.5 py-2 font-semibold text-slate-900 outline-none text-[11px]"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-2.5 py-2 font-semibold text-slate-900 dark:text-slate-100 dark:[color-scheme:dark] outline-none text-[11px]"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 ชำระทุกวันที่
               </label>
               <input
@@ -1630,12 +1630,12 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 max={31}
                 value={formDueDay}
                 onChange={(e) => setFormDueDay(e.target.value)}
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-2.5 py-2 font-bold text-slate-900 text-center outline-none"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-2.5 py-2 font-bold text-slate-900 dark:text-slate-100 text-center outline-none tabular-nums"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                 ค่างวด (บาท)
               </label>
               <input
@@ -1644,7 +1644,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 value={formMonthlyInstallment}
                 onChange={(e) => setFormMonthlyInstallment(e.target.value)}
                 placeholder="2500"
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 px-2.5 py-2 font-bold text-slate-900 text-center outline-none"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 px-2.5 py-2 font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-center outline-none tabular-nums"
               />
             </div>
           </div>
@@ -1652,15 +1652,15 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           {/* Customer Location Link (Google Maps) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-rose-500" />
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                 <span>ลิงก์ตำแหน่งที่อยู่ลูกค้า (Google Maps)</span>
               </label>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={handlePasteFormLocation}
-                  className="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-md border border-sky-200 flex items-center gap-1 cursor-pointer"
+                  className="text-[10px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 border border-sky-200 dark:text-sky-300 dark:hover:text-sky-200 dark:bg-sky-950/70 dark:hover:bg-sky-900/80 dark:border-sky-800/70 px-2 py-0.5 rounded-md flex items-center gap-1 cursor-pointer"
                 >
                   <ClipboardCopy className="w-3 h-3" />
                   <span>วางลิงก์</span>
@@ -1670,7 +1670,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                     href={getGoogleMapsNavigationUrl(formGoogleMapsLocation)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1"
+                    className="text-[10px] font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 dark:text-rose-300 dark:hover:text-rose-200 dark:bg-rose-950/70 dark:hover:bg-rose-900/80 dark:border-rose-800/70 px-2 py-0.5 rounded-md flex items-center gap-1"
                   >
                     <span>เปิดดู</span>
                     <ExternalLink className="w-3 h-3" />
@@ -1684,13 +1684,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                 value={formGoogleMapsLocation}
                 onChange={(e) => setFormGoogleMapsLocation(e.target.value)}
                 placeholder="วางลิงก์ Google Maps, พิกัด GPS หรือที่อยู่ลูกค้า..."
-                className="w-full rounded-xl bg-white border border-slate-200 focus:border-sky-500 pl-3 pr-8 py-2 font-medium text-slate-800 outline-none text-xs"
+                className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-sky-500 pl-3 pr-8 py-2 font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none text-xs"
               />
               {formGoogleMapsLocation && (
                 <button
                   type="button"
                   onClick={() => setFormGoogleMapsLocation('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-0.5"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer p-0.5"
                 >
                   ✕
                 </button>
@@ -1699,8 +1699,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           </div>
 
           {/* Live Calculated First Due Date Cohort Preview */}
-          <div className="p-2.5 rounded-xl bg-sky-50/90 border border-sky-200/80 text-[10.5px] text-sky-900 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-sky-600 shrink-0" />
+          <div className="p-2.5 rounded-xl bg-sky-50/90 border border-sky-200/80 text-sky-900 dark:bg-sky-950/60 dark:border-sky-800/70 dark:text-sky-200 text-[10.5px] flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
             <span>
               จัดกลุ่มงวดแรกอัตโนมัติ:{' '}
               <strong>
@@ -1714,7 +1714,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => setIsFormModalOpen(false)}
-              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-bold text-xs cursor-pointer"
             >
               ยกเลิก
             </button>

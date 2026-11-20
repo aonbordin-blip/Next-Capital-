@@ -149,14 +149,14 @@ const UnifiedChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) 
   const isBar = 'stageLabel' in item;
 
   return (
-    <div className="rounded-xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl px-3 py-2.5 text-xs text-slate-800 min-w-[185px] max-w-[235px]">
-      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
+    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/85 shadow-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-100 min-w-[185px] max-w-[235px]">
+      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-1.5 min-w-0">
           <span
             className="w-2.5 h-2.5 rounded-full shrink-0"
             style={{ backgroundColor: item.accentHex }}
           />
-          <span className="font-extrabold text-slate-900 truncate">
+          <span className="font-extrabold text-slate-900 dark:text-slate-50 truncate">
             {isBar ? item.fullTitle : item.name}
           </span>
         </div>
@@ -170,18 +170,18 @@ const UnifiedChartTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) 
 
       <div className="pt-1.5 space-y-1 text-[11px]">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-slate-500">{isBar ? 'จำนวน' : item.gaugeLabel}</span>
-          <span className="font-bold text-slate-900 tabular-nums">
+          <span className="text-slate-500 dark:text-slate-400">{isBar ? 'จำนวน' : item.gaugeLabel}</span>
+          <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
             {isBar ? item.countLabel : item.primaryValue}
           </span>
         </div>
         {isBar && (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-500">มูลค่า</span>
-            <span className="font-bold text-slate-900 tabular-nums">{item.moneyLabel}</span>
+            <span className="text-slate-500 dark:text-slate-400">มูลค่า</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">{item.moneyLabel}</span>
           </div>
         )}
-        <div className="text-[10.5px] text-slate-600 pt-0.5">{item.subText}</div>
+        <div className="text-[10.5px] text-slate-600 dark:text-slate-300 pt-0.5">{item.subText}</div>
       </div>
     </div>
   );
@@ -407,14 +407,15 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
         accentHex: '#0ea5e9',
         panelClass: 'glass-panel-blue',
         activeRingClass:
-          'ring-2 ring-sky-400/80 shadow-md shadow-sky-500/15 bg-white/85 -translate-y-0.5',
+          'ring-2 ring-sky-400/80 shadow-md shadow-sky-500/15 bg-white/85 dark:bg-sky-950/75 -translate-y-0.5',
         iconBgClass: 'from-sky-400 to-blue-600 shadow-sky-500/30',
-        textPrimaryClass: 'text-sky-950',
+        textPrimaryClass: 'text-sky-950 dark:text-sky-100',
         gaugeFillClass: 'from-sky-400 via-blue-500 to-cyan-400',
         tipColorClass: 'bg-sky-400',
-        auraBgClass: 'bg-sky-300/35',
-        secondaryAuraBgClass: 'bg-cyan-200/30',
-        badgeClass: 'bg-sky-100/90 text-sky-800 border-sky-200/90',
+        auraBgClass: 'bg-sky-300/35 dark:bg-sky-500/18',
+        secondaryAuraBgClass: 'bg-cyan-200/30 dark:bg-cyan-500/15',
+        badgeClass:
+          'bg-sky-100/90 text-sky-800 border-sky-200/90 dark:bg-sky-950/85 dark:text-sky-200 dark:border-sky-700/80',
         icon: <FolderArchive className="w-3.5 h-3.5" />,
       },
       {
@@ -435,14 +436,15 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
         accentHex: '#10b981',
         panelClass: 'glass-panel-teal',
         activeRingClass:
-          'ring-2 ring-emerald-400/80 shadow-md shadow-teal-500/15 bg-white/85 -translate-y-0.5',
+          'ring-2 ring-emerald-400/80 shadow-md shadow-teal-500/15 bg-white/85 dark:bg-teal-950/75 -translate-y-0.5',
         iconBgClass: 'from-emerald-400 to-teal-600 shadow-teal-500/30',
-        textPrimaryClass: 'text-teal-900',
+        textPrimaryClass: 'text-teal-900 dark:text-teal-100',
         gaugeFillClass: 'from-emerald-400 via-teal-500 to-cyan-400',
         tipColorClass: 'bg-emerald-400',
-        auraBgClass: 'bg-emerald-300/35',
-        secondaryAuraBgClass: 'bg-teal-200/30',
-        badgeClass: 'bg-emerald-100/90 text-emerald-800 border-emerald-200/90',
+        auraBgClass: 'bg-emerald-300/35 dark:bg-emerald-500/18',
+        secondaryAuraBgClass: 'bg-teal-200/30 dark:bg-teal-500/15',
+        badgeClass:
+          'bg-emerald-100/90 text-emerald-800 border-emerald-200/90 dark:bg-emerald-950/85 dark:text-emerald-200 dark:border-emerald-700/80',
         icon: <PackageCheck className="w-3.5 h-3.5" />,
       },
       {
@@ -465,14 +467,15 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
         accentHex: '#6366f1',
         panelClass: 'glass-panel-indigo',
         activeRingClass:
-          'ring-2 ring-indigo-400/80 shadow-md shadow-indigo-500/15 bg-white/85 -translate-y-0.5',
+          'ring-2 ring-indigo-400/80 shadow-md shadow-indigo-500/15 bg-white/85 dark:bg-indigo-950/75 -translate-y-0.5',
         iconBgClass: 'from-blue-500 to-indigo-600 shadow-indigo-500/30',
-        textPrimaryClass: 'text-indigo-950',
+        textPrimaryClass: 'text-indigo-950 dark:text-indigo-100',
         gaugeFillClass: 'from-blue-500 via-indigo-500 to-violet-500',
         tipColorClass: 'bg-indigo-400',
-        auraBgClass: 'bg-indigo-300/35',
-        secondaryAuraBgClass: 'bg-blue-200/30',
-        badgeClass: 'bg-indigo-100/90 text-indigo-800 border-indigo-200/90',
+        auraBgClass: 'bg-indigo-300/35 dark:bg-indigo-500/18',
+        secondaryAuraBgClass: 'bg-blue-200/30 dark:bg-blue-500/15',
+        badgeClass:
+          'bg-indigo-100/90 text-indigo-800 border-indigo-200/90 dark:bg-indigo-950/85 dark:text-indigo-200 dark:border-indigo-700/80',
         icon: <TrendingUp className="w-3.5 h-3.5" />,
       },
       {
@@ -497,14 +500,15 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
         accentHex: '#f59e0b',
         panelClass: 'glass-panel-amber',
         activeRingClass:
-          'ring-2 ring-amber-400/85 shadow-md shadow-amber-500/15 bg-white/85 -translate-y-0.5',
+          'ring-2 ring-amber-400/85 shadow-md shadow-amber-500/15 bg-white/85 dark:bg-amber-950/75 -translate-y-0.5',
         iconBgClass: 'from-amber-400 to-orange-500 shadow-amber-500/30',
-        textPrimaryClass: 'text-amber-900',
+        textPrimaryClass: 'text-amber-900 dark:text-amber-200',
         gaugeFillClass: 'from-amber-400 via-orange-500 to-rose-400',
         tipColorClass: 'bg-amber-400',
-        auraBgClass: 'bg-amber-300/35',
-        secondaryAuraBgClass: 'bg-orange-200/30',
-        badgeClass: 'bg-amber-100/90 text-amber-800 border-amber-200/90',
+        auraBgClass: 'bg-amber-300/35 dark:bg-amber-500/18',
+        secondaryAuraBgClass: 'bg-orange-200/30 dark:bg-orange-500/15',
+        badgeClass:
+          'bg-amber-100/90 text-amber-800 border-amber-200/90 dark:bg-amber-950/85 dark:text-amber-200 dark:border-amber-700/80',
         icon: <Award className="w-3.5 h-3.5" />,
       },
     ],
@@ -611,8 +615,8 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
     });
   };
 
-  const auraPrimary = activeMetric ? activeMetric.auraBgClass : 'bg-sky-300/30';
-  const auraSecondary = activeMetric ? activeMetric.secondaryAuraBgClass : 'bg-teal-200/30';
+  const auraPrimary = activeMetric ? activeMetric.auraBgClass : 'bg-sky-300/30 dark:bg-sky-500/15';
+  const auraSecondary = activeMetric ? activeMetric.secondaryAuraBgClass : 'bg-teal-200/30 dark:bg-teal-500/15';
 
   return (
     <section
@@ -621,7 +625,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
     >
       {/* Top Specular Glass Edge */}
       <div
-        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent opacity-95"
         aria-hidden="true"
       />
 
@@ -638,14 +642,14 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
       {/* Header Row: Title + Chart Mode Switcher */}
       <div className="relative flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 via-indigo-500 to-teal-500 border border-white/65 text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/25">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 via-indigo-500 to-teal-500 border border-white/65 dark:border-sky-300/30 text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/25">
             <Activity className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <MarqueeText className="text-xs sm:text-sm font-black text-slate-900">
+            <MarqueeText className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-50">
               สรุปภาพรวมผลงาน 4 มิติ
             </MarqueeText>
-            <MarqueeText className="text-[10.5px] text-slate-600">
+            <MarqueeText className="text-[10.5px] text-slate-600 dark:text-slate-400">
               {periodLabel} · เคส · รับรถ · ยอดจัด · ค่าคอม PA
             </MarqueeText>
           </div>
@@ -655,7 +659,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
         <div
           role="group"
           aria-label="เลือกรูปแบบกราฟ"
-          className="flex items-center gap-0.5 p-0.5 rounded-xl bg-white/60 backdrop-blur-md border border-white/90 shadow-2xs shrink-0"
+          className="flex items-center gap-0.5 p-0.5 rounded-xl bg-white/60 dark:bg-slate-800/80 backdrop-blur-md border border-white/90 dark:border-slate-700/80 shadow-2xs shrink-0"
         >
           <button
             type="button"
@@ -667,7 +671,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
             className={`px-2 py-1 rounded-lg text-[10.5px] sm:text-[11px] font-bold flex items-center gap-1 whitespace-nowrap shrink-0 transition-all cursor-pointer ${
               chartMode === 'radial'
                 ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/70'
             }`}
           >
             <CircleDot className="w-3 h-3 shrink-0" />
@@ -683,7 +687,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
             className={`px-2 py-1 rounded-lg text-[10.5px] sm:text-[11px] font-bold flex items-center gap-1 whitespace-nowrap shrink-0 transition-all cursor-pointer ${
               chartMode === 'bar'
                 ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/70'
             }`}
           >
             <BarChart3 className="w-3 h-3 shrink-0" />
@@ -694,15 +698,15 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
 
       {/* Empty State */}
       {stats.totalCases === 0 ? (
-        <div className="relative rounded-xl bg-gradient-to-br from-white/75 via-sky-50/60 to-teal-50/50 border border-white/90 p-5 text-center space-y-2.5">
+        <div className="relative rounded-xl bg-gradient-to-br from-white/75 via-sky-50/60 to-teal-50/50 dark:from-slate-800/85 dark:via-slate-900/80 dark:to-sky-950/65 border border-white/90 dark:border-slate-700/80 p-5 text-center space-y-2.5">
           <div className="w-10 h-10 mx-auto rounded-2xl bg-gradient-to-br from-sky-400 to-teal-500 text-white flex items-center justify-center shadow-sm">
             <Activity className="w-5 h-5" />
           </div>
           <div className="space-y-0.5">
-            <p className="text-xs font-extrabold text-slate-800">
+            <p className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
               ยังไม่มีข้อมูลเคสในงวด {periodLabel}
             </p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               เมื่อบันทึกเคสหรืออัปเดตสถานะรับรถ กราฟสรุป 4 มิติจะแสดงผลอัตโนมัติทันที
             </p>
           </div>
@@ -723,16 +727,16 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
       ) : (
         <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
           {/* Left / Top: 3D Dimensional Chart Stage */}
-          <div className="lg:col-span-5 rounded-2xl bg-gradient-to-br from-white/78 via-white/52 to-sky-50/65 border border-white/95 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_8px_24px_-10px_rgba(2,132,199,0.16)] p-2.5 sm:p-3 flex flex-col justify-between relative overflow-hidden">
+          <div className="lg:col-span-5 rounded-2xl bg-gradient-to-br from-white/78 via-white/52 to-sky-50/65 dark:from-slate-900/85 dark:via-slate-900/70 dark:to-sky-950/65 border border-white/95 dark:border-slate-700/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_8px_24px_-10px_rgba(2,132,199,0.16)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_12px_28px_-10px_rgba(2,6,23,0.65)] p-2.5 sm:p-3 flex flex-col justify-between relative overflow-hidden">
             {/* Subtle Inner Corner Specular Highlight */}
             <div
-              className="pointer-events-none absolute -top-8 -left-8 w-28 h-28 rounded-full bg-white/60 blur-xl"
+              className="pointer-events-none absolute -top-8 -left-8 w-28 h-28 rounded-full bg-white/60 dark:bg-sky-400/10 blur-xl"
               aria-hidden="true"
             />
 
             {/* Top Chart Stage Caption + Reset Filter */}
             <div className="relative flex items-center justify-between gap-2 px-0.5 z-10">
-              <span className="text-[10.5px] font-bold text-slate-600 truncate">
+              <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 truncate">
                 {chartMode === 'radial'
                   ? activeMetric
                     ? `โฟกัส: ${activeMetric.title}`
@@ -747,7 +751,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                     setOrbPulseKey((p) => p + 1);
                     setFocusedKey('overview');
                   }}
-                  className="px-2 py-0.5 rounded-lg bg-white/80 hover:bg-white border border-white text-[10px] font-bold text-sky-700 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
+                  className="px-2 py-0.5 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10px] font-bold text-sky-700 dark:text-sky-300 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
                 >
                   <RotateCcw className="w-2.5 h-2.5" />
                   <span>ดูรวม 4 มิติ</span>
@@ -845,7 +849,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                     />
 
                     <RadialBar
-                      background={{ fill: 'rgba(255, 255, 255, 0.72)' }}
+                      background={{ fill: 'var(--chart-radial-track)' }}
                       dataKey="value"
                       cornerRadius={12}
                       animationDuration={650}
@@ -905,27 +909,27 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                     }}
                   />
                   {/* Frosted Crystal Sphere Body */}
-                  <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/95 via-white/88 to-sky-50/92 border-2 border-white shadow-[0_10px_24px_-6px_rgba(2,132,199,0.32),inset_0_2px_6px_rgba(255,255,255,1)] flex flex-col items-center justify-center px-1.5 text-center transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-95">
+                  <span className="relative w-full h-full rounded-full bg-gradient-to-b from-white/95 via-white/88 to-sky-50/92 dark:from-slate-800 dark:via-slate-900 dark:to-slate-950 border-2 border-white dark:border-slate-600/80 shadow-[0_10px_24px_-6px_rgba(2,132,199,0.32),inset_0_2px_6px_rgba(255,255,255,1)] dark:shadow-[0_10px_24px_-6px_rgba(2,6,23,0.75),inset_0_2px_6px_rgba(255,255,255,0.08)] flex flex-col items-center justify-center px-1.5 text-center transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-95">
                     {/* Specular Top Reflection */}
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute top-1.5 inset-x-4 h-3 rounded-full bg-gradient-to-b from-white to-transparent opacity-90"
+                      className="pointer-events-none absolute top-1.5 inset-x-4 h-3 rounded-full bg-gradient-to-b from-white dark:from-sky-300/20 to-transparent opacity-90"
                     />
                     <div
                       key={`${effectiveKey}-${orbPulseKey}`}
                       className="relative flex flex-col items-center justify-center animate-number-tick"
                     >
-                      <span className="text-[9px] sm:text-[9.5px] font-bold text-slate-500 leading-tight max-w-[74px] truncate">
+                      <span className="text-[9px] sm:text-[9.5px] font-bold text-slate-500 dark:text-slate-400 leading-tight max-w-[74px] truncate">
                         {activeMetric ? activeMetric.shortTitle : 'รวม 4 มิติ'}
                       </span>
                       <span
                         className={`text-sm sm:text-[15px] font-black tabular-nums leading-tight mt-0.5 max-w-[82px] truncate ${
-                          activeMetric ? activeMetric.textPrimaryClass : 'text-sky-950'
+                          activeMetric ? activeMetric.textPrimaryClass : 'text-sky-950 dark:text-sky-100'
                         }`}
                       >
                         {activeMetric ? activeMetric.compactOrbValue : `${stats.totalCases} เคส`}
                       </span>
-                      <span className="text-[9px] font-extrabold tabular-nums text-slate-600 mt-0.5 max-w-[76px] truncate">
+                      <span className="text-[9px] font-extrabold tabular-nums text-slate-600 dark:text-slate-300 mt-0.5 max-w-[76px] truncate">
                         {activeMetric
                           ? `${activeMetric.gaugeLabel.replace('อัตรา', '')} ${
                               activeMetric.percentDisplay
@@ -1013,13 +1017,13 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
-                      stroke="rgba(148, 163, 184, 0.28)"
+                      stroke="var(--chart-grid)"
                     />
                     <XAxis
                       dataKey="stageLabel"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#334155', fontSize: 10.5, fontWeight: 700 }}
+                      tick={{ fill: 'var(--chart-tick)', fontSize: 10.5, fontWeight: 700 }}
                       dy={4}
                     />
                     <YAxis hide domain={[0, 118]} />
@@ -1051,7 +1055,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                         position="top"
                         formatter={formatPercentLabel}
                         style={{
-                          fill: '#0f172a',
+                          fill: 'var(--chart-label)',
                           fontSize: '10.5px',
                           fontWeight: 800,
                         }}
@@ -1063,7 +1067,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
             )}
 
             {/* Compact Ring Color Key Footer */}
-            <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-1 border-t border-white/80 text-[10px] text-slate-600">
+            <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-1 border-t border-white/80 dark:border-slate-700/75 text-[10px] text-slate-600 dark:text-slate-300">
               {metrics.map((m) => (
                 <button
                   key={m.key}
@@ -1073,7 +1077,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                   onMouseLeave={() => setHoveredKey(null)}
                   className={`inline-flex items-center gap-1 transition-opacity cursor-pointer ${
                     effectiveKey === 'overview' || effectiveKey === m.key
-                      ? 'opacity-100 font-bold text-slate-800'
+                      ? 'opacity-100 font-bold text-slate-800 dark:text-slate-100'
                       : 'opacity-45 hover:opacity-85'
                   }`}
                 >
@@ -1094,7 +1098,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
               className={`rounded-xl border p-2.5 sm:p-3 transition-all duration-300 relative overflow-hidden ${
                 activeMetric
                   ? `${activeMetric.panelClass}`
-                  : 'bg-gradient-to-r from-sky-50/85 via-white/80 to-teal-50/80 border-white/95'
+                  : 'bg-gradient-to-r from-sky-50/85 via-white/80 to-teal-50/80 dark:from-slate-800/85 dark:via-slate-900/85 dark:to-sky-950/75 border-white/95 dark:border-slate-700/80'
               }`}
             >
               {activeMetric ? (
@@ -1102,13 +1106,13 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span
-                        className={`w-7 h-7 rounded-xl bg-gradient-to-br ${activeMetric.iconBgClass} text-white border border-white/65 flex items-center justify-center shrink-0 shadow-sm`}
+                        className={`w-7 h-7 rounded-xl bg-gradient-to-br ${activeMetric.iconBgClass} text-white border border-white/65 dark:border-white/20 flex items-center justify-center shrink-0 shadow-sm`}
                       >
                         {activeMetric.icon}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <MarqueeText className="text-[11px] font-extrabold text-slate-700">
+                          <MarqueeText className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">
                             {activeMetric.title}
                           </MarqueeText>
                           <span
@@ -1132,7 +1136,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                           triggerHaptic('light');
                           onNavigateToCheckerCommission();
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-white text-[10.5px] font-bold text-amber-800 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10.5px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
                       >
                         <span>ดูตาราง PA</span>
                         <ArrowRight className="w-3 h-3" />
@@ -1144,7 +1148,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                           triggerHaptic('light');
                           onOpenSavedCases();
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-white text-[10.5px] font-bold text-sky-800 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10.5px] font-bold text-sky-800 dark:text-sky-300 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
                       >
                         <span>เปิดตารางเคส</span>
                         <ArrowRight className="w-3 h-3" />
@@ -1154,7 +1158,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
 
                   {/* Shimmer Gauge Bar with Glowing Tip */}
                   <div className="relative py-0.5">
-                    <div className="h-2 w-full rounded-full bg-white/80 border border-white shadow-inner overflow-hidden">
+                    <div className="h-2 w-full rounded-full bg-white/80 dark:bg-slate-800/85 border border-white dark:border-slate-700/80 shadow-inner overflow-hidden">
                       <div
                         className={`h-full rounded-full bg-gradient-to-r ${activeMetric.gaugeFillClass} ${
                           activeMetric.percent > 0 ? 'animate-fuel-shimmer' : ''
@@ -1175,24 +1179,24 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                     )}
                   </div>
 
-                  <MarqueeText className="text-[10.5px] font-medium text-slate-600 tabular-nums">
+                  <MarqueeText className="text-[10.5px] font-medium text-slate-600 dark:text-slate-300 tabular-nums">
                     {activeMetric.spotlightDetail}
                   </MarqueeText>
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-2.5">
                   <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="text-[10.5px] font-bold text-slate-600">
+                    <div className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300">
                       สรุปมูลค่า & ประสิทธิภาพรวม ({periodLabel})
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-                      <span className="text-base sm:text-lg font-black text-sky-950 tabular-nums">
+                      <span className="text-base sm:text-lg font-black text-sky-950 dark:text-sky-100 tabular-nums">
                         {formatBaht(displayFinance)}
                       </span>
-                      <span className="text-[11px] font-bold text-emerald-700 tabular-nums whitespace-nowrap">
+                      <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 tabular-nums whitespace-nowrap">
                         รับรถ {stats.deliveredCount}/{stats.totalCases} ({deliveryOfTotalRate.toFixed(0)}%)
                       </span>
-                      <span className="text-[11px] font-bold text-amber-700 tabular-nums whitespace-nowrap">
+                      <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300 tabular-nums whitespace-nowrap">
                         PA {formatBaht(commissionSummary.totalCommissionBaht)}
                       </span>
                     </div>
@@ -1204,7 +1208,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                         triggerHaptic('selection');
                         onOpenSavedCases();
                       }}
-                      className="px-2.5 py-1.5 rounded-xl bg-white/85 hover:bg-white border border-white text-[11px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
+                      className="px-2.5 py-1.5 rounded-xl bg-white/85 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[11px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
                     >
                       <span>เคสทั้งหมด</span>
                       <ArrowRight className="w-3 h-3" />
@@ -1237,16 +1241,16 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                   >
                     {/* Top Hairline */}
                     <div
-                      className="pointer-events-none inset-x-3 top-0 absolute h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+                      className="pointer-events-none inset-x-3 top-0 absolute h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent opacity-95"
                       aria-hidden="true"
                     />
 
                     <div className="flex items-center justify-between gap-1.5">
-                      <MarqueeText className="text-[11px] font-bold text-slate-700">
+                      <MarqueeText className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
                         {m.title}
                       </MarqueeText>
                       <span
-                        className={`w-6 h-6 rounded-lg bg-gradient-to-br ${m.iconBgClass} text-white border border-white/60 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 ${
+                        className={`w-6 h-6 rounded-lg bg-gradient-to-br ${m.iconBgClass} text-white border border-white/60 dark:border-white/20 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 ${
                           isSelected ? 'scale-110' : ''
                         }`}
                       >
@@ -1260,20 +1264,20 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                       >
                         {m.primaryValue}
                       </MarqueeText>
-                      <MarqueeText className="text-[10px] sm:text-[10.5px] text-slate-600 tabular-nums mt-0.5">
+                      <MarqueeText className="text-[10px] sm:text-[10.5px] text-slate-600 dark:text-slate-300 tabular-nums mt-0.5">
                         {m.subText}
                       </MarqueeText>
                     </div>
 
                     {/* Mini Interactive Gauge Bar inside each unified tile */}
                     <div className="space-y-0.5 pt-0.5">
-                      <div className="flex items-center justify-between text-[9.5px] text-slate-500 tabular-nums">
+                      <div className="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400 tabular-nums">
                         <span className="truncate">{m.gaugeLabel}</span>
-                        <span className="font-extrabold text-slate-700 shrink-0">
+                        <span className="font-extrabold text-slate-700 dark:text-slate-200 shrink-0">
                           {m.percentDisplay}
                         </span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-white/75 border border-white/95 overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full bg-white/75 dark:bg-slate-800/85 border border-white/95 dark:border-slate-700/80 overflow-hidden">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${m.gaugeFillClass} ${
                             m.percent > 0 && (isSelected || effectiveKey === 'overview')

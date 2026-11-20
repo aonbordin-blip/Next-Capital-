@@ -95,66 +95,66 @@ export const InstallAppBanner: React.FC = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`bg-white rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl border border-slate-200 text-slate-800 ${guideSheetAnimClass}`}
+            className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 ${guideSheetAnimClass}`}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-blue-700" />
-                <h3 className="font-bold text-sm text-slate-900">
+                <Smartphone className="w-5 h-5 text-blue-700 dark:text-sky-400" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
                   วิธีติดตั้งแอปบนมือถือ
                 </h3>
               </div>
               <button
                 onClick={() => setShowGuideModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {isIOS ? (
-              <div className="space-y-3 text-xs text-slate-600">
-                <p className="font-semibold text-slate-800">
+              <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
                   สำหรับ iPhone / iPad (Safari):
                 </p>
-                <div className="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0">
                     1
                   </div>
-                  <span>กดปุ่ม <strong>แชร์ (Share)</strong> <Share className="w-3.5 h-3.5 inline text-blue-600" /> ที่แถบด้านล่างของ Safari</span>
+                  <span>กดปุ่ม <strong>แชร์ (Share)</strong> <Share className="w-3.5 h-3.5 inline text-blue-600 dark:text-sky-400" /> ที่แถบด้านล่างของ Safari</span>
                 </div>
-                <div className="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0">
                     2
                   </div>
-                  <span>เลื่อนลงแล้วเลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong> <PlusSquare className="w-3.5 h-3.5 inline text-blue-600" /></span>
+                  <span>เลื่อนลงแล้วเลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong> <PlusSquare className="w-3.5 h-3.5 inline text-blue-600 dark:text-sky-400" /></span>
                 </div>
-                <div className="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0">
                     3
                   </div>
                   <span>กด <strong>"เพิ่ม" (Add)</strong> ที่มุมขวาบน จะมีไอคอน Next Capital ปรากฏบนหน้าจอมือถือทันที</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-3 text-xs text-slate-600">
-                <p className="font-semibold text-slate-800">
+              <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
                   สำหรับ Android (Chrome):
                 </p>
-                <div className="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0">
                     1
                   </div>
                   <span>กดปุ่มเมนู <strong>จุดสามจุด (⋮)</strong> ที่มุมขวาบนของ Chrome</span>
                 </div>
-                <div className="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0">
                     2
                   </div>
                   <span>เลือก <strong>"ติดตั้งแอป" (Install app)</strong> หรือ <strong>"เพิ่มลงในหน้าจอหลัก"</strong></span>
                 </div>
-                <div className="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0">
                     3
                   </div>
                   <span>กด <strong>"ติดตั้ง" (Install)</strong> แอปจะติดตั้งลงบนเครื่องเหมือนแอปทั่วไป</span>

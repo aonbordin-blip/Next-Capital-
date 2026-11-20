@@ -220,9 +220,9 @@ function getDealStatusMeta(record: SavedCaseRecord): {
         key: 'delivered',
         label: 'รับรถแล้ว',
         subLabel: dateText ? `รับ ${dateText}` : undefined,
-        badgeClass: 'bg-teal-50 text-teal-800 border-teal-300',
-        selectClass: 'bg-teal-50 text-teal-900 border-teal-300 hover:bg-teal-100/80',
-        iconColorClass: 'text-teal-600',
+        badgeClass: 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border-teal-300 dark:border-teal-700/70',
+        selectClass: 'bg-teal-50 dark:bg-teal-950/70 text-teal-900 dark:text-teal-100 border-teal-300 dark:border-teal-700/70 hover:bg-teal-100/80 dark:hover:bg-teal-900/70 dark:[color-scheme:dark]',
+        iconColorClass: 'text-teal-600 dark:text-teal-400',
       };
     }
     const dateText = record.approvalDate ? formatThaiDateOnly(record.approvalDate) : '';
@@ -230,35 +230,35 @@ function getDealStatusMeta(record: SavedCaseRecord): {
       key: 'approved_pending',
       label: 'อนุมัติแล้ว',
       subLabel: dateText ? `รอรับรถ · ${dateText}` : 'รอรับรถ',
-      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300',
-      selectClass: 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100/80',
-      iconColorClass: 'text-emerald-600',
+      badgeClass: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700/70',
+      selectClass: 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-700/70 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/70 dark:[color-scheme:dark]',
+      iconColorClass: 'text-emerald-600 dark:text-emerald-400',
     };
   }
   if (record.approvalStatus === 'rejected') {
     return {
       key: 'rejected',
       label: 'ไม่อนุมัติ',
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-300',
-      selectClass: 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100/80',
-      iconColorClass: 'text-rose-600',
+      badgeClass: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-200 border-rose-300 dark:border-rose-700/70',
+      selectClass: 'bg-rose-50 dark:bg-rose-950/70 text-rose-800 dark:text-rose-100 border-rose-300 dark:border-rose-700/70 hover:bg-rose-100/80 dark:hover:bg-rose-900/70 dark:[color-scheme:dark]',
+      iconColorClass: 'text-rose-600 dark:text-rose-400',
     };
   }
   if (record.approvalStatus === 'cancelled') {
     return {
       key: 'cancelled',
       label: 'ยกเลิก',
-      badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
-      selectClass: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200/80',
-      iconColorClass: 'text-slate-500',
+      badgeClass: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600',
+      selectClass: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-slate-200/80 dark:hover:bg-slate-700 dark:[color-scheme:dark]',
+      iconColorClass: 'text-slate-500 dark:text-slate-400',
     };
   }
   return {
     key: 'pending',
     label: 'รออนุมัติ',
-    badgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
-    selectClass: 'bg-sky-50 text-sky-900 border-sky-200 hover:bg-sky-100/80',
-    iconColorClass: 'text-sky-600',
+    badgeClass: 'bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-700/70',
+    selectClass: 'bg-sky-50 dark:bg-sky-950/70 text-sky-900 dark:text-sky-100 border-sky-200 dark:border-sky-700/70 hover:bg-sky-100/80 dark:hover:bg-sky-900/70 dark:[color-scheme:dark]',
+    iconColorClass: 'text-sky-600 dark:text-sky-400',
   };
 }
 
@@ -1073,9 +1073,9 @@ export const SavedCasesModal: React.FC<Props> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white rounded-[28px] sm:rounded-[32px] w-full ${
+        className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full ${
           viewMode === 'table' && !detailCase ? 'max-w-5xl' : 'max-w-2xl'
-        } max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative transition-all duration-150 ${sheetAnimClass}`}
+        } max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden relative transition-all duration-150 ${sheetAnimClass}`}
       >
         {/* Top Specular Accent Sheen */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-600 opacity-95" />
@@ -1085,18 +1085,18 @@ export const SavedCasesModal: React.FC<Props> = ({
             ========================================================================= */}
         <div className={`flex-1 flex flex-col min-h-0 ${detailCase ? 'hidden' : 'flex'}`}>
           {/* Modal Header */}
-        <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 flex items-center justify-between gap-3 bg-gradient-to-b from-sky-50/80 to-transparent shrink-0">
+        <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 dark:border-slate-800 flex items-center justify-between gap-3 bg-gradient-to-b from-sky-50/80 dark:from-slate-800/80 to-transparent shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-600 text-white flex items-center justify-center shadow-md shadow-sky-500/25 shrink-0">
               <FolderArchive className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight truncate">
+                <h2 className="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight truncate">
                   เคสที่บันทึกไว้ในอุปกรณ์
                 </h2>
               </div>
-              <p className="text-[10.5px] sm:text-[11px] text-slate-500 truncate">
+              <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 บันทึกลงในเครื่อง เรียกดูหรือนำกลับมาใช้งานได้ตลอดเวลา
               </p>
             </div>
@@ -1104,14 +1104,14 @@ export const SavedCasesModal: React.FC<Props> = ({
 
           <div className="flex items-center gap-1.5 shrink-0">
             {/* View Mode Switcher: ตาราง vs รายชื่อ vs การ์ด */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
                 className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation whitespace-nowrap shrink-0 ${
                   viewMode === 'table'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
                 title="มุมมองตาราง (แสดงคอลัมน์สถานะชัดเจน)"
               >
@@ -1123,8 +1123,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                 onClick={() => setViewMode('list')}
                 className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation whitespace-nowrap shrink-0 ${
                   viewMode === 'list'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
                 title="มุมมองรายชื่อลูกค้า (แตะเพื่อเปิดดูรายละเอียด)"
               >
@@ -1136,8 +1136,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                 onClick={() => setViewMode('cards')}
                 className={`px-2 py-1 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1 transition-colors duration-150 cursor-pointer select-none touch-manipulation whitespace-nowrap shrink-0 ${
                   viewMode === 'cards'
-                    ? 'bg-white text-sky-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
                 title="มุมมองการ์ดสรุป"
               >
@@ -1149,7 +1149,7 @@ export const SavedCasesModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
               title="ปิดหน้าต่าง"
             >
               <X className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1158,23 +1158,23 @@ export const SavedCasesModal: React.FC<Props> = ({
         </div>
 
         {/* Action & Search Bar */}
-        <div className="p-2.5 sm:p-4 pb-2.5 space-y-2 bg-slate-50/70 border-b border-slate-200/60 shrink-0">
+        <div className="p-2.5 sm:p-4 pb-2.5 space-y-2 bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-200/60 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-2">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ค้นหาชื่อลูกค้า, รุ่นรถ, รหัสรุ่น หรือ Proposal..."
-                className="w-full pl-9 pr-7 py-1.5 sm:py-2 rounded-xl text-xs bg-white border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs font-medium"
+                className="w-full pl-9 pr-7 py-1.5 sm:py-2 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-200/90 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-0.5"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer p-0.5"
                 >
                   ✕
                 </button>
@@ -1204,10 +1204,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                 type="button"
                 onClick={handleExportExcel}
                 disabled={cases.length === 0}
-                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 text-emerald-800 font-bold text-xs flex items-center gap-1 border border-emerald-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
+                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 disabled:opacity-50 text-emerald-800 dark:text-emerald-200 font-bold text-xs flex items-center gap-1 border border-emerald-200 dark:border-emerald-800/70 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
                 title="ส่งออกรายการเคสที่แสดงอยู่เป็นไฟล์ Excel (.xlsx)"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-[11px]">Excel</span>
               </button>
 
@@ -1216,19 +1216,19 @@ export const SavedCasesModal: React.FC<Props> = ({
                 type="button"
                 onClick={handleExport}
                 disabled={cases.length === 0}
-                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-sky-50 disabled:opacity-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
+                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/60 disabled:opacity-50 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1 border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
                 title="ส่งออก / แชร์ไฟล์สำรองข้อมูล (JSON)"
               >
-                <Share2 className="w-3.5 h-3.5 text-sky-600" />
+                <Share2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 <span className="hidden sm:inline text-[11px]">ส่งออก</span>
               </button>
 
               {/* นำเข้า */}
               <label
-                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-teal-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
+                className="px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-teal-950/60 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1 border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all"
                 title="นำเข้าไฟล์เคสจากอีกเครื่อง"
               >
-                <Download className="w-3.5 h-3.5 text-teal-600" />
+                <Download className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 <span className="hidden sm:inline text-[11px]">นำเข้า</span>
                 <input
                   type="file"
@@ -1248,18 +1248,18 @@ export const SavedCasesModal: React.FC<Props> = ({
                 className={`p-1.5 sm:px-2 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1 border shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 transition-all ${
                   showTransferGuide
                     ? 'bg-amber-500 text-white border-amber-600'
-                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200/90'
+                    : 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-200 border-amber-200/90 dark:border-amber-800/70'
                 }`}
                 title="วิธีย้ายข้อมูลเคสข้ามเครื่อง"
               >
-                <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                <HelpCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               </button>
 
               {cases.length > 0 && (
                 <button
                   type="button"
                   onClick={handleClearAll}
-                  className="p-1.5 sm:p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/70 transition-colors cursor-pointer"
                   title="ล้างรายการทั้งหมด"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -1271,14 +1271,14 @@ export const SavedCasesModal: React.FC<Props> = ({
           {/* Cloud Sync / Google Sign-In Status Bar */}
           <CloudSyncCard compact localCount={cases.length} />
 
-          {/* Primary Month Selector Bar - มีตัวเลือกเดือนชัดเจน พร้อมตัวนับยอดรับรถ/ยอดอนุมัติตามงวด */}
+          {/* Primary Month Selector Bar */}
           {cases.length > 0 && (
-            <div className="bg-gradient-to-r from-sky-50 via-indigo-50/40 to-sky-50/60 p-2 sm:p-2.5 rounded-2xl border border-sky-100 shadow-2xs space-y-1.5">
+            <div className="bg-gradient-to-r from-sky-50 via-indigo-50/40 to-sky-50/60 dark:from-slate-800/90 dark:via-slate-800/80 dark:to-slate-900/90 p-2 sm:p-2.5 rounded-2xl border border-sky-100 dark:border-slate-700/80 shadow-2xs space-y-1.5">
               <div className="flex items-center justify-between gap-1.5 flex-wrap sm:flex-nowrap">
                 {/* Month Navigator */}
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-700 flex items-center justify-center shrink-0">
-                    <CalendarDays className="w-4 h-4 text-sky-600" />
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 flex items-center justify-center shrink-0">
+                    <CalendarDays className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   </div>
 
                   {/* Previous Month */}
@@ -1288,7 +1288,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                       triggerHaptic('light');
                       setSelectedMonthKey((prev) => getAdjacentMonthKey(prev, -1));
                     }}
-                    className="p-1 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 transition-colors cursor-pointer shrink-0"
+                    className="p-1 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-colors cursor-pointer shrink-0"
                     title="เดือนก่อนหน้า"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -1302,7 +1302,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                         triggerHaptic('light');
                         setSelectedMonthKey(e.target.value);
                       }}
-                      className="w-full appearance-none pl-2.5 pr-7 py-1 rounded-xl text-xs sm:text-[13px] font-extrabold bg-white border border-sky-200 text-sky-950 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-2xs truncate"
+                      className="w-full appearance-none pl-2.5 pr-7 py-1 rounded-xl text-xs sm:text-[13px] font-extrabold bg-white dark:bg-slate-900 border border-sky-200 dark:border-slate-700 text-sky-950 dark:text-sky-100 dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-2xs truncate"
                     >
                       <option value="all">ทุกช่วงเวลา (เคสทั้งหมด)</option>
                       {availableMonthOptions.map((ym) => (
@@ -1311,7 +1311,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-sky-700 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 text-sky-700 dark:text-sky-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
 
                   {/* Next Month */}
@@ -1321,7 +1321,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                       triggerHaptic('light');
                       setSelectedMonthKey((prev) => getAdjacentMonthKey(prev, 1));
                     }}
-                    className="p-1 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 transition-colors cursor-pointer shrink-0"
+                    className="p-1 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-colors cursor-pointer shrink-0"
                     title="เดือนถัดไป"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -1336,66 +1336,66 @@ export const SavedCasesModal: React.FC<Props> = ({
                       triggerHaptic('success');
                       setSelectedMonthKey(getCurrentYearMonthKey());
                     }}
-                    className="p-1 sm:p-1.5 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 text-xs font-extrabold flex items-center justify-center shadow-2xs cursor-pointer shrink-0 transition-all active:scale-95"
+                    className="p-1 sm:p-1.5 rounded-xl bg-white hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/70 text-xs font-extrabold flex items-center justify-center shadow-2xs cursor-pointer shrink-0 transition-all active:scale-95"
                     title="กลับไปยังเดือนปัจจุบัน"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-sky-600" />
+                    <RotateCcw className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                   </button>
                 )}
               </div>
 
-              {/* Monthly Summary KPI Badges (แถวเดียวกระชับ: รับรถ / อนุมัติ / ยกยอดรับรถ / ยกยอดรอรับ) */}
-              <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none pt-0.5 text-[10px] sm:text-[11px]">
+              {/* Monthly Summary KPI Badges */}
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto scrollbar-none pt-0.5 text-[10px] sm:text-[11px] tabular-nums">
                 <div
-                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 font-extrabold whitespace-nowrap shrink-0"
+                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/70 text-emerald-800 dark:text-emerald-200 font-extrabold whitespace-nowrap shrink-0"
                   title="จำนวนเคสที่รับรถในงวดเดือนนี้"
                 >
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span>รับรถ</span>
-                  <span className="text-emerald-950 font-black">{monthlyStats.deliveredInMonth}</span>
+                  <span className="text-emerald-950 dark:text-emerald-100 font-black">{monthlyStats.deliveredInMonth}</span>
                 </div>
 
                 <div
-                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-sky-50 border border-sky-200/80 text-sky-800 font-bold whitespace-nowrap shrink-0"
+                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200/80 dark:border-sky-800/70 text-sky-800 dark:text-sky-200 font-bold whitespace-nowrap shrink-0"
                   title="จำนวนเคสที่อนุมัติในงวดเดือนนี้"
                 >
                   <span>อนุมัติ</span>
-                  <span className="text-sky-950 font-black">{monthlyStats.approvedInMonth}</span>
+                  <span className="text-sky-950 dark:text-sky-100 font-black">{monthlyStats.approvedInMonth}</span>
                 </div>
 
                 {/* Badge: เคสที่อนุมัติเดือนก่อน แต่มารับรถเดือนนี้ */}
                 {monthlyStats.carriedOverDelivered > 0 && (
                   <div
-                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-300 text-teal-800 font-bold whitespace-nowrap shrink-0"
+                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-300 dark:border-teal-800/70 text-teal-800 dark:text-teal-200 font-bold whitespace-nowrap shrink-0"
                     title="มีเคสที่อนุมัติในงวดก่อนหน้านี้ แต่มารับรถในเดือนนี้ นับเป็นยอดรับรถของเดือนนี้"
                   >
-                    <BadgePercent className="w-3 h-3 text-teal-600 shrink-0" />
+                    <BadgePercent className="w-3 h-3 text-teal-600 dark:text-teal-400 shrink-0" />
                     <span>ยกยอดรับรถ</span>
-                    <span className="text-teal-950 font-black">+{monthlyStats.carriedOverDelivered}</span>
+                    <span className="text-teal-950 dark:text-teal-100 font-black">+{monthlyStats.carriedOverDelivered}</span>
                   </div>
                 )}
 
-                {/* Badge: เคสที่อนุมัติจากเดือนก่อน แต่ยังรอรับรถ (ยกยอดมารอรับรถในเดือนนี้) */}
+                {/* Badge: เคสที่อนุมัติจากเดือนก่อน แต่ยังรอรับรถ */}
                 {monthlyStats.carriedOverPendingDelivery > 0 && (
                   <div
-                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-950 font-bold whitespace-nowrap shrink-0"
+                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800/70 text-amber-950 dark:text-amber-200 font-bold whitespace-nowrap shrink-0"
                     title="เคสที่อนุมัติจากเดือนก่อน แต่ยังไม่ได้รับรถ ยกยอดมารอรับรถในงวดนี้"
                   >
-                    <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                    <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                     <span>ยกยอดรอรับ</span>
-                    <span className="text-amber-950 font-black">{monthlyStats.carriedOverPendingDelivery}</span>
+                    <span className="text-amber-950 dark:text-amber-100 font-black">{monthlyStats.carriedOverPendingDelivery}</span>
                   </div>
                 )}
 
                 {/* Badge: เคสที่อนุมัติเดือนนี้ แต่ลูกค้ารับรถเดือนถัดไป */}
                 {monthlyStats.approvedDeliveredLater > 0 && (
                   <div
-                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold whitespace-nowrap shrink-0"
+                    className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/70 text-indigo-800 dark:text-indigo-200 font-bold whitespace-nowrap shrink-0"
                     title="เคสอนุมัติในเดือนนี้ แต่ลูกค้ารับรถในเดือนถัดไป (นับยอดอนุมัติในงวดนี้)"
                   >
-                    <Clock className="w-3 h-3 text-indigo-600 shrink-0" />
+                    <Clock className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
                     <span>รับเดือนหน้า</span>
-                    <span className="text-indigo-950 font-black">{monthlyStats.approvedDeliveredLater}</span>
+                    <span className="text-indigo-950 dark:text-indigo-100 font-black">{monthlyStats.approvedDeliveredLater}</span>
                   </div>
                 )}
               </div>
@@ -1415,15 +1415,15 @@ export const SavedCasesModal: React.FC<Props> = ({
                       setStatusFilter('all');
                       setDeliveryFilter('all');
                     }}
-                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] tabular-nums ${
                       statusFilter === 'all'
-                        ? 'bg-slate-800 text-white shadow-xs'
-                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        ? 'bg-slate-800 dark:bg-sky-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     <span>ทั้งหมด</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                      statusFilter === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'
+                      statusFilter === 'all' ? 'bg-slate-700 dark:bg-sky-700 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                     }`}>
                       {statusCounts.all}
                     </span>
@@ -1437,16 +1437,16 @@ export const SavedCasesModal: React.FC<Props> = ({
                       setStatusFilter('approved');
                       setDeliveryFilter('all');
                     }}
-                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] tabular-nums ${
                       statusFilter === 'approved'
-                        ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300'
-                        : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-200'
+                        ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300 dark:ring-emerald-700'
+                        : 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70'
                     }`}
                   >
                     <CheckCircle2 className="w-3 h-3" />
                     <span>อนุมัติ</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                      statusFilter === 'approved' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+                      statusFilter === 'approved' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200'
                     }`}>
                       {statusCounts.approved}
                     </span>
@@ -1460,16 +1460,16 @@ export const SavedCasesModal: React.FC<Props> = ({
                       setStatusFilter('pending');
                       setDeliveryFilter('all');
                     }}
-                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] tabular-nums ${
                       statusFilter === 'pending'
-                        ? 'bg-sky-600 text-white shadow-xs ring-2 ring-sky-300'
-                        : 'bg-white text-sky-800 hover:bg-sky-50 border border-sky-200'
+                        ? 'bg-sky-600 text-white shadow-xs ring-2 ring-sky-300 dark:ring-sky-700'
+                        : 'bg-white dark:bg-slate-800 text-sky-800 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/50 border border-sky-200 dark:border-sky-800/70'
                     }`}
                   >
                     <Clock className="w-3 h-3" />
                     <span>รอผล</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                      statusFilter === 'pending' ? 'bg-sky-700 text-white' : 'bg-sky-100 text-sky-800'
+                      statusFilter === 'pending' ? 'bg-sky-700 text-white' : 'bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200'
                     }`}>
                       {statusCounts.pending}
                     </span>
@@ -1483,16 +1483,16 @@ export const SavedCasesModal: React.FC<Props> = ({
                       setStatusFilter('rejected');
                       setDeliveryFilter('all');
                     }}
-                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                    className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] tabular-nums ${
                       statusFilter === 'rejected'
-                        ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-300'
-                        : 'bg-white text-rose-800 hover:bg-rose-50 border border-rose-200'
+                        ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-300 dark:ring-rose-700'
+                        : 'bg-white dark:bg-slate-800 text-rose-800 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-800/70'
                     }`}
                   >
                     <XCircle className="w-3 h-3" />
                     <span>ไม่อนุมัติ</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                      statusFilter === 'rejected' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
+                      statusFilter === 'rejected' ? 'bg-rose-700 text-white' : 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200'
                     }`}>
                       {statusCounts.rejected}
                     </span>
@@ -1508,8 +1508,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                     }}
                     className={`px-2 py-1 rounded-xl font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap text-[11px] ${
                       statusFilter === 'cancelled'
-                        ? 'bg-slate-700 text-white shadow-xs'
-                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     <Ban className="w-3 h-3" />
@@ -1526,15 +1526,15 @@ export const SavedCasesModal: React.FC<Props> = ({
                   }}
                   className={`px-2 py-1 rounded-xl text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
                     hasActiveAdvancedFilter || showAdvancedFilters
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-2xs font-extrabold'
-                      : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/70 border-indigo-300 dark:border-indigo-700 text-indigo-900 dark:text-indigo-200 shadow-2xs font-extrabold'
+                      : 'bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                   }`}
                   title="ตัวกรองเพิ่มเติม (เดือน/ปี, กำหนดชำระงวดแรก)"
                 >
-                  <SlidersHorizontal className="w-3 h-3 text-indigo-600" />
+                  <SlidersHorizontal className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                   <span>ตัวกรองงวด/เดือน</span>
                   {hasActiveAdvancedFilter && (
-                    <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                    <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
                   )}
                   {showAdvancedFilters ? (
                     <ChevronUp className="w-3 h-3" />
@@ -1546,8 +1546,8 @@ export const SavedCasesModal: React.FC<Props> = ({
 
               {/* Sub-filter for Delivery Status when "อนุมัติ" is active */}
               {statusFilter === 'approved' && (
-                <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-600 animate-fade-in flex-wrap">
-                  <span className="font-bold text-slate-400 text-[10px]">การรับรถ:</span>
+                <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-600 dark:text-slate-300 animate-fade-in flex-wrap tabular-nums">
+                  <span className="font-bold text-slate-400 dark:text-slate-500 text-[10px]">การรับรถ:</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -1556,8 +1556,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                     }}
                     className={`px-2 py-0.5 rounded-lg font-medium cursor-pointer transition-all ${
                       deliveryFilter === 'all'
-                        ? 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-300'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                        ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300 dark:border-emerald-700'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     ทั้งหมด ({statusCounts.approved})
@@ -1570,11 +1570,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                     }}
                     className={`px-2 py-0.5 rounded-lg font-medium cursor-pointer transition-all flex items-center gap-1 ${
                       deliveryFilter === 'delivered'
-                        ? 'bg-teal-100 text-teal-900 font-bold border border-teal-300'
-                        : 'bg-white text-teal-800 border border-slate-200 hover:bg-teal-50'
+                        ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-900 dark:text-teal-200 font-bold border border-teal-300 dark:border-teal-700'
+                        : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300 border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-teal-950/50'
                     }`}
                   >
-                    <Check className="w-3 h-3 text-teal-600" />
+                    <Check className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                     <span>รับรถแล้ว ({statusCounts.delivered})</span>
                   </button>
                   <button
@@ -1585,11 +1585,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                     }}
                     className={`px-2 py-0.5 rounded-lg font-medium cursor-pointer transition-all flex items-center gap-1 ${
                       deliveryFilter === 'pending_delivery'
-                        ? 'bg-amber-100 text-amber-900 font-bold border border-amber-300'
-                        : 'bg-white text-amber-800 border border-slate-200 hover:bg-amber-50'
+                        ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
+                        : 'bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-950/50'
                     }`}
                   >
-                    <Clock className="w-3 h-3 text-amber-600" />
+                    <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                     <span>รอรับรถ ({statusCounts.pendingDelivery})</span>
                   </button>
                 </div>
@@ -1597,11 +1597,11 @@ export const SavedCasesModal: React.FC<Props> = ({
 
               {/* Expandable Advanced Filters (First Payment Due Month) */}
               {showAdvancedFilters && (
-                <div className="pt-2 mt-1 border-t border-slate-200/80 space-y-2 animate-fade-in bg-white/70 p-2.5 rounded-2xl border border-indigo-100">
+                <div className="pt-2 mt-1 border-t border-slate-200/80 dark:border-slate-700 space-y-2 animate-fade-in bg-white/70 dark:bg-slate-900/70 p-2.5 rounded-2xl border border-indigo-100 dark:border-indigo-800/60">
                   {/* First Due Month */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 shrink-0">
-                      <CalendarClock className="w-3.5 h-3.5 text-indigo-600" />
+                    <div className="flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 dark:text-indigo-300 shrink-0">
+                      <CalendarClock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                       <span>งวดแรกชำระ:</span>
                     </div>
 
@@ -1611,10 +1611,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                         triggerHaptic('light');
                         setSelectedDueMonth(e.target.value);
                       }}
-                      className={`px-2 py-1 rounded-xl text-xs font-bold border cursor-pointer shadow-2xs ${
+                      className={`px-2 py-1 rounded-xl text-xs font-bold border cursor-pointer shadow-2xs dark:[color-scheme:dark] ${
                         selectedDueMonth !== 'all'
-                          ? 'bg-indigo-50 border-indigo-400 text-indigo-900 font-extrabold'
-                          : 'bg-white border-slate-200 text-slate-800'
+                          ? 'bg-indigo-50 dark:bg-indigo-950/70 border-indigo-400 dark:border-indigo-600 text-indigo-900 dark:text-indigo-100 font-extrabold'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
                       }`}
                     >
                       <option value="all">ทุกงวดแรกที่ครบกำหนด</option>
@@ -1632,7 +1632,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                           triggerHaptic('light');
                           setSelectedDueMonth('all');
                         }}
-                        className="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 border border-rose-200 cursor-pointer"
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-rose-600 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-200 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/70 cursor-pointer"
                       >
                         ✕ ล้างตัวกรองงวด
                       </button>
@@ -1645,10 +1645,10 @@ export const SavedCasesModal: React.FC<Props> = ({
 
           {/* Clear All In-App Confirmation Banner */}
           {showClearAllConfirm && (
-            <div className="mt-2 p-3 rounded-2xl bg-rose-50 border border-rose-300 text-rose-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fade-in shadow-xs">
+            <div className="mt-2 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/70 text-rose-900 dark:text-rose-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fade-in shadow-xs">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span className="font-semibold text-rose-950">
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                <span className="font-semibold text-rose-950 dark:text-rose-100">
                   ต้องการลบเคสทั้งหมด ({cases.length} รายการ) ออกจากเครื่องใช่หรือไม่?
                 </span>
               </div>
@@ -1663,7 +1663,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setShowClearAllConfirm(false)}
-                  className="px-2.5 py-1 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer active:scale-95 transition-all"
                 >
                   ยกเลิก
                 </button>
@@ -1673,29 +1673,29 @@ export const SavedCasesModal: React.FC<Props> = ({
 
           {/* Transfer Guide Dialog */}
           {showTransferGuide && (
-            <div className="mt-2 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 via-sky-50 to-white border border-amber-300 text-slate-800 text-xs space-y-2 animate-fade-in shadow-xs relative">
-              <div className="flex items-center justify-between gap-2 border-b border-amber-200/80 pb-1.5">
+            <div className="mt-2 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 via-sky-50 to-white dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border border-amber-300 dark:border-amber-800/70 text-slate-800 dark:text-slate-200 text-xs space-y-2 animate-fade-in shadow-xs relative">
+              <div className="flex items-center justify-between gap-2 border-b border-amber-200/80 dark:border-amber-800/50 pb-1.5">
                 <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span className="font-extrabold text-xs text-slate-900">
+                  <Smartphone className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="font-extrabold text-xs text-slate-900 dark:text-slate-100">
                     วิธีย้ายข้อมูลเคสจากเครื่องหนึ่งไปอีกเครื่อง
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowTransferGuide(false)}
-                  className="p-1 rounded-lg hover:bg-amber-100 text-slate-500 cursor-pointer text-xs"
+                  className="p-1 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50 text-slate-500 dark:text-slate-400 cursor-pointer text-xs"
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="space-y-1.5 text-slate-700 text-[11px]">
+              <div className="space-y-1.5 text-slate-700 dark:text-slate-300 text-[11px]">
                 <p>
-                  1. <strong>เครื่องเดิม:</strong> กดปุ่ม <span className="text-sky-700 font-bold">"ส่งออก"</span> ด้านบน แล้วส่งไฟล์ <span className="font-mono bg-slate-100 px-1 rounded">.json</span> เข้า LINE หรือ AirDrop ส่งไปอีกเครื่อง
+                  1. <strong>เครื่องเดิม:</strong> กดปุ่ม <span className="text-sky-700 dark:text-sky-300 font-bold">"ส่งออก"</span> ด้านบน แล้วส่งไฟล์ <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">.json</span> เข้า LINE หรือ AirDrop ส่งไปอีกเครื่อง
                 </p>
                 <p>
-                  2. <strong>เครื่องใหม่:</strong> เปิดแอป เข้าหน้านี้แล้วกดปุ่ม <span className="text-teal-700 font-bold">"นำเข้า"</span> แล้วเลือกไฟล์ที่ได้รับ ข้อมูลจะเข้ามาครบถ้วนทันที
+                  2. <strong>เครื่องใหม่:</strong> เปิดแอป เข้าหน้านี้แล้วกดปุ่ม <span className="text-teal-700 dark:text-teal-300 font-bold">"นำเข้า"</span> แล้วเลือกไฟล์ที่ได้รับ ข้อมูลจะเข้ามาครบถ้วนทันที
                 </p>
               </div>
             </div>
@@ -1714,14 +1714,14 @@ export const SavedCasesModal: React.FC<Props> = ({
         <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3">
           {filteredCases.length === 0 ? (
             <div className="py-12 px-4 text-center space-y-3">
-              <div className="w-14 h-14 rounded-3xl bg-sky-50 text-sky-500 flex items-center justify-center mx-auto border border-sky-100 shadow-inner">
+              <div className="w-14 h-14 rounded-3xl bg-sky-50 dark:bg-sky-950/60 text-sky-500 dark:text-sky-400 flex items-center justify-center mx-auto border border-sky-100 dark:border-sky-800/60 shadow-inner">
                 <FolderArchive className="w-7 h-7 opacity-70" />
               </div>
               <div className="max-w-sm mx-auto">
-                <h4 className="text-sm font-bold text-slate-700">
+                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
                   {searchQuery ? 'ไม่พบเคสที่ตรงกับการค้นหา' : 'ยังไม่มีเคสที่บันทึกไว้ในอุปกรณ์'}
                 </h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {searchQuery
                     ? 'ลองเปลี่ยนคำค้นหาเป็นชื่อลูกค้า หรือรุ่นรถมอเตอร์ไซค์'
                     : 'เมื่อคุณกรอกข้อมูลคำนวณค่างวด สามารถกดปุ่ม "บันทึกเคสนี้" เพื่อเก็บประวัติไว้ดูหรือนำกลับมาใช้งานต่อได้ตลอดเวลา'}
@@ -1733,19 +1733,19 @@ export const SavedCasesModal: React.FC<Props> = ({
               {groupedCases.map((group) => (
                 <div key={group.key} className="space-y-2">
                   {/* Sticky Month & Year Header Banner */}
-                  <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-100/90 via-sky-50 to-white border border-sky-200/80 text-slate-800 shadow-2xs">
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-100/90 via-sky-50 to-white dark:from-sky-950/70 dark:via-slate-800/90 dark:to-slate-900 border border-sky-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 shadow-2xs">
                     <div className="flex items-center gap-1.5">
-                      <CalendarDays className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                      <span className="font-extrabold text-xs sm:text-sm text-slate-900">
+                      <CalendarDays className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                      <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
                         {group.monthName} พ.ศ. {group.year}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-bold">
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-300 font-bold tabular-nums">
                       <span className="bg-sky-500 text-white px-2 py-0.2 rounded-full">
                         {group.items.length} รายการ
                       </span>
                       {group.deliveredCount > 0 && (
-                        <span className="bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded-full">
+                        <span className="bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200 border border-transparent dark:border-teal-800/60 px-1.5 py-0.2 rounded-full">
                           รับรถ {group.deliveredCount}
                         </span>
                       )}
@@ -1754,13 +1754,13 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                   {/* Customer Records: TABLE VIEW (ตารางรายการเคสพร้อมคอลัมน์สถานะ) */}
                   <div className={viewMode === 'table' ? 'block' : 'hidden'}>
-                    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs overflow-hidden">
                       <div className="overflow-x-auto scrollbar-thin">
                         <table className="w-full text-left border-collapse min-w-[740px]">
                           <thead>
-                            <tr className="bg-slate-50/95 border-b border-slate-200 text-[10.5px] font-extrabold text-slate-600">
+                            <tr className="bg-slate-50/95 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 text-[10.5px] font-extrabold text-slate-600 dark:text-slate-300">
                               <th className="py-2.5 px-2.5 text-center w-9 tabular-nums">#</th>
-                              <th className="sticky left-0 z-10 bg-slate-50/95 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/80 min-w-[145px]">
+                              <th className="sticky left-0 z-10 bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-700 min-w-[145px]">
                                 ชื่อลูกค้า
                               </th>
                               <th className="py-2.5 px-2.5 min-w-[142px] whitespace-nowrap">
@@ -1780,7 +1780,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100 text-[11px] bg-white">
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px] bg-white dark:bg-slate-900">
                             {group.items.map((record, idx) => {
                               const isCurrentEditing = activeEditingId === record.id;
                               const isApproved = record.approvalStatus === 'approved';
@@ -1797,34 +1797,34 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   onClick={() => setDetailCase(record)}
                                   className={`transition-colors duration-150 cursor-pointer group ${
                                     isCurrentEditing
-                                      ? 'bg-amber-50/40 hover:bg-amber-50/70'
-                                      : 'hover:bg-sky-50/50'
+                                      ? 'bg-amber-50/40 dark:bg-amber-950/30 hover:bg-amber-50/70 dark:hover:bg-amber-950/50'
+                                      : 'hover:bg-sky-50/50 dark:hover:bg-sky-950/40'
                                   }`}
                                 >
                                   {/* # */}
-                                  <td className="py-2.5 px-2.5 text-center text-[10.5px] font-bold text-slate-400 tabular-nums align-middle">
+                                  <td className="py-2.5 px-2.5 text-center text-[10.5px] font-bold text-slate-400 dark:text-slate-500 tabular-nums align-middle">
                                     {idx + 1}
                                   </td>
 
                                   {/* ชื่อลูกค้า (Sticky Left) */}
                                   <td
-                                    className={`sticky left-0 z-10 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/70 max-w-[185px] align-middle ${
+                                    className={`sticky left-0 z-10 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/70 dark:border-slate-700/80 max-w-[185px] align-middle ${
                                       isCurrentEditing
-                                        ? 'bg-amber-50/95 group-hover:bg-amber-50'
-                                        : 'bg-white/95 group-hover:bg-sky-50/80'
+                                        ? 'bg-amber-50/95 dark:bg-amber-950/80 group-hover:bg-amber-50 dark:group-hover:bg-amber-950/90'
+                                        : 'bg-white/95 dark:bg-slate-900/95 group-hover:bg-sky-50/80 dark:group-hover:bg-sky-950/60'
                                     }`}
                                   >
                                     <div className="flex items-center gap-1 min-w-0">
-                                      <span className="font-extrabold text-xs text-slate-900 group-hover:text-sky-700 truncate">
+                                      <span className="font-extrabold text-xs text-slate-900 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300 truncate">
                                         {custName}
                                       </span>
                                       {isCurrentEditing && (
-                                        <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                                        <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shrink-0">
                                           แก้ไข
                                         </span>
                                       )}
                                     </div>
-                                    <div className="text-[10px] text-slate-500 mt-0.5 truncate tabular-nums">
+                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate tabular-nums">
                                       {record.customerPhone ? record.customerPhone : formatThaiDateOnly(record.createdAt)}
                                     </div>
                                   </td>
@@ -1874,7 +1874,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       </div>
 
                                       {statusMeta.subLabel && (
-                                        <div className="text-[9.5px] font-semibold text-slate-500 pl-0.5 tabular-nums whitespace-nowrap">
+                                        <div className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 pl-0.5 tabular-nums whitespace-nowrap">
                                           {statusMeta.subLabel}
                                         </div>
                                       )}
@@ -1883,12 +1883,12 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                                   {/* รุ่นรถ / ดีลเลอร์ */}
                                   <td className="py-2.5 px-2.5 max-w-[190px] align-middle">
-                                    <div className="font-semibold text-slate-800 truncate">
+                                    <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                                       {record.bikeModelName || 'ไม่ระบุรุ่นรถ'}
                                     </div>
-                                    <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                                       {record.dealerName ? (
-                                        <span className="text-sky-700 font-medium">{record.dealerName}</span>
+                                        <span className="text-sky-700 dark:text-sky-300 font-medium">{record.dealerName}</span>
                                       ) : (
                                         <span>{record.snapshot.proposalCode}</span>
                                       )}
@@ -1897,11 +1897,11 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                                   {/* ค่างวด / ยอดจัด */}
                                   <td className="py-2.5 px-2.5 text-right tabular-nums align-middle whitespace-nowrap">
-                                    <div className="font-black text-sky-700 text-xs">
+                                    <div className="font-black text-sky-700 dark:text-sky-300 text-xs">
                                       {formatBaht(record.snapshot.monthlyInstallment)}
-                                      <span className="text-[9.5px] font-semibold text-slate-500">/ด.</span>
+                                      <span className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400">/ด.</span>
                                     </div>
-                                    <div className="text-[10px] text-slate-500 mt-0.5">
+                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                                       {record.term} งวด · จัด {formatBaht(record.snapshot.financeAmount, true)}
                                     </div>
                                   </td>
@@ -1909,18 +1909,18 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   {/* งวดแรก / วันที่ */}
                                   <td className="py-2.5 px-2.5 tabular-nums align-middle whitespace-nowrap">
                                     {firstDue ? (
-                                      <div className="text-[10.5px] font-bold text-indigo-800">
+                                      <div className="text-[10.5px] font-bold text-indigo-800 dark:text-indigo-300">
                                         งวดแรก 2 {firstDue.monthShort} {firstDue.thaiShortYear}
                                       </div>
                                     ) : (
-                                      <div className="text-[10px] text-slate-500">
+                                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
                                         บันทึก {formatThaiDateOnly(record.createdAt)}
                                       </div>
                                     )}
-                                    <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] text-slate-500">
+                                    <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] text-slate-500 dark:text-slate-400">
                                       <span>{record.snapshot.proposalCode}</span>
                                       {record.approvalDoc && (
-                                        <span className="text-rose-600 font-bold">· PDF</span>
+                                        <span className="text-rose-600 dark:text-rose-400 font-bold">· PDF</span>
                                       )}
                                     </div>
                                   </td>
@@ -1936,7 +1936,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                                             triggerHaptic('light');
                                             setApprovalModalCase(record);
                                           }}
-                                          className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
+                                          className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 transition-colors cursor-pointer"
                                           title="เปิดดูใบอนุมัติผลชั่วคราว"
                                         >
                                           <FileCheck className="w-3.5 h-3.5" />
@@ -1948,7 +1948,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                                           e.stopPropagation();
                                           setDetailCase(record);
                                         }}
-                                        className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-500 inline-flex items-center justify-center transition-colors cursor-pointer"
+                                        className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-500 group-hover:text-white text-slate-500 dark:text-slate-400 inline-flex items-center justify-center transition-colors cursor-pointer"
                                         title="ดูรายละเอียดเคส"
                                       >
                                         <ChevronRight className="w-4 h-4" />
@@ -1966,7 +1966,7 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                   {/* Customer Records: LIST VIEW (รายการชื่อลูกค้า) */}
                   <div className={viewMode === 'list' ? 'block' : 'hidden'}>
-                    <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs overflow-hidden">
                       {group.items.map((record) => {
                         const isCurrentEditing = activeEditingId === record.id;
                         const isApproved = record.approvalStatus === 'approved';
@@ -1978,7 +1978,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                         const firstLetter = custName.slice(0, 1) || 'ค';
                         const statusMeta = getDealStatusMeta(record);
 
-                        // Cross-month indicator label (if any)
                         let crossMonthBadge: { label: string; className: string; title?: string } | null = null;
                         if (isApproved && isDelivered) {
                           const approvalYM = getCaseApprovalYM(record);
@@ -1986,13 +1985,13 @@ export const SavedCasesModal: React.FC<Props> = ({
                           if (approvalYM && deliveryYM && approvalYM < deliveryYM) {
                             crossMonthBadge = {
                               label: `ยกยอดรับรถ (อนุมัติ ${formatThaiDateOnly(record.approvalDate)})`,
-                              className: 'bg-teal-50 text-teal-800 border-teal-200',
+                              className: 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800/70',
                               title: `อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} และมารับรถในเดือนนี้`,
                             };
                           } else if (approvalYM && deliveryYM && approvalYM > deliveryYM) {
                             crossMonthBadge = {
                               label: 'รับรถก่อนผล',
-                              className: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                              className: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800/70',
                             };
                           }
                         } else if (isApproved && !isDelivered) {
@@ -2001,13 +2000,13 @@ export const SavedCasesModal: React.FC<Props> = ({
                           if (approvalYM && selectedMonthKey !== 'all' && approvalYM < selectedMonthKey) {
                             crossMonthBadge = {
                               label: `ยกยอดรอรับรถ (${formatThaiDateOnly(record.approvalDate)})`,
-                              className: 'bg-amber-50 text-amber-900 border-amber-200',
+                              className: 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-800/70',
                               title: `อนุมัติตั้งแต่งวด ${formatYearMonthLabel(approvalYM)} แต่ยังไม่ได้รับรถ`,
                             };
                           } else if (approvalYM && deliveryYM && deliveryYM > approvalYM) {
                             crossMonthBadge = {
                               label: `รับรถ ${formatThaiDateOnly(record.deliveryDate)}`,
-                              className: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                              className: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800/70',
                               title: `อนุมัติในงวดนี้ กำหนดรับรถ ${formatThaiDateOnly(record.deliveryDate)}`,
                             };
                           }
@@ -2017,24 +2016,24 @@ export const SavedCasesModal: React.FC<Props> = ({
                           <div
                             key={record.id}
                             onClick={() => setDetailCase(record)}
-                            className={`p-3 sm:p-3.5 hover:bg-sky-50/60 transition-colors duration-150 cursor-pointer group active:bg-sky-100/60 space-y-1.5 ${
-                              isCurrentEditing ? 'bg-amber-50/35' : ''
+                            className={`p-3 sm:p-3.5 hover:bg-sky-50/60 dark:hover:bg-sky-950/40 transition-colors duration-150 cursor-pointer group active:bg-sky-100/60 dark:active:bg-sky-900/50 space-y-1.5 ${
+                              isCurrentEditing ? 'bg-amber-50/35 dark:bg-amber-950/30' : ''
                             }`}
                           >
-                            {/* Top Row: Avatar + Name (left) & Status + Actions (right) */}
+                            {/* Top Row */}
                             <div className="flex items-center justify-between gap-2 min-w-0">
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                 <div
                                   className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-2xs border ${
                                     isApproved
                                       ? isDelivered
-                                        ? 'bg-teal-50 text-teal-700 border-teal-200'
-                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800/70'
+                                        : 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70'
                                       : record.approvalStatus === 'rejected'
-                                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                      ? 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/70'
                                       : record.approvalStatus === 'cancelled'
-                                      ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                      : 'bg-sky-50 text-sky-700 border-sky-200'
+                                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                                      : 'bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/70'
                                   }`}
                                 >
                                   {firstLetter}
@@ -2042,20 +2041,20 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5 min-w-0">
-                                    <MarqueeText className="font-extrabold text-[13px] sm:text-sm text-slate-900 group-hover:text-sky-700 transition-colors min-w-0">
+                                    <MarqueeText className="font-extrabold text-[13px] sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors min-w-0">
                                       {custName}
                                     </MarqueeText>
                                     {isCurrentEditing && (
-                                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 shrink-0 whitespace-nowrap">
+                                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shrink-0 whitespace-nowrap">
                                         กำลังแก้ไข
                                       </span>
                                     )}
                                     {record.approvalDoc && (
                                       <span
-                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-0.5 shrink-0 whitespace-nowrap"
+                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70 inline-flex items-center gap-0.5 shrink-0 whitespace-nowrap"
                                         title={`แนบเอกสารแล้ว: ${record.approvalDoc.name}`}
                                       >
-                                        <FileText className="w-2.5 h-2.5 text-rose-600" />
+                                        <FileText className="w-2.5 h-2.5 text-rose-600 dark:text-rose-400" />
                                         <span>PDF</span>
                                       </span>
                                     )}
@@ -2063,7 +2062,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                                 </div>
                               </div>
 
-                              {/* Right: Unified Status + Approval Doc + Chevron */}
+                              {/* Right */}
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <div
                                   className={`px-2 py-0.5 sm:py-1 rounded-lg border text-[10px] sm:text-[10.5px] font-extrabold inline-flex items-center gap-1 whitespace-nowrap shrink-0 ${statusMeta.badgeClass}`}
@@ -2095,34 +2094,34 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       triggerHaptic('light');
                                       setApprovalModalCase(record);
                                     }}
-                                    className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
+                                    className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-2xs shrink-0"
                                     title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
                                   >
-                                    <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                    <FileCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                   </button>
                                 )}
 
-                                <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-sky-500 group-hover:text-white text-slate-400 flex items-center justify-center transition-colors duration-150 shrink-0">
+                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-500 group-hover:text-white text-slate-400 dark:text-slate-400 flex items-center justify-center transition-colors duration-150 shrink-0">
                                   <ChevronRight className="w-3.5 h-3.5" />
                                 </div>
                               </div>
                             </div>
 
-                            {/* Middle Row: Full-width Bike Model · Dealer · Phone */}
+                            {/* Middle Row */}
                             <div className="pl-[46px] min-w-0">
-                              <MarqueeText className="text-[11px] text-slate-500">
+                              <MarqueeText className="text-[11px] text-slate-500 dark:text-slate-400">
                                 <span className="inline-flex items-center gap-1.5">
                                   {record.bikeModelName && (
-                                    <span className="text-slate-700 font-semibold inline-flex items-center gap-1">
-                                      <Bike className="w-3 h-3 text-slate-400 shrink-0" />
+                                    <span className="text-slate-700 dark:text-slate-200 font-semibold inline-flex items-center gap-1">
+                                      <Bike className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                                       <span>{record.bikeModelName}</span>
                                     </span>
                                   )}
                                   {record.dealerName && (
                                     <>
-                                      {record.bikeModelName && <span className="text-slate-300">•</span>}
-                                      <span className="text-sky-700 font-medium inline-flex items-center gap-1">
-                                        <Building2 className="w-3 h-3 text-sky-500 shrink-0" />
+                                      {record.bikeModelName && <span className="text-slate-300 dark:text-slate-600">•</span>}
+                                      <span className="text-sky-700 dark:text-sky-300 font-medium inline-flex items-center gap-1">
+                                        <Building2 className="w-3 h-3 text-sky-500 dark:text-sky-400 shrink-0" />
                                         <span>{record.dealerName}</span>
                                       </span>
                                     </>
@@ -2130,10 +2129,10 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   {record.customerPhone && (
                                     <>
                                       {(record.bikeModelName || record.dealerName) && (
-                                        <span className="text-slate-300">•</span>
+                                        <span className="text-slate-300 dark:text-slate-600">•</span>
                                       )}
-                                      <span className="text-slate-600 font-medium inline-flex items-center gap-0.5 tabular-nums">
-                                        <Phone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                      <span className="text-slate-600 dark:text-slate-300 font-medium inline-flex items-center gap-0.5 tabular-nums">
+                                        <Phone className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500 shrink-0" />
                                         {record.customerPhone}
                                       </span>
                                     </>
@@ -2142,11 +2141,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                               </MarqueeText>
                             </div>
 
-                            {/* Bottom Row: Installment Amount (left) + First Due / Cross-month Pills (right) */}
+                            {/* Bottom Row */}
                             <div className="pl-[46px] flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
-                              <span className="text-slate-600 font-medium whitespace-nowrap tabular-nums">
+                              <span className="text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap tabular-nums">
                                 ค่างวด{' '}
-                                <strong className="text-sky-700 font-extrabold">
+                                <strong className="text-sky-700 dark:text-sky-300 font-extrabold">
                                   {formatBaht(record.snapshot.monthlyInstallment)}
                                 </strong>
                                 /ด. · {record.term} งวด
@@ -2155,8 +2154,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                               {(firstDue || crossMonthBadge) && (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {firstDue && (
-                                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200/80 font-bold text-[10px] inline-flex items-center gap-1 whitespace-nowrap">
-                                      <CalendarClock className="w-2.5 h-2.5 text-indigo-600 shrink-0" />
+                                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-800/70 font-bold text-[10px] inline-flex items-center gap-1 whitespace-nowrap tabular-nums">
+                                      <CalendarClock className="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                                       <span>งวดแรก: 2 {firstDue.monthShort} {firstDue.thaiShortYear}</span>
                                     </span>
                                   )}
@@ -2193,40 +2192,40 @@ export const SavedCasesModal: React.FC<Props> = ({
                           <div
                             key={record.id}
                             onClick={() => setDetailCase(record)}
-                            className={`p-3 sm:p-4 rounded-2xl bg-white border shadow-2xs hover:shadow-md transition-colors duration-150 cursor-pointer space-y-2 relative group ${
+                            className={`p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/80 border shadow-2xs hover:shadow-md transition-colors duration-150 cursor-pointer space-y-2 relative group ${
                               isCurrentEditing
-                                ? 'border-amber-400 ring-2 ring-amber-300/60 bg-amber-50/20'
-                                : 'border-slate-200/80 hover:border-sky-300'
+                                ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-300/60 dark:ring-amber-600/40 bg-amber-50/20 dark:bg-amber-950/30'
+                                : 'border-slate-200/80 dark:border-slate-700/80 hover:border-sky-300 dark:hover:border-sky-600'
                             }`}
                           >
-                            {/* Card Top: Customer Name & Badges */}
+                            {/* Card Top */}
                             <div className="flex items-center justify-between gap-1.5 flex-wrap">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <h3 className="font-extrabold text-sm text-slate-800 group-hover:text-sky-700 transition-colors">
+                                <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors">
                                   {custName}
                                 </h3>
                                 {record.customerPhone && (
-                                  <span className="text-[11px] text-slate-500 font-medium">
+                                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tabular-nums">
                                     ({record.customerPhone})
                                   </span>
                                 )}
                               </div>
 
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 flex-wrap">
                                 {isApproved ? (
-                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
+                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800/70">
                                     อนุมัติ
                                   </span>
                                 ) : record.approvalStatus === 'rejected' ? (
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-200 border border-rose-300 dark:border-rose-800/70">
                                     ไม่อนุมัติ
                                   </span>
                                 ) : record.approvalStatus === 'cancelled' ? (
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600">
                                     ยกเลิก
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-200 border border-sky-200 dark:border-sky-800/70">
                                     รอผล
                                   </span>
                                 )}
@@ -2235,8 +2234,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   <span
                                     className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
                                       isDelivered
-                                        ? 'bg-teal-50 text-teal-800 border-teal-300'
-                                        : 'bg-amber-50 text-amber-900 border-amber-300'
+                                        ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border-teal-300 dark:border-teal-800/70'
+                                        : 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800/70'
                                     }`}
                                   >
                                     {isDelivered ? 'รับรถแล้ว ✓' : 'รอรับรถ ⏳'}
@@ -2249,7 +2248,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   if (approvalYM && deliveryYM && approvalYM < deliveryYM) {
                                     return (
                                       <span
-                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-300"
+                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/70 text-teal-900 dark:text-teal-200 border border-teal-300 dark:border-teal-700"
                                         title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} และมารับรถในเดือนนี้`}
                                       >
                                         ยกยอดรับรถ
@@ -2264,7 +2263,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                                   if (approvalYM && selectedMonthKey !== 'all' && approvalYM < selectedMonthKey) {
                                     return (
                                       <span
-                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300"
+                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700"
                                         title={`อนุมัติเมื่อ ${formatThaiDateOnly(record.approvalDate)} (ยกยอดมารอรับรถ)`}
                                       >
                                         ยกยอดรอรับรถ
@@ -2282,20 +2281,20 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       triggerHaptic('light');
                                       setApprovalModalCase(record);
                                     }}
-                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800/70 inline-flex items-center gap-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-2xs active:scale-95"
                                     title="เปิดดูใบอนุมัติผลชั่วคราว (Provisional Approval Certificate)"
                                   >
-                                    <FileCheck className="w-3 h-3 text-emerald-600" />
+                                    <FileCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                     <span>ใบอนุมัติผล</span>
                                   </button>
                                 )}
 
                                 {record.approvalDoc && (
                                   <span
-                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-300 inline-flex items-center gap-1"
+                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-200 border border-rose-300 dark:border-rose-800/70 inline-flex items-center gap-1"
                                     title={`แนบเอกสารแล้ว: ${record.approvalDoc.name}`}
                                   >
-                                    <FileText className="w-3 h-3 text-rose-600" />
+                                    <FileText className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                                     <span>PDF</span>
                                   </span>
                                 )}
@@ -2303,55 +2302,55 @@ export const SavedCasesModal: React.FC<Props> = ({
                             </div>
 
                             {/* Bike & Proposal row */}
-                            <div className="flex items-center gap-2 text-[11px] text-slate-500 flex-wrap">
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
                               {record.bikeModelName && (
-                                <span className="font-medium text-slate-700 flex items-center gap-1">
-                                  <Bike className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                                  <Bike className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                                   {record.bikeModelName}
                                 </span>
                               )}
                               <span>•</span>
-                              <span className="text-[10px] font-semibold bg-slate-100 px-2 py-0.5 rounded text-slate-600">
+                              <span className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-700/80 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
                                 {record.snapshot.proposalCode}
                               </span>
                               {firstDue && (
-                                <span className="text-[10px] font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                                <span className="text-[10px] font-bold text-indigo-900 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/70 px-2 py-0.5 rounded tabular-nums">
                                   งวดแรก: 2 {firstDue.monthShort} {firstDue.thaiShortYear}
                                 </span>
                               )}
                             </div>
 
                             {/* Financial 4 stats */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-700/70 text-xs tabular-nums">
                               <div>
-                                <span className="text-[9.5px] text-slate-400 block">ค่างวดต่อเดือน:</span>
-                                <span className="font-black text-sky-700 text-xs sm:text-sm">
+                                <span className="text-[9.5px] text-slate-400 dark:text-slate-500 block">ค่างวดต่อเดือน:</span>
+                                <span className="font-black text-sky-700 dark:text-sky-300 text-xs sm:text-sm">
                                   {formatBaht(record.snapshot.monthlyInstallment)}
                                 </span>
                               </div>
                               <div>
-                                <span className="text-[9.5px] text-slate-400 block">ระยะเวลา:</span>
-                                <span className="font-bold text-slate-800 text-[11px]">
+                                <span className="text-[9.5px] text-slate-400 dark:text-slate-500 block">ระยะเวลา:</span>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                                   {record.term} งวด
                                 </span>
                               </div>
                               <div>
-                                <span className="text-[9.5px] text-slate-400 block">เงินดาวน์:</span>
-                                <span className="font-bold text-slate-800 text-[11px]">
+                                <span className="text-[9.5px] text-slate-400 dark:text-slate-500 block">เงินดาวน์:</span>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                                   {formatBaht(record.snapshot.downAmount)}
                                 </span>
                               </div>
                               <div>
-                                <span className="text-[9.5px] text-slate-400 block">ยอดจัด:</span>
-                                <span className="font-bold text-slate-800 text-[11px]">
+                                <span className="text-[9.5px] text-slate-400 dark:text-slate-500 block">ยอดจัด:</span>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                                   {formatBaht(record.snapshot.financeAmount, true)}
                                 </span>
                               </div>
                             </div>
 
-                            {/* Card Footer: Tap to open popup prompt */}
-                            <div className="flex items-center justify-between text-[11px] text-sky-600 font-bold pt-0.5">
-                              <span className="text-slate-400 text-[10px]">
+                            {/* Card Footer */}
+                            <div className="flex items-center justify-between text-[11px] text-sky-600 dark:text-sky-400 font-bold pt-0.5">
+                              <span className="text-slate-400 dark:text-slate-500 text-[10px] tabular-nums">
                                 {formatThaiDateTime(record.createdAt)}
                               </span>
                               <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
@@ -2370,14 +2369,14 @@ export const SavedCasesModal: React.FC<Props> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 sm:px-5 bg-slate-50 border-t border-slate-200/70 flex items-center justify-between text-xs text-slate-500 shrink-0">
+        <div className="p-3 sm:px-5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
           <span className="text-[11px] truncate pr-2">
             บันทึกลงในเครื่อง (LocalStorage) ปลอดภัย เป็นส่วนตัว
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold cursor-pointer transition-colors shrink-0"
+            className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold cursor-pointer transition-colors shrink-0"
           >
             ปิด
           </button>
@@ -2390,16 +2389,16 @@ export const SavedCasesModal: React.FC<Props> = ({
       {detailCase && (
         <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
           {/* Popup Header */}
-          <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 flex items-center justify-between gap-2.5 bg-gradient-to-b from-sky-50/90 to-white shrink-0">
+          <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 dark:border-slate-800 flex items-center justify-between gap-2.5 bg-gradient-to-b from-sky-50/90 to-white dark:from-slate-800/90 dark:to-slate-900 shrink-0">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               {/* ปุ่มย้อนกลับไปหน้ารายการเคส */}
               <button
                 type="button"
                 onClick={() => setDetailCase(null)}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-800 font-bold text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer transition-colors duration-150 shrink-0 active:scale-95 select-none touch-manipulation"
+                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/60 text-slate-700 hover:text-sky-800 dark:text-slate-200 dark:hover:text-sky-300 font-bold text-xs flex items-center gap-1 border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer transition-colors duration-150 shrink-0 active:scale-95 select-none touch-manipulation"
                 title="กลับไปยังหน้ารายการเคสทั้งหมด"
               >
-                <ChevronLeft className="w-4 h-4 text-sky-600" />
+                <ChevronLeft className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                 <span className="text-[11px]">รายการ</span>
               </button>
 
@@ -2414,7 +2413,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                       value={editTitleInput}
                       onChange={(e) => setEditTitleInput(e.target.value)}
                       autoFocus
-                      className="px-2.5 py-1 text-xs font-bold text-slate-800 bg-sky-50 border border-sky-300 rounded-lg focus:outline-none w-full"
+                      className="px-2.5 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 bg-sky-50 dark:bg-slate-800 border border-sky-300 dark:border-sky-700 rounded-lg focus:outline-none w-full"
                     />
                     <button
                       type="button"
@@ -2427,7 +2426,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                     <button
                       type="button"
                       onClick={() => setEditingId(null)}
-                      className="p-1.5 rounded-lg bg-slate-200 text-slate-600 text-xs cursor-pointer hover:bg-slate-300 shrink-0"
+                      className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-xs cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-600 shrink-0"
                       title="ยกเลิก"
                     >
                       ✕
@@ -2435,20 +2434,20 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 min-w-0">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 min-w-0">
                       <MarqueeText fitContent>{getCustomerDisplayName(detailCase)}</MarqueeText>
                     </h3>
                     <button
                       type="button"
                       onClick={() => handleStartEditTitle(detailCase)}
-                      className="p-1 text-slate-400 hover:text-sky-600 transition-colors cursor-pointer shrink-0"
+                      className="p-1 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer shrink-0"
                       title="แก้ไขชื่อลูกค้า"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
-                <MarqueeText className="text-[11px] text-slate-500">
+                <MarqueeText className="text-[11px] text-slate-500 dark:text-slate-400">
                   บันทึกเมื่อ {formatThaiDateTime(detailCase.createdAt)} • {detailCase.snapshot.proposalCode}
                 </MarqueeText>
               </div>
@@ -2460,7 +2459,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                 setDetailCase(null);
                 onClose();
               }}
-              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
               title="ปิดหน้าต่าง"
             >
               <X className="w-5 h-5" />
@@ -2470,30 +2469,30 @@ export const SavedCasesModal: React.FC<Props> = ({
           {/* Popup Scrollable Body with smooth touch scrolling and overscroll contain */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
               {/* SECTION 1: Status & Delivery Management */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-sky-50/30 to-white border border-slate-200/80 space-y-3">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-sky-50/30 to-white dark:from-slate-800/90 dark:via-slate-800/60 dark:to-slate-900 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                    <SlidersHorizontal className="w-4 h-4 text-sky-600" />
+                  <span className="text-xs font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <SlidersHorizontal className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                     สถานะการพิจารณาเคส
                   </span>
-                  <span className="text-[10px] text-slate-400 font-medium">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                     (แตะเพื่อเปลี่ยนสถานะ)
                   </span>
                 </div>
 
                 {/* Status Switcher Buttons */}
-                <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-200/80 text-xs font-bold">
+                <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-200/80 dark:bg-slate-950/60 text-xs font-bold">
                   {/* รอผล */}
                   <button
                     type="button"
                     onClick={() => handleSetApprovalStatus(detailCase.id, 'pending')}
                     className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
                       (!detailCase.approvalStatus || detailCase.approvalStatus === 'pending')
-                        ? 'bg-white text-sky-800 shadow-xs font-extrabold'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-white dark:bg-slate-800 text-sky-800 dark:text-sky-300 shadow-xs font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
-                    <Clock className="w-3 h-3 text-sky-500" />
+                    <Clock className="w-3 h-3 text-sky-500 dark:text-sky-400" />
                     <span>รอผล</span>
                   </button>
 
@@ -2504,7 +2503,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                     className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
                       detailCase.approvalStatus === 'approved'
                         ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
-                        : 'text-slate-600 hover:text-emerald-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400'
                     }`}
                   >
                     <CheckCircle2 className="w-3 h-3" />
@@ -2518,7 +2517,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                     className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
                       detailCase.approvalStatus === 'rejected'
                         ? 'bg-rose-600 text-white shadow-xs font-extrabold'
-                        : 'text-slate-600 hover:text-rose-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400'
                     }`}
                   >
                     <XCircle className="w-3 h-3" />
@@ -2531,8 +2530,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                     onClick={() => handleSetApprovalStatus(detailCase.id, 'cancelled')}
                     className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
                       detailCase.approvalStatus === 'cancelled'
-                        ? 'bg-slate-700 text-white shadow-xs font-extrabold'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-xs font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
                     <Ban className="w-3 h-3" />
@@ -2542,21 +2541,21 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                 {/* If Approved: Delivery Status Toggle & Dates */}
                 {detailCase.approvalStatus === 'approved' && (
-                  <div className="space-y-3 pt-1 animate-fade-in border-t border-slate-200/80">
+                  <div className="space-y-3 pt-1 animate-fade-in border-t border-slate-200/80 dark:border-slate-700/80">
                     {/* Delivery Status Switch */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Bike className="w-4 h-4 text-teal-600" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <Bike className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                         การรับมอบรถ:
                       </span>
-                      <div className="inline-flex rounded-xl p-0.5 bg-slate-200/80 text-xs font-bold gap-1 shadow-2xs">
+                      <div className="inline-flex rounded-xl p-0.5 bg-slate-200/80 dark:bg-slate-950/60 text-xs font-bold gap-1 shadow-2xs">
                         <button
                           type="button"
                           onClick={() => handleSetDeliveryStatus(detailCase.id, 'pending_delivery')}
                           className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] ${
                             (!detailCase.deliveryStatus || detailCase.deliveryStatus === 'pending_delivery')
                               ? 'bg-amber-500 text-white shadow-xs font-extrabold'
-                              : 'text-slate-600 hover:text-amber-800'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-amber-800 dark:hover:text-amber-300'
                           }`}
                         >
                           <Clock className="w-3 h-3" />
@@ -2569,7 +2568,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                           className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] ${
                             detailCase.deliveryStatus === 'delivered'
                               ? 'bg-teal-600 text-white shadow-xs font-extrabold'
-                              : 'text-slate-600 hover:text-teal-800'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-teal-800 dark:hover:text-teal-300'
                           }`}
                         >
                           <Check className="w-3 h-3" />
@@ -2581,23 +2580,23 @@ export const SavedCasesModal: React.FC<Props> = ({
                     {/* Date Pickers for วันอนุมัติ and วันรับรถ */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                       {/* วันอนุมัติ */}
-                      <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>วันอนุมัติ:</span>
                         </div>
                         <input
                           type="date"
                           value={detailCase.approvalDate || toInputDateStr(detailCase.createdAt)}
                           onChange={(e) => handleSetDates(detailCase.id, { approvalDate: e.target.value })}
-                          className="text-xs font-bold text-slate-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 focus:outline-none cursor-pointer"
+                          className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-emerald-50 dark:bg-emerald-950/60 dark:[color-scheme:dark] px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/70 focus:outline-none cursor-pointer tabular-nums"
                         />
                       </div>
 
                       {/* วันรับรถ */}
-                      <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-teal-800">
-                          <PackageCheck className="w-3.5 h-3.5 text-teal-600" />
+                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-teal-800 dark:text-teal-300">
+                          <PackageCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                           <span>
                             {detailCase.deliveryStatus === 'delivered' ? 'วันรับรถ:' : 'วันนัดรับ:'}
                           </span>
@@ -2606,49 +2605,49 @@ export const SavedCasesModal: React.FC<Props> = ({
                           type="date"
                           value={detailCase.deliveryDate || (detailCase.deliveryStatus === 'delivered' ? toInputDateStr(detailCase.createdAt) : '')}
                           onChange={(e) => handleSetDates(detailCase.id, { deliveryDate: e.target.value })}
-                          className="text-xs font-bold text-slate-800 bg-teal-50 px-2 py-1 rounded-lg border border-teal-200 focus:outline-none cursor-pointer"
+                          className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-teal-50 dark:bg-teal-950/60 dark:[color-scheme:dark] px-2 py-1 rounded-lg border border-teal-200 dark:border-teal-800/70 focus:outline-none cursor-pointer tabular-nums"
                         />
                       </div>
                     </div>
 
-                    {/* AUTOMATIC FIRST PAYMENT DUE CARD (คำนวณอัตโนมัติ ชำระทุกวันที่ 2 ของเดือน) */}
+                    {/* AUTOMATIC FIRST PAYMENT DUE CARD */}
                     {detailCase.deliveryStatus === 'delivered' && (() => {
                       const firstDue = calculateFirstPaymentDueDate(detailCase.deliveryDate || detailCase.createdAt);
                       return (
-                        <div className="bg-gradient-to-r from-indigo-50 via-white to-sky-50/60 p-3 sm:p-3.5 rounded-2xl border border-indigo-200 space-y-2 shadow-2xs animate-fade-in">
+                        <div className="bg-gradient-to-r from-indigo-50 via-white to-sky-50/60 dark:from-indigo-950/60 dark:via-slate-900 dark:to-sky-950/40 p-3 sm:p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800/70 space-y-2 shadow-2xs animate-fade-in">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
                                 <CalendarClock className="w-4 h-4" />
                               </div>
                               <div>
-                                <span className="text-xs font-black text-indigo-950 block">
+                                <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 block">
                                   กำหนดชำระงวดแรก (ขึ้นอัตโนมัติ)
                                 </span>
-                                <span className="text-[10px] text-slate-500">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
                                   ชำระทุกวันที่ 2 ของทุกเดือนทุกราย
                                 </span>
                               </div>
                             </div>
-                            <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/70 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-700">
                               คำนวณอัตโนมัติ
                             </span>
                           </div>
 
-                          <div className="p-2.5 rounded-xl bg-white border border-indigo-100 shadow-2xs space-y-1">
+                          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-indigo-100 dark:border-indigo-800/60 shadow-2xs space-y-1">
                             <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                              <span className="text-[11px] font-bold text-slate-500">
+                              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                                 วันครบกำหนดชำระงวดแรก:
                               </span>
-                              <span className="text-sm sm:text-base font-black text-indigo-900 tracking-tight">
+                              <span className="text-sm sm:text-base font-black text-indigo-900 dark:text-indigo-200 tracking-tight tabular-nums">
                                 {firstDue.formattedLong}
                               </span>
                             </div>
-                            <div className="pt-1 border-t border-slate-100 flex items-center justify-between gap-2 text-[10.5px] text-slate-600 flex-wrap">
+                            <div className="pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-[10.5px] text-slate-600 dark:text-slate-300 flex-wrap">
                               <span>
                                 {firstDue.cycleRangeText} ➔ ชำระงวดแรก 2 {firstDue.monthName}
                               </span>
-                              <span className="text-[10px] text-indigo-900 font-bold bg-indigo-50 px-2 py-0.2 rounded-md">
+                              <span className="text-[10px] text-indigo-900 dark:text-indigo-200 font-bold bg-indigo-50 dark:bg-indigo-950/70 px-2 py-0.2 rounded-md">
                                 งวดถัดไป: ทุกวันที่ 2 ของทุกเดือน
                               </span>
                             </div>
@@ -2664,16 +2663,16 @@ export const SavedCasesModal: React.FC<Props> = ({
                       if (approvalYM && deliveryYM && approvalYM !== deliveryYM) {
                         const isCarried = approvalYM < deliveryYM;
                         return (
-                          <div className="p-3 rounded-2xl bg-teal-50 border border-teal-200 text-teal-950 text-xs flex items-start gap-2.5 shadow-2xs">
-                            <BadgePercent className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                          <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/70 text-teal-950 dark:text-teal-100 text-xs flex items-start gap-2.5 shadow-2xs">
+                            <BadgePercent className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                             <div className="space-y-1">
-                              <div className="font-extrabold text-teal-900 flex items-center gap-1.5 flex-wrap">
+                              <div className="font-extrabold text-teal-900 dark:text-teal-200 flex items-center gap-1.5 flex-wrap">
                                 <span>{isCarried ? 'เคสยกยอดมารับรถข้ามเดือน' : 'การนับยอดข้ามเดือน'}</span>
-                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-teal-200/70 text-teal-900 font-bold">
+                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-teal-200/70 dark:bg-teal-900/70 text-teal-900 dark:text-teal-200 font-bold">
                                   อนุมัติ {formatYearMonthLabel(approvalYM)} ➔ รับรถ {formatYearMonthLabel(deliveryYM)}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-teal-800 leading-relaxed font-medium">
+                              <p className="text-[11px] text-teal-800 dark:text-teal-200/90 leading-relaxed font-medium">
                                 ลูกค้ารับรถในเดือน <strong>{formatYearMonthLabel(deliveryYM)}</strong> ระบบจึงนับเป็น<strong>ยอดรับรถของเดือน {formatYearMonthLabel(deliveryYM)}</strong> แต่<strong>ผลอนุมัติยังเป็นยอดของเดือน {formatYearMonthLabel(approvalYM)}</strong> ตามเกณฑ์บันทึกข้อมูล
                               </p>
                             </div>
@@ -2690,16 +2689,16 @@ export const SavedCasesModal: React.FC<Props> = ({
                       const targetYM = selectedMonthKey !== 'all' ? selectedMonthKey : currentYM;
                       if (approvalYM && approvalYM < targetYM) {
                         return (
-                          <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 text-xs flex items-start gap-2.5 shadow-2xs">
-                            <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div className="p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800/70 text-amber-950 dark:text-amber-100 text-xs flex items-start gap-2.5 shadow-2xs">
+                            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                             <div className="space-y-1">
-                              <div className="font-extrabold text-amber-900 flex items-center gap-1.5 flex-wrap">
+                              <div className="font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 flex-wrap">
                                 <span>เคสยกยอดรอรับรถจากเดือนก่อน</span>
-                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-amber-200/80 text-amber-950 font-bold">
+                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-amber-200/80 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 font-bold">
                                   อนุมัติ {formatYearMonthLabel(approvalYM)} ({formatThaiDateOnly(detailCase.approvalDate)})
                                 </span>
                               </div>
-                              <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                              <p className="text-[11px] text-amber-800 dark:text-amber-200/90 leading-relaxed font-medium">
                                 เคสนี้ผ่านการอนุมัติตั้งแต่เดือน <strong>{formatYearMonthLabel(approvalYM)}</strong> แต่ยังไม่ได้รับรถ ระบบจึงยกยอดมารอรับรถในงวดปัจจุบัน เมื่อลูกค้ามารับรถแล้วสามารถกดเลือก <strong>"รับรถแล้ว ✓"</strong> และระบุวันรับรถได้ทันที
                               </p>
                             </div>
@@ -2709,7 +2708,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                       return null;
                     })()}
 
-                    {/* Action Button: เปิดดู / พิมพ์ / ดาวน์โหลดรูปภาพ ใบอนุมัติผลชั่วคราว */}
+                    {/* Action Button */}
                     <div className="pt-1.5">
                       <button
                         type="button"
@@ -2728,16 +2727,16 @@ export const SavedCasesModal: React.FC<Props> = ({
               </div>
 
               {/* SECTION 2: Google Maps Location & Navigation */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-sky-200/90 space-y-2.5 shadow-2xs">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-sky-200/90 dark:border-slate-700 space-y-2.5 shadow-2xs">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
-                    <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-slate-100">
+                    <MapPin className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
                     <span>ตำแหน่งที่อยู่ปัจจุบัน (คัดลอกจาก Google Maps):</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => handlePasteLocation(detailCase.id)}
-                    className="text-[10.5px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-md border border-sky-200 flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[10.5px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2 py-0.5 rounded-md border border-sky-200 dark:border-sky-800/70 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <ClipboardCopy className="w-3 h-3" />
                     <span>วางที่อยู่/ลิงก์</span>
@@ -2750,13 +2749,13 @@ export const SavedCasesModal: React.FC<Props> = ({
                     value={detailCase.googleMapsLocation || ''}
                     onChange={(e) => handleSaveLocation(detailCase.id, e.target.value)}
                     placeholder="วางลิงก์ Google Maps, พิกัด GPS หรือที่อยู่ลูกค้า..."
-                    className="w-full pl-3 pr-8 py-2 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white focus:border-sky-400 font-medium"
+                    className="w-full pl-3 pr-8 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-900 focus:border-sky-400 font-medium"
                   />
                   {detailCase.googleMapsLocation && (
                     <button
                       type="button"
                       onClick={() => handleSaveLocation(detailCase.id, '')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-0.5"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer p-0.5"
                     >
                       ✕
                     </button>
@@ -2770,7 +2769,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                   className={`w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer ${
                     detailCase.googleMapsLocation?.trim()
                       ? 'bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white active:scale-[0.98]'
-                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed'
                   }`}
                 >
                   <Navigation className="w-4 h-4 shrink-0" />
@@ -2786,31 +2785,31 @@ export const SavedCasesModal: React.FC<Props> = ({
               </div>
 
               {/* SECTION 3: Customer & Motorcycle Info */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs">
-                <span className="font-black text-slate-700 flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-sky-600" />
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
+                <span className="font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                  <User className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   ข้อมูลลูกค้าและรุ่นรถ
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
-                  <div className="p-2 rounded-xl bg-white border border-slate-200/70">
-                    <span className="text-[10px] text-slate-400 block">ชื่อลูกค้า:</span>
-                    <span className="font-extrabold text-slate-900 text-xs sm:text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 dark:text-slate-200">
+                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ชื่อลูกค้า:</span>
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
                       {detailCase.customerName || 'ไม่ระบุชื่อ'}
                     </span>
                   </div>
 
-                  <div className="p-2 rounded-xl bg-white border border-slate-200/70 flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">เบอร์โทรศัพท์:</span>
-                      <span className="font-extrabold text-slate-900 text-xs sm:text-sm">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">เบอร์โทรศัพท์:</span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm tabular-nums">
                         {detailCase.customerPhone || 'ไม่ระบุเบอร์'}
                       </span>
                     </div>
                     {detailCase.customerPhone && (
                       <a
                         href={`tel:${detailCase.customerPhone}`}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10.5px] border border-emerald-200 inline-flex items-center gap-1 transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-[10.5px] border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1 transition-colors"
                       >
                         <Phone className="w-3 h-3" />
                         <span>โทรออก</span>
@@ -2818,33 +2817,33 @@ export const SavedCasesModal: React.FC<Props> = ({
                     )}
                   </div>
 
-                  <div className="p-2 rounded-xl bg-white border border-slate-200/70 sm:col-span-2 flex items-center justify-between gap-2">
+                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 sm:col-span-2 flex items-center justify-between gap-2">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">รุ่นรถมอเตอร์ไซค์:</span>
-                      <span className="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-1">
-                        <Bike className="w-4 h-4 text-sky-600 shrink-0" />
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">รุ่นรถมอเตอร์ไซค์:</span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1">
+                        <Bike className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
                         {detailCase.bikeModelName || 'ไม่ระบุรุ่น'}
                         {detailCase.bikeModelCode && (
-                          <span className="text-[10.5px] text-slate-500 font-normal">
+                          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-normal">
                             ({detailCase.bikeModelCode})
                           </span>
                         )}
                       </span>
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] text-slate-400 block">ราคารถเงินสด:</span>
-                      <span className="font-extrabold text-slate-900 text-xs sm:text-sm">
+                    <div className="text-right shrink-0 tabular-nums">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ราคารถเงินสด:</span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
                         {formatBaht(detailCase.vehiclePrice)}
                       </span>
                     </div>
                   </div>
 
                   {detailCase.dealerName && (
-                    <div className="p-2 rounded-xl bg-white border border-slate-200/70 sm:col-span-2 flex items-center justify-between gap-2">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 sm:col-span-2 flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[10px] text-slate-400 block">ร้านตัวแทนจำหน่าย (Dealer):</span>
-                        <span className="font-extrabold text-sky-900 text-xs sm:text-sm flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ร้านตัวแทนจำหน่าย (Dealer):</span>
+                        <span className="font-extrabold text-sky-900 dark:text-sky-300 text-xs sm:text-sm flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
                           <span>{detailCase.dealerName}</span>
                         </span>
                       </div>
@@ -2854,81 +2853,81 @@ export const SavedCasesModal: React.FC<Props> = ({
               </div>
 
               {/* SECTION 4: Financial & Installment Breakdown */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 space-y-3 shadow-2xs">
-                <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                  <Banknote className="w-4 h-4 text-emerald-600" />
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-slate-200/90 dark:border-slate-700/80 space-y-3 shadow-2xs">
+                <span className="text-xs font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                  <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   สรุปข้อมูลทางการเงินและค่างวด
                 </span>
 
                 {/* 4 Large Highlight Stat Cards */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-3 rounded-2xl bg-gradient-to-br from-sky-50 to-cyan-50/50 border border-sky-200">
-                    <span className="text-[10.5px] font-bold text-sky-800 block">ค่างวดต่อเดือน:</span>
-                    <span className="text-lg sm:text-xl font-black text-sky-800 tracking-tight block">
+                <div className="grid grid-cols-2 gap-2 text-xs tabular-nums">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-sky-50 to-cyan-50/50 dark:from-sky-950/60 dark:to-cyan-950/40 border border-sky-200 dark:border-sky-800/70">
+                    <span className="text-[10.5px] font-bold text-sky-800 dark:text-sky-300 block">ค่างวดต่อเดือน:</span>
+                    <span className="text-lg sm:text-xl font-black text-sky-800 dark:text-sky-200 tracking-tight block">
                       {formatBaht(detailCase.snapshot.monthlyInstallment)}
-                      <span className="text-xs font-normal text-slate-500"> /งวด</span>
+                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> /งวด</span>
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10.5px] font-bold text-slate-600 block">ระยะเวลาผ่อน:</span>
-                    <span className="text-lg sm:text-xl font-black text-slate-800 block">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70">
+                    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 block">ระยะเวลาผ่อน:</span>
+                    <span className="text-lg sm:text-xl font-black text-slate-800 dark:text-slate-100 block">
                       {detailCase.term}
-                      <span className="text-xs font-normal text-slate-500"> งวด</span>
+                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> งวด</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 font-medium">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                       {detailCase.snapshot.rateDisplayText}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10.5px] font-bold text-slate-600 block">เงินดาวน์:</span>
-                    <span className="text-sm sm:text-base font-extrabold text-slate-800 block">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70">
+                    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 block">เงินดาวน์:</span>
+                    <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 block">
                       {formatBaht(detailCase.snapshot.downAmount)}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-medium">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                       ({detailCase.snapshot.downPercent.toFixed(1)}%)
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10.5px] font-bold text-slate-600 block">ยอดจัดไฟแนนซ์:</span>
-                    <span className="text-sm sm:text-base font-extrabold text-slate-800 block">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70">
+                    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 block">ยอดจัดไฟแนนซ์:</span>
+                    <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 block">
                       {formatBaht(detailCase.snapshot.financeAmount, true)}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-medium">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                       ถอด VAT: {formatBaht(detailCase.snapshot.financeAmount / 1.07)}
                     </span>
                   </div>
                 </div>
 
                 {/* Additional Detailed Numbers */}
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 text-[11px] space-y-1.5 text-slate-600">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 text-[11px] space-y-1.5 text-slate-600 dark:text-slate-300 tabular-nums">
                   <div className="flex items-center justify-between">
                     <span>รวมเงินค่างวดทั้งสิ้น:</span>
-                    <span className="font-extrabold text-slate-900">
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100">
                       {formatBaht(detailCase.snapshot.totalWithVat)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>ดอกเบี้ยรวมทั้งสัญญา:</span>
-                    <span className="font-extrabold text-slate-900">
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100">
                       {formatBaht(detailCase.snapshot.totalInterest)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>อัตราดอกเบี้ยแท้จริง (EIR):</span>
-                    <span className="font-bold text-slate-800">
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
                       {detailCase.snapshot.eirAnnualPercent.toFixed(2)}% ต่อปี
                     </span>
                   </div>
                   {detailCase.insurancePlan && detailCase.insurancePlan !== 'none' && (
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                      <span className="flex items-center gap-1 text-teal-800 font-bold">
-                        <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/70">
+                      <span className="flex items-center gap-1 text-teal-800 dark:text-teal-300 font-bold">
+                        <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                         ประกันภัยกลุ่ม PA:
                       </span>
-                      <span className="font-extrabold text-teal-900">
+                      <span className="font-extrabold text-teal-900 dark:text-teal-200">
                         {detailCase.insurancePlan.toUpperCase()} ({detailCase.insuranceYears} ปี)
                       </span>
                     </div>
@@ -2938,27 +2937,27 @@ export const SavedCasesModal: React.FC<Props> = ({
 
               {/* SECTION 5: Notes & Proposal Info */}
               {detailCase.customerNote && (
-                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-1">
-                  <span className="font-bold text-amber-900">บันทึกเพิ่มเติม:</span>
-                  <p className="text-amber-800 leading-relaxed">{detailCase.customerNote}</p>
+                <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-xs space-y-1">
+                  <span className="font-bold text-amber-900 dark:text-amber-200">บันทึกเพิ่มเติม:</span>
+                  <p className="text-amber-800 dark:text-amber-200/90 leading-relaxed">{detailCase.customerNote}</p>
                 </div>
               )}
 
-              {/* SECTION 6: Approval Document (เอกสารการอนุมัติ PDF) - หัวข้อสุดท้ายล่างสุด */}
+              {/* SECTION 6: Approval Document (เอกสารการอนุมัติ PDF) */}
               {detailCase.approvalStatus === 'approved' && (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-rose-50/60 via-white to-red-50/30 border border-rose-200 space-y-3 shadow-2xs animate-fade-in">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-rose-50/60 via-white to-red-50/30 dark:from-rose-950/30 dark:via-slate-900 dark:to-red-950/20 border border-rose-200 dark:border-rose-800/70 space-y-3 shadow-2xs animate-fade-in">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-rose-950">
-                      <FileText className="w-4 h-4 text-rose-600 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-xs font-black text-rose-950 dark:text-rose-200">
+                      <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                       <span>เอกสารการอนุมัติ (PDF):</span>
                     </div>
                     {detailCase.approvalDoc ? (
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
-                        <Check className="w-3 h-3 text-emerald-600" />
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1 shadow-2xs">
+                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                         แนบเอกสารแล้ว
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                         ยังไม่ได้แนบเอกสาร
                       </span>
                     )}
@@ -2979,23 +2978,21 @@ export const SavedCasesModal: React.FC<Props> = ({
                   />
 
                   {detailCase.approvalDoc ? (
-                    /* Case with Uploaded PDF */
-                    <div className="p-3 rounded-xl bg-white border border-rose-100 shadow-2xs space-y-3">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/90 border border-rose-100 dark:border-rose-800/50 shadow-2xs space-y-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
                           <FileText className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1" title={detailCase.approvalDoc.name}>
-                          <MarqueeText className="text-xs font-black text-slate-900">
+                          <MarqueeText className="text-xs font-black text-slate-900 dark:text-slate-100">
                             {detailCase.approvalDoc.name}
                           </MarqueeText>
-                          <MarqueeText className="text-[10px] text-slate-500">
+                          <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400">
                             {formatFileSize(detailCase.approvalDoc.size)} • อัปโหลดเมื่อ {formatThaiDateTime(detailCase.approvalDoc.uploadedAt)}
                           </MarqueeText>
                         </div>
                       </div>
 
-                      {/* AUTOMATIC LIVE PREVIEW (แสดงแค่ตัวอย่าง) */}
                       {inlinePdfDataUrl ? (
                         <div className="space-y-1 pt-1">
                           <PdfCanvasViewer
@@ -3012,7 +3009,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                         </div>
                       ) : null}
 
-                      {/* External App Actions: Open in External App / Download */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <button
                           type="button"
@@ -3039,21 +3035,20 @@ export const SavedCasesModal: React.FC<Props> = ({
                               showToast('✓ ดาวน์โหลดไฟล์ PDF เรียบร้อย');
                             }
                           }}
-                          className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 active:scale-[0.98] transition-all cursor-pointer"
+                          className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 active:scale-[0.98] transition-all cursor-pointer"
                           title="ดาวน์โหลดไฟล์ PDF เก็บไว้ในอุปกรณ์"
                         >
-                          <Download className="w-4 h-4 shrink-0 text-slate-600" />
+                          <Download className="w-4 h-4 shrink-0 text-slate-600 dark:text-slate-300" />
                           <span>ดาวน์โหลด PDF</span>
                         </button>
                       </div>
 
-                      {/* Auxiliary Actions: Change file or Delete file */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
                         <button
                           type="button"
                           onClick={() => pdfFileInputRef.current?.click()}
                           disabled={isUploadingPdf}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                           title="เลือกไฟล์ PDF ใหม่เพื่อแทนที่ไฟล์เดิม"
                         >
                           <Upload className="w-3.5 h-3.5" />
@@ -3061,8 +3056,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                         </button>
 
                         {deleteDocConfirmId === detailCase.id ? (
-                          <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">
-                            <span className="text-[10px] text-rose-800 font-bold">ยืนยันลบไฟล์?</span>
+                          <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/70 px-2 py-0.5 rounded-lg">
+                            <span className="text-[10px] text-rose-800 dark:text-rose-200 font-bold">ยืนยันลบไฟล์?</span>
                             <button
                               type="button"
                               onClick={() => handleDeletePdfDoc(detailCase.id)}
@@ -3073,7 +3068,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                             <button
                               type="button"
                               onClick={() => setDeleteDocConfirmId(null)}
-                              className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 text-[10px] cursor-pointer"
+                              className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-[10px] cursor-pointer"
                             >
                               ยกเลิก
                             </button>
@@ -3082,7 +3077,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                           <button
                             type="button"
                             onClick={() => setDeleteDocConfirmId(detailCase.id)}
-                            className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
                             title="ลบเอกสารออกจากเคสนี้"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -3092,23 +3087,22 @@ export const SavedCasesModal: React.FC<Props> = ({
                       </div>
                     </div>
                   ) : (
-                    /* Dropzone / Upload button when no PDF is attached */
                     <div
                       onClick={() => pdfFileInputRef.current?.click()}
-                      className="p-4 rounded-xl border-2 border-dashed border-rose-300 hover:border-rose-400 bg-white hover:bg-rose-50/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group text-center"
+                      className="p-4 rounded-xl border-2 border-dashed border-rose-300 dark:border-rose-800/70 hover:border-rose-400 dark:hover:border-rose-600 bg-white dark:bg-slate-900/70 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group text-center"
                     >
-                      <div className="w-10 h-10 rounded-2xl bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors shadow-2xs">
+                      <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-colors shadow-2xs">
                         <UploadCloud className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-slate-800 group-hover:text-rose-700 block">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-rose-700 dark:group-hover:text-rose-300 block">
                           {isUploadingPdf ? 'กำลังอัปโหลดไฟล์...' : 'คลิกเพื่ออัปโหลดไฟล์ PDF เอกสารการอนุมัติ'}
                         </span>
-                        <span className="text-[10.5px] text-slate-400 mt-0.5 block">
+                        <span className="text-[10.5px] text-slate-400 dark:text-slate-500 mt-0.5 block">
                           รองรับไฟล์ .PDF (เช่น เอกสารอนุมัติสินเชื่อ, ใบแจ้งผลการพิจารณา)
                         </span>
                       </div>
-                      <div className="mt-1 px-3 py-1.5 rounded-lg bg-rose-50 group-hover:bg-rose-600 text-rose-700 group-hover:text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 pointer-events-none">
+                      <div className="mt-1 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 group-hover:bg-rose-600 text-rose-700 dark:text-rose-300 group-hover:text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 pointer-events-none">
                         <Paperclip className="w-3.5 h-3.5" />
                         <span>เลือกไฟล์ PDF จากอุปกรณ์</span>
                       </div>
@@ -3119,11 +3113,10 @@ export const SavedCasesModal: React.FC<Props> = ({
             </div>
 
             {/* Popup Action Footer */}
-            <div className="p-3 sm:px-5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between gap-2 shrink-0">
-              {/* Delete button with confirm */}
+            <div className="p-3 sm:px-5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
               {deleteConfirmId === detailCase.id ? (
-                <div className="flex items-center gap-1 bg-rose-50 border border-rose-300 px-2 py-1 rounded-xl shadow-2xs">
-                  <span className="text-[10px] text-rose-800 font-bold">ลบเคสนี้?</span>
+                <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/70 px-2 py-1 rounded-xl shadow-2xs">
+                  <span className="text-[10px] text-rose-800 dark:text-rose-200 font-bold">ลบเคสนี้?</span>
                   <button
                     type="button"
                     onClick={() => executeDelete(detailCase.id)}
@@ -3134,7 +3127,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmId(null)}
-                    className="px-2 py-0.5 rounded-lg bg-slate-200 text-slate-700 text-[10px] cursor-pointer"
+                    className="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] cursor-pointer"
                   >
                     ยกเลิก
                   </button>
@@ -3143,7 +3136,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(detailCase.id)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                   title="ลบเคสนี้"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -3151,7 +3144,6 @@ export const SavedCasesModal: React.FC<Props> = ({
               )}
 
               <div className="flex items-center gap-1.5 sm:gap-2">
-                {/* ปุ่มใบอนุมัติผลชั่วคราว */}
                 {detailCase.approvalStatus === 'approved' && (
                   <button
                     type="button"
@@ -3167,7 +3159,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </button>
                 )}
 
-                {/* ปุ่มแก้ไขเคส */}
                 {onEditCase && (
                   <button
                     type="button"
@@ -3185,7 +3176,6 @@ export const SavedCasesModal: React.FC<Props> = ({
                   </button>
                 )}
 
-                {/* ปุ่มนำมาใช้งาน */}
                 <button
                   type="button"
                   onClick={() => {
