@@ -94,6 +94,672 @@ function extractBangkokYearMonth(createdAtMs: number): { year: number; month: nu
   };
 }
 
+function clampPercent(val: number): number {
+  if (!Number.isFinite(val)) return 0;
+  return Math.max(0, Math.min(100, val));
+}
+
+function buildMiniSmoothPath(points: Array<{ x: number; y: number }>): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+  }
+  return d;
+}
+
+function pickCompactMonthlyWindow(
+  buckets: MonthlyBucketDatum[],
+  peakKey?: string | null
+): MonthlyBucketDatum[] {
+  if (buckets.length <= 6) return buckets;
+
+  const activeIndices: number[] = [];
+  let peakIdx = -1;
+  buckets.forEach((b, idx) => {
+    if (b.total > 0) activeIndices.push(idx);
+    if (peakKey && b.key === peakKey) peakIdx = idx;
+  });
+
+  if (activeIndices.length === 0) {
+    return buckets.slice(-6);
+  }
+
+  if (activeIndices.length >= 6) {
+    const picked = new Set<number>(activeIndices.slice(-6));
+    if (peakIdx >= 0 && !picked.has(peakIdx)) {
+      const firstActive = activeIndices[activeIndices.length - 6];
+      picked.delete(firstActive);
+      picked.add(peakIdx);
+    }
+    return Array.from(picked)
+      .sort((a, b) => a - b)
+      .map((i) => buckets[i]);
+  }
+
+  const picked = new Set<number>(activeIndices);
+  const anchor = activeIndices[activeIndices.length - 1];
+  for (let offset = 1; picked.size < 6 && offset <= buckets.length; offset++) {
+    if (anchor + offset < buckets.length) picked.add(anchor + offset);
+    if (picked.size >= 6) break;
+    if (anchor - offset >= 0) picked.add(anchor - offset);
+  }
+
+  return Array.from(picked)
+    .sort((a, b) => a - b)
+    .map((i) => buckets[i]);
+}
+
+type MonthlyMiniVariant = 'total' | 'average' | 'peak' | 'approval';
+
+interface MonthlyKpiMiniChartProps {
+  variant: MonthlyMiniVariant;
+  chartData: MonthlyBucketDatum[];
+  avgPerActiveMonth: number;
+  peakBucket: MonthlyBucketDatum | null;
+  totalApproved: number;
+  totalDelivered: number;
+  isHighlighted?: boolean;
+  animSeed: string;
+}
+
+const MonthlyKpiMiniChart: React.FC<MonthlyKpiMiniChartProps> = ({
+  variant,
+  chartData,
+  avgPerActiveMonth,
+  peakBucket,
+  totalApproved,
+  totalDelivered,
+  isHighlighted = false,
+  animSeed,
+}) => {
+  if (variant === 'total') {
+    const series = chartData.length > 12 ? chartData.slice(-12) : chartData;
+    const count = Math.max(1, series.length);
+    const maxTotal = Math.max(1, ...series.map((d) => d.total));
+    const slotWidth = 156 / count;
+    const barW = Math.min(14, Math.max(7.2, slotWidth * 0.64));
+
+    return (
+      <div
+        key={`mdash-total-${animSeed}`}
+        className="relative h-[38px] sm:h-[42px] w-full transition-transform duration-300 group-hover:scale-[1.015]"
+        aria-hidden="true"
+      >
+        <svg viewBox="0 0 156 42" className="w-full h-full overflow-visible">
+          <defs>
+            <linearGradient id="mDashSkyColGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="55%" stopColor="#0ea5e9" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
+            <linearGradient id="mDashSkyPeakGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#0284c7" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+            <filter id="mDashSkyGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#0284c7" floodOpacity="0.34" />
+            </filter>
+          </defs>
+
+          <line
+            x1="3"
+            y1="37"
+            x2="153"
+            y2="37"
+            stroke="currentColor"
+            className="text-sky-900/15 dark:text-sky-200/15"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+
+          {series.map((d, idx) => {
+            const x = idx * slotWidth + (slotWidth - barW) / 2;
+            const hasCases = d.total > 0;
+            const h = hasCases ? Math.max(7, (d.total / maxTotal) * 28) : 3.2;
+            const y = 36.5 - h;
+            const isPeak = hasCases && peakBucket?.key === d.key;
+
+            return (
+              <g
+                key={`${d.key}-${idx}`}
+                className="animate-kpi-mini-bar"
+                style={{ animationDelay: `${idx * 32}ms` }}
+              >
+                <ellipse
+                  cx={x + barW / 2}
+                  cy={38}
+                  rx={barW * 0.45}
+                  ry={1.15}
+                  fill="#0369a1"
+                  fillOpacity={hasCases ? 0.16 : 0.05}
+                />
+
+                {hasCases ? (
+                  <g filter={isPeak ? 'url(#mDashSkyGlow)' : undefined}>
+                    <rect
+                      x={x}
+                      y={y}
+                      width={barW}
+                      height={h}
+                      rx={Math.min(3.5, barW * 0.36)}
+                      fill={isPeak ? 'url(#mDashSkyPeakGrad)' : 'url(#mDashSkyColGrad)'}
+                    />
+                    <rect
+                      x={x + 1.2}
+                      y={y + 1.1}
+                      width={Math.max(2, barW - 2.4)}
+                      height={Math.min(3.4, Math.max(1.4, h * 0.26))}
+                      rx={1.2}
+                      fill="#ffffff"
+                      fillOpacity={0.62}
+                    />
+                  </g>
+                ) : (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barW}
+                    height={h}
+                    rx={1.6}
+                    fill="#7dd3fc"
+                    fillOpacity={0.28}
+                    stroke="#38bdf8"
+                    strokeOpacity={0.22}
+                    strokeWidth={0.6}
+                  />
+                )}
+
+                {isPeak && (
+                  <g>
+                    <circle
+                      cx={x + barW / 2}
+                      cy={Math.max(3, y - 3)}
+                      r={2.1}
+                      fill="#0ea5e9"
+                      className="animate-fuel-tip-ping"
+                      style={{ transformOrigin: `${x + barW / 2}px ${Math.max(3, y - 3)}px` }}
+                    />
+                    <circle
+                      cx={x + barW / 2}
+                      cy={Math.max(3, y - 3)}
+                      r={1.5}
+                      fill="#ffffff"
+                      stroke="#0284c7"
+                      strokeWidth={0.95}
+                    />
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
+  }
+
+  if (variant === 'average') {
+    const series = chartData.length > 12 ? chartData.slice(-12) : chartData;
+    const count = series.length;
+    const maxTotal = Math.max(1, avgPerActiveMonth, ...series.map((d) => d.total));
+    const points = series.map((d, idx) => {
+      const x = count > 1 ? 7 + (idx / (count - 1)) * 142 : 78;
+      const y = d.total > 0 ? 33 - (d.total / maxTotal) * 23.5 : 33.5;
+      return { x, y, total: d.total };
+    });
+
+    const linePath = buildMiniSmoothPath(points);
+    const areaPath =
+      points.length > 0
+        ? `${linePath} L ${points[points.length - 1].x.toFixed(2)} 37 L ${points[0].x.toFixed(2)} 37 Z`
+        : '';
+
+    const avgY =
+      avgPerActiveMonth > 0 ? Math.max(7, 33 - (avgPerActiveMonth / maxTotal) * 23.5) : 33.5;
+
+    let latestActiveIdx = points.length - 1;
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (points[i].total > 0) {
+        latestActiveIdx = i;
+        break;
+      }
+    }
+
+    return (
+      <div
+        key={`mdash-avg-${animSeed}`}
+        className="relative h-[38px] sm:h-[42px] w-full transition-transform duration-300 group-hover:scale-[1.015]"
+        aria-hidden="true"
+      >
+        <svg viewBox="0 0 156 42" className="w-full h-full overflow-visible">
+          <defs>
+            <linearGradient id="mDashAmberAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.46" />
+              <stop offset="65%" stopColor="#fbbf24" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.02" />
+            </linearGradient>
+            <linearGradient id="mDashAmberStrokeGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ea580c" />
+            </linearGradient>
+            <filter id="mDashAmberGlow" x="-20%" y="-25%" width="140%" height="160%">
+              <feDropShadow dx="0" dy="2.2" stdDeviation="2" floodColor="#d97706" floodOpacity="0.36" />
+            </filter>
+          </defs>
+
+          <line
+            x1="3"
+            y1="37"
+            x2="153"
+            y2="37"
+            stroke="currentColor"
+            className="text-amber-900/15 dark:text-amber-200/15"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+
+          {/* Dashed Average Benchmark Line */}
+          {avgPerActiveMonth > 0 && (
+            <g className="animate-kpi-mini-area">
+              <line
+                x1="4"
+                y1={avgY}
+                x2="151"
+                y2={avgY}
+                stroke="#d97706"
+                strokeOpacity={0.62}
+                strokeWidth="1.05"
+                strokeDasharray="3 2.5"
+              />
+              <circle
+                cx="150"
+                cy={avgY}
+                r={1.7}
+                fill="#ffffff"
+                stroke="#d97706"
+                strokeWidth={1.1}
+              />
+            </g>
+          )}
+
+          {areaPath && (
+            <path
+              d={areaPath}
+              fill="url(#mDashAmberAreaGrad)"
+              className="animate-kpi-mini-area"
+            />
+          )}
+
+          {linePath && (
+            <g filter="url(#mDashAmberGlow)">
+              <path
+                d={linePath}
+                fill="none"
+                stroke="url(#mDashAmberStrokeGrad)"
+                strokeWidth={2.35}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="animate-kpi-mini-line"
+              />
+              <path
+                d={linePath}
+                fill="none"
+                stroke="#ffffff"
+                strokeOpacity={0.55}
+                strokeWidth={0.8}
+                strokeLinecap="round"
+                transform="translate(0, -0.65)"
+                className="animate-kpi-mini-line"
+              />
+            </g>
+          )}
+
+          {points.map((pt, idx) => {
+            const isHero = idx === latestActiveIdx && pt.total > 0;
+            if (pt.total === 0) {
+              return (
+                <circle
+                  key={`avg-pt-${idx}`}
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={1.2}
+                  fill="#f59e0b"
+                  fillOpacity={0.28}
+                />
+              );
+            }
+            return (
+              <g key={`avg-pt-${idx}`}>
+                {isHero && (
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r={4}
+                    fill="#f59e0b"
+                    fillOpacity={0.32}
+                    className="animate-fuel-tip-ping"
+                    style={{ transformOrigin: `${pt.x}px ${pt.y}px` }}
+                  />
+                )}
+                <circle
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={isHero ? 2.55 : 2}
+                  fill="#ffffff"
+                  stroke="#d97706"
+                  strokeWidth={isHero ? 1.45 : 1.15}
+                />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
+  }
+
+  if (variant === 'peak') {
+    const windowBuckets = pickCompactMonthlyWindow(chartData, peakBucket?.key);
+    const count = Math.max(1, windowBuckets.length);
+    const maxTotal = Math.max(1, ...windowBuckets.map((d) => d.total));
+    const slotWidth = 156 / count;
+
+    return (
+      <div
+        key={`mdash-peak-${animSeed}`}
+        className={`relative h-[38px] sm:h-[42px] w-full transition-transform duration-300 ${
+          isHighlighted ? 'scale-[1.02]' : 'group-hover:scale-[1.015]'
+        }`}
+        aria-hidden="true"
+      >
+        <svg viewBox="0 0 156 42" className="w-full h-full overflow-visible">
+          <defs>
+            <linearGradient id="mDashIndigoPeakFront" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a5b4fc" />
+              <stop offset="45%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#4338ca" />
+            </linearGradient>
+            <linearGradient id="mDashIndigoPeakSide" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#4f46e5" />
+              <stop offset="100%" stopColor="#312e81" />
+            </linearGradient>
+            <linearGradient id="mDashIndigoSoftFront" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#818cf8" stopOpacity="0.62" />
+              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.46" />
+            </linearGradient>
+            <filter id="mDashIndigoGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="1" dy="2.5" stdDeviation="2.2" floodColor="#4f46e5" floodOpacity="0.38" />
+            </filter>
+          </defs>
+
+          <line
+            x1="3"
+            y1="37"
+            x2="153"
+            y2="37"
+            stroke="currentColor"
+            className="text-indigo-900/15 dark:text-indigo-200/15"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+
+          {windowBuckets.map((d, idx) => {
+            const frontW = 10.5;
+            const depthX = 3.5;
+            const depthY = 2.6;
+            const x = idx * slotWidth + (slotWidth - (frontW + depthX)) / 2;
+            const hasCases = d.total > 0;
+            const barH = hasCases ? Math.max(6, (d.total / maxTotal) * 25.5) : 2.5;
+            const y = 36.5 - barH;
+            const isPeak = hasCases && peakBucket?.key === d.key;
+
+            return (
+              <g
+                key={`${d.key}-${idx}`}
+                className="animate-kpi-mini-bar"
+                style={{ animationDelay: `${idx * 55}ms` }}
+                filter={isPeak ? 'url(#mDashIndigoGlow)' : undefined}
+              >
+                <ellipse
+                  cx={x + (frontW + depthX) / 2}
+                  cy={38}
+                  rx={frontW * 0.58}
+                  ry={1.25}
+                  fill="#3730a3"
+                  fillOpacity={isPeak ? 0.24 : hasCases ? 0.14 : 0.05}
+                />
+
+                {/* Right 3D Side Facet */}
+                <polygon
+                  points={`${x + frontW},${y} ${x + frontW + depthX},${y - depthY} ${x + frontW + depthX},${36.5 - depthY} ${x + frontW},36.5`}
+                  fill={isPeak ? 'url(#mDashIndigoPeakSide)' : '#4f46e5'}
+                  fillOpacity={isPeak ? 0.96 : hasCases ? 0.42 : 0.16}
+                />
+
+                {/* Top 3D Bevel Cap */}
+                <polygon
+                  points={`${x},${y} ${x + depthX},${y - depthY} ${x + frontW + depthX},${y - depthY} ${x + frontW},${y}`}
+                  fill={isPeak ? '#e0e7ff' : '#c7d2fe'}
+                  fillOpacity={isPeak ? 0.98 : hasCases ? 0.72 : 0.28}
+                />
+
+                {/* Front Crystal Face */}
+                <rect
+                  x={x}
+                  y={y}
+                  width={frontW}
+                  height={barH}
+                  rx={1.2}
+                  fill={isPeak ? 'url(#mDashIndigoPeakFront)' : 'url(#mDashIndigoSoftFront)'}
+                  fillOpacity={hasCases ? 1 : 0.28}
+                />
+
+                {hasCases && barH > 5 && (
+                  <line
+                    x1={x + 1.3}
+                    y1={y + 1.1}
+                    x2={x + 1.3}
+                    y2={35.5}
+                    stroke="#ffffff"
+                    strokeOpacity={isPeak ? 0.62 : 0.35}
+                    strokeWidth={0.9}
+                    strokeLinecap="round"
+                  />
+                )}
+
+                {/* Peak Crown Beacon */}
+                {isPeak && (
+                  <g>
+                    <circle
+                      cx={x + (frontW + depthX) / 2}
+                      cy={Math.max(3, y - 5.2)}
+                      r={2.2}
+                      fill="#6366f1"
+                      className="animate-fuel-tip-ping"
+                      style={{ transformOrigin: `${x + (frontW + depthX) / 2}px ${Math.max(3, y - 5.2)}px` }}
+                    />
+                    <circle
+                      cx={x + (frontW + depthX) / 2}
+                      cy={Math.max(3, y - 5.2)}
+                      r={1.6}
+                      fill="#ffffff"
+                      stroke="#4f46e5"
+                      strokeWidth={1}
+                    />
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
+  }
+
+  // variant === 'approval': 3D Delivery Conversion Donut + Approved vs Delivered Pipeline Columns
+  const windowBuckets = pickCompactMonthlyWindow(chartData, peakBucket?.key);
+  const count = Math.max(1, windowBuckets.length);
+  const deliveryRatePct =
+    totalApproved > 0 ? clampPercent((totalDelivered / totalApproved) * 100) : 0;
+  const ringRadius = 13.5;
+  const ringCirc = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCirc - (deliveryRatePct / 100) * ringCirc;
+  const maxApprovedInWindow = Math.max(
+    1,
+    ...windowBuckets.map((d) => Math.max(d.delivered + d.approvedPendingDelivery, d.delivered))
+  );
+  const colSlotW = 104 / count;
+
+  return (
+    <div
+      key={`mdash-approval-${animSeed}`}
+      className="relative h-[38px] sm:h-[42px] w-full flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-[1.015]"
+      aria-hidden="true"
+    >
+      {/* Left 3D Emerald-Teal Conversion Gauge */}
+      <div className="relative w-[36px] h-[36px] shrink-0 flex items-center justify-center animate-kpi-mini-float">
+        <svg viewBox="0 0 36 36" className="w-full h-full overflow-visible -rotate-90">
+          <defs>
+            <linearGradient id="mDashTealRingGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="55%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+            <filter id="mDashTealGlow" x="-25%" y="-25%" width="150%" height="150%">
+              <feDropShadow dx="0" dy="1.5" stdDeviation="1.8" floodColor="#059669" floodOpacity="0.38" />
+            </filter>
+          </defs>
+          <circle
+            cx="18"
+            cy="18"
+            r={ringRadius}
+            fill="none"
+            stroke="currentColor"
+            className="text-emerald-900/12 dark:text-emerald-200/15"
+            strokeWidth="3.8"
+          />
+          <circle
+            cx="18"
+            cy="18"
+            r={ringRadius}
+            fill="none"
+            stroke="url(#mDashTealRingGrad)"
+            strokeWidth="3.8"
+            strokeLinecap="round"
+            strokeDasharray={ringCirc}
+            strokeDashoffset={ringOffset}
+            filter="url(#mDashTealGlow)"
+            style={{ transition: 'stroke-dashoffset 650ms cubic-bezier(0.22, 1, 0.36, 1)' }}
+          />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums text-emerald-800 dark:text-emerald-200">
+          {Math.round(deliveryRatePct)}%
+        </span>
+      </div>
+
+      {/* Right Paired Approved (Outer Shell) vs Delivered (Inner 3D Crystal) Columns */}
+      <div className="flex-1 h-full min-w-0">
+        <svg viewBox="0 0 104 42" className="w-full h-full overflow-visible">
+          <defs>
+            <linearGradient id="mDashTealColGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="55%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#0d9488" />
+            </linearGradient>
+          </defs>
+
+          <line
+            x1="2"
+            y1="37"
+            x2="102"
+            y2="37"
+            stroke="currentColor"
+            className="text-emerald-900/15 dark:text-emerald-200/15"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+
+          {windowBuckets.map((d, idx) => {
+            const barW = 10.5;
+            const x = idx * colSlotW + (colSlotW - barW) / 2;
+            const approvedVal = Math.max(d.delivered + d.approvedPendingDelivery, d.delivered);
+            const approvedH =
+              approvedVal > 0 ? Math.max(7, (approvedVal / maxApprovedInWindow) * 28) : 3.2;
+            const deliveredH =
+              d.delivered > 0
+                ? Math.max(5, Math.min(approvedH, (d.delivered / maxApprovedInWindow) * 28))
+                : 0;
+            const approvedY = 36.5 - approvedH;
+            const deliveredY = 36.5 - deliveredH;
+
+            return (
+              <g
+                key={`${d.key}-${idx}`}
+                className="animate-kpi-mini-bar"
+                style={{ animationDelay: `${idx * 50}ms` }}
+              >
+                <ellipse
+                  cx={x + barW / 2}
+                  cy={38}
+                  rx={barW * 0.44}
+                  ry={1.15}
+                  fill="#047857"
+                  fillOpacity={approvedVal > 0 ? 0.16 : 0.05}
+                />
+
+                <rect
+                  x={x}
+                  y={approvedY}
+                  width={barW}
+                  height={approvedH}
+                  rx={3}
+                  fill="#34d399"
+                  fillOpacity={approvedVal > 0 ? 0.22 : 0.1}
+                  stroke="#10b981"
+                  strokeOpacity={approvedVal > 0 ? 0.45 : 0.18}
+                  strokeWidth={0.7}
+                />
+
+                {deliveredH > 0 && (
+                  <>
+                    <rect
+                      x={x + 1.2}
+                      y={deliveredY}
+                      width={barW - 2.4}
+                      height={deliveredH}
+                      rx={2.3}
+                      fill="url(#mDashTealColGrad)"
+                    />
+                    <rect
+                      x={x + 2.1}
+                      y={deliveredY + 1}
+                      width={Math.max(2, barW - 4.2)}
+                      height={Math.min(3.2, Math.max(1.4, deliveredH * 0.26))}
+                      rx={1.2}
+                      fill="#ffffff"
+                      fillOpacity={0.62}
+                    />
+                  </>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </div>
+  );
+};
+
 interface CustomTooltipProps {
   active?: boolean;
   payload?: ReadonlyArray<{ payload?: MonthlyBucketDatum }>;
@@ -431,63 +1097,131 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
       ) : (
         <>
           {/* KPI Summary Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-            <div className="glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/80 dark:text-sky-200/90">
-                จำนวนเคสช่วงนี้
-              </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-sky-950 dark:text-sky-100 font-mono tabular-nums whitespace-nowrap">
-                {summaryStats.totalCases}
-                <span className="text-[11px] font-semibold text-sky-800/70 dark:text-sky-300/80 ml-1 font-sans">
-                  เคส
-                </span>
-              </div>
-            </div>
+          {(() => {
+            const animSeed = `${effectiveYearFilter}-${monthScope}-${summaryStats.totalCases}-${summaryStats.totalDelivered}`;
+            const isPeakSelected =
+              Boolean(summaryStats.peakBucket) && selectedMonthKey === summaryStats.peakBucket?.key;
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                <div className="group glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 flex flex-col justify-between gap-1.5 min-w-0">
+                  <div className="space-y-0.5 min-w-0">
+                    <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/80 dark:text-sky-200/90">
+                      จำนวนเคสช่วงนี้
+                    </MarqueeText>
+                    <div className="text-base sm:text-xl font-black text-sky-950 dark:text-sky-100 font-mono tabular-nums whitespace-nowrap">
+                      {summaryStats.totalCases}
+                      <span className="text-[11px] font-semibold text-sky-800/70 dark:text-sky-300/80 ml-1 font-sans">
+                        เคส
+                      </span>
+                    </div>
+                  </div>
+                  <MonthlyKpiMiniChart
+                    variant="total"
+                    chartData={chartData}
+                    avgPerActiveMonth={summaryStats.avgPerActiveMonth}
+                    peakBucket={summaryStats.peakBucket}
+                    totalApproved={summaryStats.totalApproved}
+                    totalDelivered={summaryStats.totalDelivered}
+                    animSeed={animSeed}
+                  />
+                </div>
 
-            <div className="glass-panel-amber dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-amber-900/80 dark:text-amber-200/90">
-                เฉลี่ยต่อเดือนที่มีเคส
-              </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-amber-900 dark:text-amber-200 font-mono tabular-nums whitespace-nowrap">
-                {summaryStats.avgPerActiveMonth.toFixed(1)}
-                <span className="text-[11px] font-semibold text-amber-800/70 dark:text-amber-300/80 ml-1 font-sans">
-                  / ด. ({summaryStats.activeMonthCount})
-                </span>
-              </div>
-            </div>
+                <div className="group glass-panel-amber dashboard-card-lift rounded-xl p-2.5 sm:p-3 flex flex-col justify-between gap-1.5 min-w-0">
+                  <div className="space-y-0.5 min-w-0">
+                    <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-amber-900/80 dark:text-amber-200/90">
+                      เฉลี่ยต่อเดือนที่มีเคส
+                    </MarqueeText>
+                    <div className="text-base sm:text-xl font-black text-amber-900 dark:text-amber-200 font-mono tabular-nums whitespace-nowrap">
+                      {summaryStats.avgPerActiveMonth.toFixed(1)}
+                      <span className="text-[11px] font-semibold text-amber-800/70 dark:text-amber-300/80 ml-1 font-sans">
+                        / ด. ({summaryStats.activeMonthCount})
+                      </span>
+                    </div>
+                  </div>
+                  <MonthlyKpiMiniChart
+                    variant="average"
+                    chartData={chartData}
+                    avgPerActiveMonth={summaryStats.avgPerActiveMonth}
+                    peakBucket={summaryStats.peakBucket}
+                    totalApproved={summaryStats.totalApproved}
+                    totalDelivered={summaryStats.totalDelivered}
+                    animSeed={animSeed}
+                  />
+                </div>
 
-            <div className="glass-panel-indigo dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-indigo-900/80 dark:text-indigo-200/90">
-                เดือนที่บันทึกสูงสุด
-              </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-indigo-800 dark:text-indigo-200 font-mono tabular-nums whitespace-nowrap">
-                {summaryStats.peakBucket ? (
-                  <>
-                    <span className="font-sans text-sm sm:text-base font-extrabold mr-1">
-                      {summaryStats.peakBucket.shortLabel}
-                    </span>
-                    ({summaryStats.peakBucket.total})
-                  </>
-                ) : (
-                  '—'
-                )}
-              </div>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const peak = summaryStats.peakBucket;
+                    if (!peak) return;
+                    triggerHaptic('light');
+                    setSelectedMonthKey((prev) => (prev === peak.key ? null : peak.key));
+                  }}
+                  disabled={!summaryStats.peakBucket}
+                  className={`group text-left glass-panel-indigo dashboard-card-lift rounded-xl p-2.5 sm:p-3 flex flex-col justify-between gap-1.5 min-w-0 transition-all ${
+                    summaryStats.peakBucket ? 'cursor-pointer' : 'cursor-default'
+                  } ${
+                    isPeakSelected
+                      ? 'ring-2 ring-indigo-400/80 shadow-md shadow-indigo-500/15'
+                      : ''
+                  }`}
+                >
+                  <div className="space-y-0.5 min-w-0 w-full">
+                    <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-indigo-900/80 dark:text-indigo-200/90">
+                      เดือนที่บันทึกสูงสุด
+                    </MarqueeText>
+                    <div className="text-base sm:text-xl font-black text-indigo-800 dark:text-indigo-200 font-mono tabular-nums whitespace-nowrap">
+                      {summaryStats.peakBucket ? (
+                        <>
+                          <span className="font-sans text-sm sm:text-base font-extrabold mr-1">
+                            {summaryStats.peakBucket.shortLabel}
+                          </span>
+                          ({summaryStats.peakBucket.total})
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </div>
+                  </div>
+                  <MonthlyKpiMiniChart
+                    variant="peak"
+                    chartData={chartData}
+                    avgPerActiveMonth={summaryStats.avgPerActiveMonth}
+                    peakBucket={summaryStats.peakBucket}
+                    totalApproved={summaryStats.totalApproved}
+                    totalDelivered={summaryStats.totalDelivered}
+                    isHighlighted={isPeakSelected}
+                    animSeed={animSeed}
+                  />
+                </button>
 
-            <div className="glass-panel-teal dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
-              <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/80 dark:text-teal-200/90">
-                อนุมัติ / รับรถแล้ว
-              </MarqueeText>
-              <div className="text-base sm:text-xl font-black text-emerald-700 dark:text-emerald-300 font-mono tabular-nums whitespace-nowrap">
-                {summaryStats.totalApproved}
-                <span className="text-slate-400 dark:text-slate-500 mx-1">/</span>
-                {summaryStats.totalDelivered}
-                <span className="text-[11px] font-semibold text-teal-800/70 dark:text-teal-300/80 ml-1 font-sans">
-                  คัน
-                </span>
+                <div className="group glass-panel-teal dashboard-card-lift rounded-xl p-2.5 sm:p-3 flex flex-col justify-between gap-1.5 min-w-0">
+                  <div className="space-y-0.5 min-w-0">
+                    <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-teal-900/80 dark:text-teal-200/90">
+                      อนุมัติ / รับรถแล้ว
+                    </MarqueeText>
+                    <div className="text-base sm:text-xl font-black text-emerald-700 dark:text-emerald-300 font-mono tabular-nums whitespace-nowrap">
+                      {summaryStats.totalApproved}
+                      <span className="text-slate-400 dark:text-slate-500 mx-1">/</span>
+                      {summaryStats.totalDelivered}
+                      <span className="text-[11px] font-semibold text-teal-800/70 dark:text-teal-300/80 ml-1 font-sans">
+                        คัน
+                      </span>
+                    </div>
+                  </div>
+                  <MonthlyKpiMiniChart
+                    variant="approval"
+                    chartData={chartData}
+                    avgPerActiveMonth={summaryStats.avgPerActiveMonth}
+                    peakBucket={summaryStats.peakBucket}
+                    totalApproved={summaryStats.totalApproved}
+                    totalDelivered={summaryStats.totalDelivered}
+                    animSeed={animSeed}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Interactive Filter Toolbar (Single-Row Balanced Controls) */}
           <div className="flex items-center justify-between gap-1.5 sm:gap-2 pt-2.5 border-t border-sky-200/45 dark:border-slate-700/75 overflow-x-auto">
