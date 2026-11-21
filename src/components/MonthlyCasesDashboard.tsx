@@ -668,8 +668,8 @@ const MonthlyKpiMiniChart: React.FC<MonthlyKpiMiniChartProps> = ({
       </div>
 
       {/* Right Paired Approved (Outer Shell) vs Delivered (Inner 3D Crystal) Columns */}
-      <div className="flex-1 h-full min-w-0">
-        <svg viewBox="0 0 104 42" className="w-full h-full overflow-visible">
+      <div className="flex-1 h-[38px] sm:h-[42px] min-w-0">
+        <svg viewBox="0 0 104 42" className="block w-full h-full overflow-visible">
           <defs>
             <linearGradient id="mDashTealColGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#34d399" />

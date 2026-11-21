@@ -861,8 +861,8 @@ const KpiMiniCardChart: React.FC<KpiMiniCardChartProps> = ({
       </div>
 
       {/* Right 6-Period 3D Amber PA Penetration Columns */}
-      <div className="flex-1 h-full min-w-0">
-        <svg viewBox="0 0 104 44" className="w-full h-full overflow-visible">
+      <div className="flex-1 h-[42px] sm:h-[46px] min-w-0">
+        <svg viewBox="0 0 104 44" className="block w-full h-full overflow-visible">
           <defs>
             <linearGradient id="miniPaColGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fbbf24" />
@@ -1970,7 +1970,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                       percent={m.percent}
                       tier={commissionSummary.tier}
                       isSelected={isSelected}
-                      animSeed={`${periodLabel}-${stats.totalCases}-${stats.deliveredCount}`}
+                      animSeed={`${periodLabel}-${stats.totalCases}-${stats.deliveredCount}-${commissionSummary.totalInsuredContracts}`}
                     />
 
                     {/* Mini Interactive Gauge Bar inside each unified tile */}

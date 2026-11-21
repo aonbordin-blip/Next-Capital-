@@ -1343,30 +1343,27 @@
 /* Mini 3D KPI Card Chart Motion Effects */
 @keyframes kpi-mini-bar-rise {
   0% {
-    transform: scaleY(0.08);
-    opacity: 0.25;
+    transform: translate3d(0, 6px, 0);
+    opacity: 0.42;
   }
   70% {
-    transform: scaleY(1.04);
+    transform: translate3d(0, -1px, 0);
     opacity: 1;
   }
   100% {
-    transform: scaleY(1);
+    transform: translate3d(0, 0, 0);
     opacity: 1;
   }
 }
 
 .animate-kpi-mini-bar {
-  transform-box: fill-box;
-  transform-origin: center bottom;
-  animation: kpi-mini-bar-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: transform, opacity;
+  animation: kpi-mini-bar-rise 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes kpi-mini-line-draw {
   0% {
     stroke-dashoffset: 260;
-    opacity: 0.35;
+    opacity: 0.45;
   }
   100% {
     stroke-dashoffset: 0;
@@ -1376,13 +1373,13 @@
 
 .animate-kpi-mini-line {
   stroke-dasharray: 260;
-  animation: kpi-mini-line-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: kpi-mini-line-draw 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes kpi-mini-area-reveal {
   0% {
-    opacity: 0;
-    transform: translate3d(0, 5px, 0);
+    opacity: 0.15;
+    transform: translate3d(0, 4px, 0);
   }
   100% {
     opacity: 1;
@@ -1391,8 +1388,7 @@
 }
 
 .animate-kpi-mini-area {
-  animation: kpi-mini-area-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: transform, opacity;
+  animation: kpi-mini-area-reveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes kpi-mini-float {
@@ -1406,7 +1402,6 @@
 
 .animate-kpi-mini-float {
   animation: kpi-mini-float 3.8s ease-in-out infinite;
-  will-change: transform;
 }
 
 /* Prevent Chrome/Android tap black focus outline on Recharts SVG surfaces */
