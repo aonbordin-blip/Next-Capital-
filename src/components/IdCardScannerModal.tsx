@@ -54,6 +54,7 @@ export const IdCardScannerModal: React.FC<Props> = ({
 }) => {
   const [step, setStep] = useState<ScannerStep>('pick');
   const [scanStageText, setScanStageText] = useState<string>('กำลังเตรียมภาพ...');
+  const [scanElapsedSec, setScanElapsedSec] = useState<number>(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -76,6 +77,7 @@ export const IdCardScannerModal: React.FC<Props> = ({
   useEffect(() => {
     if (isOpen) {
       setStep('pick');
+      setScanElapsedSec(0);
       setPreviewUrl(null);
       setErrorMessage('');
       setFullName('');
@@ -97,16 +99,34 @@ export const IdCardScannerModal: React.FC<Props> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (step !== 'scanning') {
+      setScanElapsedSec(0);
+      return;
+    }
+    const startMs = Date.now();
+    const timer = window.setInterval(() => {
+      setScanElapsedSec(Math.floor((Date.now() - startMs) / 1000));
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [step]);
+
   const handleFileSelected = async (file?: File) => {
     if (!file) return;
     triggerHaptic('light');
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    let didTimeout = false;
+    const timeoutId = window.setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, 28000);
 
     setStep('scanning');
+    setScanElapsedSec(0);
     setErrorMessage('');
-    setScanStageText('กำลังย่อขนาดและปรับคุณภาพภาพ...');
+    setScanStageText('กำลังย่อขนาดภาพ...');
 
     try {
       const compressed = await compressImageForIdScan(file);
@@ -156,7 +176,15 @@ export const IdCardScannerModal: React.FC<Props> = ({
       triggerHaptic('success');
       setStep('review');
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        if (!didTimeout) return;
+        triggerHaptic('warning');
+        setErrorMessage(
+          'การสแกนใช้เวลานานเกินกำหนด กรุณาลองถ่ายใหม่ในที่สว่างหรือเช็กสัญญาณอินเทอร์เน็ต'
+        );
+        setStep('error');
+        return;
+      }
       triggerHaptic('warning');
       setErrorMessage(
         err instanceof Error && err.message
@@ -164,6 +192,8 @@ export const IdCardScannerModal: React.FC<Props> = ({
           : 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง'
       );
       setStep('error');
+    } finally {
+      window.clearTimeout(timeoutId);
     }
   };
 
@@ -373,6 +403,7 @@ export const IdCardScannerModal: React.FC<Props> = ({
                   <Loader2 className="w-8 h-8 animate-spin text-emerald-300" />
                   <span className="text-xs font-extrabold tracking-wide drop-shadow">
                     {scanStageText}
+                    {scanElapsedSec > 0 ? ` (${scanElapsedSec} วินาที)` : ''}
                   </span>
                 </div>
               </div>

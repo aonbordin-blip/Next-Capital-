@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 
 const PORT = Number(process.env.PORT) || 3000;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -41,6 +41,7 @@ function getGeminiClient(): GoogleGenAI {
       headers: {
         'User-Agent': 'aistudio-build',
       },
+      timeout: 25000,
     },
   });
 }
@@ -65,12 +66,170 @@ function normalizeWhitespace(val?: string, maxLen = 500): string {
     .slice(0, maxLen);
 }
 
+function extractJsonText(raw: string): string {
+  const trimmed = raw.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced) return fenced[1].trim();
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return trimmed.slice(firstBrace, lastBrace + 1);
+  }
+  return trimmed;
+}
+
+function getErrorStatus(error: unknown): number {
+  if (!error || typeof error !== 'object') return 0;
+  const errObj = error as { status?: unknown; statusCode?: unknown; code?: unknown };
+  const candidate = Number(errObj.status ?? errObj.statusCode ?? errObj.code);
+  return Number.isFinite(candidate) ? candidate : 0;
+}
+
+function isTransientError(error: unknown): boolean {
+  const status = getErrorStatus(error);
+  if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) {
+    return true;
+  }
+  const msg = error instanceof Error ? error.message.toLowerCase() : '';
+  return (
+    msg.includes('fetch failed') ||
+    msg.includes('network') ||
+    msg.includes('timeout') ||
+    msg.includes('econnreset') ||
+    msg.includes('unavailable')
+  );
+}
+
+const ID_SCAN_SYSTEM_INSTRUCTION = [
+  'You are a high-speed, high-accuracy Thai National ID Card (บัตรประจำตัวประชาชน) OCR extractor.',
+  'Images may be slightly tilted, rotated, cropped, photocopied (including "สำเนาถูกต้อง" watermarks), or ThaiD digital ID screenshots.',
+  'Always rotate mentally if needed and extract all readable fields accurately.',
+  'Rules:',
+  '- idNumber: 13 digits only (no hyphens/spaces). Check confusing digits carefully (0/8, 1/7, 5/6, 3/8).',
+  '- fullNameTh: Thai honorific + first name + last name (e.g. "นายสมชาย ใจดี").',
+  '- dateOfBirthIso: Convert Buddhist Era year on card (e.g. 2535 -> 2535 - 543 = 1992) to YYYY-MM-DD. If only month/year or year is shown, use 01 for missing day/month.',
+  '- expiryDateIso & isLifetime: If "ตลอดชีพ" set isLifetime=true and expiryDateIso="". Otherwise convert BE date to YYYY-MM-DD.',
+  '- addressTh: Single-line clean Thai address as printed on card (do not invent postal code).',
+  '- Set isThaiNationalId=false ONLY when the image is clearly not a Thai ID card / photocopy / ThaiD ID and no name or ID digits can be read.',
+].join('\n');
+
+const ID_SCAN_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    isThaiNationalId: {
+      type: Type.BOOLEAN,
+      description: 'True if the image shows a Thai National ID card, photocopy, or ThaiD ID.',
+    },
+    idNumber: {
+      type: Type.STRING,
+      description: '13-digit Thai National ID number (digits only, no hyphens).',
+    },
+    titleTh: {
+      type: Type.STRING,
+      description: 'Thai honorific prefix such as นาย, นาง, นางสาว.',
+    },
+    firstNameTh: {
+      type: Type.STRING,
+      description: 'Thai first name.',
+    },
+    lastNameTh: {
+      type: Type.STRING,
+      description: 'Thai last name.',
+    },
+    fullNameTh: {
+      type: Type.STRING,
+      description: 'Full Thai name including prefix and surname cleanly spaced.',
+    },
+    dateOfBirthIso: {
+      type: Type.STRING,
+      description: 'Gregorian birth date in YYYY-MM-DD format converted from Buddhist Era.',
+    },
+    dateOfBirthTh: {
+      type: Type.STRING,
+      description: 'Thai date of birth string as printed on the card.',
+    },
+    expiryDateIso: {
+      type: Type.STRING,
+      description: 'Gregorian card expiry date in YYYY-MM-DD format, or empty if lifetime.',
+    },
+    isLifetime: {
+      type: Type.BOOLEAN,
+      description: 'True if card expiry says ตลอดชีพ / lifetime.',
+    },
+    addressTh: {
+      type: Type.STRING,
+      description: 'Full Thai address printed on the card.',
+    },
+    unreadableReason: {
+      type: Type.STRING,
+      description: 'Short Thai explanation if unreadable or not a Thai ID card.',
+    },
+  },
+  required: [
+    'isThaiNationalId',
+    'idNumber',
+    'fullNameTh',
+    'dateOfBirthIso',
+    'addressTh',
+  ],
+};
+
+const THAI_MONTH_MAP: Record<string, string> = {
+  'ม.ค.': '01',
+  'มกราคม': '01',
+  'ก.พ.': '02',
+  'กุมภาพันธ์': '02',
+  'มี.ค.': '03',
+  'มีนาคม': '03',
+  'เม.ย.': '04',
+  'เมษายน': '04',
+  'พ.ค.': '05',
+  'พฤษภาคม': '05',
+  'มิ.ย.': '06',
+  'มิถุนายน': '06',
+  'ก.ค.': '07',
+  'กรกฎาคม': '07',
+  'ส.ค.': '08',
+  'สิงหาคม': '08',
+  'ก.ย.': '09',
+  'กันยายน': '09',
+  'ต.ค.': '10',
+  'ตุลาคม': '10',
+  'พ.ย.': '11',
+  'พฤศจิกายน': '11',
+  'ธ.ค.': '12',
+  'ธันวาคม': '12',
+};
+
+function parseThaiDateFallback(rawThaiDate?: string): string {
+  const s = normalizeWhitespace(rawThaiDate, 80);
+  if (!s) return '';
+  const yearMatch = s.match(/(24\d{2}|25\d{2}|26\d{2})/);
+  if (!yearMatch) return '';
+  const beYear = Number(yearMatch[1]);
+  const ceYear = beYear - 543;
+  if (ceYear < 1900 || ceYear > 2150) return '';
+
+  let month = '01';
+  for (const [label, mm] of Object.entries(THAI_MONTH_MAP)) {
+    if (s.includes(label)) {
+      month = mm;
+      break;
+    }
+  }
+
+  const dayMatch = s.match(/(?:^|\s)(\d{1,2})(?=\s)/);
+  const dayNum = dayMatch ? Math.min(31, Math.max(1, Number(dayMatch[1]))) : 1;
+  return `${ceYear}-${month}-${String(dayNum).padStart(2, '0')}`;
+}
+
 async function startServer() {
   const app = express();
 
   app.use(express.json({ limit: '10mb' }));
 
   app.post('/api/scan-id-card', async (req, res) => {
+    const reqStart = Date.now();
     try {
       const body = (req.body || {}) as {
         imageBase64?: unknown;
@@ -113,95 +272,40 @@ async function startServer() {
 
       const ai = getGeminiClient();
 
-      const prompt = [
-        'คุณคือผู้เชี่ยวชาญในการอ่านข้อมูลจากบัตรประจำตัวประชาชนไทย (Thai National ID Card) ให้มีความแม่นยำสูงสุด',
-        'จงตรวจสอบรูปภาพที่แนบมาและสกัดข้อมูลเป็น JSON ตามสคีมาที่กำหนด:',
-        '1. ตรวจสอบว่าภาพนี้คือ "บัตรประจำตัวประชาชนไทย" ที่พออ่านข้อความได้หรือไม่ (isThaiNationalId)',
-        '   - หากไม่ใช่บัตรประชาชนไทย (เช่น ใบขับขี่ พาสปอร์ต ภาพทั่วไป หรือภาพเบลอ/มืดจนอ่านชื่อหรือเลขบัตรไม่ได้เลย) ให้กำหนด isThaiNationalId = false และระบุเหตุผลสั้นๆ เป็นภาษาไทยใน unreadableReason',
-        '2. เลขประจำตัวประชาชน 13 หลัก (idNumber): ดึงเป็นตัวเลข 13 หลักติดกันไม่มีขีดหรือช่องว่าง ตรวจทานตัวเลขที่คล้ายกัน เช่น 0 กับ 8, 1 กับ 7, 5 กับ 6, 3 กับ 8 ให้แม่นยำ',
-        '3. ชื่อ-นามสกุลภาษาไทย (titleTh, firstNameTh, lastNameTh, fullNameTh): ดึงให้ถูกต้องตามสะกดภาษาไทยบนบัตร (เช่น "นายสมชาย ใจดี" หรือ "นางสาวสมหญิง รักไทย")',
-        '4. วันเกิด (dateOfBirthIso): แปลงจาก พ.ศ. บนบัตร (เช่น เกิดวันที่ 14 พ.ค. 2535 -> 2535 - 543 = 1992) เป็นรูปแบบ ค.ศ. YYYY-MM-DD เท่านั้น หากบนบัตรระบุเฉพาะเดือนหรือปี ให้ใช้วันที่ 01 ของเดือน/ปีนั้น หรือหากอ่านไม่ได้ให้ใส่ค่าว่าง',
-        '5. วันบัตรหมดอายุ (expiryDateIso, isLifetime): หากระบุ "ตลอดชีพ" ให้ตั้ง isLifetime = true และ expiryDateIso = "" หากระบุวันที่ ให้แปลงจาก พ.ศ. เป็น ค.ศ. รูปแบบ YYYY-MM-DD',
-        '6. ที่อยู่ตามบัตร (addressTh): ดึงที่อยู่ภาษาไทยทั้งหมดตามที่พิมพ์บนบัตรในบรรทัดเดียวเว้นวรรคสะอาดตา (บ้านเลขที่ หมู่ ซอย ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด) ห้ามแต่งเติมรหัสไปรษณีย์หรือข้อความที่ไม่มีบนบัตร',
-      ].join('\n');
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType,
-                data: base64Data,
+      const callModel = () =>
+        ai.models.generateContent({
+          model: 'gemini-3.1-flash-lite',
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
               },
-            },
-            { text: prompt },
-          ],
-        },
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              isThaiNationalId: {
-                type: Type.BOOLEAN,
-                description: 'True only if the image shows a readable Thai National ID card.',
+              {
+                text: 'อ่านข้อมูลจากบัตรประชาชนไทยในภาพนี้แล้วส่งกลับเป็น JSON ตามสคีมา',
               },
-              idNumber: {
-                type: Type.STRING,
-                description: '13-digit Thai National ID number (digits only, no hyphens).',
-              },
-              titleTh: {
-                type: Type.STRING,
-                description: 'Thai honorific prefix such as นาย, นาง, นางสาว.',
-              },
-              firstNameTh: {
-                type: Type.STRING,
-                description: 'Thai first name.',
-              },
-              lastNameTh: {
-                type: Type.STRING,
-                description: 'Thai last name.',
-              },
-              fullNameTh: {
-                type: Type.STRING,
-                description: 'Full Thai name including prefix and surname cleanly spaced.',
-              },
-              dateOfBirthIso: {
-                type: Type.STRING,
-                description: 'Gregorian birth date in YYYY-MM-DD format converted from Buddhist Era.',
-              },
-              dateOfBirthTh: {
-                type: Type.STRING,
-                description: 'Thai date of birth string as printed on the card.',
-              },
-              expiryDateIso: {
-                type: Type.STRING,
-                description: 'Gregorian card expiry date in YYYY-MM-DD format, or empty if lifetime.',
-              },
-              isLifetime: {
-                type: Type.BOOLEAN,
-                description: 'True if card expiry says ตลอดชีพ / lifetime.',
-              },
-              addressTh: {
-                type: Type.STRING,
-                description: 'Full Thai address printed on the card.',
-              },
-              unreadableReason: {
-                type: Type.STRING,
-                description: 'Thai explanation if not a Thai ID card or too blurry to read.',
-              },
-            },
-            required: [
-              'isThaiNationalId',
-              'idNumber',
-              'fullNameTh',
-              'dateOfBirthIso',
-              'addressTh',
             ],
           },
-        },
-      });
+          config: {
+            systemInstruction: ID_SCAN_SYSTEM_INSTRUCTION,
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+            responseMimeType: 'application/json',
+            responseSchema: ID_SCAN_RESPONSE_SCHEMA,
+          },
+        });
+
+      let response;
+      try {
+        response = await callModel();
+      } catch (firstErr) {
+        if (!isTransientError(firstErr) || Date.now() - reqStart > 12000) {
+          throw firstErr;
+        }
+        await new Promise((r) => setTimeout(r, 350));
+        response = await callModel();
+      }
 
       const rawText = (response.text || '').trim();
       if (!rawText) {
@@ -214,21 +318,11 @@ async function startServer() {
 
       let parsed: RawScanResult;
       try {
-        parsed = JSON.parse(rawText) as RawScanResult;
+        parsed = JSON.parse(extractJsonText(rawText)) as RawScanResult;
       } catch {
         res.status(502).json({
           ok: false,
           error: 'ไม่สามารถอ่านรูปแบบผลลัพธ์จากระบบวิเคราะห์ภาพได้ กรุณาลองใหม่อีกครั้ง',
-        });
-        return;
-      }
-
-      if (!parsed.isThaiNationalId) {
-        res.status(422).json({
-          ok: false,
-          error:
-            normalizeWhitespace(parsed.unreadableReason, 240) ||
-            'ภาพนี้ไม่ใช่บัตรประจำตัวประชาชนไทย หรือภาพไม่ชัดเจนพอ กรุณาถ่ายภาพใหม่ให้แสงสว่างเพียงพอและไม่สะท้อนแสง',
         });
         return;
       }
@@ -245,9 +339,25 @@ async function startServer() {
 
       const fullNameTh =
         normalizeWhitespace(parsed.fullNameTh, 200) || composedFallbackName;
-      const dateOfBirthIso = isValidIsoDate(parsed.dateOfBirthIso);
+      const dateOfBirthTh = normalizeWhitespace(parsed.dateOfBirthTh, 80);
+      const dateOfBirthIso =
+        isValidIsoDate(parsed.dateOfBirthIso) || parseThaiDateFallback(dateOfBirthTh);
       const expiryDateIso = parsed.isLifetime ? '' : isValidIsoDate(parsed.expiryDateIso);
       const addressTh = normalizeWhitespace(parsed.addressTh, 500);
+
+      // Only reject if neither classified as Thai ID NOR extracted useful ID/name fields
+      const hasUsefulExtraction =
+        idNumber.length >= 10 || (Boolean(fullNameTh) && Boolean(addressTh || dateOfBirthIso));
+
+      if (!parsed.isThaiNationalId && !hasUsefulExtraction) {
+        res.status(422).json({
+          ok: false,
+          error:
+            normalizeWhitespace(parsed.unreadableReason, 240) ||
+            'ภาพนี้ไม่ใช่บัตรประจำตัวประชาชนไทย หรือภาพไม่ชัดเจนพอ กรุณาถ่ายภาพใหม่ให้แสงสว่างเพียงพอและเห็นข้อความชัด',
+        });
+        return;
+      }
 
       if (!idNumber && !fullNameTh && !addressTh) {
         res.status(422).json({
@@ -259,6 +369,10 @@ async function startServer() {
         return;
       }
 
+      console.log(
+        `[scan-id-card] OK in ${Date.now() - reqStart}ms (${Math.round(approxBytes / 1024)}KB)`
+      );
+
       res.json({
         ok: true,
         data: {
@@ -268,19 +382,42 @@ async function startServer() {
           lastNameTh: normalizeWhitespace(parsed.lastNameTh, 100),
           fullNameTh,
           dateOfBirthIso,
-          dateOfBirthTh: normalizeWhitespace(parsed.dateOfBirthTh, 80),
+          dateOfBirthTh,
           expiryDateIso,
           isLifetime: Boolean(parsed.isLifetime),
           addressTh,
         },
       });
     } catch (error) {
-      console.error('Error scanning Thai ID card:', error);
-      const msg =
-        error instanceof Error && error.message.includes('GEMINI_API_KEY')
-          ? 'ยังไม่ได้ตั้งค่า GEMINI_API_KEY บนเซิร์ฟเวอร์'
-          : 'เกิดข้อผิดพลาดในการสแกนบัตรประชาชน กรุณาลองใหม่อีกครั้ง';
-      res.status(500).json({ ok: false, error: msg });
+      const status = getErrorStatus(error);
+      const rawMessage = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[scan-id-card] ERROR after ${Date.now() - reqStart}ms (status=${status}):`,
+        rawMessage
+      );
+
+      let httpStatus = 500;
+      let msg = 'เกิดข้อผิดพลาดในการสแกนบัตรประชาชน กรุณาลองใหม่อีกครั้ง';
+
+      if (rawMessage.includes('GEMINI_API_KEY') || status === 401 || status === 403) {
+        httpStatus = 500;
+        msg =
+          'ยังไม่ได้ตั้งค่า GEMINI_API_KEY หรือสิทธิ์คีย์ไม่ถูกต้อง กรุณาตรวจสอบใน Settings > Secrets';
+      } else if (status === 429) {
+        httpStatus = 429;
+        msg = 'ขณะนี้มีผู้ใช้งานจำนวนมาก (Quota เต็มชั่วคราว) กรุณารอสักครู่แล้วลองใหม่อีกครั้ง';
+      } else if (status === 404) {
+        httpStatus = 502;
+        msg = 'ไม่พบบริการโมเดลวิเคราะห์ภาพ กรุณาลองใหม่อีกครั้ง';
+      } else if (
+        rawMessage.toLowerCase().includes('timeout') ||
+        rawMessage.toLowerCase().includes('aborted')
+      ) {
+        httpStatus = 504;
+        msg = 'การประมวลผลใช้เวลานานเกินกำหนด กรุณาลองถ่ายใหม่หรือเช็กสัญญาณอินเทอร์เน็ต';
+      }
+
+      res.status(httpStatus).json({ ok: false, error: msg });
     }
   });
 

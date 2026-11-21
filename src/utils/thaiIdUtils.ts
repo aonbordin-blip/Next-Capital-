@@ -117,6 +117,21 @@ export function isThaiIdExpired(
   return s < todayIso;
 }
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string' && reader.result) {
+        resolve(reader.result);
+      } else {
+        reject(new Error('ไม่สามารถอ่านไฟล์ภาพได้'));
+      }
+    };
+    reader.onerror = () => reject(new Error('ไม่สามารถอ่านไฟล์ภาพได้'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function compressImageForIdScan(file: File): Promise<{
   base64: string;
   mimeType: string;
@@ -126,21 +141,42 @@ export async function compressImageForIdScan(file: File): Promise<{
     throw new Error('ไม่พบไฟล์ภาพ');
   }
 
-  const MAX_DIMENSION = 1400;
-  const JPEG_QUALITY = 0.86;
+  const MAX_DIMENSION = 1152;
+  const JPEG_QUALITY = 0.8;
 
   const objectUrl = URL.createObjectURL(file);
   try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('ไม่สามารถเปิดอ่านไฟล์ภาพนี้ได้ (รองรับ JPG, PNG, WebP)'));
-      el.src = objectUrl;
-    });
+    let source: CanvasImageSource | null = null;
+    let naturalW = 0;
+    let naturalH = 0;
+    let bitmap: ImageBitmap | null = null;
 
-    const naturalW = img.naturalWidth || img.width || 0;
-    const naturalH = img.naturalHeight || img.height || 0;
+    if (typeof createImageBitmap === 'function') {
+      try {
+        bitmap = await createImageBitmap(file);
+        naturalW = bitmap.width;
+        naturalH = bitmap.height;
+        source = bitmap;
+      } catch {
+        bitmap = null;
+      }
+    }
+
+    if (!source) {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () =>
+          reject(new Error('ไม่สามารถเปิดอ่านไฟล์ภาพนี้ได้ (รองรับ JPG, PNG, WebP, HEIC)'));
+        el.src = objectUrl;
+      });
+      naturalW = img.naturalWidth || img.width || 0;
+      naturalH = img.naturalHeight || img.height || 0;
+      source = img;
+    }
+
     if (!naturalW || !naturalH) {
+      if (bitmap) bitmap.close();
       throw new Error('ขนาดภาพไม่ถูกต้อง');
     }
 
@@ -154,14 +190,22 @@ export async function compressImageForIdScan(file: File): Promise<{
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
+      if (bitmap) bitmap.close();
       throw new Error('เบราว์เซอร์ไม่รองรับการประมวลผลภาพ');
     }
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, targetW, targetH);
-    ctx.drawImage(img, 0, 0, targetW, targetH);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(source, 0, 0, targetW, targetH);
 
-    const previewDataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+    if (bitmap) bitmap.close();
+
+    let previewDataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+    if (previewDataUrl.length > 1_100_000) {
+      previewDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    }
     const commaIdx = previewDataUrl.indexOf(',');
     const base64 = commaIdx >= 0 ? previewDataUrl.slice(commaIdx + 1) : previewDataUrl;
 
@@ -170,6 +214,25 @@ export async function compressImageForIdScan(file: File): Promise<{
       mimeType: 'image/jpeg',
       previewDataUrl,
     };
+  } catch (decodeErr) {
+    // Fallback for HEIC/HEIF or formats browser <img> cannot decode directly:
+    // send original image bytes up to 5.5MB directly to Gemini.
+    if (file.size > 0 && file.size <= 5.5 * 1024 * 1024) {
+      const dataUrl = await readFileAsDataUrl(file);
+      const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/i);
+      if (match) {
+        const detectedMime =
+          file.type && file.type.startsWith('image/')
+            ? file.type.toLowerCase()
+            : match[1].toLowerCase();
+        return {
+          base64: match[2],
+          mimeType: detectedMime || 'image/jpeg',
+          previewDataUrl: dataUrl,
+        };
+      }
+    }
+    throw decodeErr;
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
