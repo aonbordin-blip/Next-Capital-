@@ -25,12 +25,12 @@ import {
   getNineInstallmentSchedule,
   getSavedCases,
 } from '../utils/savedCasesStorage';
-import { calculateCheckerCommission } from '../utils/checkerCommission';
+import { calculateCheckerCommission, getCaseEffectiveDate } from '../utils/checkerCommission';
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import { MonthlyCasesDashboard } from './MonthlyCasesDashboard';
 import { GasolineAllowanceCard } from './GasolineAllowanceCard';
-import { KpiSummaryChartCard } from './KpiSummaryChartCard';
+import { KpiMiniBucket, KpiSummaryChartCard } from './KpiSummaryChartCard';
 import { DealPipelineAndDealersChartCard } from './DealPipelineAndDealersChartCard';
 import { MarqueeText } from './MarqueeText';
 import { BoxThemeToggle } from './BoxThemeToggle';
@@ -110,6 +110,34 @@ function getBangkokYearMonth(tsOrDate?: number | string): string {
   }
   const bkk = new Date(ts + 7 * 60 * 60 * 1000);
   return `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function getBangkokDateStr(tsOrDate?: number | string): string {
+  if (typeof tsOrDate === 'string' && /^\d{4}-\d{2}-\d{2}/.test(tsOrDate)) {
+    return tsOrDate.slice(0, 10);
+  }
+  const ts =
+    typeof tsOrDate === 'number' && Number.isFinite(tsOrDate) && tsOrDate > 0
+      ? tsOrDate
+      : Date.now();
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(ts));
+    const y = parts.find((p) => p.type === 'year')?.value;
+    const m = parts.find((p) => p.type === 'month')?.value;
+    const d = parts.find((p) => p.type === 'day')?.value;
+    if (y && m && d) return `${y}-${m}-${d}`;
+  } catch {
+    // fallback
+  }
+  const bkk = new Date(ts + 7 * 60 * 60 * 1000);
+  return `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(
+    bkk.getUTCDate()
+  ).padStart(2, '0')}`;
 }
 
 function getCurrentMonthKey(): string {
@@ -335,6 +363,112 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       ),
     [savedCases, selectedMonth]
   );
+
+  // Real 6-interval time-series buckets for the 4 KPI card mini charts
+  const kpiMiniSeries: KpiMiniBucket[] = useMemo(() => {
+    if (selectedMonth !== 'all') {
+      const labels = ['1-5', '6-10', '11-15', '16-20', '21-25', '26+'];
+      const buckets: KpiMiniBucket[] = labels.map((label) => ({
+        label,
+        casesCount: 0,
+        approvedCount: 0,
+        deliveredCount: 0,
+        financeAmount: 0,
+        paDeliveredCount: 0,
+        paInsuredCount: 0,
+      }));
+
+      const pickDayIndex = (dateStr: string): number => {
+        const day = Number(dateStr.slice(8, 10));
+        if (!Number.isFinite(day) || day < 1) return 0;
+        return Math.max(0, Math.min(5, Math.floor((day - 1) / 5)));
+      };
+
+      for (const c of periodCases) {
+        const effectiveDateStr =
+          c.deliveryDate && c.deliveryDate.startsWith(selectedMonth)
+            ? c.deliveryDate
+            : c.approvalDate && c.approvalDate.startsWith(selectedMonth)
+            ? c.approvalDate
+            : getBangkokDateStr(c.createdAt);
+        const idx = pickDayIndex(effectiveDateStr);
+        const b = buckets[idx];
+        b.casesCount += 1;
+        if (c.approvalStatus === 'approved') {
+          b.approvedCount += 1;
+          if (c.deliveryStatus === 'delivered') {
+            b.deliveredCount += 1;
+          }
+        }
+        b.financeAmount += Number(c.snapshot?.financeAmount) || 0;
+      }
+
+      for (const detail of commissionSummary.cases) {
+        const idx = pickDayIndex(getCaseEffectiveDate(detail.record));
+        buckets[idx].paDeliveredCount += 1;
+        if (detail.isInsured) {
+          buckets[idx].paInsuredCount += 1;
+        }
+      }
+
+      return buckets;
+    }
+
+    // All-time view: show chronological 6 most recent months
+    const monthKeysSet = new Set<string>();
+    for (const c of periodCases) {
+      monthKeysSet.add(getBangkokYearMonth(c.deliveryDate || c.approvalDate || c.createdAt));
+    }
+    let sortedMonths = Array.from(monthKeysSet).sort((a, b) => a.localeCompare(b));
+    if (sortedMonths.length === 0) {
+      sortedMonths = [currentMonthKey];
+    }
+    while (sortedMonths.length < 6) {
+      sortedMonths.unshift(shiftMonthKey(sortedMonths[0], -1));
+    }
+    const targetMonths = sortedMonths.slice(-6);
+    const monthIdxMap = new Map<string, number>();
+    const buckets: KpiMiniBucket[] = targetMonths.map((ym, idx) => {
+      monthIdxMap.set(ym, idx);
+      const mNum = Number(ym.split('-')[1]);
+      return {
+        label: THAI_MONTHS_SHORT[mNum - 1] || ym,
+        casesCount: 0,
+        approvedCount: 0,
+        deliveredCount: 0,
+        financeAmount: 0,
+        paDeliveredCount: 0,
+        paInsuredCount: 0,
+      };
+    });
+
+    for (const c of periodCases) {
+      const ym = getBangkokYearMonth(c.deliveryDate || c.approvalDate || c.createdAt);
+      const idx = monthIdxMap.get(ym);
+      if (idx === undefined) continue;
+      const b = buckets[idx];
+      b.casesCount += 1;
+      if (c.approvalStatus === 'approved') {
+        b.approvedCount += 1;
+        if (c.deliveryStatus === 'delivered') {
+          b.deliveredCount += 1;
+        }
+      }
+      b.financeAmount += Number(c.snapshot?.financeAmount) || 0;
+    }
+
+    for (const detail of commissionSummary.cases) {
+      const ym = getCaseEffectiveDate(detail.record).slice(0, 7);
+      const idx = monthIdxMap.get(ym);
+      if (idx === undefined) continue;
+      buckets[idx].paDeliveredCount += 1;
+      if (detail.isInsured) {
+        buckets[idx].paInsuredCount += 1;
+      }
+    }
+
+    return buckets;
+  }, [periodCases, commissionSummary, selectedMonth, currentMonthKey]);
 
   // All Dealers in selected period (normalized whitespace/parentheses so totals reconcile 100%)
   const dealerSummaryList = useMemo(() => {
@@ -607,6 +741,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         periodLabel={formatMonthLabel(selectedMonth)}
         stats={periodStats}
         commissionSummary={commissionSummary}
+        miniSeries={kpiMiniSeries}
         onOpenSavedCases={onOpenSavedCases}
         onNavigateToCaseForm={onNavigateToCaseForm}
         onNavigateToCheckerCommission={onNavigateToCheckerCommission}
