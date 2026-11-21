@@ -192,10 +192,13 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         pushErr = err;
       }
 
-      // Push any existing local DV requests that aren't in cloud yet
-      pushLocalDvRequestsToCloud(targetUser).catch((err) => {
+      // Push any existing local DV requests (and heal any cloud stubs) before subscribing
+      try {
+        await pushLocalDvRequestsToCloud(targetUser);
+        setDvRequests(getSavedDvRequests());
+      } catch (err) {
         console.error('Failed to push local DV requests:', err);
-      });
+      }
 
       if (unsubscribeCasesRef.current) {
         unsubscribeCasesRef.current();

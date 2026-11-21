@@ -131,11 +131,22 @@ function persistSavedCases(cases: SavedCaseRecord[]): boolean {
   }
 }
 
+function isDvPollutedRecord(raw: unknown): boolean {
+  if (!raw || typeof raw !== 'object') return false;
+  const obj = raw as Record<string, unknown>;
+  return (
+    (typeof obj.id === 'string' && obj.id.startsWith('dv-')) ||
+    obj.recordType === 'dv_request' ||
+    'dvData' in obj ||
+    (typeof obj.caseTitle === 'string' && obj.caseTitle.startsWith('DV:'))
+  );
+}
+
 /**
  * Ensure all existing local cases have unique Firestore-valid IDs and valid timestamps before Cloud sync
  */
 export function normalizeLocalCaseIdsForCloud(): SavedCaseRecord[] {
-  const current = getSavedCases();
+  const current = getSavedCases().filter((c) => !isDvPollutedRecord(c));
   if (current.length === 0) return current;
 
   const seenIds = new Set<string>();
@@ -215,13 +226,17 @@ export function mergeCloudCasesIntoLocal(
 
   const localMap = new Map<string, SavedCaseRecord>();
   for (const c of localCurrent) {
+    if (isDvPollutedRecord(c)) continue;
     const safeId = sanitizeCaseId(c.id);
+    if (safeId.startsWith('dv-')) continue;
     localMap.set(safeId, c.id === safeId ? c : { ...c, id: safeId });
   }
 
   const cloudMap = new Map<string, SavedCaseRecord>();
   for (const c of cloudCases) {
+    if (isDvPollutedRecord(c)) continue;
     const safeId = sanitizeCaseId(c.id);
+    if (safeId.startsWith('dv-')) continue;
     if (pendingCloudDeleteIds.has(safeId)) continue;
     cloudMap.set(safeId, c.id === safeId ? c : { ...c, id: safeId });
     if (!fromCache) {
@@ -330,7 +345,11 @@ export function getSavedCases(): SavedCaseRecord[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.sort((a, b) => b.createdAt - a.createdAt);
+      const cleaned = parsed.filter((item) => !isDvPollutedRecord(item));
+      if (cleaned.length !== parsed.length) {
+        persistSavedCases(cleaned);
+      }
+      return cleaned.sort((a, b) => b.createdAt - a.createdAt);
     }
     return [];
   } catch (err) {
@@ -922,7 +941,7 @@ export function mergeBackupJsonIntoLocal(
     const baseNow = Date.now();
 
     incoming.forEach((rawItem, idx) => {
-      if (!isLikelyCaseObject(rawItem)) {
+      if (!isLikelyCaseObject(rawItem) || isDvPollutedRecord(rawItem)) {
         skippedCount++;
         return;
       }

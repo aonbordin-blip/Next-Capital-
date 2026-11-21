@@ -1112,6 +1112,20 @@ export function DvApprovalCard({
                           </p>
                         )}
 
+                        {!item.bikeModel &&
+                          !item.downPayment &&
+                          !item.income &&
+                          !item.dealer &&
+                          item.topics.length === 0 &&
+                          !item.dvMessage && (
+                            <div className="p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/70 text-[10.5px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                              <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                              <span className="leading-relaxed">
+                                รายการเก่านี้เคยถูกระบบซิงก์เวอร์ชันก่อนเขียนทับข้อมูลรายละเอียดออก (ระบบแก้ไขจุดนี้ให้ถาวรแล้ว) สามารถกด <strong>&quot;เปิดดู / แก้ไข&quot;</strong> เพื่อกรอกใหม่หรือกดลบรายการนี้ได้เลยครับ
+                              </span>
+                            </div>
+                          )}
+
                         <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <button
@@ -1126,8 +1140,19 @@ export function DvApprovalCard({
                               type="button"
                               onClick={async () => {
                                 triggerHaptic('success');
+                                const textToCopy =
+                                  item.dvMessage ||
+                                  [
+                                    '📋 ขออนุมัติเคส DV',
+                                    `👤 ชื่อลูกค้า : ${item.customerName || '-'}`,
+                                    `🛡️ NCB : ${item.ncb || '-'}`,
+                                    `🏪 Dealer : ${item.dealer || '-'}`,
+                                    `• รุ่นรถ : ${item.bikeModel || '-'}`,
+                                    `• เงินดาวน์ : ${item.downPayment || '-'}`,
+                                    `• รายได้ : ${item.income || '-'}`,
+                                  ].join('\n');
                                 try {
-                                  await navigator.clipboard.writeText(item.dvMessage);
+                                  await navigator.clipboard.writeText(textToCopy);
                                   setCopiedSavedDvId(item.id);
                                   setTimeout(() => setCopiedSavedDvId(null), 2000);
                                 } catch {
@@ -1152,8 +1177,19 @@ export function DvApprovalCard({
                               type="button"
                               onClick={() => {
                                 triggerHaptic('success');
+                                const textToShare =
+                                  item.dvMessage ||
+                                  [
+                                    '📋 ขออนุมัติเคส DV',
+                                    `👤 ชื่อลูกค้า : ${item.customerName || '-'}`,
+                                    `🛡️ NCB : ${item.ncb || '-'}`,
+                                    `🏪 Dealer : ${item.dealer || '-'}`,
+                                    `• รุ่นรถ : ${item.bikeModel || '-'}`,
+                                    `• เงินดาวน์ : ${item.downPayment || '-'}`,
+                                    `• รายได้ : ${item.income || '-'}`,
+                                  ].join('\n');
                                 const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
-                                  item.dvMessage
+                                  textToShare
                                 )}`;
                                 window.open(lineUrl, '_blank', 'noopener,noreferrer');
                               }}

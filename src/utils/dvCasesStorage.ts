@@ -175,6 +175,18 @@ export function deleteLocalDvRequest(id: string): SavedDvRequestRecord[] {
   return next;
 }
 
+function isRichDvRecord(rec: SavedDvRequestRecord): boolean {
+  return Boolean(
+    rec.bikeModel.trim() ||
+      rec.downPayment.trim() ||
+      rec.income.trim() ||
+      rec.dealer.trim() ||
+      rec.topics.length > 0 ||
+      rec.dvMessage.trim() ||
+      (rec.customerName.trim() && rec.customerName.trim() !== 'คุณลูกค้า')
+  );
+}
+
 export function mergeCloudDvRequestsIntoLocal(
   cloudRecords: SavedDvRequestRecord[],
   options?: { isServerSnapshotSettled?: boolean }
@@ -204,8 +216,13 @@ export function mergeCloudDvRequestsIntoLocal(
     if (pendingDeletes.has(safeId)) continue;
     const cloudMatch = mergedMap.get(safeId);
     if (cloudMatch) {
-      if (pendingUploads.has(safeId) && l.updatedAt > cloudMatch.updatedAt) {
+      const localNewer = pendingUploads.has(safeId) && l.updatedAt > cloudMatch.updatedAt;
+      const cloudCorruptedWhileLocalRich = !isRichDvRecord(cloudMatch) && isRichDvRecord(l);
+      if (localNewer || cloudCorruptedWhileLocalRich) {
         mergedMap.set(safeId, l);
+        if (cloudCorruptedWhileLocalRich) {
+          markPendingDvUpload(safeId);
+        }
       }
       continue;
     }

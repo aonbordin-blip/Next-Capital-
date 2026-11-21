@@ -192,12 +192,15 @@ interface RtdbCaseEntry {
   data: Record<string, unknown>;
 }
 
-function isDvRequestNode(val: unknown): boolean {
+function isDvRequestNode(val: unknown, nodeKey?: string): boolean {
+  if (typeof nodeKey === 'string' && nodeKey.startsWith('DV - ')) return true;
   if (!val || typeof val !== 'object' || Array.isArray(val)) return false;
   const obj = val as Record<string, unknown>;
   return (
     obj.recordType === 'dv_request' ||
-    (typeof obj.id === 'string' && obj.id.startsWith('dv-'))
+    'dvData' in obj ||
+    (typeof obj.id === 'string' && obj.id.startsWith('dv-')) ||
+    (typeof obj.caseTitle === 'string' && obj.caseTitle.startsWith('DV:'))
   );
 }
 
@@ -222,7 +225,7 @@ function collectRtdbCaseEntries(rawTree: unknown): RtdbCaseEntry[] {
 
     // 1. Legacy flat structure: users/${userKey}/cases/${caseId}
     if (isCaseObjectNode(level1Val)) {
-      if (isDvRequestNode(level1Val)) continue;
+      if (isDvRequestNode(level1Val, level1Key)) continue;
       entries.push({
         caseId: sanitizeCaseId(String(level1Val.id || level1Key)),
         relPath: level1Key,
@@ -238,7 +241,7 @@ function collectRtdbCaseEntries(rawTree: unknown): RtdbCaseEntry[] {
         if (!level2Val || typeof level2Val !== 'object') continue;
         for (const [caseKey, caseVal] of Object.entries(level2Val as Record<string, unknown>)) {
           if (!isCaseObjectNode(caseVal)) continue;
-          if (isDvRequestNode(caseVal)) continue;
+          if (isDvRequestNode(caseVal, caseKey)) continue;
           entries.push({
             caseId: sanitizeCaseId(String(caseVal.id || caseKey)),
             relPath: `${level1Key}/${level2Key}/${caseKey}`,
@@ -877,13 +880,23 @@ export async function upsertCloudCases(
   const uid = typeof userOrUid === 'string' ? userOrUid : userOrUid.uid;
   const userKey = getRtdbUserKey(userOrUid);
 
-  // Deduplicate by safeId (latest record wins)
+  // Deduplicate by safeId (latest record wins) and strictly exclude DV request IDs
   const dedupedMap = new Map<string, { safeId: string; record: SavedCaseRecord }>();
   for (const record of records) {
     const safeId = sanitizeCaseId(record.id);
+    if (safeId.startsWith('dv-')) continue;
     dedupedMap.set(safeId, { safeId, record });
   }
   const uniqueItems = Array.from(dedupedMap.values());
+  if (uniqueItems.length === 0) {
+    return {
+      uploadedCount: 0,
+      failedCount: 0,
+      totalCount: 0,
+      approvalDocSkippedCount: 0,
+      firstError: null,
+    };
+  }
   const allSafeIds = uniqueItems.map((i) => i.safeId);
   const totalCount = uniqueItems.length;
 
@@ -1430,13 +1443,16 @@ export async function pushAllLocalCasesToCloud(
     localCases = [...localCases, ...migratedCloudRecords];
   }
 
-  // Also ensure any cloud-only record whose key isn't customerName (tag) gets migrated cleanly
   const allCandidateMap = new Map<string, SavedCaseRecord>();
   for (const c of cloudOnlyRecords) {
-    allCandidateMap.set(sanitizeCaseId(c.id), c);
+    const sid = sanitizeCaseId(c.id);
+    if (sid.startsWith('dv-')) continue;
+    allCandidateMap.set(sid, c);
   }
   for (const c of localCases) {
-    allCandidateMap.set(sanitizeCaseId(c.id), c);
+    const sid = sanitizeCaseId(c.id);
+    if (sid.startsWith('dv-')) continue;
+    allCandidateMap.set(sid, c);
   }
 
   const toPush: SavedCaseRecord[] = [];
@@ -1616,7 +1632,7 @@ function collectRtdbDvEntries(rawTree: unknown): RtdbDvEntry[] {
   for (const [level1Key, level1Val] of Object.entries(rawTree as Record<string, unknown>)) {
     if (!level1Val || typeof level1Val !== 'object' || Array.isArray(level1Val)) continue;
     const level1Obj = level1Val as Record<string, unknown>;
-    if (isDvRequestNode(level1Obj)) {
+    if (isDvRequestNode(level1Obj, level1Key)) {
       entries.push({
         dvId: sanitizeDvRequestId(String(level1Obj.id || level1Key)),
         relPath: level1Key,
@@ -1628,7 +1644,7 @@ function collectRtdbDvEntries(rawTree: unknown): RtdbDvEntry[] {
       for (const [level2Key, level2Val] of Object.entries(level1Obj)) {
         if (!level2Val || typeof level2Val !== 'object' || Array.isArray(level2Val)) continue;
         for (const [nodeKey, nodeVal] of Object.entries(level2Val as Record<string, unknown>)) {
-          if (!isDvRequestNode(nodeVal)) continue;
+          if (!isDvRequestNode(nodeVal, nodeKey)) continue;
           const nodeObj = nodeVal as Record<string, unknown>;
           entries.push({
             dvId: sanitizeDvRequestId(String(nodeObj.id || nodeKey)),
@@ -1708,6 +1724,9 @@ export function buildRtdbDvPayload(
     id: safeId,
     recordType: 'dv_request',
     caseTitle,
+    customerName: cleanName,
+    ...(cleanModel ? { bikeModelName: cleanModel } : {}),
+    ...(dvData.dealer ? { dealerName: dvData.dealer } : {}),
     proposalKey,
     vehiclePrice: 0,
     term: Math.max(1, Math.min(120, Math.round(safeAnyNum(record.term, 36) || 36))),
@@ -1732,10 +1751,10 @@ export function fromCloudDvDoc(
   data: Record<string, unknown>,
   fallbackId?: string
 ): SavedDvRequestRecord {
-  const dvRaw =
-    data.dvData && typeof data.dvData === 'object'
-      ? (data.dvData as Record<string, unknown>)
-      : data;
+  const hasNestedDvData = Boolean(
+    data.dvData && typeof data.dvData === 'object' && !Array.isArray(data.dvData)
+  );
+  const dvRaw = hasNestedDvData ? (data.dvData as Record<string, unknown>) : data;
 
   const statusRaw = dvRaw.status;
   const status: DvRequestStatus =
@@ -1745,41 +1764,110 @@ export function fromCloudDvDoc(
     ? dvRaw.topics.map((t) => String(t)).filter(Boolean)
     : [];
 
+  // Recover name/model if an older sync stripped dvData but preserved caseTitle ("DV: Name • Model")
+  let titleNameFallback = '';
+  let titleModelFallback = '';
+  const rawCaseTitle = typeof data.caseTitle === 'string' ? data.caseTitle.trim() : '';
+  if (rawCaseTitle.startsWith('DV:')) {
+    const stripped = rawCaseTitle.slice(3).trim();
+    const parts = stripped.split('•').map((p) => p.trim());
+    if (parts[0]) titleNameFallback = parts[0];
+    if (parts[1]) titleModelFallback = parts[1];
+  } else if (rawCaseTitle && rawCaseTitle !== 'คุณลูกค้า') {
+    titleNameFallback = rawCaseTitle;
+  }
+
+  const rawDvName = typeof dvRaw.customerName === 'string' ? dvRaw.customerName.trim() : '';
+  const rawTopName = typeof data.customerName === 'string' ? data.customerName.trim() : '';
+  const resolvedCustomerName =
+    (rawDvName && rawDvName !== 'คุณลูกค้า' ? rawDvName : '') ||
+    (rawTopName && rawTopName !== 'คุณลูกค้า' ? rawTopName : '') ||
+    titleNameFallback ||
+    rawDvName ||
+    rawTopName ||
+    'คุณลูกค้า';
+
+  const snapRaw =
+    data.snapshot && typeof data.snapshot === 'object'
+      ? (data.snapshot as Record<string, unknown>)
+      : {};
+  const fallbackDownAmount =
+    typeof snapRaw.downAmount === 'number' && snapRaw.downAmount > 0
+      ? `${snapRaw.downAmount.toLocaleString('th-TH')} บาท`
+      : '';
+  const fallbackIncome =
+    typeof data.customerIncome === 'string' && data.customerIncome.trim()
+      ? `${Number(data.customerIncome.replace(/,/g, '')) ? Number(data.customerIncome.replace(/,/g, '')).toLocaleString('th-TH') + ' บาท/เดือน' : data.customerIncome.trim()}`
+      : '';
+
   return {
     id: sanitizeDvRequestId(String(data.id || fallbackId || '')),
     createdAt: Number(data.recordCreatedAt) || toEpochMs(data.createdAt) || Date.now(),
     updatedAt: Number(data.recordUpdatedAt) || toEpochMs(data.updatedAt) || Date.now(),
-    customerName: String(dvRaw.customerName || data.caseTitle || 'คุณลูกค้า'),
+    customerName: resolvedCustomerName,
     topics,
     ncb: String(dvRaw.ncb || 'Normal'),
-    dealer: String(dvRaw.dealer || ''),
-    bikeModel: String(dvRaw.bikeModel || ''),
-    bikeCode: String(dvRaw.bikeCode || ''),
-    occupation: String(dvRaw.occupation || ''),
-    income: String(dvRaw.income || ''),
+    dealer: String(dvRaw.dealer || data.dealerName || ''),
+    bikeModel: String(dvRaw.bikeModel || data.bikeModelName || titleModelFallback || ''),
+    bikeCode: String(dvRaw.bikeCode || data.bikeModelCode || ''),
+    occupation: String(dvRaw.occupation || data.customerOccupation || ''),
+    income: String(dvRaw.income || fallbackIncome || ''),
     financialDocs: String(dvRaw.financialDocs || ''),
-    downPayment: String(dvRaw.downPayment || ''),
+    downPayment: String(dvRaw.downPayment || fallbackDownAmount || ''),
     remark: String(dvRaw.remark || ''),
-    ck: String(dvRaw.ck || ''),
+    ck: String(dvRaw.ck || data.officerName || ''),
     yodRate: String(dvRaw.yodRate || ''),
     dvMessage: String(dvRaw.dvMessage || ''),
     status,
     proposalKey: (dvRaw.proposalKey || data.proposalKey) as ProposalKey | undefined,
     financeAmount:
-      typeof dvRaw.financeAmount === 'number' ? dvRaw.financeAmount : undefined,
+      typeof dvRaw.financeAmount === 'number'
+        ? dvRaw.financeAmount
+        : typeof snapRaw.financeAmount === 'number'
+        ? snapRaw.financeAmount
+        : undefined,
     monthlyInstallment:
-      typeof dvRaw.monthlyInstallment === 'number' ? dvRaw.monthlyInstallment : undefined,
-    term: typeof dvRaw.term === 'number' ? dvRaw.term : undefined,
-    customerAge: typeof dvRaw.customerAge === 'string' ? dvRaw.customerAge : undefined,
+      typeof dvRaw.monthlyInstallment === 'number'
+        ? dvRaw.monthlyInstallment
+        : typeof snapRaw.monthlyInstallment === 'number'
+        ? snapRaw.monthlyInstallment
+        : undefined,
+    term:
+      typeof dvRaw.term === 'number'
+        ? dvRaw.term
+        : typeof data.term === 'number'
+        ? data.term
+        : undefined,
+    customerAge:
+      typeof dvRaw.customerAge === 'string'
+        ? dvRaw.customerAge
+        : typeof data.customerAge === 'string'
+        ? data.customerAge
+        : undefined,
     customerWorkMonths:
-      typeof dvRaw.customerWorkMonths === 'string' ? dvRaw.customerWorkMonths : undefined,
-    customerIncome: typeof dvRaw.customerIncome === 'string' ? dvRaw.customerIncome : undefined,
+      typeof dvRaw.customerWorkMonths === 'string'
+        ? dvRaw.customerWorkMonths
+        : typeof data.customerWorkMonths === 'string'
+        ? data.customerWorkMonths
+        : undefined,
+    customerIncome:
+      typeof dvRaw.customerIncome === 'string'
+        ? dvRaw.customerIncome
+        : typeof data.customerIncome === 'string'
+        ? data.customerIncome
+        : undefined,
     customerResidenceMonths:
       typeof dvRaw.customerResidenceMonths === 'string'
         ? dvRaw.customerResidenceMonths
+        : typeof data.customerResidenceMonths === 'string'
+        ? data.customerResidenceMonths
         : undefined,
     isAceCustomer:
-      typeof dvRaw.isAceCustomer === 'boolean' ? dvRaw.isAceCustomer : undefined,
+      typeof dvRaw.isAceCustomer === 'boolean'
+        ? dvRaw.isAceCustomer
+        : typeof data.isAceCustomer === 'boolean'
+        ? data.isAceCustomer
+        : undefined,
   };
 }
 
@@ -1864,6 +1952,7 @@ export async function pushLocalDvRequestsToCloud(
   }
 
   const cloudUpdatedMap = new Map<string, number>();
+  const cloudMissingDvDataSet = new Set<string>();
   const cloudRecords: SavedDvRequestRecord[] = [];
   const pendingDeletes = getPendingDvDeletes();
 
@@ -1877,6 +1966,9 @@ export async function pushLocalDvRequestsToCloud(
         dvCloudCreatedAtMap.set(getDvRelMapKey(userKey, entry.dvId), createdMs);
       }
       cloudUpdatedMap.set(entry.dvId, Number(entry.data.recordUpdatedAt) || 0);
+      if (!entry.data.dvData || typeof entry.data.dvData !== 'object') {
+        cloudMissingDvDataSet.add(entry.dvId);
+      }
       cloudRecords.push(fromCloudDvDoc(entry.data, entry.dvId));
       markConfirmedDvCloudIds([entry.dvId]);
     }
@@ -1887,23 +1979,33 @@ export async function pushLocalDvRequestsToCloud(
     await deleteCloudDvRequest(userOrUid, delId).catch(() => {});
   }
 
-  const localRecords = getSavedDvRequests();
   const merged = mergeCloudDvRequestsIntoLocal(cloudRecords, {
     isServerSnapshotSettled: false,
   });
 
   let uploadedCount = 0;
-  for (const rec of localRecords) {
+  for (const rec of merged) {
     const safeId = sanitizeDvRequestId(rec.id);
     if (pendingDeletes.has(safeId)) continue;
     const cloudUpdated = cloudUpdatedMap.get(safeId);
-    if (cloudUpdated === undefined || rec.updatedAt > cloudUpdated) {
+    const localHasRichDetails = Boolean(
+      rec.bikeModel ||
+        rec.downPayment ||
+        rec.income ||
+        rec.dealer ||
+        rec.topics.length > 0 ||
+        (rec.customerName && rec.customerName !== 'คุณลูกค้า')
+    );
+    if (
+      cloudUpdated === undefined ||
+      rec.updatedAt > cloudUpdated ||
+      (cloudMissingDvDataSet.has(safeId) && localHasRichDetails)
+    ) {
       await upsertCloudDvRequest(userOrUid, rec);
       uploadedCount += 1;
     }
   }
 
-  void merged;
   return uploadedCount;
 }
 
