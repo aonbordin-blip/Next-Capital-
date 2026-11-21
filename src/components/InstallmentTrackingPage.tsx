@@ -27,11 +27,12 @@ import {
   ExternalLink,
   ClipboardCopy,
 } from 'lucide-react';
-import { SavedCaseRecord } from '../types';
+import { SavedCaseRecord, InstallmentPaymentStatus } from '../types';
 import {
   getSavedCases,
   saveCaseRecord,
   updateCaseTrackingDetails,
+  updateCaseInstallmentPayment,
   resolveBikeBrand,
   calculateFirstPaymentDueDate,
   getNineInstallmentSchedule,
@@ -120,6 +121,132 @@ function toLocalDateInputValue(input?: string | number): string {
   return `${y}-${m}-${day}`;
 }
 
+type PaymentHealthKey = 'paid_up' | 'pending_due' | 'overdue';
+type PaymentStatusFilter = 'ALL' | PaymentHealthKey;
+type SlotVisualState = 'paid' | 'overdue' | 'due_soon' | 'upcoming';
+
+interface EvaluatedInstallmentSlot extends InstallmentDueSlot {
+  visualState: SlotVisualState;
+}
+
+interface PaymentHealthSummary {
+  statusKey: PaymentHealthKey;
+  badgeLabel: string;
+  shortLabel: string;
+  paidCount: number;
+  overdueCount: number;
+  dueSoonCount: number;
+  evaluatedSlots: EvaluatedInstallmentSlot[];
+}
+
+function addDaysToIsoDate(isoDate: string, days: number): string {
+  const parts = isoDate.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return isoDate;
+  const d = new Date(parts[0], parts[1] - 1, parts[2] + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function evaluatePaymentHealth(
+  schedule: InstallmentDueSlot[],
+  todayIso: string
+): PaymentHealthSummary {
+  const plus7Iso = addDaysToIsoDate(todayIso, 7);
+  let paidCount = 0;
+  let overdueCount = 0;
+  let dueSoonCount = 0;
+  let dueUpToTodayCount = 0;
+  let firstDueToday = false;
+  let nextDueSoonNo: number | null = null;
+
+  const evaluatedSlots: EvaluatedInstallmentSlot[] = schedule.map((slot) => {
+    if (slot.isoDate <= todayIso) {
+      dueUpToTodayCount += 1;
+    }
+
+    if (slot.status === 'paid') {
+      paidCount += 1;
+      return { ...slot, visualState: 'paid' };
+    }
+
+    if (slot.status === 'unpaid' || slot.isoDate < todayIso) {
+      overdueCount += 1;
+      return { ...slot, visualState: 'overdue' };
+    }
+
+    if (slot.isoDate >= todayIso && slot.isoDate <= plus7Iso) {
+      dueSoonCount += 1;
+      if (slot.isoDate === todayIso) firstDueToday = true;
+      if (nextDueSoonNo === null) nextDueSoonNo = slot.installmentNo;
+      return { ...slot, visualState: 'due_soon' };
+    }
+
+    return { ...slot, visualState: 'upcoming' };
+  });
+
+  if (overdueCount > 0) {
+    return {
+      statusKey: 'overdue',
+      badgeLabel: `ค้างชำระ ${overdueCount} งวด`,
+      shortLabel: 'ค้างชำระ',
+      paidCount,
+      overdueCount,
+      dueSoonCount,
+      evaluatedSlots,
+    };
+  }
+
+  if (paidCount === 9) {
+    return {
+      statusKey: 'paid_up',
+      badgeLabel: 'จ่ายครบ 9/9 งวด',
+      shortLabel: 'จ่ายครบแล้ว',
+      paidCount,
+      overdueCount,
+      dueSoonCount,
+      evaluatedSlots,
+    };
+  }
+
+  if (dueSoonCount > 0) {
+    return {
+      statusKey: 'pending_due',
+      badgeLabel: firstDueToday
+        ? `ครบกำหนดงวด ${nextDueSoonNo ?? ''} วันนี้`
+        : `ใกล้กำหนดงวด ${nextDueSoonNo ?? ''} (${paidCount}/9)`,
+      shortLabel: 'ใกล้กำหนด',
+      paidCount,
+      overdueCount,
+      dueSoonCount,
+      evaluatedSlots,
+    };
+  }
+
+  if (paidCount > 0 && paidCount >= dueUpToTodayCount) {
+    return {
+      statusKey: 'paid_up',
+      badgeLabel: `จ่ายครบตามงวด (${paidCount}/9)`,
+      shortLabel: 'จ่ายครบแล้ว',
+      paidCount,
+      overdueCount,
+      dueSoonCount,
+      evaluatedSlots,
+    };
+  }
+
+  return {
+    statusKey: 'pending_due',
+    badgeLabel: 'รอชำระงวดแรก',
+    shortLabel: 'รอชำระ',
+    paidCount,
+    overdueCount,
+    dueSoonCount,
+    evaluatedSlots,
+  };
+}
+
 interface EnrichedCustomerItem {
   record: SavedCaseRecord;
   customerName: string;
@@ -134,6 +261,7 @@ interface EnrichedCustomerItem {
   firstDueLabelLong: string;
   cycleRangeText: string;
   schedule: InstallmentDueSlot[];
+  paymentHealth: PaymentHealthSummary;
   mapsUrl: string;
 }
 
@@ -159,6 +287,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
   const [cases, setCases] = useState<SavedCaseRecord[]>(() => getSavedCases());
   const [searchQuery, setSearchQuery] = useState('');
   const [brandFilter, setBrandFilter] = useState<string>('ALL');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatusFilter>('ALL');
   const [selectedFirstDueMonth, setSelectedFirstDueMonth] = useState<string>('ALL');
   const [viewStyle, setViewStyle] = useState<ViewStyle>('cards');
   const [copiedCaseId, setCopiedCaseId] = useState<string | null>(null);
@@ -220,6 +349,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     };
   }, [cases]);
 
+  const todayIso = getLocalTodayDateStr();
+
   // Enrich each eligible customer using the exact same deliveryDate || createdAt rule as SavedCasesModal
   const enrichedList: EnrichedCustomerItem[] = useMemo(() => {
     return eligibleCases
@@ -237,6 +368,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
         const firstDue = calculateFirstPaymentDueDate(deliverySource);
         const schedule = getNineInstallmentSchedule(record);
+        const paymentHealth = evaluatePaymentHealth(schedule, todayIso);
         const firstSlot = schedule[0];
         const firstDueMonthKey = firstSlot?.monthKey || `${firstDue.year}-${firstDue.month.toString().padStart(2, '0')}`;
         const firstDueLabelShort = firstSlot?.formattedShort || `2 ${firstDue.monthShort} ${firstDue.thaiShortYear}`;
@@ -256,6 +388,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           firstDueLabelLong,
           cycleRangeText: firstDue.cycleRangeText,
           schedule,
+          paymentHealth,
           mapsUrl: getGoogleMapsNavigationUrl(record.googleMapsLocation),
         };
       })
@@ -268,7 +401,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         }
         return a.customerName.localeCompare(b.customerName, 'th');
       });
-  }, [eligibleCases]);
+  }, [eligibleCases, todayIso]);
 
   // Build available First Payment Due Month groups (unfiltered except all eligible) for month selector
   const monthOptions = useMemo(() => {
@@ -326,8 +459,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     return ['ALL', ...Array.from(set)];
   }, [enrichedList]);
 
-  // Apply First Payment Due Month + brand + search filters
-  const filteredList = useMemo(() => {
+  // Base list filtered by First Payment Due Month + brand + search (before payment status filter)
+  const baseFilteredList = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return enrichedList.filter((item) => {
       if (selectedFirstDueMonth !== 'ALL' && item.firstDueMonthKey !== selectedFirstDueMonth) {
@@ -347,6 +480,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           item.firstDueLabelShort,
           item.firstDueLabelLong,
           item.cycleRangeText,
+          item.paymentHealth.badgeLabel,
           item.record.dealerName,
           item.record.googleMapsLocation,
         ]
@@ -358,6 +492,30 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       return true;
     });
   }, [enrichedList, selectedFirstDueMonth, brandFilter, searchQuery]);
+
+  const paymentStatusCounts = useMemo(() => {
+    let paidUp = 0;
+    let pendingDue = 0;
+    let overdue = 0;
+    for (const item of baseFilteredList) {
+      if (item.paymentHealth.statusKey === 'paid_up') paidUp += 1;
+      else if (item.paymentHealth.statusKey === 'overdue') overdue += 1;
+      else pendingDue += 1;
+    }
+    return {
+      all: baseFilteredList.length,
+      paid_up: paidUp,
+      pending_due: pendingDue,
+      overdue,
+    };
+  }, [baseFilteredList]);
+
+  const filteredList = useMemo(() => {
+    if (paymentStatusFilter === 'ALL') return baseFilteredList;
+    return baseFilteredList.filter(
+      (item) => item.paymentHealth.statusKey === paymentStatusFilter
+    );
+  }, [baseFilteredList, paymentStatusFilter]);
 
   // Group filtered customers strictly by First Payment Due Month
   const groupedByFirstDue: FirstDueMonthGroup[] = useMemo(() => {
@@ -410,6 +568,32 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       cycleRangeText: info.cycleRangeText,
     };
   }, [formDeliveryDate, formDueDay]);
+
+  const handleToggleInstallmentSlot = (
+    recordId: string,
+    installmentNo: number,
+    currentStatus?: InstallmentPaymentStatus
+  ) => {
+    triggerHaptic('selection');
+    let nextStatus: InstallmentPaymentStatus | undefined;
+    if (currentStatus === 'paid') {
+      nextStatus = 'unpaid';
+    } else if (currentStatus === 'unpaid') {
+      nextStatus = undefined;
+    } else {
+      nextStatus = 'paid';
+    }
+    const updated = updateCaseInstallmentPayment(recordId, installmentNo, nextStatus);
+    setCases(updated);
+    onDataChanged();
+    if (nextStatus === 'paid') {
+      onNotify(`บันทึกงวดที่ ${installmentNo}: ชำระแล้ว`);
+    } else if (nextStatus === 'unpaid') {
+      onNotify(`บันทึกงวดที่ ${installmentNo}: ค้างชำระ`);
+    } else {
+      onNotify(`รีเซ็ตสถานะงวดที่ ${installmentNo} ตามกำหนดปกติ`);
+    }
+  };
 
   const handleSelectFirstDueMonth = (nextMonth: string) => {
     triggerHaptic('selection');
@@ -921,6 +1105,85 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           </button>
         </div>
 
+        {/* Payment Status Dot Filter Chips (Green / Yellow / Red) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 pt-0.5">
+          {(
+            [
+              {
+                key: 'ALL' as const,
+                label: 'ทุกสถานะ',
+                count: paymentStatusCounts.all,
+                dotClass: 'bg-sky-500',
+                activeClass:
+                  'bg-sky-600 text-white border-sky-600 shadow-2xs',
+                idleClass:
+                  'bg-white/80 hover:bg-white text-slate-700 border-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700',
+              },
+              {
+                key: 'paid_up' as const,
+                label: 'จ่ายครบแล้ว',
+                count: paymentStatusCounts.paid_up,
+                dotClass: 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.65)]',
+                activeClass:
+                  'bg-emerald-600 text-white border-emerald-600 shadow-2xs',
+                idleClass:
+                  'bg-emerald-50/85 hover:bg-emerald-100/80 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/70 dark:text-emerald-200 dark:border-emerald-800/70',
+              },
+              {
+                key: 'pending_due' as const,
+                label: 'รอ / ใกล้กำหนด',
+                count: paymentStatusCounts.pending_due,
+                dotClass: 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.65)]',
+                activeClass:
+                  'bg-amber-500 text-white border-amber-500 shadow-2xs',
+                idleClass:
+                  'bg-amber-50/85 hover:bg-amber-100/80 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900/70 dark:text-amber-200 dark:border-amber-800/70',
+              },
+              {
+                key: 'overdue' as const,
+                label: 'ค้างชำระ',
+                count: paymentStatusCounts.overdue,
+                dotClass: 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.7)]',
+                activeClass:
+                  'bg-rose-600 text-white border-rose-600 shadow-2xs',
+                idleClass:
+                  'bg-rose-50/85 hover:bg-rose-100/80 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/70 dark:text-rose-200 dark:border-rose-800/70',
+              },
+            ] as const
+          ).map((chip) => {
+            const isActive = paymentStatusFilter === chip.key;
+            return (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setPaymentStatusFilter(chip.key);
+                }}
+                className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold border whitespace-nowrap transition-all cursor-pointer shrink-0 inline-flex items-center gap-1.5 tabular-nums ${
+                  isActive ? chip.activeClass : chip.idleClass
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    isActive ? 'bg-white' : chip.dotClass
+                  }`}
+                />
+                <span>{chip.label}</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                    isActive
+                      ? 'bg-white/25 text-white'
+                      : 'bg-white/80 dark:bg-slate-900/70 text-slate-700 dark:text-slate-200'
+                  }`}
+                >
+                  {chip.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Brand Filter Chips + Copy & View Switcher */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 flex-1">
@@ -1033,13 +1296,17 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
               <Plus className="w-3.5 h-3.5" />
               <span>เพิ่มลูกค้า (รับรถแล้ว)</span>
             </button>
-            {(searchQuery || brandFilter !== 'ALL' || selectedFirstDueMonth !== 'ALL') && (
+            {(searchQuery ||
+              brandFilter !== 'ALL' ||
+              selectedFirstDueMonth !== 'ALL' ||
+              paymentStatusFilter !== 'ALL') && (
               <button
                 type="button"
                 onClick={() => {
                   setSearchQuery('');
                   setBrandFilter('ALL');
                   setSelectedFirstDueMonth('ALL');
+                  setPaymentStatusFilter('ALL');
                 }}
                 className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 cursor-pointer"
               >
@@ -1097,15 +1364,37 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                     firstDueLabelShort,
                     cycleRangeText,
                     schedule,
+                    paymentHealth,
                   } = item;
                   const isCopied = copiedCaseId === record.id;
                   const isExpanded = Boolean(expandedScheduleIds[record.id]);
                   const ninthSlot = schedule[8];
+                  const statusBadgeConfig =
+                    paymentHealth.statusKey === 'overdue'
+                      ? {
+                          dot: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] animate-pulse',
+                          pill: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800/80',
+                          cardBorder:
+                            'border-rose-200/90 dark:border-rose-800/70',
+                        }
+                      : paymentHealth.statusKey === 'paid_up'
+                      ? {
+                          dot: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.75)]',
+                          pill: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800/80',
+                          cardBorder:
+                            'border-emerald-200/85 dark:border-emerald-800/65',
+                        }
+                      : {
+                          dot: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.75)]',
+                          pill: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800/80',
+                          cardBorder:
+                            'border-sky-200/80 dark:border-slate-700/80',
+                        };
 
                   return (
                     <div
                       key={record.id}
-                      className="glass-card-primary rounded-2xl p-3 sm:p-3.5 border border-sky-200/80 dark:border-slate-700/80 shadow-xs space-y-2.5 relative overflow-hidden"
+                      className={`glass-card-primary rounded-2xl p-3 sm:p-3.5 border ${statusBadgeConfig.cardBorder} shadow-xs space-y-2.5 relative overflow-hidden`}
                     >
                       {/* Customer Header */}
                       <div className="flex items-start justify-between gap-2">
@@ -1115,10 +1404,28 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                           </span>
 
                           <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <span
+                                className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusBadgeConfig.dot}`}
+                                title={paymentHealth.badgeLabel}
+                              />
                               <MarqueeText fitContent className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100">
                                 {customerName}
                               </MarqueeText>
+                              <span
+                                className={`inline-flex items-center gap-1 text-[9.5px] font-extrabold px-2 py-0.5 rounded-full border shrink-0 whitespace-nowrap tabular-nums ${statusBadgeConfig.pill}`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                    paymentHealth.statusKey === 'overdue'
+                                      ? 'bg-rose-500'
+                                      : paymentHealth.statusKey === 'paid_up'
+                                      ? 'bg-emerald-500'
+                                      : 'bg-amber-400'
+                                  }`}
+                                />
+                                {paymentHealth.badgeLabel}
+                              </span>
                               <span className="text-[9.5px] font-bold px-2 py-0.2 rounded-full bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/70 dark:text-teal-200 dark:border-teal-800/70 shrink-0 whitespace-nowrap">
                                 รับรถ {deliveryDateShort}
                               </span>
@@ -1223,75 +1530,188 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                         </div>
                       </div>
 
-                      {/* Clean Read-Only First Payment Highlight Strip */}
-                      <div className="rounded-xl bg-gradient-to-r from-sky-50/90 via-white to-cyan-50/80 dark:from-sky-950/60 dark:via-slate-900 dark:to-cyan-950/50 border border-sky-200/90 dark:border-sky-800/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-[11px]">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="px-2 py-0.5 rounded-md bg-sky-600 text-white font-black text-[10px] shrink-0">
-                            งวดแรก
-                          </span>
-                          <span className="font-extrabold text-sky-950 dark:text-sky-100 whitespace-nowrap">
-                            {firstDueLabelShort}
-                          </span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                            ({cycleRangeText})
-                          </span>
+                      {/* First Payment Highlight Strip + 9-Dot Status Progress */}
+                      <div className="rounded-xl bg-gradient-to-r from-sky-50/90 via-white to-cyan-50/80 dark:from-sky-950/60 dark:via-slate-900 dark:to-cyan-950/50 border border-sky-200/90 dark:border-sky-800/60 px-3 py-2 space-y-1.5 text-[11px]">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="px-2 py-0.5 rounded-md bg-sky-600 text-white font-black text-[10px] shrink-0">
+                              งวดแรก
+                            </span>
+                            <span className="font-extrabold text-sky-950 dark:text-sky-100 whitespace-nowrap">
+                              {firstDueLabelShort}
+                            </span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                              ({cycleRangeText})
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {ninthSlot && (
+                              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                ถึงงวด 9: <strong className="text-slate-800 dark:text-slate-200">{ninthSlot.formattedShort}</strong>
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedScheduleIds((prev) => ({
+                                  ...prev,
+                                  [record.id]: !prev[record.id],
+                                }))
+                              }
+                              className="px-2 py-0.5 rounded-lg bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-sky-300 dark:border-sky-700/70 font-bold text-[10px] flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <span>{isExpanded ? 'ซ่อนงวด 1-9' : 'ดู/เช็กงวด 1-9'}</span>
+                              {isExpanded ? (
+                                <ChevronUp className="w-3 h-3" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          {ninthSlot && (
-                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                              ถึงงวด 9: <strong className="text-slate-800 dark:text-slate-200">{ninthSlot.formattedShort}</strong>
+                        {/* Compact 9-Dot Status Strip (Visible even when collapsed) */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedScheduleIds((prev) => ({
+                              ...prev,
+                              [record.id]: !prev[record.id],
+                            }))
+                          }
+                          className="w-full pt-1.5 border-t border-sky-100/90 dark:border-sky-800/50 flex items-center justify-between gap-2 text-left cursor-pointer group"
+                          title="แตะเพื่อเปิดเช็กสถานะชำระเงินทีละงวด (งวด 1-9)"
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                              งวด 1-9:
                             </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setExpandedScheduleIds((prev) => ({
-                                ...prev,
-                                [record.id]: !prev[record.id],
-                              }))
-                            }
-                            className="px-2 py-0.5 rounded-lg bg-white hover:bg-sky-50 text-sky-700 border border-sky-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-sky-300 dark:border-sky-700/70 font-bold text-[10px] flex items-center gap-0.5 cursor-pointer"
-                          >
-                            <span>{isExpanded ? 'ซ่อนงวด 1-9' : 'ดูงวด 1-9'}</span>
-                            {isExpanded ? (
-                              <ChevronUp className="w-3 h-3" />
-                            ) : (
-                              <ChevronDown className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
+                            <div className="flex items-center gap-1">
+                              {paymentHealth.evaluatedSlots.map((slot) => {
+                                const dotColor =
+                                  slot.visualState === 'paid'
+                                    ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.55)]'
+                                    : slot.visualState === 'overdue'
+                                    ? 'bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.6)]'
+                                    : slot.visualState === 'due_soon'
+                                    ? 'bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.55)]'
+                                    : 'bg-slate-300 dark:bg-slate-600';
+                                return (
+                                  <span
+                                    key={slot.installmentNo}
+                                    className={`w-2.5 h-2.5 rounded-full transition-transform group-hover:scale-110 ${dotColor}`}
+                                    title={`งวด ${slot.installmentNo} (${slot.formattedShort})`}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <span className="text-[9.5px] font-extrabold text-slate-600 dark:text-slate-300 tabular-nums shrink-0">
+                            ชำระแล้ว {paymentHealth.paidCount}/9
+                          </span>
+                        </button>
                       </div>
 
-                      {/* Read-Only 9-Installment Due Dates Grid */}
+                      {/* Interactive 9-Installment Due Dates & Payment Status Grid */}
                       {isExpanded && (
-                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-0.5 animate-fade-in">
-                          {schedule.map((slot) => (
-                            <div
-                              key={slot.installmentNo}
-                              className={`rounded-xl px-2.5 py-2 border flex flex-col gap-0.5 ${
-                                slot.installmentNo === 1
-                                  ? 'bg-sky-50/90 border-sky-300 dark:bg-sky-950/70 dark:border-sky-700'
-                                  : 'bg-white/85 border-slate-200/80 dark:bg-slate-800/80 dark:border-slate-700'
-                              }`}
-                            >
-                              <span
-                                className={`text-[9.5px] font-extrabold ${
-                                  slot.installmentNo === 1 ? 'text-sky-700 dark:text-sky-300' : 'text-slate-500 dark:text-slate-400'
-                                }`}
-                              >
-                                งวดที่ {slot.installmentNo}
-                                {slot.installmentNo === 1 ? ' (แรก)' : ''}
+                        <div className="space-y-1.5 pt-0.5 animate-fade-in">
+                          <div className="flex items-center justify-between gap-2 text-[9.5px] text-slate-500 dark:text-slate-400 px-0.5 flex-wrap">
+                            <span>แตะที่ช่องงวดเพื่ออัปเดตสถานะการชำระเงิน</span>
+                            <span className="inline-flex items-center gap-2 font-semibold">
+                              <span className="inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                จ่ายแล้ว
                               </span>
-                              <span
-                                className={`text-[11px] font-extrabold tracking-tight ${
-                                  slot.installmentNo === 1 ? 'text-sky-950 dark:text-sky-100' : 'text-slate-800 dark:text-slate-100'
-                                }`}
-                              >
-                                {slot.formattedShort}
+                              <span className="inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                ใกล้กำหนด
                               </span>
-                            </div>
-                          ))}
+                              <span className="inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                ค้างชำระ
+                              </span>
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                            {paymentHealth.evaluatedSlots.map((slot) => {
+                              const slotTheme =
+                                slot.visualState === 'paid'
+                                  ? {
+                                      box: 'bg-emerald-50/90 border-emerald-300 dark:bg-emerald-950/60 dark:border-emerald-700/80',
+                                      dot: 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]',
+                                      statusText: 'จ่ายแล้ว',
+                                      statusClass: 'text-emerald-700 dark:text-emerald-300',
+                                    }
+                                  : slot.visualState === 'overdue'
+                                  ? {
+                                      box: 'bg-rose-50/90 border-rose-300 dark:bg-rose-950/60 dark:border-rose-700/80',
+                                      dot: 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.65)]',
+                                      statusText: 'ค้างชำระ',
+                                      statusClass: 'text-rose-700 dark:text-rose-300',
+                                    }
+                                  : slot.visualState === 'due_soon'
+                                  ? {
+                                      box: 'bg-amber-50/90 border-amber-300 dark:bg-amber-950/60 dark:border-amber-700/80',
+                                      dot: 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]',
+                                      statusText: slot.isoDate === todayIso ? 'ครบวันนี้' : 'ใกล้กำหนด',
+                                      statusClass: 'text-amber-700 dark:text-amber-300',
+                                    }
+                                  : {
+                                      box:
+                                        slot.installmentNo === 1
+                                          ? 'bg-sky-50/90 border-sky-300 dark:bg-sky-950/70 dark:border-sky-700'
+                                          : 'bg-white/85 border-slate-200/80 dark:bg-slate-800/80 dark:border-slate-700',
+                                      dot: 'bg-slate-300 dark:bg-slate-600',
+                                      statusText: 'รอถึงกำหนด',
+                                      statusClass: 'text-slate-400 dark:text-slate-500',
+                                    };
+
+                              return (
+                                <button
+                                  key={slot.installmentNo}
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleInstallmentSlot(
+                                      record.id,
+                                      slot.installmentNo,
+                                      slot.status
+                                    )
+                                  }
+                                  className={`rounded-xl px-2.5 py-2 border flex flex-col gap-0.5 text-left cursor-pointer active:scale-95 transition-all hover:shadow-xs ${slotTheme.box}`}
+                                  title="แตะเพื่อสลับสถานะ (จ่ายแล้ว / ค้างชำระ / ปกติ)"
+                                >
+                                  <div className="flex items-center justify-between gap-1 w-full">
+                                    <span
+                                      className={`text-[9.5px] font-extrabold ${
+                                        slot.installmentNo === 1
+                                          ? 'text-sky-700 dark:text-sky-300'
+                                          : 'text-slate-500 dark:text-slate-400'
+                                      }`}
+                                    >
+                                      งวด {slot.installmentNo}
+                                      {slot.installmentNo === 1 ? ' (แรก)' : ''}
+                                    </span>
+                                    <span
+                                      className={`w-2 h-2 rounded-full shrink-0 ${slotTheme.dot}`}
+                                    />
+                                  </div>
+                                  <span
+                                    className={`text-[11px] font-extrabold tracking-tight ${
+                                      slot.installmentNo === 1
+                                        ? 'text-sky-950 dark:text-sky-100'
+                                        : 'text-slate-800 dark:text-slate-100'
+                                    }`}
+                                  >
+                                    {slot.formattedShort}
+                                  </span>
+                                  <span className={`text-[9px] font-bold ${slotTheme.statusClass}`}>
+                                    {slotTheme.statusText}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1360,12 +1780,29 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                         modelName,
                         modelCode,
                         deliveryDateShort,
-                        schedule,
+                        paymentHealth,
                       } = item;
+                      const dotColor =
+                        paymentHealth.statusKey === 'overdue'
+                          ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.75)]'
+                          : paymentHealth.statusKey === 'paid_up'
+                          ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.65)]'
+                          : 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.65)]';
+                      const statusTextClass =
+                        paymentHealth.statusKey === 'overdue'
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : paymentHealth.statusKey === 'paid_up'
+                          ? 'text-emerald-700 dark:text-emerald-400'
+                          : 'text-amber-700 dark:text-amber-400';
+
                       return (
                         <tr key={record.id} className="hover:bg-sky-50/40 dark:hover:bg-sky-950/40 transition-colors">
-                          <td className="sticky left-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-700/80 max-w-[170px]">
+                          <td className="sticky left-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm py-2.5 px-3 border-r border-slate-200/80 dark:border-slate-700/80 max-w-[185px]">
                             <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`}
+                                title={paymentHealth.badgeLabel}
+                              />
                               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 shrink-0 tabular-nums">
                                 {idx + 1}.
                               </span>
@@ -1373,11 +1810,16 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                 {customerName}
                               </MarqueeText>
                             </div>
-                            {record.snapshot?.monthlyInstallment > 0 && (
-                              <div className="text-[9.5px] text-emerald-700 dark:text-emerald-400 font-semibold mt-0.5 tabular-nums">
-                                {formatBaht(record.snapshot.monthlyInstallment)} บ./ด.
-                              </div>
-                            )}
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className={`text-[9.5px] font-extrabold tabular-nums ${statusTextClass}`}>
+                                {paymentHealth.badgeLabel}
+                              </span>
+                              {record.snapshot?.monthlyInstallment > 0 && (
+                                <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-semibold tabular-nums">
+                                  • {formatBaht(record.snapshot.monthlyInstallment)} บ./ด.
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           <td className="py-2.5 px-2.5 whitespace-nowrap">
@@ -1406,18 +1848,49 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                             {deliveryDateShort}
                           </td>
 
-                          {schedule.map((slot) => (
-                            <td
-                              key={slot.installmentNo}
-                              className={`py-2 px-1.5 text-center whitespace-nowrap font-bold tabular-nums ${
-                                slot.installmentNo === 1
-                                  ? 'bg-sky-50/60 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200'
-                                  : 'text-slate-700 dark:text-slate-300'
-                              }`}
-                            >
-                              <span className="text-[10px]">{slot.formattedShort}</span>
-                            </td>
-                          ))}
+                          {paymentHealth.evaluatedSlots.map((slot) => {
+                            const slotDot =
+                              slot.visualState === 'paid'
+                                ? 'bg-emerald-500'
+                                : slot.visualState === 'overdue'
+                                ? 'bg-rose-500'
+                                : slot.visualState === 'due_soon'
+                                ? 'bg-amber-400'
+                                : 'bg-slate-300 dark:bg-slate-600';
+                            const cellBg =
+                              slot.visualState === 'paid'
+                                ? 'bg-emerald-50/60 dark:bg-emerald-950/35 text-emerald-900 dark:text-emerald-200'
+                                : slot.visualState === 'overdue'
+                                ? 'bg-rose-50/70 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200'
+                                : slot.visualState === 'due_soon'
+                                ? 'bg-amber-50/70 dark:bg-amber-950/35 text-amber-900 dark:text-amber-200'
+                                : slot.installmentNo === 1
+                                ? 'bg-sky-50/60 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200'
+                                : 'text-slate-700 dark:text-slate-300';
+
+                            return (
+                              <td
+                                key={slot.installmentNo}
+                                className={`py-2 px-1.5 text-center whitespace-nowrap font-bold tabular-nums ${cellBg}`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleInstallmentSlot(
+                                      record.id,
+                                      slot.installmentNo,
+                                      slot.status
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-white/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+                                  title="แตะเพื่อสลับสถานะ (จ่ายแล้ว / ค้างชำระ / ปกติ)"
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${slotDot}`} />
+                                  <span className="text-[10px]">{slot.formattedShort}</span>
+                                </button>
+                              </td>
+                            );
+                          })}
 
                           <td className="py-2 px-2 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1">
