@@ -26,6 +26,8 @@ import {
   MapPin,
   ExternalLink,
   ClipboardCopy,
+  Barcode,
+  ScanLine,
 } from 'lucide-react';
 import { SavedCaseRecord, InstallmentPaymentStatus } from '../types';
 import {
@@ -48,6 +50,8 @@ import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import { CardModalOverlay } from './CardModalOverlay';
 import { MarqueeText } from './MarqueeText';
+import { normalizeVehicleSerial, VehicleBarcodeTarget } from '../utils/vehicleNumberUtils';
+import { VehicleBarcodeScannerModal } from './VehicleBarcodeScannerModal';
 
 interface Props {
   refreshTrigger: number;
@@ -306,6 +310,9 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
   const [formDueDay, setFormDueDay] = useState('2');
   const [formMonthlyInstallment, setFormMonthlyInstallment] = useState('');
   const [formGoogleMapsLocation, setFormGoogleMapsLocation] = useState('');
+  const [formEngineNumber, setFormEngineNumber] = useState('');
+  const [formChassisNumber, setFormChassisNumber] = useState('');
+  const [formScannerTarget, setFormScannerTarget] = useState<VehicleBarcodeTarget | null>(null);
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
@@ -483,6 +490,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           item.paymentHealth.badgeLabel,
           item.record.dealerName,
           item.record.googleMapsLocation,
+          item.record.engineNumber,
+          item.record.chassisNumber,
         ]
           .filter(Boolean)
           .join(' ')
@@ -634,6 +643,9 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     setFormDueDay('2');
     setFormMonthlyInstallment('');
     setFormGoogleMapsLocation('');
+    setFormEngineNumber('');
+    setFormChassisNumber('');
+    setFormScannerTarget(null);
     setFormError('');
     setIsFormModalOpen(true);
   };
@@ -653,6 +665,9 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       r.snapshot?.monthlyInstallment ? String(r.snapshot.monthlyInstallment) : ''
     );
     setFormGoogleMapsLocation(r.googleMapsLocation || '');
+    setFormEngineNumber(r.engineNumber || '');
+    setFormChassisNumber(r.chassisNumber || '');
+    setFormScannerTarget(null);
     setFormError('');
     setIsFormModalOpen(true);
   };
@@ -699,6 +714,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
     const cleanModel = formModelName.trim();
     const cleanCode = formModelCode.trim().toUpperCase();
     const cleanLocation = formGoogleMapsLocation.trim();
+    const cleanEngineNumber = normalizeVehicleSerial(formEngineNumber);
+    const cleanChassisNumber = normalizeVehicleSerial(formChassisNumber);
     const parsedDueDay = Math.min(31, Math.max(1, parseInt(formDueDay, 10) || 2));
     const parsedInstallment = parseFloat(formMonthlyInstallment.replace(/[^0-9.]/g, '')) || 0;
 
@@ -712,6 +729,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         deliveryDate: formDeliveryDate || undefined,
         paymentDueDay: parsedDueDay,
         googleMapsLocation: cleanLocation,
+        engineNumber: cleanEngineNumber,
+        chassisNumber: cleanChassisNumber,
         ...(parsedInstallment > 0 ? { monthlyInstallment: parsedInstallment } : {}),
       });
       setCases(updated);
@@ -743,6 +762,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           matchedModel?.name ||
           (cleanCode ? `รุ่นรหัส ${cleanCode}` : 'รถจักรยานยนต์'),
         bikeModelCode: cleanCode || undefined,
+        engineNumber: cleanEngineNumber || undefined,
+        chassisNumber: cleanChassisNumber || undefined,
         downMode: 'amount',
         downValue: 0,
         term: 36,
@@ -797,6 +818,8 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       `👤 ลูกค้า: ${item.customerName}${item.record.customerPhone ? ` (${item.record.customerPhone})` : ''}`,
       `🏍️ ยี่ห้อ: ${item.brand} | รุ่น: ${item.modelName}`,
       `🏷️ รหัสรถ: ${item.modelCode}`,
+      item.record.engineNumber ? `🔧 เลขเครื่อง: ${item.record.engineNumber}` : '',
+      item.record.chassisNumber ? `🪪 เลขตัวถัง: ${item.record.chassisNumber}` : '',
       `📦 วันรับรถ: ${item.deliveryDateShort} (${item.cycleRangeText})`,
       `⭐ กำหนดชำระงวดแรก: ${item.firstDueLabelLong}`,
       item.record.snapshot?.monthlyInstallment
@@ -1498,6 +1521,23 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                                 </button>
                               )}
                             </div>
+
+                            {(record.engineNumber || record.chassisNumber) && (
+                              <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono font-bold pt-0.5">
+                                {record.engineNumber && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50/90 text-teal-800 border border-teal-200/80 dark:bg-teal-950/60 dark:text-teal-200 dark:border-teal-800/70">
+                                    <Barcode className="w-2.5 h-2.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                                    <span>เครื่อง: {record.engineNumber}</span>
+                                  </span>
+                                )}
+                                {record.chassisNumber && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-50/90 text-cyan-800 border border-cyan-200/80 dark:bg-cyan-950/60 dark:text-cyan-200 dark:border-cyan-800/70">
+                                    <Barcode className="w-2.5 h-2.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                                    <span>ถัง: {record.chassisNumber}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -1842,6 +1882,12 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                             <span className="font-mono text-[10px] font-bold text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/70 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800/70">
                               {modelCode}
                             </span>
+                            {(record.engineNumber || record.chassisNumber) && (
+                              <div className="mt-1 space-y-0.5 font-mono text-[9.5px] font-bold text-teal-800 dark:text-teal-300">
+                                {record.engineNumber && <div>E: {record.engineNumber}</div>}
+                                {record.chassisNumber && <div>C: {record.chassisNumber}</div>}
+                              </div>
+                            )}
                           </td>
 
                           <td className="py-2.5 px-2.5 whitespace-nowrap text-center text-[10.5px] font-semibold text-teal-800 dark:text-teal-300 tabular-nums">
@@ -2080,6 +2126,107 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
             </div>
           </div>
 
+          {/* Vehicle Engine & Chassis Numbers (Manual + Barcode Scan) */}
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-50/80 via-white to-cyan-50/70 dark:from-teal-950/40 dark:via-slate-900 dark:to-cyan-950/30 border border-teal-200/80 dark:border-teal-800/70 space-y-2.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-teal-900 dark:text-teal-200">
+                <Barcode className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                <span>เลขเครื่อง / เลขตัวถัง (พิมพ์เองหรือสแกนบาร์โค้ด)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFormScannerTarget('both');
+                }}
+                className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-extrabold text-[10.5px] shadow-2xs inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+              >
+                <ScanLine className="w-3 h-3" />
+                <span>สแกนสติ๊กเกอร์คู่</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                    เลขเครื่อง (Engine No.)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setFormScannerTarget('engine');
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-teal-100/80 hover:bg-teal-200 dark:bg-teal-950/70 dark:hover:bg-teal-900/70 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <ScanLine className="w-3 h-3" />
+                    <span>สแกน</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formEngineNumber}
+                    onChange={(e) => setFormEngineNumber(normalizeVehicleSerial(e.target.value))}
+                    placeholder="เช่น JC75E-1234567"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-teal-500 pl-3 pr-7 py-2 font-bold font-mono uppercase text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
+                  />
+                  {formEngineNumber && (
+                    <button
+                      type="button"
+                      onClick={() => setFormEngineNumber('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                    เลขตัวถัง (Chassis No. / VIN)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setFormScannerTarget('chassis');
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-cyan-100/80 hover:bg-cyan-200 dark:bg-cyan-950/70 dark:hover:bg-cyan-900/70 text-cyan-800 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <ScanLine className="w-3 h-3" />
+                    <span>สแกน</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formChassisNumber}
+                    onChange={(e) => setFormChassisNumber(normalizeVehicleSerial(e.target.value))}
+                    placeholder="เช่น MLHJC7500R5001234"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-cyan-500 pl-3 pr-7 py-2 font-bold font-mono uppercase text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
+                  />
+                  {formChassisNumber && (
+                    <button
+                      type="button"
+                      onClick={() => setFormChassisNumber('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-3 gap-2.5">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
@@ -2201,6 +2348,28 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           </div>
         </form>
       </CardModalOverlay>
+
+      {/* Vehicle Engine & Chassis Barcode Scanner Modal */}
+      {formScannerTarget && (
+        <VehicleBarcodeScannerModal
+          isOpen={Boolean(formScannerTarget)}
+          onClose={() => setFormScannerTarget(null)}
+          initialTarget={formScannerTarget}
+          initialEngineNumber={formEngineNumber}
+          initialChassisNumber={formChassisNumber}
+          customerName={formCustomerName || undefined}
+          onApply={(data) => {
+            if (data.engineNumber !== undefined) {
+              setFormEngineNumber(data.engineNumber);
+            }
+            if (data.chassisNumber !== undefined) {
+              setFormChassisNumber(data.chassisNumber);
+            }
+            setFormScannerTarget(null);
+            onNotify('✓ ดึงเลขเครื่อง/เลขตัวถังจากการสแกนเรียบร้อย');
+          }}
+        />
+      )}
     </div>
   );
 };

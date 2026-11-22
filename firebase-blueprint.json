@@ -167,6 +167,16 @@
           "type": "string",
           "maxLength": 80
         },
+        "engineNumber": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Motorcycle engine serial number for approved and delivered cases"
+        },
+        "chassisNumber": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Motorcycle chassis / frame / VIN number for approved and delivered cases"
+        },
         "downMode": {
           "type": "string",
           "enum": ["amount", "percent"]

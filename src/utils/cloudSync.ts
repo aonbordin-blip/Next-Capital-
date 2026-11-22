@@ -672,6 +672,12 @@ export function buildRtdbCasePayload(
   if (typeof record.bikeBrand === 'string' && record.bikeBrand) {
     payload.bikeBrand = safeStr(record.bikeBrand, 80);
   }
+  if (typeof record.engineNumber === 'string' && record.engineNumber.trim()) {
+    payload.engineNumber = safeStr(record.engineNumber.trim().toUpperCase(), 60);
+  }
+  if (typeof record.chassisNumber === 'string' && record.chassisNumber.trim()) {
+    payload.chassisNumber = safeStr(record.chassisNumber.trim().toUpperCase(), 60);
+  }
   if (
     record.approvalStatus === 'pending' ||
     record.approvalStatus === 'approved' ||
@@ -819,6 +825,8 @@ export function fromCloudCaseDoc(
     bikeModelName: typeof data.bikeModelName === 'string' ? data.bikeModelName : undefined,
     bikeModelCode: typeof data.bikeModelCode === 'string' ? data.bikeModelCode : undefined,
     bikeBrand: typeof data.bikeBrand === 'string' ? data.bikeBrand : undefined,
+    engineNumber: typeof data.engineNumber === 'string' ? data.engineNumber : undefined,
+    chassisNumber: typeof data.chassisNumber === 'string' ? data.chassisNumber : undefined,
     downMode: (data.downMode as 'amount' | 'percent') || 'amount',
     downValue: Number(data.downValue) || 0,
     term: Number(data.term) || 36,

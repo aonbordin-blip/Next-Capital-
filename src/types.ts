@@ -215,8 +215,10 @@ export interface SavedCaseRecord {
   paymentDueDay?: number; // กำหนดวันชำระค่างวด (เช่น วันที่ 1-31 ของทุกเดือน)
   googleMapsLocation?: string; // ลิงก์ พิกัด หรือที่อยู่ปัจจุบันที่คัดลอกมาจาก Google Maps
 
-  // Vehicle Brand & 9-Installment Payment Tracking (ติดตามชำระงวด 1-9)
+  // Vehicle Brand, Engine/Chassis Numbers & 9-Installment Payment Tracking (ติดตามชำระงวด 1-9)
   bikeBrand?: string;
+  engineNumber?: string; // เลขเครื่องยนต์ (สำหรับเคสที่ผ่านและรับรถแล้ว)
+  chassisNumber?: string; // เลขตัวถัง / เลขถัง / VIN (สำหรับเคสที่ผ่านและรับรถแล้ว)
   installmentPayments?: Record<number, InstallmentPaymentStatus>;
 
   // Approval Document (เอกสารการอนุมัติ PDF)

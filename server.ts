@@ -66,6 +66,15 @@ function normalizeWhitespace(val?: string, maxLen = 500): string {
     .slice(0, maxLen);
 }
 
+function cleanVehicleSerial(raw?: string, maxLen = 60): string {
+  return String(raw || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\r\n\t\s]+/g, '')
+    .replace(/[^A-Z0-9\-/.*_]/g, '')
+    .slice(0, maxLen);
+}
+
 function extractJsonText(raw: string): string {
   const trimmed = raw.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -172,6 +181,59 @@ const ID_SCAN_RESPONSE_SCHEMA = {
     'dateOfBirthIso',
     'addressTh',
   ],
+};
+
+interface RawVehicleBarcodeResult {
+  isReadable?: boolean;
+  engineNumber?: string;
+  chassisNumber?: string;
+  detectedBarcodeText?: string;
+  confidenceNote?: string;
+  unreadableReason?: string;
+}
+
+const VEHICLE_BARCODE_SYSTEM_INSTRUCTION = [
+  'You are an ultra-fast, high-accuracy motorcycle VIN / Chassis / Engine Number & Barcode extractor.',
+  'Images may show motorcycle box/crate barcode stickers, frame/chassis plates, engine crankcases, vehicle registration books (เล่มทะเบียนรถจักรยานยนต์), or sales delivery stickers.',
+  'Read BOTH 1D/2D barcodes (Code128, Code39, QR, DataMatrix) and the human-readable printed or stamped text carefully.',
+  'Rules:',
+  '- chassisNumber: Vehicle chassis / frame / VIN number (often 17 characters like MLH..., MH3..., LWB..., or labeled VIN / FRAME / CHASSIS / F/N / เลขตัวถัง / เลขถัง).',
+  '- engineNumber: Motorcycle engine serial number (often contains engine model prefix + E + digits like JA14E-0123456, KF40E0012345, E33NE-123456, or labeled ENGINE / ENG.NO / E/N / เลขเครื่อง).',
+  '- detectedBarcodeText: Raw primary barcode string if only a single unlabeled barcode is shown.',
+  '- Return ONLY uppercase alphanumeric serial characters (plus hyphen - or / if printed inside the serial). Do NOT include labels like "VIN:", "E/N:", or spaces.',
+  '- Check visually similar characters carefully (0 vs O, 1 vs I, 5 vs S, 8 vs B, 2 vs Z).',
+  '- Set isReadable=false ONLY if no serial number or barcode can be read at all.',
+].join('\n');
+
+const VEHICLE_BARCODE_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    isReadable: {
+      type: Type.BOOLEAN,
+      description: 'True if at least one barcode, engine number, or chassis/VIN number is readable.',
+    },
+    engineNumber: {
+      type: Type.STRING,
+      description: 'Extracted motorcycle engine number (เลขเครื่อง), uppercase without spaces, or empty string if not present.',
+    },
+    chassisNumber: {
+      type: Type.STRING,
+      description: 'Extracted motorcycle chassis / frame / VIN number (เลขถัง/เลขตัวถัง), uppercase without spaces, or empty string if not present.',
+    },
+    detectedBarcodeText: {
+      type: Type.STRING,
+      description: 'Raw decoded text from the clearest barcode in the image if unlabeled.',
+    },
+    confidenceNote: {
+      type: Type.STRING,
+      description: 'Brief Thai note describing what was detected (e.g. อ่านจากสติ๊กเกอร์บาร์โค้ดคู่).',
+    },
+    unreadableReason: {
+      type: Type.STRING,
+      description: 'Short Thai explanation if the barcode/serial text cannot be read clearly.',
+    },
+  },
+  required: ['isReadable', 'engineNumber', 'chassisNumber'],
 };
 
 const THAI_MONTH_MAP: Record<string, string> = {
@@ -398,6 +460,186 @@ async function startServer() {
 
       let httpStatus = 500;
       let msg = 'เกิดข้อผิดพลาดในการสแกนบัตรประชาชน กรุณาลองใหม่อีกครั้ง';
+
+      if (rawMessage.includes('GEMINI_API_KEY') || status === 401 || status === 403) {
+        httpStatus = 500;
+        msg =
+          'ยังไม่ได้ตั้งค่า GEMINI_API_KEY หรือสิทธิ์คีย์ไม่ถูกต้อง กรุณาตรวจสอบใน Settings > Secrets';
+      } else if (status === 429) {
+        httpStatus = 429;
+        msg = 'ขณะนี้มีผู้ใช้งานจำนวนมาก (Quota เต็มชั่วคราว) กรุณารอสักครู่แล้วลองใหม่อีกครั้ง';
+      } else if (status === 404) {
+        httpStatus = 502;
+        msg = 'ไม่พบบริการโมเดลวิเคราะห์ภาพ กรุณาลองใหม่อีกครั้ง';
+      } else if (
+        rawMessage.toLowerCase().includes('timeout') ||
+        rawMessage.toLowerCase().includes('aborted')
+      ) {
+        httpStatus = 504;
+        msg = 'การประมวลผลใช้เวลานานเกินกำหนด กรุณาลองถ่ายใหม่หรือเช็กสัญญาณอินเทอร์เน็ต';
+      }
+
+      res.status(httpStatus).json({ ok: false, error: msg });
+    }
+  });
+
+  app.post('/api/scan-vehicle-barcode', async (req, res) => {
+    const reqStart = Date.now();
+    try {
+      const body = (req.body || {}) as {
+        imageBase64?: unknown;
+        mimeType?: unknown;
+        scanTarget?: unknown;
+      };
+
+      if (typeof body.imageBase64 !== 'string' || !body.imageBase64.trim()) {
+        res.status(400).json({
+          ok: false,
+          error: 'ไม่พบข้อมูลรูปภาพสำหรับสแกน กรุณาถ่ายภาพหรือเลือกรูปใหม่อีกครั้ง',
+        });
+        return;
+      }
+
+      const rawInput = body.imageBase64.trim();
+      const dataUrlMatch = rawInput.match(/^data:([^;]+);base64,(.+)$/i);
+      const base64Data = (dataUrlMatch ? dataUrlMatch[2] : rawInput).replace(/\s+/g, '');
+
+      const requestedMime = (
+        (typeof body.mimeType === 'string' && body.mimeType.trim()) ||
+        (dataUrlMatch ? dataUrlMatch[1] : '') ||
+        'image/jpeg'
+      ).toLowerCase();
+
+      const mimeType = ALLOWED_MIME_TYPES.has(requestedMime)
+        ? requestedMime === 'image/jpg'
+          ? 'image/jpeg'
+          : requestedMime
+        : 'image/jpeg';
+
+      const approxBytes = Math.floor((base64Data.length * 3) / 4);
+      if (approxBytes < 100 || approxBytes > 6 * 1024 * 1024) {
+        res.status(400).json({
+          ok: false,
+          error: 'ขนาดไฟล์ภาพไม่เหมาะสม (ต้องไม่เกิน 6MB)',
+        });
+        return;
+      }
+
+      const scanTarget =
+        body.scanTarget === 'engine' || body.scanTarget === 'chassis' ? body.scanTarget : 'both';
+      const targetHint =
+        scanTarget === 'engine'
+          ? 'ผู้ใช้กำลังต้องการอ่านเลขเครื่อง (Engine No.) เป็นหลัก แต่ถ้าเห็นเลขถังด้วยให้ส่งกลับมาด้วย'
+          : scanTarget === 'chassis'
+          ? 'ผู้ใช้กำลังต้องการอ่านเลขถัง / VIN (Chassis/Frame No.) เป็นหลัก แต่ถ้าเห็นเลขเครื่องด้วยให้ส่งกลับมาด้วย'
+          : 'อ่านทั้งเลขเครื่อง (Engine No.) และเลขถัง (Chassis/Frame/VIN No.) ที่พบในภาพนี้';
+
+      const ai = getGeminiClient();
+
+      const callModel = () =>
+        ai.models.generateContent({
+          model: 'gemini-3.1-flash-lite',
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
+                },
+              },
+              {
+                text: `${targetHint} แล้วส่งกลับเป็น JSON ตามสคีมา`,
+              },
+            ],
+          },
+          config: {
+            systemInstruction: VEHICLE_BARCODE_SYSTEM_INSTRUCTION,
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+            responseMimeType: 'application/json',
+            responseSchema: VEHICLE_BARCODE_RESPONSE_SCHEMA,
+          },
+        });
+
+      let response;
+      try {
+        response = await callModel();
+      } catch (firstErr) {
+        if (!isTransientError(firstErr) || Date.now() - reqStart > 12000) {
+          throw firstErr;
+        }
+        await new Promise((r) => setTimeout(r, 350));
+        response = await callModel();
+      }
+
+      const rawText = (response.text || '').trim();
+      if (!rawText) {
+        res.status(502).json({
+          ok: false,
+          error: 'ระบบวิเคราะห์ภาพไม่ได้ส่งผลลัพธ์กลับมา กรุณาลองใหม่อีกครั้ง',
+        });
+        return;
+      }
+
+      let parsed: RawVehicleBarcodeResult;
+      try {
+        parsed = JSON.parse(extractJsonText(rawText)) as RawVehicleBarcodeResult;
+      } catch {
+        res.status(502).json({
+          ok: false,
+          error: 'ไม่สามารถอ่านรูปแบบผลลัพธ์จากระบบวิเคราะห์ภาพได้ กรุณาลองใหม่อีกครั้ง',
+        });
+        return;
+      }
+
+      let engineNumber = cleanVehicleSerial(parsed.engineNumber, 60);
+      let chassisNumber = cleanVehicleSerial(parsed.chassisNumber, 60);
+      const detectedBarcodeText = cleanVehicleSerial(parsed.detectedBarcodeText, 60);
+
+      if (!engineNumber && !chassisNumber && detectedBarcodeText) {
+        if (scanTarget === 'engine') {
+          engineNumber = detectedBarcodeText;
+        } else if (scanTarget === 'chassis') {
+          chassisNumber = detectedBarcodeText;
+        } else if (detectedBarcodeText.length >= 16) {
+          chassisNumber = detectedBarcodeText;
+        } else {
+          engineNumber = detectedBarcodeText;
+        }
+      }
+
+      if (!parsed.isReadable && !engineNumber && !chassisNumber && !detectedBarcodeText) {
+        res.status(422).json({
+          ok: false,
+          error:
+            normalizeWhitespace(parsed.unreadableReason, 240) ||
+            'ไม่พบบาร์โค้ด หรือตัวอักษรเลขเครื่อง/เลขถังที่อ่านได้ชัด กรุณาถ่ายภาพให้ใกล้ขึ้นและโฟกัสชัดเจน',
+        });
+        return;
+      }
+
+      console.log(
+        `[scan-vehicle-barcode] OK in ${Date.now() - reqStart}ms (${Math.round(approxBytes / 1024)}KB)`
+      );
+
+      res.json({
+        ok: true,
+        data: {
+          engineNumber,
+          chassisNumber,
+          detectedBarcodeText,
+          confidenceNote: normalizeWhitespace(parsed.confidenceNote, 180),
+        },
+      });
+    } catch (error) {
+      const status = getErrorStatus(error);
+      const rawMessage = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[scan-vehicle-barcode] ERROR after ${Date.now() - reqStart}ms (status=${status}):`,
+        rawMessage
+      );
+
+      let httpStatus = 500;
+      let msg = 'เกิดข้อผิดพลาดในการสแกนเลขเครื่อง/เลขถัง กรุณาลองใหม่อีกครั้ง';
 
       if (rawMessage.includes('GEMINI_API_KEY') || status === 401 || status === 403) {
         httpStatus = 500;

@@ -173,6 +173,8 @@ service cloud.firestore {
           'bikeModelName',
           'bikeModelCode',
           'bikeBrand',
+          'engineNumber',
+          'chassisNumber',
           'downMode',
           'downValue',
           'term',
@@ -249,6 +251,8 @@ service cloud.firestore {
         && (!('bikeModelName' in data) || (data.bikeModelName is string && data.bikeModelName.size() <= 200))
         && (!('bikeModelCode' in data) || (data.bikeModelCode is string && data.bikeModelCode.size() <= 80))
         && (!('bikeBrand' in data) || (data.bikeBrand is string && data.bikeBrand.size() <= 80))
+        && (!('engineNumber' in data) || (data.engineNumber is string && data.engineNumber.size() <= 60))
+        && (!('chassisNumber' in data) || (data.chassisNumber is string && data.chassisNumber.size() <= 60))
         && (!('approvalStatus' in data) || (data.approvalStatus is string && data.approvalStatus in ['pending', 'approved', 'rejected', 'cancelled']))
         && (!('deliveryStatus' in data) || (data.deliveryStatus is string && data.deliveryStatus in ['pending_delivery', 'delivered']))
         && (!('approvalDate' in data) || (data.approvalDate is string && data.approvalDate.size() <= 40))
@@ -273,6 +277,8 @@ service cloud.firestore {
         'approvalNote',
         'approvalUpdatedAt',
         'paymentDueDay',
+        'engineNumber',
+        'chassisNumber',
         'recordUpdatedAt',
         'updatedAt'
       ]);
@@ -287,6 +293,8 @@ service cloud.firestore {
         'bikeBrand',
         'bikeModelName',
         'bikeModelCode',
+        'engineNumber',
+        'chassisNumber',
         'deliveryDate',
         'paymentDueDay',
         'googleMapsLocation',
@@ -322,6 +330,8 @@ service cloud.firestore {
         'bikeModelName',
         'bikeModelCode',
         'bikeBrand',
+        'engineNumber',
+        'chassisNumber',
         'downMode',
         'downValue',
         'term',
@@ -346,6 +356,7 @@ service cloud.firestore {
         'googleMapsLocation',
         'installmentPayments',
         'approvalDoc',
+        'recordCreatedAt',
         'recordUpdatedAt',
         'updatedAt'
       ]);

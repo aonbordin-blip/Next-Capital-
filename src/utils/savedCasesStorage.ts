@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { deleteApprovalDocFile, saveApprovalDocDataUrl } from './approvalDocsStorage';
 import { findModelByCode } from '../data/motorcycleModels';
+import { normalizeVehicleSerial } from './vehicleNumberUtils';
 
 const STORAGE_KEY = 'ncap_saved_cases_v1';
 
@@ -381,6 +382,14 @@ export function saveCaseRecord(
         paymentDueDay: data.paymentDueDay !== undefined ? data.paymentDueDay : existing.paymentDueDay,
         googleMapsLocation: data.googleMapsLocation !== undefined ? data.googleMapsLocation : existing.googleMapsLocation,
         bikeBrand: data.bikeBrand !== undefined ? data.bikeBrand : existing.bikeBrand,
+        engineNumber:
+          data.engineNumber !== undefined
+            ? normalizeVehicleSerial(data.engineNumber) || undefined
+            : existing.engineNumber,
+        chassisNumber:
+          data.chassisNumber !== undefined
+            ? normalizeVehicleSerial(data.chassisNumber) || undefined
+            : existing.chassisNumber,
         installmentPayments:
           data.installmentPayments !== undefined ? data.installmentPayments : existing.installmentPayments,
         approvalDoc: data.approvalDoc !== undefined ? data.approvalDoc : existing.approvalDoc,
@@ -417,6 +426,8 @@ export function saveCaseRecord(
     paymentDueDay: data.paymentDueDay,
     googleMapsLocation: data.googleMapsLocation,
     bikeBrand: data.bikeBrand,
+    engineNumber: normalizeVehicleSerial(data.engineNumber) || undefined,
+    chassisNumber: normalizeVehicleSerial(data.chassisNumber) || undefined,
     installmentPayments: data.installmentPayments,
     approvalDoc: data.approvalDoc,
     id: sanitizeCaseId(data.id),
@@ -578,6 +589,27 @@ export function updateCaseGoogleMapsLocation(
         }
       : c
   );
+  return finalizeUpdatedCase(updated, id);
+}
+
+export function updateCaseVehicleNumbers(
+  id: string,
+  numbers: { engineNumber?: string; chassisNumber?: string }
+): SavedCaseRecord[] {
+  const cases = getSavedCases();
+  const updated = cases.map((c) => {
+    if (c.id !== id) return c;
+    return {
+      ...c,
+      ...(numbers.engineNumber !== undefined
+        ? { engineNumber: normalizeVehicleSerial(numbers.engineNumber) || undefined }
+        : {}),
+      ...(numbers.chassisNumber !== undefined
+        ? { chassisNumber: normalizeVehicleSerial(numbers.chassisNumber) || undefined }
+        : {}),
+      updatedAt: Date.now(),
+    };
+  });
   return finalizeUpdatedCase(updated, id);
 }
 
@@ -856,6 +888,12 @@ function normalizeImportedRecord(
     ...(typeof raw.bikeModelName === 'string' && raw.bikeModelName ? { bikeModelName: raw.bikeModelName } : {}),
     ...(typeof raw.bikeModelCode === 'string' && raw.bikeModelCode ? { bikeModelCode: raw.bikeModelCode } : {}),
     ...(typeof raw.bikeBrand === 'string' && raw.bikeBrand ? { bikeBrand: raw.bikeBrand } : {}),
+    ...(typeof raw.engineNumber === 'string' && normalizeVehicleSerial(raw.engineNumber)
+      ? { engineNumber: normalizeVehicleSerial(raw.engineNumber) }
+      : {}),
+    ...(typeof raw.chassisNumber === 'string' && normalizeVehicleSerial(raw.chassisNumber)
+      ? { chassisNumber: normalizeVehicleSerial(raw.chassisNumber) }
+      : {}),
     downMode,
     downValue,
     term,
@@ -1177,6 +1215,8 @@ export function updateCaseTrackingDetails(
     bikeBrand?: string;
     bikeModelName?: string;
     bikeModelCode?: string;
+    engineNumber?: string;
+    chassisNumber?: string;
     deliveryDate?: string;
     paymentDueDay?: number;
     monthlyInstallment?: number;
@@ -1194,6 +1234,12 @@ export function updateCaseTrackingDetails(
       ...(updates.bikeBrand !== undefined ? { bikeBrand: updates.bikeBrand.trim() || undefined } : {}),
       ...(updates.bikeModelName !== undefined ? { bikeModelName: updates.bikeModelName.trim() || undefined } : {}),
       ...(updates.bikeModelCode !== undefined ? { bikeModelCode: updates.bikeModelCode.trim().toUpperCase() || undefined } : {}),
+      ...(updates.engineNumber !== undefined
+        ? { engineNumber: normalizeVehicleSerial(updates.engineNumber) || undefined }
+        : {}),
+      ...(updates.chassisNumber !== undefined
+        ? { chassisNumber: normalizeVehicleSerial(updates.chassisNumber) || undefined }
+        : {}),
       ...(updates.deliveryDate !== undefined ? { deliveryDate: updates.deliveryDate || undefined } : {}),
       ...(updates.paymentDueDay !== undefined ? { paymentDueDay: updates.paymentDueDay } : {}),
       ...(updates.googleMapsLocation !== undefined

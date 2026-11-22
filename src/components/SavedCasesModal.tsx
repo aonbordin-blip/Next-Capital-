@@ -56,6 +56,8 @@ import {
   FileSpreadsheet,
   CreditCard,
   EyeOff,
+  Barcode,
+  ScanLine,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -76,6 +78,7 @@ import {
   updateCaseDates,
   updateCasePaymentDueDay,
   updateCaseGoogleMapsLocation,
+  updateCaseVehicleNumbers,
   updateCaseApprovalDoc,
   getGoogleMapsNavigationUrl,
   calculateFirstPaymentDueDate,
@@ -93,6 +96,8 @@ import {
 } from '../utils/approvalDocsStorage';
 import { PdfCanvasViewer } from './PdfCanvasViewer';
 import { ProvisionalApprovalModal, ProvisionalApprovalData } from './ProvisionalApprovalModal';
+import { normalizeVehicleSerial, VehicleBarcodeTarget } from '../utils/vehicleNumberUtils';
+import { VehicleBarcodeScannerModal } from './VehicleBarcodeScannerModal';
 
 interface Props {
   isOpen: boolean;
@@ -314,6 +319,10 @@ export const SavedCasesModal: React.FC<Props> = ({
   // Provisional Approval Certificate Modal State
   const [approvalModalCase, setApprovalModalCase] = useState<SavedCaseRecord | null>(null);
   const [showFullIdCard, setShowFullIdCard] = useState<boolean>(true);
+  const [barcodeScannerState, setBarcodeScannerState] = useState<{
+    caseId: string;
+    target: VehicleBarcodeTarget;
+  } | null>(null);
 
   // Load cases when modal opens
   useEffect(() => {
@@ -346,6 +355,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeleteDocConfirmId(null);
       setInlinePdfDataUrl(null);
       setIsLoadingInlinePdf(false);
+      setBarcodeScannerState(null);
     }
   }, [isOpen, initialShowAllMonths]);
 
@@ -666,6 +676,8 @@ export const SavedCasesModal: React.FC<Props> = ({
         const idCardMatch =
           Boolean(cleanIdQuery) && Boolean(c.customerIdCard?.includes(cleanIdQuery));
         const addressMatch = Boolean(c.customerAddress?.toLowerCase().includes(q));
+        const engineMatch = Boolean(c.engineNumber?.toLowerCase().includes(q));
+        const chassisMatch = Boolean(c.chassisNumber?.toLowerCase().includes(q));
         let dueMatch = false;
         if (c.approvalStatus === 'approved' && c.deliveryStatus === 'delivered') {
           const dueInfo = calculateFirstPaymentDueDate(c.deliveryDate || c.createdAt);
@@ -675,7 +687,7 @@ export const SavedCasesModal: React.FC<Props> = ({
             dueInfo.cycleRangeText.toLowerCase().includes(q) ||
             `ชำระ 2 ${dueInfo.monthName}`.toLowerCase().includes(q);
         }
-        return titleMatch || custMatch || phoneMatch || Boolean(dealerMatch) || bikeMatch || codeMatch || proposalMatch || Boolean(locationMatch) || idCardMatch || addressMatch || dueMatch;
+        return titleMatch || custMatch || phoneMatch || Boolean(dealerMatch) || bikeMatch || codeMatch || proposalMatch || Boolean(locationMatch) || idCardMatch || addressMatch || engineMatch || chassisMatch || dueMatch;
       }
 
       return true;
@@ -813,6 +825,18 @@ export const SavedCasesModal: React.FC<Props> = ({
   const handleSaveLocation = (id: string, location: string) => {
     const updated = updateCaseGoogleMapsLocation(id, location);
     setCases(updated);
+  };
+
+  const handleSaveVehicleNumbers = (
+    id: string,
+    numbers: { engineNumber?: string; chassisNumber?: string },
+    toastText?: string
+  ) => {
+    const updated = updateCaseVehicleNumbers(id, numbers);
+    setCases(updated);
+    if (toastText) {
+      showToast(toastText);
+    }
   };
 
   const handlePasteLocation = async (id: string) => {
@@ -1905,6 +1929,12 @@ export const SavedCasesModal: React.FC<Props> = ({
                                         <span>{record.snapshot.proposalCode}</span>
                                       )}
                                     </div>
+                                    {isApproved && isDelivered && (record.engineNumber || record.chassisNumber) && (
+                                      <div className="flex items-center gap-1 mt-0.5 flex-wrap font-mono text-[9.5px] font-bold text-teal-800 dark:text-teal-300 truncate">
+                                        {record.engineNumber && <span>E:{record.engineNumber}</span>}
+                                        {record.chassisNumber && <span>C:{record.chassisNumber}</span>}
+                                      </div>
+                                    )}
                                   </td>
 
                                   {/* ค่างวด / ยอดจัด */}
@@ -2153,6 +2183,23 @@ export const SavedCasesModal: React.FC<Props> = ({
                               </MarqueeText>
                             </div>
 
+                            {isApproved && isDelivered && (record.engineNumber || record.chassisNumber) && (
+                              <div className="pl-[46px] flex items-center gap-1.5 flex-wrap text-[10px] font-mono font-bold">
+                                {record.engineNumber && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border border-teal-200/80 dark:border-teal-800/70 inline-flex items-center gap-1">
+                                    <Barcode className="w-2.5 h-2.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                                    <span>เครื่อง: {record.engineNumber}</span>
+                                  </span>
+                                )}
+                                {record.chassisNumber && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-200 border border-cyan-200/80 dark:border-cyan-800/70 inline-flex items-center gap-1">
+                                    <Barcode className="w-2.5 h-2.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                                    <span>ถัง: {record.chassisNumber}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             {/* Bottom Row */}
                             <div className="pl-[46px] flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
                               <span className="text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap tabular-nums">
@@ -2331,6 +2378,23 @@ export const SavedCasesModal: React.FC<Props> = ({
                                 </span>
                               )}
                             </div>
+
+                            {isApproved && isDelivered && (record.engineNumber || record.chassisNumber) && (
+                              <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono font-bold">
+                                {record.engineNumber && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border border-teal-200/80 dark:border-teal-800/70">
+                                    <Barcode className="w-2.5 h-2.5 shrink-0" />
+                                    <span>เลขเครื่อง: {record.engineNumber}</span>
+                                  </span>
+                                )}
+                                {record.chassisNumber && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-200 border border-cyan-200/80 dark:border-cyan-800/70">
+                                    <Barcode className="w-2.5 h-2.5 shrink-0" />
+                                    <span>เลขถัง: {record.chassisNumber}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
 
                             {/* Financial 4 stats */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-700/70 text-xs tabular-nums">
@@ -2667,6 +2731,199 @@ export const SavedCasesModal: React.FC<Props> = ({
                         </div>
                       );
                     })()}
+
+                    {/* ENGINE & CHASSIS NUMBERS (FOR APPROVED & DELIVERED CASES ONLY) */}
+                    {detailCase.deliveryStatus === 'delivered' && (
+                      <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/85 via-white to-cyan-50/60 dark:from-teal-950/45 dark:via-slate-900 dark:to-cyan-950/35 border border-teal-200 dark:border-teal-800/70 space-y-2.5 shadow-2xs animate-fade-in">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                              <Barcode className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-black text-teal-950 dark:text-teal-100 block">
+                                เลขเครื่อง / เลขตัวถัง (รับรถแล้ว)
+                              </span>
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                พิมพ์กรอกเองหรือสแกนบาร์โค้ดข้างกล่อง/สติ๊กเกอร์รถ
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {(detailCase.engineNumber || detailCase.chassisNumber) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const lines = [
+                                    detailCase.engineNumber ? `เลขเครื่อง: ${detailCase.engineNumber}` : '',
+                                    detailCase.chassisNumber ? `เลขตัวถัง: ${detailCase.chassisNumber}` : '',
+                                  ]
+                                    .filter(Boolean)
+                                    .join('\n');
+                                  navigator.clipboard?.writeText(lines);
+                                  triggerHaptic('success');
+                                  showToast('✓ คัดลอกเลขเครื่อง/เลขถังแล้ว');
+                                }}
+                                className="px-2 py-1 rounded-lg bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <ClipboardCopy className="w-3 h-3" />
+                                <span>คัดลอกคู่</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('light');
+                                setBarcodeScannerState({ caseId: detailCase.id, target: 'both' });
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white text-[10.5px] font-extrabold shadow-xs inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                            >
+                              <ScanLine className="w-3.5 h-3.5" />
+                              <span>สแกนสติ๊กเกอร์</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {/* เลขเครื่อง */}
+                          <div className="p-2 rounded-xl bg-white/95 dark:bg-slate-900/90 border border-teal-200/80 dark:border-teal-800/60 space-y-1.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[10.5px] font-extrabold text-teal-900 dark:text-teal-200">
+                                เลขเครื่องยนต์ (Engine No.)
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {detailCase.engineNumber && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard?.writeText(detailCase.engineNumber || '');
+                                      triggerHaptic('success');
+                                      showToast('✓ คัดลอกเลขเครื่องแล้ว');
+                                    }}
+                                    className="p-1 rounded-md text-slate-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/60 cursor-pointer transition-colors"
+                                    title="คัดลอกเลขเครื่อง"
+                                  >
+                                    <ClipboardCopy className="w-3 h-3" />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    setBarcodeScannerState({ caseId: detailCase.id, target: 'engine' });
+                                  }}
+                                  className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/70 dark:hover:bg-teal-900/70 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                  title="สแกนบาร์โค้ดเลขเครื่อง"
+                                >
+                                  <ScanLine className="w-3 h-3" />
+                                  <span>สแกน</span>
+                                </button>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={detailCase.engineNumber || ''}
+                                onChange={(e) =>
+                                  handleSaveVehicleNumbers(detailCase.id, {
+                                    engineNumber: normalizeVehicleSerial(e.target.value),
+                                  })
+                                }
+                                placeholder="เช่น JC75E-1234567"
+                                autoCapitalize="characters"
+                                spellCheck={false}
+                                className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none font-mono font-extrabold text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wide tabular-nums"
+                              />
+                              {detailCase.engineNumber && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSaveVehicleNumbers(
+                                      detailCase.id,
+                                      { engineNumber: '' },
+                                      'ล้างเลขเครื่องแล้ว'
+                                    )
+                                  }
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
+                                  title="ล้างเลขเครื่อง"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* เลขตัวถัง */}
+                          <div className="p-2 rounded-xl bg-white/95 dark:bg-slate-900/90 border border-cyan-200/80 dark:border-cyan-800/60 space-y-1.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[10.5px] font-extrabold text-cyan-900 dark:text-cyan-200">
+                                เลขตัวถัง (Chassis No. / VIN)
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {detailCase.chassisNumber && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard?.writeText(detailCase.chassisNumber || '');
+                                      triggerHaptic('success');
+                                      showToast('✓ คัดลอกเลขตัวถังแล้ว');
+                                    }}
+                                    className="p-1 rounded-md text-slate-400 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/60 cursor-pointer transition-colors"
+                                    title="คัดลอกเลขตัวถัง"
+                                  >
+                                    <ClipboardCopy className="w-3 h-3" />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    setBarcodeScannerState({ caseId: detailCase.id, target: 'chassis' });
+                                  }}
+                                  className="px-2 py-0.5 rounded-md bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/70 dark:hover:bg-cyan-900/70 text-cyan-800 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                  title="สแกนบาร์โค้ดเลขตัวถัง"
+                                >
+                                  <ScanLine className="w-3 h-3" />
+                                  <span>สแกน</span>
+                                </button>
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={detailCase.chassisNumber || ''}
+                                onChange={(e) =>
+                                  handleSaveVehicleNumbers(detailCase.id, {
+                                    chassisNumber: normalizeVehicleSerial(e.target.value),
+                                  })
+                                }
+                                placeholder="เช่น MLHJC7500R5001234"
+                                autoCapitalize="characters"
+                                spellCheck={false}
+                                className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none font-mono font-extrabold text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wide tabular-nums"
+                              />
+                              {detailCase.chassisNumber && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSaveVehicleNumbers(
+                                      detailCase.id,
+                                      { chassisNumber: '' },
+                                      'ล้างเลขตัวถังแล้ว'
+                                    )
+                                  }
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
+                                  title="ล้างเลขตัวถัง"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Cross-Month Accounting Notice Banner */}
                     {detailCase.deliveryStatus === 'delivered' && (() => {
@@ -3358,6 +3615,29 @@ export const SavedCasesModal: React.FC<Props> = ({
             }}
           />
         )}
+
+        {/* Vehicle Engine & Chassis Barcode Scanner Modal */}
+        {barcodeScannerState && (() => {
+          const targetCase = cases.find((c) => c.id === barcodeScannerState.caseId);
+          return (
+            <VehicleBarcodeScannerModal
+              isOpen={Boolean(barcodeScannerState)}
+              onClose={() => setBarcodeScannerState(null)}
+              initialTarget={barcodeScannerState.target}
+              initialEngineNumber={targetCase?.engineNumber}
+              initialChassisNumber={targetCase?.chassisNumber}
+              customerName={targetCase ? getCustomerDisplayName(targetCase) : undefined}
+              onApply={(data) => {
+                handleSaveVehicleNumbers(
+                  barcodeScannerState.caseId,
+                  data,
+                  '✓ บันทึกเลขเครื่อง/เลขตัวถังเรียบร้อยแล้ว'
+                );
+                setBarcodeScannerState(null);
+              }}
+            />
+          );
+        })()}
       </div>
     </div>
   );

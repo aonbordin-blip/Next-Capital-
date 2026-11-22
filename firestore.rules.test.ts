@@ -120,6 +120,14 @@ export const DIRTY_DOZEN_CASES = [
     payload: { vehiclePrice: 'free' },
     expected: 'PERMISSION_DENIED',
   },
+  {
+    name: '13. Resource poisoning (oversized engineNumber/chassisNumber > 60 chars)',
+    operation: 'update',
+    path: '/users/u1/cases/case-1',
+    auth: { uid: 'u1', token: { email: 'u1@example.com', email_verified: true } },
+    payload: { engineNumber: 'E'.repeat(120), chassisNumber: 'C'.repeat(120) },
+    expected: 'PERMISSION_DENIED',
+  },
 ];
 
 function createSampleCases(): SavedCaseRecord[] {
@@ -139,6 +147,10 @@ function createSampleCases(): SavedCaseRecord[] {
       proposalKey: 'small_bike',
       vehiclePrice: 65000,
       bikeModelName: 'Honda Wave 110i',
+      approvalStatus: 'approved',
+      deliveryStatus: 'delivered',
+      engineNumber: 'JA14E-0123456',
+      chassisNumber: 'MLHJA1400P5012345',
       downMode: 'amount',
       downValue: 5000,
       term: 36,
@@ -287,6 +299,11 @@ export function runRtdbVerification(): void {
         rt.customerAddress !== c.customerAddress
       ) {
         throw new Error('Thai ID card fields RTDB roundtrip mismatch');
+      }
+    }
+    if (c.engineNumber || c.chassisNumber) {
+      if (rt.engineNumber !== c.engineNumber || rt.chassisNumber !== c.chassisNumber) {
+        throw new Error('Engine/chassis number RTDB roundtrip mismatch');
       }
     }
     const ym = `${year}/${month}`;
