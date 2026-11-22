@@ -28,6 +28,7 @@ import {
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import { MarqueeText } from './MarqueeText';
+import { DimensionalMascotStage } from './DimensionalMascotStage';
 
 export type KpiFocusKey = 'overview' | 'cases' | 'delivered' | 'finance' | 'pa';
 type ChartViewMode = 'radial' | 'bar';
@@ -1213,7 +1214,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
       },
       {
         key: 'pa',
-        stageLabel: 'ประกัน PA',
+        stageLabel: 'PA',
         fullTitle: 'ค่าคอมประกัน PA',
         value: clampPercent(commissionSummary.achievementPercent),
         rawPercent: commissionSummary.achievementPercent,
@@ -1434,7 +1435,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                 {chartMode === 'radial'
                   ? activeMetric
                     ? `โฟกัส: ${activeMetric.title}`
-                    : 'แตะวงแหวนหรือการ์ดเพื่อเจาะลึก'
+                    : 'แตะมาสคอตหรือวงแหวนเพื่อเจาะลึก'
                   : 'เทียบสัดส่วน 4 ขั้นตอน (%)'}
               </span>
               {focusedKey !== 'overview' && (
@@ -1453,9 +1454,18 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
               )}
             </div>
 
-            {chartMode === 'radial' ? (
-              <div className="relative h-[228px] sm:h-[246px] w-full flex items-center justify-center my-0.5">
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="relative w-full my-0.5">
+              {/* Interactive Animated 3D Mascot Companion */}
+              <DimensionalMascotStage
+                activeKey={effectiveKey}
+                accentHex={activeMetric?.accentHex ?? '#0ea5e9'}
+                pulseKey={orbPulseKey}
+                onInteract={handleCycleOrb}
+              />
+
+              {chartMode === 'radial' ? (
+                <div className="relative h-[224px] sm:h-[244px] ml-[66px] sm:ml-[80px] flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart
                     accessibilityLayer={false}
                     cx="50%"
@@ -1634,10 +1644,10 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                   </span>
                 </button>
               </div>
-            ) : (
-              /* 3D Gradient Funnel & Value Bar Chart */
-              <div className="relative h-[228px] sm:h-[246px] w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
+              ) : (
+                /* 3D Gradient Funnel & Value Bar Chart */
+                <div className="relative h-[224px] sm:h-[244px] ml-[66px] sm:ml-[80px] pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     accessibilityLayer={false}
                     data={barData}
@@ -1758,7 +1768,8 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            )}
+              )}
+            </div>
 
             {/* Compact Ring Color Key Footer */}
             <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-1 border-t border-white/80 dark:border-slate-700/75 text-[10px] text-slate-600 dark:text-slate-300">

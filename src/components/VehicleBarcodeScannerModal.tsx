@@ -484,8 +484,8 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
         triggerHaptic('warning');
         const msg =
           err instanceof Error && err.name === 'NotAllowedError'
-            ? 'ยังไม่ได้รับอนุญาตให้เข้าถึงกล้อง กรุณากดอนุญาตกล้อง หรือเลือก "ถ่ายภาพด้วยแอพกล้อง"'
-            : 'ไม่สามารถเปิดกล้องสดได้ กรุณาใช้ปุ่ม "ถ่ายภาพด้วยแอพกล้อง / เลือกรูปจากคลัง" ด้านล่าง';
+            ? 'ยังไม่ได้รับอนุญาตให้เข้าถึงกล้อง กรุณากดอนุญาตกล้อง หรือเลือก "ถ่ายภาพจากกล้อง"'
+            : 'ไม่สามารถเปิดกล้องสดได้ กรุณาใช้ปุ่ม "ถ่ายภาพจากกล้อง / เลือกรูปจากอัลบั้ม" ด้านล่าง';
         setErrorMessage(msg);
         setStep('error');
       }
@@ -713,22 +713,22 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => void startLiveCamera()}
-                className="w-full p-4 rounded-2xl bg-gradient-to-r from-sky-600 via-cyan-600 to-teal-600 hover:opacity-95 text-white shadow-md shadow-sky-500/20 flex items-center gap-3.5 text-left active:scale-[0.98] transition-all cursor-pointer"
+                className="w-full p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-sky-600 via-cyan-600 to-teal-600 hover:opacity-95 text-white shadow-md shadow-sky-500/20 flex items-center gap-3 text-left active:scale-[0.98] transition-all cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
                   <ScanLine className="w-6 h-6 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-black text-sm sm:text-base flex items-center gap-1.5">
-                    <span>เปิดกล้องสแกนบาร์โค้ดสด</span>
+                  <div className="font-black text-sm sm:text-base flex items-center justify-between gap-2">
+                    <span className="whitespace-nowrap truncate">สแกนบาร์โค้ดกล้องสด</span>
                     {hasNativeDetector && (
-                      <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-white/25 text-white">
+                      <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-white/25 text-white whitespace-nowrap shrink-0">
                         จับอัตโนมัติ
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-sky-50/90 mt-0.5">
-                    ส่องไปที่สติ๊กเกอร์บาร์โค้ดข้างกล่องรถ เล่มทะเบียน หรือป้ายตัวถังรถ
+                  <p className="text-[11px] text-sky-50/90 mt-0.5 truncate">
+                    ส่องสติ๊กเกอร์ข้างกล่อง เล่มทะเบียน หรือป้ายรถ
                   </p>
                 </div>
               </button>
@@ -738,17 +738,17 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="p-3.5 rounded-2xl bg-slate-50 hover:bg-sky-50 dark:bg-slate-800/80 dark:hover:bg-sky-950/50 border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2 text-center cursor-pointer active:scale-95 transition-all"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 hover:bg-sky-50 dark:bg-slate-800/80 dark:hover:bg-sky-950/50 border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2 text-center cursor-pointer active:scale-95 transition-all"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/70 text-sky-700 dark:text-sky-300 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/70 text-sky-700 dark:text-sky-300 flex items-center justify-center shrink-0">
                     <Camera className="w-5 h-5" />
                   </div>
-                  <div>
-                    <div className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
-                      ถ่ายภาพด้วยแอพกล้อง
+                  <div className="min-w-0 w-full">
+                    <div className="text-xs font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                      ถ่ายภาพจากกล้อง
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      ชัดสูง เหมาะกับเลขตอกเครื่อง
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap truncate">
+                      เหมาะกับเลขตอกเครื่อง
                     </div>
                   </div>
                 </button>
@@ -756,16 +756,16 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => galleryInputRef.current?.click()}
-                  className="p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50 dark:bg-slate-800/80 dark:hover:bg-indigo-950/50 border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2 text-center cursor-pointer active:scale-95 transition-all"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50 dark:bg-slate-800/80 dark:hover:bg-indigo-950/50 border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2 text-center cursor-pointer active:scale-95 transition-all"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0">
                     <ImagePlus className="w-5 h-5" />
                   </div>
-                  <div>
-                    <div className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                  <div className="min-w-0 w-full">
+                    <div className="text-xs font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap">
                       เลือกรูปจากอัลบั้ม
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap truncate">
                       อ่านทั้งบาร์โค้ดและตัวอักษร
                     </div>
                   </div>
