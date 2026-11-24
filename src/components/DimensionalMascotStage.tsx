@@ -41,52 +41,65 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const [isExcited, setIsExcited] = useState(false);
-  const [sheetSource, setSheetSource] = useState<CanvasImageSource | null>(null);
+  const [sheetAtlas, setSheetAtlas] = useState<{
+    bitmaps: ImageBitmap[] | null;
+    fallbackImg: HTMLImageElement | null;
+  }>({ bitmaps: null, fallbackImg: null });
   const [imgError, setImgError] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const startTimeRef = useRef<number>(0);
   const lastFrameRef = useRef<number>(-1);
   const lastStageRef = useRef<MascotGreetStage>('none');
+  const stageCallbackRef = useRef(onGreetStageChange);
+  stageCallbackRef.current = onGreetStageChange;
 
   const isLoopActive = activeKey === 'overview' && !shouldReduceMotion;
 
-  // Preload & GPU-decode the 90-frame sprite sheet once (ImageBitmap prevents Chrome draw stalls)
+  // Preload & slice into 90 GPU ImageBitmaps once (eliminates atlas tearing & clearRect blink on mobile Chrome)
   useEffect(() => {
     let cancelled = false;
-    let decodedBitmap: ImageBitmap | null = null;
+    let allocatedBitmaps: ImageBitmap[] = [];
     const img = new Image();
     img.decoding = 'async';
     img.src = mascotGreetSheet90;
 
-    const finalizeFallback = () => {
+    const useFallback = () => {
       if (!cancelled) {
-        setSheetSource(img);
+        setSheetAtlas({ bitmaps: null, fallbackImg: img });
       }
     };
 
     img.onload = () => {
       if (typeof createImageBitmap === 'function') {
-        createImageBitmap(img)
-          .then((bitmap) => {
+        const slicePromises: Promise<ImageBitmap>[] = [];
+        for (let i = 0; i < TOTAL_FRAMES; i++) {
+          const col = i % SHEET_COLS;
+          const row = Math.floor(i / SHEET_COLS);
+          slicePromises.push(
+            createImageBitmap(img, col * SHEET_FRAME_W, row * SHEET_FRAME_H, SHEET_FRAME_W, SHEET_FRAME_H)
+          );
+        }
+        Promise.all(slicePromises)
+          .then((bitmaps) => {
             if (cancelled) {
-              bitmap.close();
+              bitmaps.forEach((b) => b.close());
               return;
             }
-            decodedBitmap = bitmap;
-            setSheetSource(bitmap);
+            allocatedBitmaps = bitmaps;
+            setSheetAtlas({ bitmaps, fallbackImg: img });
           })
           .catch(() => {
             if (typeof img.decode === 'function') {
-              img.decode().then(finalizeFallback).catch(finalizeFallback);
+              img.decode().then(useFallback).catch(useFallback);
             } else {
-              finalizeFallback();
+              useFallback();
             }
           });
       } else if (typeof img.decode === 'function') {
-        img.decode().then(finalizeFallback).catch(finalizeFallback);
+        img.decode().then(useFallback).catch(useFallback);
       } else {
-        finalizeFallback();
+        useFallback();
       }
     };
     img.onerror = () => {
@@ -95,9 +108,7 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
 
     return () => {
       cancelled = true;
-      if (decodedBitmap) {
-        decodedBitmap.close();
-      }
+      allocatedBitmaps.forEach((b) => b.close());
     };
   }, []);
 
@@ -108,14 +119,15 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
     if (!isLoopActive) {
       if (lastStageRef.current !== 'none') {
         lastStageRef.current = 'none';
-        onGreetStageChange?.('none');
+        stageCallbackRef.current?.('none');
       }
     }
-  }, [isLoopActive, greetTrigger, onGreetStageChange]);
+  }, [isLoopActive, greetTrigger]);
 
-  // Synchronous 90-frame GPU canvas blitting locked to 30fps cadence (zero stutter, zero white flash)
+  // Atomic 90-frame GPU canvas blitting locked to 30fps cadence (zero clearRect blanking, zero white flash)
   useEffect(() => {
-    if (!isLoopActive || !sheetSource) return;
+    const { bitmaps, fallbackImg } = sheetAtlas;
+    if (!isLoopActive || (!bitmaps && !fallbackImg)) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -136,20 +148,25 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
     let rafId = 0;
 
     const drawFrame = (frameIndex: number) => {
-      const col = frameIndex % SHEET_COLS;
-      const row = Math.floor(frameIndex / SHEET_COLS);
-      ctx.clearRect(0, 0, targetW, targetH);
-      ctx.drawImage(
-        sheetSource,
-        col * SHEET_FRAME_W,
-        row * SHEET_FRAME_H,
-        SHEET_FRAME_W,
-        SHEET_FRAME_H,
-        0,
-        0,
-        targetW,
-        targetH
-      );
+      // 'copy' replaces all pixels atomically in 1 pass without flashing transparent via clearRect
+      ctx.globalCompositeOperation = 'copy';
+      if (bitmaps && bitmaps[frameIndex]) {
+        ctx.drawImage(bitmaps[frameIndex], 0, 0, targetW, targetH);
+      } else if (fallbackImg) {
+        const col = frameIndex % SHEET_COLS;
+        const row = Math.floor(frameIndex / SHEET_COLS);
+        ctx.drawImage(
+          fallbackImg,
+          col * SHEET_FRAME_W,
+          row * SHEET_FRAME_H,
+          SHEET_FRAME_W,
+          SHEET_FRAME_H,
+          0,
+          0,
+          targetW,
+          targetH
+        );
+      }
     };
 
     const tick = (now: number) => {
@@ -165,7 +182,7 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
         const nextStage = getStageForFrame(frameIndex);
         if (nextStage !== lastStageRef.current) {
           lastStageRef.current = nextStage;
-          onGreetStageChange?.(nextStage);
+          stageCallbackRef.current?.(nextStage);
         }
       }
 
@@ -179,7 +196,7 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
     return () => {
       window.cancelAnimationFrame(rafId);
     };
-  }, [isLoopActive, sheetSource, onGreetStageChange]);
+  }, [isLoopActive, sheetAtlas]);
 
   // Gentle settle bounce when KPI filter changes
   useEffect(() => {
@@ -217,10 +234,12 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
     onInteract();
   };
 
+  const isAtlasReady = Boolean(sheetAtlas.bitmaps || sheetAtlas.fallbackImg);
+
   return (
     <div
       className="pointer-events-auto absolute left-0.5 bottom-0.5 sm:left-1.5 sm:bottom-1 z-20 flex flex-col items-center select-none"
-      style={{ perspective: '540px' }}
+      style={isLoopActive ? { isolation: 'isolate' } : { perspective: '540px' }}
     >
       <motion.button
         type="button"
@@ -277,7 +296,7 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
                   }
           }
           className="relative z-10 w-full h-[126px] sm:h-[146px] flex items-end justify-center pb-2.5 overflow-visible"
-          style={{ transformStyle: 'preserve-3d' }}
+          style={isLoopActive ? undefined : { transformStyle: 'preserve-3d' }}
         >
           {imgError ? (
             <div
@@ -287,8 +306,8 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
               <Sparkles className="w-5 h-5 text-yellow-300" />
             </div>
           ) : isLoopActive ? (
-            <div className="relative h-[124px] sm:h-[144px] aspect-[180/240] shrink-0 overflow-visible flex items-end justify-center">
-              {!sheetSource ? (
+            <div className="relative h-[124px] sm:h-[144px] aspect-[180/240] shrink-0 overflow-visible flex items-end justify-center transform-gpu">
+              {!isAtlasReady ? (
                 <img
                   src={mascotCompanionImg}
                   alt={altText}
@@ -301,7 +320,7 @@ export const DimensionalMascotStage: React.FC<DimensionalMascotStageProps> = ({
                   ref={canvasRef}
                   role="img"
                   aria-label={altText}
-                  className="w-full h-full block pointer-events-none select-none will-change-contents"
+                  className="w-full h-full block pointer-events-none select-none transform-gpu"
                 />
               )}
             </div>
