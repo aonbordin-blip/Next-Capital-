@@ -31,8 +31,30 @@
         overscroll-behavior: none;
       }
       @keyframes ncap-loading {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(250%); }
+        0% {
+          transform: translateX(-110%) scaleX(0.85);
+          opacity: 0;
+          animation-timing-function: ease-in-out;
+        }
+        20% {
+          transform: translateX(-20%) scaleX(1);
+          opacity: 1;
+          animation-timing-function: ease-in-out;
+        }
+        50% {
+          transform: translateX(65%) scaleX(1.06);
+          opacity: 1;
+          animation-timing-function: ease-in-out;
+        }
+        80% {
+          transform: translateX(155%) scaleX(1);
+          opacity: 1;
+          animation-timing-function: ease-in-out;
+        }
+        100% {
+          transform: translateX(240%) scaleX(0.85);
+          opacity: 0;
+        }
       }
       html[data-box-theme="dark"],
       html[data-box-theme="dark"] body,
@@ -72,7 +94,7 @@
           <div style="font-weight: 800; font-size: 16px; color: #0f172a; letter-spacing: -0.02em;">Next Capital MotoLease</div>
           <div style="font-size: 12px; color: #0284c7; font-weight: 600; margin-top: 4px;">กำลังโหลดระบบคำนวณค่างวด...</div>
           <div style="width: 120px; height: 4px; background: #e0f2fe; border-radius: 9999px; margin: 1.25rem auto 0; overflow: hidden; position: relative;">
-            <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #0284c7, #06b6d4); border-radius: 9999px; animation: ncap-loading 1.2s infinite ease-in-out;"></div>
+            <div style="width: 45%; height: 100%; background: linear-gradient(90deg, #0284c7, #06b6d4); border-radius: 9999px; animation: ncap-loading 1.6s ease-in-out infinite; will-change: transform, opacity;"></div>
           </div>
         </div>
       </div>

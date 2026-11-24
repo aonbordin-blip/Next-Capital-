@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -20,6 +20,7 @@ import {
   BarChart3,
   CircleDot,
   FolderArchive,
+  Hand,
   PackageCheck,
   Plus,
   RotateCcw,
@@ -28,10 +29,36 @@ import {
 import { formatBaht } from '../data/proposals';
 import { triggerHaptic } from '../utils/haptics';
 import { MarqueeText } from './MarqueeText';
-import { DimensionalMascotStage } from './DimensionalMascotStage';
+import { DimensionalMascotStage, type MascotGreetStage } from './DimensionalMascotStage';
 
 export type KpiFocusKey = 'overview' | 'cases' | 'delivered' | 'finance' | 'pa';
 type ChartViewMode = 'radial' | 'bar';
+
+interface StageGreetCaptionHandle {
+  setStage: (stage: MascotGreetStage) => void;
+}
+
+const StageGreetCaption = React.forwardRef<
+  StageGreetCaptionHandle,
+  { activeTitle?: string; chartMode: ChartViewMode }
+>(({ activeTitle, chartMode }, ref) => {
+  const [stage, setStage] = useState<MascotGreetStage>('wai');
+  useImperativeHandle(ref, () => ({ setStage }), []);
+
+  return (
+    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 truncate">
+      {activeTitle
+        ? `โฟกัส: ${activeTitle}`
+        : stage === 'wai'
+          ? 'สวัสดีครับ ยินดีต้อนรับสู่สรุปผลงาน'
+          : stage === 'wave'
+            ? 'ทักทายครับ แตะวงแหวนหรือการ์ดเพื่อเจาะลึก'
+            : chartMode === 'radial'
+              ? 'แตะมาสคอตหรือวงแหวนเพื่อเจาะลึก'
+              : 'เทียบสัดส่วน 4 ขั้นตอน (%)'}
+    </span>
+  );
+});
 
 export interface KpiPeriodStatsInput {
   totalCases: number;
@@ -962,6 +989,19 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
   const [focusedKey, setFocusedKey] = useState<KpiFocusKey>('overview');
   const [hoveredKey, setHoveredKey] = useState<Exclude<KpiFocusKey, 'overview'> | null>(null);
   const [orbPulseKey, setOrbPulseKey] = useState<number>(0);
+  const [greetTrigger, setGreetTrigger] = useState<number>(1);
+  const greetCaptionRef = useRef<StageGreetCaptionHandle | null>(null);
+
+  const handleGreetStageChange = useCallback((stage: MascotGreetStage) => {
+    greetCaptionRef.current?.setStage(stage);
+  }, []);
+
+  const handleReplayGreet = useCallback(() => {
+    triggerHaptic('selection');
+    setFocusedKey('overview');
+    setHoveredKey(null);
+    setGreetTrigger((g) => g + 1);
+  }, []);
 
   // Animated count-up for total finance in overview spotlight
   const [displayFinance, setDisplayFinance] = useState<number>(Math.round(stats.totalFinance));
@@ -1429,27 +1469,36 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
               aria-hidden="true"
             />
 
-            {/* Top Chart Stage Caption + Reset Filter */}
+            {/* Top Chart Stage Caption + Greet / Reset Controls */}
             <div className="relative flex items-center justify-between gap-2 px-0.5 z-10">
-              <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 truncate">
-                {chartMode === 'radial'
-                  ? activeMetric
-                    ? `โฟกัส: ${activeMetric.title}`
-                    : 'แตะมาสคอตหรือวงแหวนเพื่อเจาะลึก'
-                  : 'เทียบสัดส่วน 4 ขั้นตอน (%)'}
-              </span>
-              {focusedKey !== 'overview' && (
+              <StageGreetCaption
+                ref={greetCaptionRef}
+                activeTitle={activeMetric?.title}
+                chartMode={chartMode}
+              />
+              {focusedKey !== 'overview' ? (
                 <button
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
                     setOrbPulseKey((p) => p + 1);
                     setFocusedKey('overview');
+                    setGreetTrigger((g) => g + 1);
                   }}
-                  className="px-2 py-0.5 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10px] font-bold text-sky-700 dark:text-sky-300 flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs transition-colors"
+                  className="px-2 py-0.5 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10px] font-bold text-sky-700 dark:text-sky-300 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
                 >
                   <RotateCcw className="w-2.5 h-2.5" />
                   <span>ดูรวม 4 มิติ</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleReplayGreet}
+                  title="เล่นอนิเมชันมาสคอตยกมือไหว้และโบกมือทักทาย"
+                  className="px-2 py-0.5 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10px] font-bold text-sky-700 dark:text-sky-300 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
+                >
+                  <Hand className="w-2.5 h-2.5" />
+                  <span>ทักทาย</span>
                 </button>
               )}
             </div>
@@ -1460,6 +1509,8 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                 activeKey={effectiveKey}
                 accentHex={activeMetric?.accentHex ?? '#0ea5e9'}
                 pulseKey={orbPulseKey}
+                greetTrigger={greetTrigger}
+                onGreetStageChange={handleGreetStageChange}
                 onInteract={handleCycleOrb}
               />
 
@@ -1891,9 +1942,9 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
               ) : (
                 <div className="flex items-center justify-between gap-2.5">
                   <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300">
+                    <MarqueeText className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300">
                       สรุปมูลค่า & ประสิทธิภาพรวม ({periodLabel})
-                    </div>
+                    </MarqueeText>
                     <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
                       <span className="text-base sm:text-lg font-black text-sky-950 dark:text-sky-100 tabular-nums">
                         {formatBaht(displayFinance)}
