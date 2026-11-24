@@ -1494,7 +1494,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
                 <button
                   type="button"
                   onClick={handleReplayGreet}
-                  title="เล่นอนิเมชันมาสคอตยกมือไหว้และโบกมือทักทาย"
+                  title="มาสคอตท่ายกมือไหว้ทักทาย แตะเพื่อรีเซ็ตมุมมองรวม 4 มิติ"
                   className="px-2 py-0.5 rounded-lg bg-white/80 dark:bg-slate-800/85 hover:bg-white dark:hover:bg-slate-700 border border-white dark:border-slate-600/80 text-[10px] font-bold text-sky-700 dark:text-sky-300 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs transition-colors"
                 >
                   <Hand className="w-2.5 h-2.5" />
