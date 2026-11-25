@@ -701,8 +701,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {/* Primary Action Strip + Box Color Theme Toggle */}
-        <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 pt-0.5">
-          <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:shrink-0">
+        <div className="relative flex flex-col xl:flex-row xl:flex-wrap xl:items-center xl:justify-between gap-2 pt-0.5">
+          <div className="grid grid-cols-2 xl:flex items-center gap-2 xl:shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -730,7 +730,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </button>
           </div>
 
-          <div className="flex items-center justify-end sm:ml-auto">
+          <div className="flex items-center justify-end xl:ml-auto">
             <BoxThemeToggle showLabel />
           </div>
         </div>
@@ -754,8 +754,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onGoToCalculate={onNavigateToCaseForm}
       />
 
-      {/* 2-Column Analytics: Checker Commission Summary + Deal Pipeline & Dealers + Gasoline Allowance */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      {/* 2-Column Analytics on Desktop, Mobile 1-Column on Phone/Tablet */}
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         {/* Card A: Checker Insurance Commission Summary */}
         <div className="order-1 glass-card-primary rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between space-y-3 relative overflow-hidden">
           <div
@@ -969,7 +969,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
         {/* Card A-2: Gasoline Allowance (ค่าน้ำมัน) right after Checker Commission */}
         <GasolineAllowanceCard
-          className="order-2 lg:order-3 lg:col-span-2"
+          className="order-2 xl:order-3 xl:col-span-2"
           actualContractCount={commissionSummary.totalDeliveredContracts}
           periodLabel={formatMonthLabel(selectedMonth)}
           onOpenSavedCases={onOpenSavedCases}
@@ -977,7 +977,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
         {/* Card B: Interactive Deal Pipeline Donut & Dealers Stacked Chart */}
         <DealPipelineAndDealersChartCard
-          className="order-3 lg:order-2"
+          className="order-3 xl:order-2"
           periodLabel={formatMonthLabel(selectedMonth)}
           stats={periodStats}
           dealers={dealerSummaryList}
@@ -1093,8 +1093,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         )}
       </section>
 
-      {/* Quick Tools Grid (Vibrant Jewel-Icon Crystal Glass Cards) */}
-      <section className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      {/* Quick Tools Grid (2x2 Mobile Style on Phone & Tablet, 4-Col on Desktop) */}
+      <section className="grid grid-cols-2 xl:grid-cols-4 gap-2.5">
         <button
           type="button"
           onClick={() => {

@@ -385,9 +385,9 @@ export const DealPipelineAndDealersChartCard: React.FC<
               </div>
 
               {/* Donut + 4 Gauge Rows Responsive Split */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 items-center">
                 {/* 3D Donut Chart Stage */}
-                <div className="sm:col-span-5 relative h-[156px] w-full flex items-center justify-center chart-gpu-layer">
+                <div className="xl:col-span-5 relative h-[156px] w-full flex items-center justify-center chart-gpu-layer">
                   <ResponsiveContainer width="100%" height="100%" debounce={120}>
                     <PieChart accessibilityLayer={false}>
                       <defs>
@@ -540,7 +540,7 @@ export const DealPipelineAndDealersChartCard: React.FC<
                 </div>
 
                 {/* Interactive Status Gauge Bars */}
-                <div className="sm:col-span-7 space-y-1.5 text-[11px]">
+                <div className="xl:col-span-7 space-y-1.5 text-[11px]">
                   {statusItems.map((row) => {
                     const isPinned = effectiveStatus === row.key;
                     const isDimmed = effectiveStatus !== 'all' && !isPinned;

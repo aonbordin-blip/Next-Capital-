@@ -1038,7 +1038,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       </div>
 
       {/* Clean KPI Summary Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
         <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-sky-200/80 dark:border-sky-800/60 min-w-0">
           <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 min-w-0">
             <User className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />

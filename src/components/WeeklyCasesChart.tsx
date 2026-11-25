@@ -275,7 +275,7 @@ export const WeeklyCasesChart: React.FC<WeeklyCasesChartProps> = ({
       </div>
 
       {/* 4-Column Weekly KPI Mini Strip */}
-      <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+      <div className="relative grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5">
         <div className="glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 space-y-0.5 min-w-0">
           <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/75 dark:text-sky-200/90">
             เคสรวม 7 วันล่าสุด

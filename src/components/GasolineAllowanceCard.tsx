@@ -443,7 +443,7 @@ export const GasolineAllowanceCard: React.FC<GasolineAllowanceCardProps> = ({
         </div>
 
         {/* 6 Paid Tier Interactive Quick-Select Grid (3x2 mobile / 6x1 desktop) */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+        <div className="grid grid-cols-3 xl:grid-cols-6 gap-1.5">
           {paidTiers.map((tier) => {
             const isCurrent = summary.currentTier.tierIndex === tier.tierIndex;
             const reached = activeCount >= tier.minContracts;

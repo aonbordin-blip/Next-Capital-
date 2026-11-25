@@ -1460,9 +1460,9 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
           )}
         </div>
       ) : (
-        <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <div className="relative grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
           {/* Left / Top: 3D Dimensional Chart Stage */}
-          <div className="lg:col-span-5 rounded-2xl bg-gradient-to-br from-white/78 via-white/52 to-sky-50/65 dark:from-slate-900/85 dark:via-slate-900/70 dark:to-sky-950/65 border border-white/95 dark:border-slate-700/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_8px_24px_-10px_rgba(2,132,199,0.16)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_12px_28px_-10px_rgba(2,6,23,0.65)] p-2.5 sm:p-3 flex flex-col justify-between relative overflow-hidden">
+          <div className="xl:col-span-5 rounded-2xl bg-gradient-to-br from-white/78 via-white/52 to-sky-50/65 dark:from-slate-900/85 dark:via-slate-900/70 dark:to-sky-950/65 border border-white/95 dark:border-slate-700/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_8px_24px_-10px_rgba(2,132,199,0.16)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.06),0_12px_28px_-10px_rgba(2,6,23,0.65)] p-2.5 sm:p-3 flex flex-col justify-between relative overflow-hidden">
             {/* Subtle Inner Corner Specular Highlight */}
             <div
               className="pointer-events-none absolute -top-8 -left-8 w-28 h-28 rounded-full bg-white/60 dark:bg-sky-400/10 blur-xl"
@@ -1848,7 +1848,7 @@ export const KpiSummaryChartCard: React.FC<KpiSummaryChartCardProps> = ({
           </div>
 
           {/* Right / Bottom: Interactive Spotlight Strip + 4 Unified Metric Selector Cards */}
-          <div className="lg:col-span-7 flex flex-col justify-between gap-2.5">
+          <div className="xl:col-span-7 flex flex-col justify-between gap-2.5">
             {/* Live Interactive Spotlight Strip */}
             <div
               className={`rounded-xl border p-2.5 sm:p-3 transition-all duration-300 relative overflow-hidden ${

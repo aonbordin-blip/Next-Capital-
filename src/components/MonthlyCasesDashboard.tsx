@@ -1102,7 +1102,7 @@ export const MonthlyCasesDashboard: React.FC<MonthlyCasesDashboardProps> = ({
             const isPeakSelected =
               Boolean(summaryStats.peakBucket) && selectedMonthKey === summaryStats.peakBucket?.key;
             return (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5">
                 <div className="group glass-panel-blue dashboard-card-lift rounded-xl p-2.5 sm:p-3 flex flex-col justify-between gap-1.5 min-w-0">
                   <div className="space-y-0.5 min-w-0">
                     <MarqueeText className="text-[10.5px] sm:text-[11px] font-semibold text-sky-900/80 dark:text-sky-200/90">

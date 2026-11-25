@@ -605,8 +605,31 @@ export default function App() {
   }, [expandedCard]);
 
 
-  // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard)
+  // Layout view mode (Mobile simulator frame vs Fullscreen Dashboard on desktop only)
   const [viewMode, setViewMode] = useState<'mobile' | 'dashboard'>('mobile');
+  const [isHandheldViewport, setIsHandheldViewport] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const isCoarsePointer =
+      typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    return window.innerWidth < 1280 || (isCoarsePointer && window.innerWidth <= 1440);
+  });
+
+  useEffect(() => {
+    const updateViewportMode = () => {
+      const isCoarsePointer =
+        typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+      setIsHandheldViewport(
+        window.innerWidth < 1280 || (isCoarsePointer && window.innerWidth <= 1440)
+      );
+    };
+    updateViewportMode();
+    window.addEventListener('resize', updateViewportMode);
+    window.addEventListener('orientationchange', updateViewportMode);
+    return () => {
+      window.removeEventListener('resize', updateViewportMode);
+      window.removeEventListener('orientationchange', updateViewportMode);
+    };
+  }, []);
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
   const [shareTextStyle, setShareTextStyle] = useState<'card' | 'compare' | 'compact'>(() => {
     try {
@@ -1441,48 +1464,62 @@ export default function App() {
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden outer-canvas-bg text-slate-800 dark:text-slate-100 flex flex-col justify-center items-center p-0 sm:p-2 md:p-3 select-none">
+    <div
+      className={`fixed inset-0 w-full h-full overflow-hidden outer-canvas-bg text-slate-800 dark:text-slate-100 flex flex-col justify-center items-center ${
+        isHandheldViewport ? 'p-0' : 'p-0 xl:p-3'
+      } select-none`}
+    >
 
-      {/* Top Floating View Mode & Theme Switcher on Desktop */}
-      <div className="no-print hidden sm:flex items-center gap-2 mb-2 bg-white/75 dark:bg-slate-900/80 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 dark:border-slate-700/80 shadow-sm shadow-sky-900/10 dark:shadow-slate-950/50 text-xs z-10 shrink-0">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">มุมมอง:</span>
-        <button
-          onClick={() => setViewMode('mobile')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            viewMode === 'mobile'
-              ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/70'
-          }`}
-        >
-          <Smartphone className="w-3.5 h-3.5" /> จำลองมือถือ
-        </button>
-        <button
-          onClick={() => setViewMode('dashboard')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            viewMode === 'dashboard'
-              ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/70'
-          }`}
-        >
-          <Monitor className="w-3.5 h-3.5" /> แดชบอร์ดเต็มจอ
-        </button>
-        <div className="h-4 w-px bg-slate-300/70 dark:bg-slate-700/80 mx-0.5 shrink-0" aria-hidden="true" />
-        <BoxThemeToggle compact />
-      </div>
+      {/* Top Floating View Mode & Theme Switcher on Desktop Only */}
+      {!isHandheldViewport && (
+        <div className="no-print hidden xl:flex items-center gap-2 mb-2 bg-white/75 dark:bg-slate-900/80 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/90 dark:border-slate-700/80 shadow-sm shadow-sky-900/10 dark:shadow-slate-950/50 text-xs z-10 shrink-0">
+          <span className="text-slate-500 dark:text-slate-400 font-medium">มุมมอง:</span>
+          <button
+            onClick={() => setViewMode('mobile')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              viewMode === 'mobile'
+                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/70'
+            }`}
+          >
+            <Smartphone className="w-3.5 h-3.5" /> จำลองมือถือ
+          </button>
+          <button
+            onClick={() => setViewMode('dashboard')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              viewMode === 'dashboard'
+                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/70'
+            }`}
+          >
+            <Monitor className="w-3.5 h-3.5" /> แดชบอร์ดเต็มจอ
+          </button>
+          <div className="h-4 w-px bg-slate-300/70 dark:bg-slate-700/80 mx-0.5 shrink-0" aria-hidden="true" />
+          <BoxThemeToggle compact />
+        </div>
+      )}
 
-      {/* Main Container - Soft Neo-Morphic Glass Frame matching Reference UI */}
+      {/* Main Container - Edge-to-Edge Fullscreen on Mobile & Tablet, Soft Glass Frame on Desktop */}
       <div
-        className={`w-full flex-1 sm:flex-initial min-h-0 transition-[max-width,border-radius] duration-300 z-10 ${
-          viewMode === 'mobile'
-            ? 'max-w-full sm:max-w-[560px] md:max-w-[580px] h-full sm:h-[min(920px,calc(100%-3rem))] sm:max-h-[96%] sm:rounded-[36px]'
-            : 'max-w-6xl xl:max-w-7xl h-full sm:h-[min(940px,calc(100%-3rem))] sm:max-h-[96%] sm:rounded-[36px]'
+        className={`w-full min-h-0 transition-[max-width,border-radius] duration-300 z-10 ${
+          isHandheldViewport
+            ? 'flex-1 h-full max-w-none rounded-none !border-0 !shadow-none'
+            : viewMode === 'mobile'
+              ? 'flex-initial max-w-[580px] h-[min(920px,calc(100%-3rem))] max-h-[96%] rounded-[36px]'
+              : 'flex-initial max-w-6xl xl:max-w-7xl h-[min(940px,calc(100%-3rem))] max-h-[96%] rounded-[36px]'
         } glass-container-frame flex flex-col relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-30" />
 
         {/* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
-        <header className="shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white pt-2.5 sm:pt-3 pb-5 px-3.5 sm:px-5 rounded-b-[24px] sm:rounded-b-[32px] shadow-md shadow-sky-950/15">
+        <header
+          className={`shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white ${
+            isHandheldViewport
+              ? 'pt-2.5 pb-5 px-3.5 rounded-b-[24px]'
+              : 'pt-3 pb-5 px-5 rounded-b-[32px]'
+          } shadow-md shadow-sky-950/15`}
+        >
           {/* Overlapping Organic Water Wave Animation Layers */}
           <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 pointer-events-none overflow-hidden select-none">
             {/* Back Wave (Slow Deep Swell - Soft Translucent Cyan Tone) */}
@@ -1640,7 +1677,11 @@ export default function App() {
         {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
-          className="relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 sm:px-4 md:px-5 py-2.5 sm:py-3.5 pb-24 sm:pb-28 space-y-2.5 sm:space-y-3.5 overscroll-contain"
+          className={`relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${
+            isHandheldViewport
+              ? 'px-2.5 sm:px-3.5 py-2.5 pb-28 space-y-2.5'
+              : 'px-4 md:px-5 py-3.5 pb-28 space-y-3.5'
+          } overscroll-contain`}
         >
           {/* In-App PWA Install Banner */}
           <InstallAppBanner />
@@ -1809,10 +1850,12 @@ export default function App() {
 
           <div
             className={`${
-              viewMode === 'dashboard' && (activeTab === 'home' || activeTab === 'installments')
-                ? 'max-w-5xl'
-                : 'max-w-2xl'
-            } mx-auto space-y-3 sm:space-y-3.5 pb-6`}
+              isHandheldViewport
+                ? 'w-full max-w-none'
+                : viewMode === 'dashboard' && (activeTab === 'home' || activeTab === 'installments')
+                  ? 'max-w-5xl'
+                  : 'max-w-2xl'
+            } mx-auto space-y-3 pb-6`}
           >
             {/* ========================================================
                 หน้าโฮมเพจ: แดชบอร์ดภาพรวมผลงาน & สรุปยอดรายเดือน
@@ -2073,7 +2116,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
                       <YearsMonthsInput
                         label="อายุงาน"
                         criteriaHint={`≥${customerEligibilityEval.tier.workMonthsLabel}`}
@@ -3102,7 +3145,7 @@ export default function App() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
                     {/* ช่องตาม Proposal (ซ้าย) */}
                     <div
                       className={`rounded-xl p-2.5 transition-all ${
@@ -3749,7 +3792,7 @@ export default function App() {
         {activeTab === 'documents' && (
           <div className="space-y-3 sm:space-y-3.5 animate-tab-fade">
             {/* Action Buttons: 3 primary action buttons (แผนความคุ้มครอง, ใบเสนอราคา, ใบอนุมัติผลชั่วคราว) */}
-            <div data-card-id="actions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            <div data-card-id="actions" className="grid grid-cols-1 xl:grid-cols-3 gap-2.5">
               {/* 1. Coverage Plan Button */}
               <button
                 type="button"
@@ -3806,7 +3849,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowProvisionalApproval(true)}
-                className="group relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-emerald-950/20 transition-all flex items-center justify-between cursor-pointer border border-emerald-400/30 sm:col-span-2 lg:col-span-1"
+                className="group relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 hover:opacity-95 active:scale-[0.98] text-white py-3 px-4 rounded-2xl font-bold shadow-lg shadow-emerald-950/20 transition-all flex items-center justify-between cursor-pointer border border-emerald-400/30"
                 title="ออกใบแจ้งผลการอนุมัติสินเชื่อเช่าซื้อชั่วคราว (Provisional Approval Certificate)"
               >
                 <div className="flex items-center gap-2.5 text-left min-w-0 flex-1 pr-2">
@@ -3958,10 +4001,16 @@ export default function App() {
 
         {/* Bottom Floating Crystal Glass Navigation Capsule (โปร่งใสเหมือนแท่งแก้วคริสตัล พร้อมเอฟเฟคแสงสะท้อนและแรงเด้งมีมิติ) */}
         <div
-          className="pointer-events-none absolute bottom-2 sm:bottom-3 inset-x-2 sm:inset-x-4 z-40 flex justify-center pb-[env(safe-area-inset-bottom)]"
+          className={`pointer-events-none absolute ${
+            isHandheldViewport ? 'bottom-2 inset-x-2' : 'bottom-3 inset-x-4'
+          } z-40 flex justify-center pb-[env(safe-area-inset-bottom)]`}
           style={{ transform: 'translate3d(0, 0, 0)' }}
         >
-          <div className="pointer-events-auto liquid-crystal-nav w-full max-w-[590px] rounded-full p-1 sm:p-1.5 relative overflow-hidden">
+          <div
+            className={`pointer-events-auto liquid-crystal-nav w-full ${
+              isHandheldViewport ? 'p-1' : 'max-w-[590px] p-1.5'
+            } rounded-full relative overflow-hidden`}
+          >
             {/* Curved Top & Bottom Crystal Specular Glint Line */}
             <div
               className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-95"
@@ -4018,7 +4067,11 @@ export default function App() {
                     key={tab.id}
                     type="button"
                     onClick={() => handleTabChange(tab.id)}
-                    className={`group relative z-10 flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 sm:py-2.5 px-0.5 sm:px-1.5 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 overflow-hidden ${
+                    className={`group relative z-10 flex-1 min-w-0 flex ${
+                      isHandheldViewport
+                        ? 'flex-col gap-0.5 py-2 px-0.5'
+                        : 'flex-col xl:flex-row gap-0.5 xl:gap-1.5 py-2 xl:py-2.5 px-0.5 xl:px-1.5'
+                    } items-center justify-center rounded-full transition-all duration-200 cursor-pointer select-none active:scale-90 active:translate-y-0.5 overflow-hidden ${
                       isActive
                         ? 'text-white font-extrabold drop-shadow-[0_1px_2px_rgba(12,74,110,0.65)]'
                         : 'text-slate-900 dark:text-slate-100 hover:text-sky-950 dark:hover:text-white hover:bg-white/20 dark:hover:bg-slate-700/40 font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)] dark:drop-shadow-none'
@@ -4034,14 +4087,18 @@ export default function App() {
                     )}
 
                     <Icon
-                      className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-transform duration-300 ${
+                      className={`relative z-10 ${
+                        isHandheldViewport ? 'w-[17px] h-[17px]' : 'w-[17px] h-[17px] xl:w-[18px] xl:h-[18px]'
+                      } shrink-0 transition-transform duration-300 ${
                         isActive
                           ? 'text-white animate-tab-icon -translate-y-0.5 drop-shadow-[0_2px_6px_rgba(255,255,255,0.55)]'
                           : 'text-slate-900 dark:text-slate-200 group-hover:-translate-y-0.5 group-hover:scale-110'
                       }`}
                     />
                     <span
-                      className={`relative z-10 text-[10px] sm:text-xs leading-tight whitespace-nowrap transition-transform duration-200 ${
+                      className={`relative z-10 ${
+                        isHandheldViewport ? 'text-[10px]' : 'text-[10px] xl:text-xs'
+                      } leading-tight whitespace-nowrap transition-transform duration-200 ${
                         isActive ? 'scale-105' : 'group-hover:scale-[1.03]'
                       }`}
                     >
