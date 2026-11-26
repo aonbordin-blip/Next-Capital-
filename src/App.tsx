@@ -2219,7 +2219,10 @@ export default function App() {
           <div
             className={`${
               isSaasWorkspace
-                ? activeTab === 'home' || activeTab === 'financing' || activeTab === 'calculation'
+                ? activeTab === 'home' ||
+                  activeTab === 'financing' ||
+                  activeTab === 'calculation' ||
+                  activeTab === 'installments'
                   ? 'w-full max-w-[1400px]'
                   : 'w-full max-w-5xl'
                 : isHandheldViewport
@@ -4390,6 +4393,7 @@ export default function App() {
                 officerName={officerName}
                 officerCode={officerCode}
                 officerDisplay={officerDisplay}
+                isTwoColumn={isSaasWorkspace}
                 onDataChanged={() => {
                   setSavedCasesCount(getSavedCases().length);
                   setCasesRevision((v) => v + 1);

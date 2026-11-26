@@ -58,6 +58,7 @@ interface Props {
   officerName: string;
   officerCode: string;
   officerDisplay: string;
+  isTwoColumn?: boolean;
   onDataChanged: () => void;
   onOpenSavedCases: () => void;
   onNotify: (msg: string) => void;
@@ -284,6 +285,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
   refreshTrigger,
   officerName,
   officerCode,
+  isTwoColumn = false,
   onDataChanged,
   onOpenSavedCases,
   onNotify,
@@ -898,11 +900,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
         </span>
       </div>
 
+      {/* Top Control Workspace: 2-Column split on Tablet/Desktop, stacked original order on Mobile */}
+      <div className={isTwoColumn ? 'grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch' : 'flex flex-col gap-3 sm:gap-3.5'}>
       {/* ==============================================================
           FIRST PAYMENT DUE MONTH SELECTOR PANEL
           จัดกลุ่มตาม "กำหนดชำระงวดแรก" (เฉพาะเคสที่อนุมัติและรับรถแล้ว)
           ============================================================== */}
-      <div className="glass-card-primary rounded-2xl p-3 sm:p-3.5 space-y-2.5">
+      <div className={`glass-card-primary rounded-2xl p-3 sm:p-3.5 space-y-2.5 min-w-0 ${isTwoColumn ? 'flex flex-col justify-between h-full' : 'order-1'}`}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-7 h-7 rounded-xl bg-sky-100/90 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300 flex items-center justify-center shrink-0 shadow-2xs">
@@ -1038,7 +1042,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       </div>
 
       {/* Clean KPI Summary Grid */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
+      <div
+        className={
+          isTwoColumn
+            ? 'md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-2.5'
+            : 'order-2 grid grid-cols-2 xl:grid-cols-4 gap-2'
+        }
+      >
         <div className="glass-card-primary rounded-2xl p-2.5 sm:p-3 border border-sky-200/80 dark:border-sky-800/60 min-w-0">
           <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 min-w-0">
             <User className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
@@ -1095,7 +1105,11 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
       </div>
 
       {/* Search, Brand Filter & View Switcher Toolbar */}
-      <div className="glass-card-primary rounded-2xl p-3 space-y-2.5 border border-sky-200/80 dark:border-slate-700/80">
+      <div
+        className={`glass-card-primary rounded-2xl p-3 space-y-2.5 border border-sky-200/80 dark:border-slate-700/80 min-w-0 ${
+          isTwoColumn ? 'md:row-start-1 md:col-start-2 flex flex-col justify-between h-full' : 'order-3'
+        }`}
+      >
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[180px]">
             <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -1287,6 +1301,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
           </div>
         </div>
       </div>
+      </div>
 
       {/* Empty State */}
       {groupedByFirstDue.length === 0 ? (
@@ -1375,7 +1390,13 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
               </div>
 
               {/* Customers in this First-Due Cohort */}
-              <div className="space-y-2.5">
+              <div
+                className={
+                  isTwoColumn
+                    ? 'grid grid-cols-1 md:grid-cols-2 gap-3 items-start'
+                    : 'space-y-2.5'
+                }
+              >
                 {group.items.map((item, idx) => {
                   const {
                     record,
@@ -1417,7 +1438,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
                   return (
                     <div
                       key={record.id}
-                      className={`glass-card-primary rounded-2xl p-3 sm:p-3.5 border ${statusBadgeConfig.cardBorder} shadow-xs space-y-2.5 relative overflow-hidden`}
+                      className={`glass-card-primary rounded-2xl p-3 sm:p-3.5 border ${statusBadgeConfig.cardBorder} shadow-xs space-y-2.5 relative overflow-hidden min-w-0`}
                     >
                       {/* Customer Header */}
                       <div className="flex items-start justify-between gap-2">
