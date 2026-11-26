@@ -1,21 +1,28 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 import {
+  Activity,
   ArrowRight,
   Award,
   Ban,
   Banknote,
+  BarChart3,
+  Building2,
   CalendarClock,
   CalendarDays,
   CheckCircle2,
@@ -26,6 +33,7 @@ import {
   FileText,
   FolderArchive,
   Fuel,
+  LayoutList,
   Maximize2,
   Minimize2,
   PackageCheck,
@@ -33,6 +41,7 @@ import {
   RotateCcw,
   ShieldCheck,
   TrendingUp,
+  X,
 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -40,6 +49,8 @@ import { triggerHaptic } from '../utils/haptics';
 import { calculateGasolineAllowance } from '../utils/gasolineAllowance';
 import { CheckerCommissionSummary } from '../utils/checkerCommission';
 import type { KpiMiniBucket } from './KpiSummaryChartCard';
+import { GasolineAllowanceCard } from './GasolineAllowanceCard';
+import { useModalTransition } from '../hooks/useModalTransition';
 
 interface PeriodStatsShape {
   totalCases: number;
@@ -404,27 +415,217 @@ const StatBarTooltip: React.FC<{
   if (!active || !payload || payload.length === 0) return null;
   const item = payload[0]?.payload;
   if (!item) return null;
+  const deliveryPct = item.total > 0 ? Math.round((item.delivered / item.total) * 100) : 0;
 
   return (
-    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 min-w-[165px]">
-      <div className="font-bold text-slate-900 dark:text-white pb-1 border-b border-slate-100 dark:border-slate-800">
-        {item.fullLabel}
+    <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-indigo-200/80 dark:border-slate-700 shadow-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-100 min-w-[185px]">
+      <div className="flex items-center justify-between gap-3 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+        <span className="font-extrabold text-slate-900 dark:text-white">{item.fullLabel}</span>
+        <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+          ส่งมอบ {deliveryPct}%
+        </span>
       </div>
       <div className="pt-1.5 space-y-1 text-[11px] tabular-nums">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-indigo-600 dark:text-indigo-300 font-semibold">เคสทั้งหมด</span>
+          <span className="inline-flex items-center gap-1.5 text-indigo-600 dark:text-indigo-300 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+            เคสทั้งหมด
+          </span>
           <span className="font-extrabold">{item.total} เคส</span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-rose-500 dark:text-rose-300 font-semibold">รับรถแล้ว</span>
+          <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            รับรถแล้ว
+          </span>
           <span className="font-extrabold">{item.delivered} คัน</span>
         </div>
-        <div className="flex items-center justify-between gap-3 pt-0.5 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
           <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวม</span>
-          <span className="font-bold">{formatCompactBaht(item.finance)}</span>
+          <span className="font-extrabold text-slate-900 dark:text-white">
+            {formatCompactBaht(item.finance)}
+          </span>
         </div>
       </div>
     </div>
+  );
+};
+
+interface Performance3DBarShapeProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  index?: number;
+  payload?: StatBarDatum;
+  series: 'total' | 'delivered';
+  peakIdx: number;
+  activeIdx: number | null;
+  onHover: (idx: number | null) => void;
+  onSelect: (idx: number) => void;
+}
+
+const Performance3DBarShape: React.FC<Performance3DBarShapeProps> = ({
+  x = 0,
+  y = 0,
+  width = 0,
+  height = 0,
+  index = 0,
+  payload,
+  series,
+  peakIdx,
+  activeIdx,
+  onHover,
+  onSelect,
+}) => {
+  if (width <= 0) return <g />;
+
+  const isTotal = series === 'total';
+  const gradId = isTotal ? 'tsdPerfTotalGrad' : 'tsdPerfDelivGrad';
+  const glowFilter = isTotal ? 'url(#tsdPerfTotalGlow)' : 'url(#tsdPerfDelivGlow)';
+  const accentColor = isTotal ? '#5b5be6' : '#10b981';
+  const rimColor = isTotal ? '#93c5fd' : '#6ee7b7';
+  const isSelected = activeIdx === index;
+  const isDimmed = activeIdx !== null && !isSelected;
+  const isPeak = isTotal && index === peakIdx && (payload?.total ?? 0) > 0;
+
+  if (height <= 0) {
+    return (
+      <g
+        onMouseEnter={() => onHover(index)}
+        onMouseLeave={() => onHover(null)}
+        onClick={() => onSelect(index)}
+        className="cursor-pointer"
+      >
+        <rect
+          x={x}
+          y={y - 3}
+          width={width}
+          height={3}
+          rx={1.5}
+          fill={accentColor}
+          fillOpacity={isSelected ? 0.55 : 0.16}
+        />
+      </g>
+    );
+  }
+
+  const rx = Math.min(6, width / 2);
+
+  return (
+    <g
+      onMouseEnter={() => onHover(index)}
+      onMouseLeave={() => onHover(null)}
+      onClick={() => onSelect(index)}
+      style={{
+        cursor: 'pointer',
+        opacity: isDimmed ? 0.42 : 1,
+        transition: 'opacity 180ms ease',
+      }}
+    >
+      {/* 3D Soft Ground Shadow */}
+      <ellipse
+        cx={x + width / 2}
+        cy={y + height + 1.5}
+        rx={width * 0.52}
+        ry={1.8}
+        fill={accentColor}
+        fillOpacity={isSelected ? 0.3 : 0.14}
+      />
+
+      {/* Active Column Outer Luminous Aura */}
+      {isSelected && (
+        <rect
+          x={x - 2.5}
+          y={y - 2.5}
+          width={width + 5}
+          height={height + 5}
+          rx={rx + 2}
+          fill={accentColor}
+          fillOpacity={0.14}
+          stroke={rimColor}
+          strokeWidth={1.5}
+          filter={glowFilter}
+          className="animate-kpi-bar-aura"
+        />
+      )}
+
+      {/* Main 3D Gradient Column */}
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={rx}
+        fill={`url(#${gradId})`}
+        filter={isSelected || isPeak ? glowFilter : 'url(#tsdPerfBarShadow)'}
+      />
+
+      {/* 3D Cylindrical Right Shaded Bevel */}
+      {width >= 6 && height > 6 && (
+        <rect
+          x={x + width * 0.66}
+          y={y + 1}
+          width={width * 0.28}
+          height={Math.max(0, height - 2)}
+          rx={Math.max(1.5, rx * 0.45)}
+          fill="#0f172a"
+          fillOpacity={0.14}
+          pointerEvents="none"
+        />
+      )}
+
+      {/* Specular Crystal Top Reflection Cap */}
+      {height > 8 && (
+        <rect
+          x={x + 1.5}
+          y={y + 1.5}
+          width={Math.max(2, width - 3)}
+          height={Math.min(7, height * 0.24)}
+          rx={Math.max(1.5, rx - 1.5)}
+          fill="#ffffff"
+          fillOpacity={isSelected ? 0.62 : 0.42}
+          pointerEvents="none"
+        />
+      )}
+
+      {/* Left-Edge Crisp Rim Highlight */}
+      {height > 10 && (
+        <line
+          x1={x + 1.6}
+          y1={y + 3}
+          x2={x + 1.6}
+          y2={y + height - 2.5}
+          stroke="#ffffff"
+          strokeOpacity={0.35}
+          strokeWidth={0.9}
+          strokeLinecap="round"
+          pointerEvents="none"
+        />
+      )}
+
+      {/* Pulsing Peak Beacon & Count Label */}
+      {isPeak && payload && (
+        <g className="pointer-events-none">
+          <circle
+            cx={x + width / 2}
+            cy={Math.max(6, y - 6)}
+            r={3.2}
+            fill="#6366f1"
+            className="animate-fuel-tip-ping"
+            style={{ transformOrigin: `${x + width / 2}px ${Math.max(6, y - 6)}px` }}
+          />
+          <circle
+            cx={x + width / 2}
+            cy={Math.max(6, y - 6)}
+            r={2.2}
+            fill="#ffffff"
+            stroke="#4f46e5"
+            strokeWidth={1.3}
+          />
+        </g>
+      )}
+    </g>
   );
 };
 
@@ -453,7 +654,30 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
   onLoadCase,
 }) => {
   const [statGraphTab, setStatGraphTab] = useState<'monthly' | 'weekly'>('monthly');
+  const [statVisualMode, setStatVisualMode] = useState<'bars' | 'wave'>('bars');
+  const [hoveredPerfIdx, setHoveredPerfIdx] = useState<number | null>(null);
+  const [pinnedPerfIdx, setPinnedPerfIdx] = useState<number | null>(null);
   const [rightBottomTab, setRightBottomTab] = useState<'recent' | 'timeline' | 'tools'>('recent');
+  const [dealerViewMode, setDealerViewMode] = useState<'chart' | 'list'>('chart');
+  const [selectedDealerName, setSelectedDealerName] = useState<string | null>(null);
+  const [hoveredDealerName, setHoveredDealerName] = useState<string | null>(null);
+  const [showGasolineModal, setShowGasolineModal] = useState<boolean>(false);
+  const {
+    shouldRender: shouldRenderGasolineModal,
+    isClosing: isClosingGasolineModal,
+    backdropAnimClass: gasolineBackdropAnimClass,
+    sheetAnimClass: gasolineSheetAnimClass,
+  } = useModalTransition(showGasolineModal, () => setShowGasolineModal(false));
+
+  useEffect(() => {
+    if (!showGasolineModal) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [showGasolineModal]);
+
   const [hoveredKpiSlot, setHoveredKpiSlot] = useState<{
     card: 'cases' | 'delivered' | 'finance' | 'pa';
     idx: number;
@@ -644,6 +868,45 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
   }, [savedCases]);
 
   const activeBarData = statGraphTab === 'monthly' ? monthlyBarData : weeklyBarData;
+
+  const perfSummary = useMemo(() => {
+    let sumTotal = 0;
+    let sumDelivered = 0;
+    let peakIdx = 0;
+    activeBarData.forEach((d, idx) => {
+      sumTotal += d.total;
+      sumDelivered += d.delivered;
+      if (d.total > (activeBarData[peakIdx]?.total ?? -1)) {
+        peakIdx = idx;
+      }
+    });
+    const avgTotal = activeBarData.length > 0 ? sumTotal / activeBarData.length : 0;
+    return {
+      sumTotal,
+      sumDelivered,
+      peakIdx,
+      peakItem: activeBarData[peakIdx] || null,
+      avgTotal,
+    };
+  }, [activeBarData]);
+
+  const effectivePerfIdx = hoveredPerfIdx ?? pinnedPerfIdx;
+  const spotlightPerfItem =
+    effectivePerfIdx !== null ? activeBarData[effectivePerfIdx] ?? null : null;
+
+  const maxDealerCases = useMemo(
+    () => Math.max(1, ...dealerSummaryList.map((d) => d.total)),
+    [dealerSummaryList]
+  );
+
+  const focusedDealerName = hoveredDealerName ?? selectedDealerName;
+  const focusedDealer = useMemo(() => {
+    if (dealerSummaryList.length === 0) return null;
+    if (focusedDealerName) {
+      return dealerSummaryList.find((d) => d.name === focusedDealerName) ?? dealerSummaryList[0];
+    }
+    return dealerSummaryList[0];
+  }, [dealerSummaryList, focusedDealerName]);
 
   const timelineItems = useMemo(() => {
     if (upcomingInstallmentSummary && upcomingInstallmentSummary.cohorts.length > 0) {
@@ -1697,14 +1960,15 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               </div>
             </button>
 
-            {/* Gradient Card 2: Orchid -> Violet Indigo */}
+            {/* Gradient Card 2: Orchid -> Violet Indigo (Opens Gasoline Allowance Popup) */}
             <button
               type="button"
               onClick={() => {
                 triggerHaptic('selection');
-                onOpenSavedCases();
+                setShowGasolineModal(true);
               }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-400 via-violet-500 to-indigo-600 text-white p-4 text-center flex flex-col items-center justify-center min-h-[118px] shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
+              title="แตะเพื่อเปิดกล่องสรุปยอดค่าน้ำมันและจำลองเป้าหมาย"
             >
               <svg
                 viewBox="0 0 240 60"
@@ -1732,7 +1996,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                   ค่าน้ำมัน Checker · {commissionSummary.totalDeliveredContracts} สัญญา
                 </div>
                 <div className="text-[10px] font-medium text-white/80">
-                  {gasolineSummary.currentTier.tierName} ({gasolineSummary.currentTier.shortRangeLabel} สัญญา)
+                  {gasolineSummary.currentTier.tierName} ({gasolineSummary.currentTier.shortRangeLabel} สัญญา) · แตะดูสรุป
                 </div>
               </div>
             </button>
@@ -1939,54 +2203,170 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
           ROW 3: Bottom 2-Column Graphs (Statistic Bar Graph + Cases/Timeline)
          ===================================================================== */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
-        {/* Bottom Left 6 cols: Statistic Bar Graph (Monthly / Last 7 Days) */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/85 dark:border-slate-800 shadow-[0_2px_14px_-4px_rgba(15,23,42,0.06)] p-4 flex flex-col justify-between gap-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-              กราฟสถิติผลงาน
-            </h3>
-            <div className="flex items-center gap-3 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#5b5be6]" /> เคสทั้งหมด
+        {/* Bottom Left 6 cols: Dimensional Animated Performance Statistics Chart */}
+        <div className="lg:col-span-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-white to-indigo-50/55 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/35 border border-slate-200/85 dark:border-slate-800 shadow-[0_8px_24px_-8px_rgba(79,70,229,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_10px_28px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] p-4 flex flex-col justify-between gap-2.5">
+          {/* Top Hairline Highlight & Corner Ambient Glow */}
+          <span
+            className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-indigo-300/35 to-transparent"
+            aria-hidden="true"
+          />
+          <span
+            className="pointer-events-none -right-10 -top-10 absolute w-36 h-36 rounded-full bg-indigo-400/12 dark:bg-indigo-500/12 blur-2xl"
+            aria-hidden="true"
+          />
+
+          <div className="relative flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white flex items-center justify-center shadow-sm shadow-indigo-500/25 ring-1 ring-white/50 dark:ring-white/15 shrink-0">
+                <BarChart3 className="w-3.5 h-3.5" />
               </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#f8b4b4]" /> รับรถแล้ว
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                กราฟสถิติผลงาน
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Visual Mode Switcher: 3D Pillars vs Smooth Wave */}
+              <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatVisualMode('bars');
+                  }}
+                  className={`px-2 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                    statVisualMode === 'bars'
+                      ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-2xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <BarChart3 className="w-3 h-3" />
+                  <span>แท่ง 3D</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setStatVisualMode('wave');
+                  }}
+                  className={`px-2 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                    statVisualMode === 'wave'
+                      ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-2xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Activity className="w-3 h-3" />
+                  <span>คลื่น 3D</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeframe Tabs + Legend Row */}
+          <div className="relative flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-5 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setStatGraphTab('monthly');
+                  setPinnedPerfIdx(null);
+                  setHoveredPerfIdx(null);
+                }}
+                className={`pb-2 font-bold border-b-2 transition-colors cursor-pointer ${
+                  statGraphTab === 'monthly'
+                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                สถิติรายเดือน
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setStatGraphTab('weekly');
+                  setPinnedPerfIdx(null);
+                  setHoveredPerfIdx(null);
+                }}
+                className={`pb-2 font-bold border-b-2 transition-colors cursor-pointer ${
+                  statGraphTab === 'weekly'
+                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                7 วันล่าสุด
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 pb-2 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-sky-400 to-indigo-600 shadow-2xs" />
+                เคสทั้งหมด
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 shadow-2xs" />
+                รับรถแล้ว
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-5 border-b border-slate-100 dark:border-slate-800 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setStatGraphTab('monthly');
-              }}
-              className={`pb-2 font-bold border-b-2 transition-colors cursor-pointer ${
-                statGraphTab === 'monthly'
-                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              สถิติรายเดือน
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setStatGraphTab('weekly');
-              }}
-              className={`pb-2 font-bold border-b-2 transition-colors cursor-pointer ${
-                statGraphTab === 'weekly'
-                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              7 วันล่าสุด
-            </button>
-          </div>
+          {/* Interactive Spotlight Readout Bar */}
+          {savedCases.length > 0 && (
+            <div className="relative flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[11px] tabular-nums">
+              {spotlightPerfItem ? (
+                <>
+                  <div className="flex items-center gap-2 min-w-0 truncate">
+                    <span className="font-extrabold text-indigo-600 dark:text-sky-300 shrink-0">
+                      {spotlightPerfItem.fullLabel}
+                    </span>
+                    <span className="text-slate-300 dark:text-slate-600">·</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                      เคส {spotlightPerfItem.total}
+                    </span>
+                    <span className="text-slate-300 dark:text-slate-600">·</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      รับรถ {spotlightPerfItem.delivered} (
+                      {spotlightPerfItem.total > 0
+                        ? Math.round((spotlightPerfItem.delivered / spotlightPerfItem.total) * 100)
+                        : 0}
+                      %)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-extrabold text-slate-900 dark:text-white">
+                      {formatCompactBaht(spotlightPerfItem.finance)}
+                    </span>
+                    {pinnedPerfIdx !== null && (
+                      <button
+                        type="button"
+                        onClick={() => setPinnedPerfIdx(null)}
+                        className="text-[10px] font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline cursor-pointer"
+                      >
+                        รีเซ็ต
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 min-w-0 truncate text-slate-600 dark:text-slate-300">
+                    <span className="font-semibold">
+                      รวม {perfSummary.sumTotal} เคส · รับรถ {perfSummary.sumDelivered} คัน
+                    </span>
+                  </div>
+                  <span className="font-bold text-indigo-600 dark:text-sky-300 shrink-0">
+                    {perfSummary.peakItem && perfSummary.peakItem.total > 0
+                      ? `สูงสุด ${perfSummary.peakItem.fullLabel} (${perfSummary.peakItem.total})`
+                      : 'แตะแท่งกราฟเพื่อเจาะลึก'}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
 
-          <div className="h-[195px] w-full pt-1">
+          {/* Animated 3D Chart Viewport */}
+          <div key={`${statGraphTab}-${statVisualMode}`} className="h-[190px] w-full pt-1 animate-tab-fade">
             {savedCases.length === 0 ? (
               <div className="h-full rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center p-4 space-y-2">
                 <TrendingUp className="w-6 h-6 text-indigo-500" />
@@ -2005,15 +2385,41 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                   <span>คำนวณ / บันทึกเคสแรก</span>
                 </button>
               </div>
-            ) : (
+            ) : statVisualMode === 'bars' ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activeBarData} barGap={3} margin={{ top: 6, right: 6, left: -24, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.2)" />
+                <BarChart
+                  data={activeBarData}
+                  barGap={4}
+                  margin={{ top: 14, right: 8, left: -24, bottom: 2 }}
+                  onMouseLeave={() => setHoveredPerfIdx(null)}
+                >
+                  <defs>
+                    <linearGradient id="tsdPerfTotalGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#38bdf8" />
+                      <stop offset="48%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#4338ca" />
+                    </linearGradient>
+                    <linearGradient id="tsdPerfDelivGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#34d399" />
+                      <stop offset="52%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#047857" />
+                    </linearGradient>
+                    <filter id="tsdPerfBarShadow" x="-20%" y="-15%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2.5" stdDeviation="2" floodColor="#1e293b" floodOpacity="0.18" />
+                    </filter>
+                    <filter id="tsdPerfTotalGlow" x="-35%" y="-25%" width="170%" height="160%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3.5" floodColor="#4f46e5" floodOpacity="0.45" />
+                    </filter>
+                    <filter id="tsdPerfDelivGlow" x="-35%" y="-25%" width="170%" height="160%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3.5" floodColor="#059669" floodOpacity="0.42" />
+                    </filter>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.22)" />
                   <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 10.5, fill: '#64748b', fontWeight: 600 }}
+                    tick={{ fontSize: 10.5, fill: '#64748b', fontWeight: 700 }}
                   />
                   <YAxis
                     allowDecimals={false}
@@ -2021,22 +2427,143 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                     tickLine={false}
                     tick={{ fontSize: 10, fill: '#94a3b8' }}
                   />
-                  <Tooltip content={<StatBarTooltip />} cursor={{ fill: 'rgba(99,102,241,0.06)' }} />
+                  {perfSummary.avgTotal > 0 && (
+                    <ReferenceLine
+                      y={perfSummary.avgTotal}
+                      stroke="#6366f1"
+                      strokeDasharray="4 4"
+                      strokeOpacity={0.38}
+                    />
+                  )}
+                  <Tooltip
+                    content={<StatBarTooltip />}
+                    cursor={{ fill: 'rgba(99,102,241,0.06)', radius: 8 }}
+                  />
                   <Bar
                     dataKey="total"
-                    fill="#5b5be6"
-                    barSize={8}
-                    radius={[5, 5, 0, 0]}
+                    barSize={13}
                     name="เคสทั้งหมด"
+                    isAnimationActive
+                    animationDuration={680}
+                    animationEasing="ease-out"
+                    shape={(props: unknown) => {
+                      const p = props as Performance3DBarShapeProps;
+                      return (
+                        <Performance3DBarShape
+                          {...p}
+                          series="total"
+                          peakIdx={perfSummary.peakIdx}
+                          activeIdx={effectivePerfIdx}
+                          onHover={setHoveredPerfIdx}
+                          onSelect={(idx) => {
+                            triggerHaptic('light');
+                            setPinnedPerfIdx((prev) => (prev === idx ? null : idx));
+                          }}
+                        />
+                      );
+                    }}
                   />
                   <Bar
                     dataKey="delivered"
-                    fill="#f8c8c6"
-                    barSize={8}
-                    radius={[5, 5, 0, 0]}
+                    barSize={13}
                     name="รับรถแล้ว"
+                    isAnimationActive
+                    animationDuration={760}
+                    animationEasing="ease-out"
+                    shape={(props: unknown) => {
+                      const p = props as Performance3DBarShapeProps;
+                      return (
+                        <Performance3DBarShape
+                          {...p}
+                          series="delivered"
+                          peakIdx={perfSummary.peakIdx}
+                          activeIdx={effectivePerfIdx}
+                          onHover={setHoveredPerfIdx}
+                          onSelect={(idx) => {
+                            triggerHaptic('light');
+                            setPinnedPerfIdx((prev) => (prev === idx ? null : idx));
+                          }}
+                        />
+                      );
+                    }}
                   />
                 </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={activeBarData}
+                  margin={{ top: 14, right: 10, left: -24, bottom: 2 }}
+                >
+                  <defs>
+                    <linearGradient id="tsdPerfWaveFillTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.42" />
+                      <stop offset="65%" stopColor="#38bdf8" stopOpacity="0.14" />
+                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
+                    </linearGradient>
+                    <linearGradient id="tsdPerfWaveFillDeliv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.38" />
+                      <stop offset="65%" stopColor="#2dd4bf" stopOpacity="0.12" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
+                    </linearGradient>
+                    <linearGradient id="tsdPerfWaveStrokeTotal" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#38bdf8" />
+                      <stop offset="50%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                    <linearGradient id="tsdPerfWaveStrokeDeliv" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#34d399" />
+                      <stop offset="50%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.22)" />
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10.5, fill: '#64748b', fontWeight: 700 }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                  />
+                  {perfSummary.avgTotal > 0 && (
+                    <ReferenceLine
+                      y={perfSummary.avgTotal}
+                      stroke="#6366f1"
+                      strokeDasharray="4 4"
+                      strokeOpacity={0.45}
+                    />
+                  )}
+                  <Tooltip content={<StatBarTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="url(#tsdPerfWaveStrokeTotal)"
+                    strokeWidth={2.8}
+                    fill="url(#tsdPerfWaveFillTotal)"
+                    dot={{ r: 3, fill: '#ffffff', stroke: '#5b5be6', strokeWidth: 1.6 }}
+                    activeDot={{ r: 5.5, fill: '#ffffff', stroke: '#4f46e5', strokeWidth: 2.5 }}
+                    isAnimationActive
+                    animationDuration={680}
+                    animationEasing="ease-out"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="delivered"
+                    stroke="url(#tsdPerfWaveStrokeDeliv)"
+                    strokeWidth={2.6}
+                    fill="url(#tsdPerfWaveFillDeliv)"
+                    dot={{ r: 2.8, fill: '#ffffff', stroke: '#10b981', strokeWidth: 1.6 }}
+                    activeDot={{ r: 5.5, fill: '#ffffff', stroke: '#059669', strokeWidth: 2.5 }}
+                    isAnimationActive
+                    animationDuration={760}
+                    animationEasing="ease-out"
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
@@ -2333,6 +2860,461 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
           </div>
         </div>
       </section>
+
+      {/* =====================================================================
+          ROW 4: กราฟสรุปตามร้านตัวแทน & สาขา (Dealers & Branches Chart)
+         ===================================================================== */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-white to-sky-50/55 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/35 border border-slate-200/85 dark:border-slate-800 shadow-[0_8px_24px_-8px_rgba(14,165,233,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_10px_28px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] p-4 space-y-3">
+        <span
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent"
+          aria-hidden="true"
+        />
+
+        {/* Header Row */}
+        <div className="relative flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-teal-500 text-white flex items-center justify-center shadow-sm shadow-sky-500/25 ring-1 ring-white/50 dark:ring-white/15 shrink-0">
+              <Building2 className="w-4 h-4" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                กราฟสรุปตามร้านตัวแทน (Dealers)
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                งวด {formatMonthLabel(selectedMonth)} · จำนวนเคสและยอดจัดแยกตามร้าน/สาขา
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {dealerSummaryList.length > 0 && (
+              <div
+                role="group"
+                aria-label="มุมมองกราฟร้านตัวแทน"
+                className="flex items-center gap-0.5 p-0.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setDealerViewMode('chart');
+                  }}
+                  aria-pressed={dealerViewMode === 'chart'}
+                  className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                    dealerViewMode === 'chart'
+                      ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <BarChart3 className="w-3 h-3" />
+                  <span>แท่งกราฟ</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setDealerViewMode('list');
+                  }}
+                  aria-pressed={dealerViewMode === 'list'}
+                  className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                    dealerViewMode === 'list'
+                      ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <LayoutList className="w-3 h-3" />
+                  <span>รายการ</span>
+                </button>
+              </div>
+            )}
+
+            <span className="px-2.5 py-1 rounded-xl bg-sky-50/90 dark:bg-sky-950/70 border border-sky-200/80 dark:border-sky-700/70 text-[11px] font-extrabold text-sky-800 dark:text-sky-200 tabular-nums whitespace-nowrap">
+              {dealerSummaryList.length} ร้าน · {stats.totalCases} เคส
+            </span>
+          </div>
+        </div>
+
+        {dealerSummaryList.length === 0 ? (
+          <div className="rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 py-8 px-4 text-center space-y-2">
+            <Building2 className="w-6 h-6 text-sky-500 mx-auto" />
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              ยังไม่มีข้อมูลร้านตัวแทนในงวด {formatMonthLabel(selectedMonth)}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('medium');
+                onNavigateToCaseForm();
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold inline-flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>คำนวณ / บันทึกเคสใหม่</span>
+            </button>
+          </div>
+        ) : dealerViewMode === 'chart' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+            {/* Left 8 cols: Shared-Scale 3D Stacked Bar Chart */}
+            <div className="lg:col-span-8 rounded-2xl bg-slate-50/75 dark:bg-slate-800/45 border border-slate-200/70 dark:border-slate-800 p-3 space-y-2.5 min-w-0">
+              {/* Legend & Reset */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-slate-600 dark:text-slate-300">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
+                    <span>รับรถแล้ว</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-green-300" />
+                    <span>อนุมัติรอรับรถ</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                    <span>รอผล/อื่นๆ</span>
+                  </span>
+                </div>
+                {selectedDealerName && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSelectedDealerName(null);
+                      setHoveredDealerName(null);
+                    }}
+                    className="text-sky-700 dark:text-sky-300 font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>แสดงทุกร้าน</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Horizontal Stacked Bars with Dashed Gridlines */}
+              <div className="relative space-y-1.5">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-2 top-0 bottom-5 z-0"
+                >
+                  {[0, 20, 40, 60, 80].map((posPct) => (
+                    <div
+                      key={posPct}
+                      className="absolute top-0 bottom-0 border-l border-dashed border-slate-300/70 dark:border-slate-700/70"
+                      style={{ left: `${posPct}%` }}
+                    />
+                  ))}
+                </div>
+
+                <div className="relative z-10 space-y-1.5">
+                  {dealerSummaryList.map((d) => {
+                    const isPinned = selectedDealerName === d.name;
+                    const isActive = focusedDealerName === d.name;
+                    const isDimmed = Boolean(focusedDealerName && !isActive);
+                    const barTrackPct = Math.min(80, (d.total / maxDealerCases) * 80);
+                    const delShare = d.total > 0 ? (d.delivered / d.total) * 100 : 0;
+                    const pendShare = d.total > 0 ? (d.approvedPending / d.total) * 100 : 0;
+                    const otherShare = d.total > 0 ? (d.other / d.total) * 100 : 0;
+
+                    return (
+                      <button
+                        key={d.name}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('selection');
+                          setSelectedDealerName((prev) => (prev === d.name ? null : d.name));
+                        }}
+                        onMouseEnter={() => setHoveredDealerName(d.name)}
+                        onMouseLeave={() => setHoveredDealerName(null)}
+                        aria-pressed={isPinned}
+                        className={`w-full text-left rounded-xl px-2.5 py-1.5 border transition-all duration-150 cursor-pointer space-y-1 ${
+                          isActive
+                            ? 'bg-white dark:bg-slate-800/95 border-sky-300 dark:border-sky-600 shadow-xs'
+                            : isDimmed
+                              ? 'border-transparent opacity-55 hover:opacity-95'
+                              : 'border-transparent hover:bg-white/80 dark:hover:bg-slate-800/65'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-100 truncate min-w-0">
+                            {d.name}
+                          </span>
+                          <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap shrink-0">
+                            รับรถ{' '}
+                            <strong className="text-teal-700 dark:text-teal-300">
+                              {d.delivered}
+                            </strong>
+                            /{d.total} ·{' '}
+                            <strong className="text-sky-700 dark:text-sky-300">
+                              {formatCompactBaht(d.finance)}
+                            </strong>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center w-full h-4">
+                          <div
+                            style={{
+                              width: `${barTrackPct}%`,
+                              minWidth: d.total > 0 ? '16px' : '0px',
+                            }}
+                            className={`relative h-3.5 rounded-full overflow-hidden flex transition-all duration-500 ease-out shadow-2xs ${
+                              isActive
+                                ? 'ring-2 ring-sky-400/80 shadow-[0_0_10px_rgba(14,165,233,0.35)]'
+                                : 'border border-white/80 dark:border-slate-700/70'
+                            }`}
+                          >
+                            {d.delivered > 0 && (
+                              <div
+                                style={{ width: `${delShare}%` }}
+                                className="h-full bg-gradient-to-r from-teal-500 to-emerald-500"
+                              />
+                            )}
+                            {d.approvedPending > 0 && (
+                              <div
+                                style={{ width: `${pendShare}%` }}
+                                className="h-full bg-gradient-to-r from-emerald-400 to-green-300"
+                              />
+                            )}
+                            {d.other > 0 && (
+                              <div
+                                style={{ width: `${otherShare}%` }}
+                                className="h-full bg-gradient-to-r from-slate-400 to-slate-500"
+                              />
+                            )}
+                            <span
+                              aria-hidden="true"
+                              className="pointer-events-none absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/40 to-transparent"
+                            />
+                          </div>
+
+                          <span className="ml-2 text-[11px] font-black tabular-nums text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0">
+                            {d.total} เคส
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* X-Axis Scale Ticks */}
+                <div className="relative mx-2 h-4 text-[9.5px] font-bold text-slate-400 dark:text-slate-500 tabular-nums select-none pt-0.5">
+                  <span className="absolute left-0">0</span>
+                  {maxDealerCases >= 4 && (
+                    <span className="absolute -translate-x-1/2" style={{ left: '40%' }}>
+                      {Math.round(maxDealerCases / 2)}
+                    </span>
+                  )}
+                  <span className="absolute -translate-x-1/2" style={{ left: '80%' }}>
+                    {maxDealerCases} เคส
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right 4 cols: Focused Dealer Insight + Total Reconciliation */}
+            <div className="lg:col-span-4 space-y-2.5 min-w-0">
+              {focusedDealer && (
+                <div className="rounded-2xl bg-gradient-to-br from-sky-50/90 via-white to-teal-50/85 dark:from-sky-950/60 dark:via-slate-900 dark:to-teal-950/50 border border-sky-200/80 dark:border-sky-800/70 p-3.5 space-y-2.5 shadow-2xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300 block">
+                        {focusedDealerName ? 'ร้านที่เลือกดู' : 'อันดับ 1 สูงสุด'}
+                      </span>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white truncate mt-0.5">
+                        {focusedDealer.name}
+                      </h4>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-lg bg-sky-600 text-white text-[11px] font-black tabular-nums shrink-0">
+                      {focusedDealer.total} เคส
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 text-center text-[10.5px] tabular-nums">
+                    <div className="rounded-xl bg-white/90 dark:bg-slate-800/85 border border-slate-200/70 dark:border-slate-700/70 p-2">
+                      <div className="text-slate-500 dark:text-slate-400 font-medium">รับรถแล้ว</div>
+                      <div className="text-sm font-black text-teal-700 dark:text-teal-300 mt-0.5">
+                        {focusedDealer.delivered}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-white/90 dark:bg-slate-800/85 border border-slate-200/70 dark:border-slate-700/70 p-2">
+                      <div className="text-slate-500 dark:text-slate-400 font-medium">รอรับรถ</div>
+                      <div className="text-sm font-black text-emerald-700 dark:text-emerald-300 mt-0.5">
+                        {focusedDealer.approvedPending}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-white/90 dark:bg-slate-800/85 border border-slate-200/70 dark:border-slate-700/70 p-2">
+                      <div className="text-slate-500 dark:text-slate-400 font-medium">อื่นๆ</div>
+                      <div className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
+                        {focusedDealer.other}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-sky-200/60 dark:border-slate-700/70 space-y-1 text-[11px] tabular-nums">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวมร้านนี้</span>
+                      <span className="font-black text-indigo-700 dark:text-sky-300">
+                        {formatBaht(Math.round(focusedDealer.finance))}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-slate-500 dark:text-slate-400">ยอดจัดรับรถแล้ว</span>
+                      <span className="font-bold text-teal-700 dark:text-teal-300">
+                        {formatBaht(Math.round(focusedDealer.deliveredFinance))}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-slate-500 dark:text-slate-400">สัดส่วนจากเคสทั้งหมด</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">
+                        {stats.totalCases > 0
+                          ? `${((focusedDealer.total / stats.totalCases) * 100).toFixed(1)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Total Reconciliation Box */}
+              <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 p-3 space-y-1.5 text-[11px] tabular-nums">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-slate-700 dark:text-slate-200">
+                    รวมทุกร้าน ({dealerSummaryList.length} ร้าน)
+                  </span>
+                  <span className="font-black text-slate-900 dark:text-white">
+                    {stats.totalCases} เคส (รับรถ {stats.deliveredCount})
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวมทั้งหมด</span>
+                  <span className="font-black text-indigo-700 dark:text-sky-300">
+                    {formatBaht(Math.round(stats.totalFinance))}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    onOpenSavedCases();
+                  }}
+                  className="w-full mt-1 py-1.5 px-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-[11px] font-bold text-sky-700 dark:text-sky-300 flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                >
+                  <span>ดูเคสแยกตามร้านในตาราง</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* List View Mode */
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
+            <table className="w-full text-left border-collapse text-xs tabular-nums">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-700">
+                  <th className="py-2.5 px-3 font-bold">#</th>
+                  <th className="py-2.5 px-3 font-bold">ร้านตัวแทน / สาขา</th>
+                  <th className="py-2.5 px-3 text-right font-bold">ทั้งหมด</th>
+                  <th className="py-2.5 px-3 text-right font-bold">รับรถแล้ว</th>
+                  <th className="py-2.5 px-3 text-right font-bold">รอรับรถ</th>
+                  <th className="py-2.5 px-3 text-right font-bold">อื่นๆ</th>
+                  <th className="py-2.5 px-3 text-right font-bold">ยอดจัดรวม</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {dealerSummaryList.map((d, idx) => (
+                  <tr
+                    key={d.name}
+                    className="hover:bg-sky-50/50 dark:hover:bg-slate-800/60 transition-colors"
+                  >
+                    <td className="py-2 px-3 font-bold text-slate-400">{idx + 1}</td>
+                    <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-100">
+                      {d.name}
+                    </td>
+                    <td className="py-2 px-3 text-right font-black text-slate-900 dark:text-white">
+                      {d.total} เคส
+                    </td>
+                    <td className="py-2 px-3 text-right font-bold text-teal-700 dark:text-teal-300">
+                      {d.delivered}
+                    </td>
+                    <td className="py-2 px-3 text-right font-semibold text-emerald-700 dark:text-emerald-300">
+                      {d.approvedPending}
+                    </td>
+                    <td className="py-2 px-3 text-right text-slate-500 dark:text-slate-400">
+                      {d.other}
+                    </td>
+                    <td className="py-2 px-3 text-right font-extrabold text-indigo-700 dark:text-sky-300 whitespace-nowrap">
+                      {formatBaht(Math.round(d.finance))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* =====================================================================
+          POPUP MODAL: สรุปยอดค่าน้ำมัน (GasolineAllowanceCard Portal Modal)
+         ===================================================================== */}
+      {shouldRenderGasolineModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="สรุปยอดค่าน้ำมัน Checker"
+            data-modal-portal="true"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isClosingGasolineModal) {
+                setShowGasolineModal(false);
+              }
+            }}
+            className={`fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/75 backdrop-blur-xs overflow-y-auto overscroll-contain ${gasolineBackdropAnimClass}`}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white/95 dark:bg-slate-900/95 rounded-[26px] w-full max-w-2xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col overflow-hidden shadow-2xl border border-white/80 dark:border-slate-700/80 ${gasolineSheetAnimClass}`}
+            >
+              {/* Modal Top Bar */}
+              <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-800 bg-gradient-to-r from-amber-50/90 via-white to-sky-50/80 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <Fuel className="w-3.5 h-3.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                      สรุปยอดค่าน้ำมัน Checker & จำลองเป้าหมาย
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      {formatMonthLabel(selectedMonth)} · อ้างอิง {commissionSummary.totalDeliveredContracts} สัญญา
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowGasolineModal(false);
+                  }}
+                  aria-label="ปิดหน้าต่างสรุปค่าน้ำมัน"
+                  className="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Scrollable GasolineAllowanceCard Body */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2.5 sm:p-3.5">
+                <GasolineAllowanceCard
+                  actualContractCount={commissionSummary.totalDeliveredContracts}
+                  periodLabel={formatMonthLabel(selectedMonth)}
+                  onOpenSavedCases={() => {
+                    setShowGasolineModal(false);
+                    onOpenSavedCases();
+                  }}
+                />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

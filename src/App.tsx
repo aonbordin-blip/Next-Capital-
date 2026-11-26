@@ -586,7 +586,12 @@ export default function App() {
         clickedId === 'daily_report'
       ) {
         setExpandedCard(clickedId as 'financing' | 'comparison' | 'dv' | 'daily_report');
-      } else {
+      } else if (
+        !(
+          (expandedCard === 'financing' || expandedCard === 'comparison') &&
+          target.closest('[data-saas-two-col="true"]')
+        )
+      ) {
         // Clicked inside another distinct data box (pricing, insurance, customer, officer, result, etc.)
         // Automatically collapse the open collapsible card!
         setExpandedCard(null);
@@ -2214,7 +2219,7 @@ export default function App() {
           <div
             className={`${
               isSaasWorkspace
-                ? activeTab === 'home'
+                ? activeTab === 'home' || activeTab === 'financing' || activeTab === 'calculation'
                   ? 'w-full max-w-[1400px]'
                   : 'w-full max-w-5xl'
                 : isHandheldViewport
@@ -2341,14 +2346,24 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Input Form Card - Frosted Glass */}
-                <div className="glass-card-primary rounded-2xl p-2.5 sm:p-4 space-y-3 relative overflow-hidden">
-                  {/* Officer Name & Code & Broker License Card (ย้ายไปไว้เป็นส่วนตั้งค่าพับได้ด้านล่างของฟอร์ม) */}
-
+                {/* Input Form Card - Frosted Glass (2 columns on tablet/desktop SaaS workspace) */}
+                <div
+                  data-saas-two-col={isSaasWorkspace ? 'true' : undefined}
+                  className="glass-card-primary rounded-2xl p-2.5 sm:p-4 relative overflow-hidden"
+                >
+                  <div
+                    className={
+                      isSaasWorkspace
+                        ? 'grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 items-start'
+                        : 'flex flex-col gap-3'
+                    }
+                  >
+                    {/* Left Column Stack (ข้อมูลลูกค้า, ดีลเลอร์, เจ้าหน้าที่) */}
+                    <div className={isSaasWorkspace ? 'space-y-3 min-w-0' : 'contents'}>
               {/* Customer Information Card (กล่องใส่ข้อมูลลูกค้า: ชื่อและเบอร์โทร) */}
               <div
                 data-card-id="customer"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald"
+                className="order-1 p-3 sm:p-3.5 rounded-2xl glass-panel-emerald space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-emerald"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-emerald-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -2370,7 +2385,7 @@ export default function App() {
                   </button>
                 </div>
                 <div className="grid grid-cols-12 gap-2">
-                  <div className="col-span-7 sm:col-span-7">
+                  <div className="col-span-7 sm:col-span-7 min-w-0">
                     <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
                       ชื่อลูกค้า
                     </label>
@@ -2382,7 +2397,7 @@ export default function App() {
                       className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
                     />
                   </div>
-                  <div className="col-span-5 sm:col-span-5">
+                  <div className="col-span-5 sm:col-span-5 min-w-0">
                     <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
                       <Phone className="w-2.5 h-2.5 text-slate-400" /> เบอร์โทรศัพท์
                     </label>
@@ -2504,7 +2519,7 @@ export default function App() {
 
                   {/* Occupation + ACE Toggle Row */}
                   <div className="grid grid-cols-12 gap-2 items-end">
-                    <div className="col-span-7 sm:col-span-8">
+                    <div className="col-span-7 sm:col-span-8 min-w-0">
                       <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
                         อาชีพ (ซิงก์ไปหน้า DV)
                       </label>
@@ -2516,14 +2531,14 @@ export default function App() {
                         className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-semibold outline-none"
                       />
                     </div>
-                    <div className="col-span-5 sm:col-span-4">
+                    <div className="col-span-5 sm:col-span-4 min-w-0">
                       <button
                         type="button"
                         onClick={() => {
                           triggerHaptic('selection');
                           handleIsAceCustomerChange(!isAceCustomer);
                         }}
-                        className={`w-full py-1.5 px-2.5 rounded-xl text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
                           isAceCustomer
                             ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
                             : 'bg-white/85 dark:bg-slate-800/85 hover:bg-amber-50 dark:hover:bg-amber-950/50 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700'
@@ -2743,7 +2758,7 @@ export default function App() {
               {/* Dealer Information Card (กล่องใส่ชื่อร้านตัวแทนจำหน่าย ลิงก์ไปยังเอกสารและทุกส่วน) */}
               <div
                 data-card-id="dealer"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
+                className="order-2 p-3 sm:p-3.5 rounded-2xl glass-panel-cyan space-y-2 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2">
@@ -2802,10 +2817,112 @@ export default function App() {
                 </div>
               </div>
 
+            {/* Collapsible Officer Info Card (ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา) */}
+            <div
+              data-card-id="officer"
+              className="order-6 p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
+            >
+              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
+              <div
+                data-card-toggle="true"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsOfficerExpanded((prev) => !prev);
+                }}
+                className={`flex items-center justify-between gap-2 cursor-pointer select-none ${
+                  isOfficerExpanded ? 'pb-2 border-b border-blue-200/60 dark:border-sky-700/60' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-xl bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center shadow-2xs shrink-0">
+                    <UserCheck className="w-4 h-4 text-blue-700 dark:text-sky-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 font-bold block">
+                      ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา
+                    </span>
+                    {!isOfficerExpanded && (
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 block truncate">
+                        {officerName.trim() || 'ยังไม่ระบุชื่อ'}
+                        {officerCode.trim() ? ` · รหัส ${officerCode.trim()}` : ''}
+                        {officerLicense.trim() ? ` · นายหน้า ${officerLicense.trim()}` : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('light');
+                    setIsOfficerExpanded((prev) => !prev);
+                  }}
+                  className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700 shadow-2xs shrink-0"
+                  title={isOfficerExpanded ? 'ย่อกล่อง' : 'แก้ไขข้อมูลเจ้าหน้าที่'}
+                >
+                  {isOfficerExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
+              {isOfficerExpanded && (
+                <div className="grid grid-cols-12 gap-2 pt-0.5 animate-fade-in">
+                  <div className="col-span-7 sm:col-span-8 min-w-0">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
+                      ชื่อเจ้าหน้าที่
+                    </label>
+                    <input
+                      type="text"
+                      value={officerName}
+                      onChange={(e) => handleOfficerNameChange(e.target.value)}
+                      placeholder="ใส่ชื่อเจ้าหน้าที่"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
+                    />
+                  </div>
+                  <div className="col-span-5 sm:col-span-4 min-w-0">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
+                      โค้ด / รหัส
+                    </label>
+                    <input
+                      type="text"
+                      value={officerCode}
+                      onChange={(e) => handleOfficerCodeChange(e.target.value)}
+                      placeholder="ใส่โค้ด"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 dark:text-sky-200 font-bold font-mono outline-none"
+                    />
+                  </div>
+                  <div className="col-span-12">
+                    <label className="block text-[10px] text-slate-600 dark:text-slate-300 font-medium mb-1 flex items-center justify-between gap-2 flex-wrap">
+                      <span className="flex items-center gap-1 font-semibold text-blue-950 dark:text-sky-200">
+                        <Award className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                        เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        (สำหรับตารางความคุ้มครอง Group PA)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={officerLicense}
+                      onChange={(e) => handleOfficerLicenseChange(e.target.value)}
+                      placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
+                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 dark:text-sky-200 font-semibold font-mono outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+                    </div>
+
+                    {/* Right Column Stack (ข้อมูลรถ, ประกัน PA, เงินดาวน์ & ยอดจัด) */}
+                    <div className={isSaasWorkspace ? 'space-y-3 min-w-0' : 'contents'}>
               {/* Vehicle & Proposal Information Card (กล่องข้อมูลรถเหมือนกับกล่องข้อมูลเจ้าหน้าที่) */}
               <div
                 data-card-id="pricing"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
+                className="order-3 p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -2926,7 +3043,7 @@ export default function App() {
               {/* PA Insurance Protection Selection (แผน A vs แผน B) */}
               <div
                 data-card-id="insurance"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
+                className="order-4 p-3 sm:p-3.5 rounded-2xl glass-panel-amber space-y-2 relative overflow-hidden elevated-data-box elevated-box-amber"
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-amber-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex justify-between items-center">
@@ -3021,7 +3138,7 @@ export default function App() {
                           +{formatBaht(currentCalculation.insuranceTotalWithVat, true)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/50 dark:border-slate-700/60">
+                      <div className="flex flex-wrap justify-between gap-1 text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/50 dark:border-slate-700/60">
                         <span>เบี้ยสุทธิ {formatBaht(currentCalculation.insuranceBasePremium)} + VAT 7% ({formatBaht(currentCalculation.insuranceVat, true)})</span>
                         <span className="text-blue-800 dark:text-sky-300 font-medium">รวมในยอดจัดไฟแนนซ์</span>
                       </div>
@@ -3030,13 +3147,12 @@ export default function App() {
                   </div>
                 )}
               </div>
-            </div>
 
             {/* Financing Terms Card (กล่องข้อมูลเงินดาวน์และยอดจัดไฟแนนซ์) */}
             <div
               data-card-id="financing"
-                className="p-3 sm:p-3.5 rounded-2xl glass-panel-indigo relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
-              >
+              className="order-5 p-3 sm:p-3.5 rounded-2xl glass-panel-indigo relative overflow-hidden elevated-data-box elevated-box-blue transition-all duration-200"
+            >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-indigo-400/20 to-transparent opacity-90 pointer-events-none" />
 
                 {/* Collapsible Header: นำป้าย 'ยอดจัด & ระยะเวลาผ่อน' ออกตามที่ระบุในรูป */}
@@ -3403,12 +3519,12 @@ export default function App() {
                         </div>
 
                         {/* ปุ่มปรับละเอียด +/- 0.01 และ +/- 0.05 */}
-                        <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                          <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
+                          <div className="flex items-center gap-1">
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(-0.05)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2 sm:px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="ลดลง 0.05%"
                             >
                               -0.05%
@@ -3416,7 +3532,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(-0.01)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2 sm:px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="ลดลง 0.01%"
                             >
                               -0.01%
@@ -3427,11 +3543,11 @@ export default function App() {
                             ปุ่มปรับละเอียด
                           </span>
 
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(0.01)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2 sm:px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="เพิ่มขึ้น 0.01%"
                             >
                               +0.01%
@@ -3439,7 +3555,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => handleAdjustRate(0.05)}
-                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                              className="px-2 sm:px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
                               title="เพิ่มขึ้น 0.05%"
                             >
                               +0.05%
@@ -3698,105 +3814,9 @@ export default function App() {
               </div>
             )}
           </div>
-
-            {/* Collapsible Officer Info Card (ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา) */}
-            <div
-              data-card-id="officer"
-              className="p-3 sm:p-3.5 rounded-2xl glass-panel-blue space-y-2.5 relative overflow-hidden elevated-data-box elevated-box-blue"
-            >
-              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/20 to-transparent opacity-90 pointer-events-none" />
-              <div
-                data-card-toggle="true"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setIsOfficerExpanded((prev) => !prev);
-                }}
-                className={`flex items-center justify-between gap-2 cursor-pointer select-none ${
-                  isOfficerExpanded ? 'pb-2 border-b border-blue-200/60 dark:border-sky-700/60' : ''
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-xl bg-blue-100 dark:bg-sky-950/80 text-blue-700 dark:text-sky-300 flex items-center justify-center shadow-2xs shrink-0">
-                    <UserCheck className="w-4 h-4 text-blue-700 dark:text-sky-300" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 font-bold block">
-                      ข้อมูลเจ้าหน้าที่ / ผู้เสนอราคา
-                    </span>
-                    {!isOfficerExpanded && (
-                      <span className="text-[10px] text-slate-600 dark:text-slate-300 block truncate">
-                        {officerName.trim() || 'ยังไม่ระบุชื่อ'}
-                        {officerCode.trim() ? ` · รหัส ${officerCode.trim()}` : ''}
-                        {officerLicense.trim() ? ` · นายหน้า ${officerLicense.trim()}` : ''}
-                      </span>
-                    )}
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('light');
-                    setIsOfficerExpanded((prev) => !prev);
-                  }}
-                  className="p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700 shadow-2xs shrink-0"
-                  title={isOfficerExpanded ? 'ย่อกล่อง' : 'แก้ไขข้อมูลเจ้าหน้าที่'}
-                >
-                  {isOfficerExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-
-              {isOfficerExpanded && (
-                <div className="grid grid-cols-12 gap-2 pt-0.5 animate-fade-in">
-                  <div className="col-span-7 sm:col-span-8">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
-                      ชื่อเจ้าหน้าที่
-                    </label>
-                    <input
-                      type="text"
-                      value={officerName}
-                      onChange={(e) => handleOfficerNameChange(e.target.value)}
-                      placeholder="ใส่ชื่อเจ้าหน้าที่"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100 font-bold outline-none"
-                    />
-                  </div>
-                  <div className="col-span-5 sm:col-span-4">
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
-                      โค้ด / รหัส
-                    </label>
-                    <input
-                      type="text"
-                      value={officerCode}
-                      onChange={(e) => handleOfficerCodeChange(e.target.value)}
-                      placeholder="ใส่โค้ด"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-900 dark:text-sky-200 font-bold font-mono outline-none"
-                    />
-                  </div>
-                  <div className="col-span-12">
-                    <label className="block text-[10px] text-slate-600 dark:text-slate-300 font-medium mb-1 flex items-center justify-between">
-                      <span className="flex items-center gap-1 font-semibold text-blue-950 dark:text-sky-200">
-                        <Award className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                        เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย
-                      </span>
-                      <span className="text-[9px] text-slate-400 font-normal">
-                        (สำหรับตารางความคุ้มครอง Group PA)
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      value={officerLicense}
-                      onChange={(e) => handleOfficerLicenseChange(e.target.value)}
-                      placeholder="ใส่เลขที่ใบอนุญาตนายหน้าประกันวินาศภัย (เช่น 620400xxxx)"
-                      className="w-full glass-input-field rounded-xl px-2.5 py-1.5 text-xs text-blue-950 dark:text-sky-200 font-semibold font-mono outline-none"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Navigation Buttons for Page 2 */}
             <div className="flex items-center gap-2 pt-1">
@@ -3838,8 +3858,22 @@ export default function App() {
               </span>
             </div>
 
+            {/* 2-Column SaaS Grid on Tablet/Desktop (Result Card + Term Comparison Table) */}
+            <div
+              data-saas-two-col={isSaasWorkspace ? 'true' : undefined}
+              className={
+                isSaasWorkspace
+                  ? 'grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 items-start'
+                  : 'space-y-3 sm:space-y-3.5'
+              }
+            >
             {/* Result Hero Card - Frosted Glassmorphism Masterpiece matching Reference UI */}
-            <div data-card-id="result" className="glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden">
+            <div
+              data-card-id="result"
+              className={`glass-card-hero rounded-[28px] p-4 text-center relative overflow-hidden min-w-0 ${
+                isSaasWorkspace && comparisons.length <= 1 ? 'md:col-span-2 max-w-2xl mx-auto w-full' : ''
+              }`}
+            >
               {/* Subtle top specular sheen */}
               <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 dark:via-sky-400/25 to-transparent opacity-95 pointer-events-none" />
 
@@ -3908,7 +3942,7 @@ export default function App() {
                     </div>
                   )}
                 </div>
-                <div className="glass-mini-card p-2.5 rounded-2xl">
+                <div className="glass-mini-card p-2.5 rounded-2xl min-w-0">
                   <div className="text-[10px] text-slate-400 font-medium">ดอกเบี้ยรายเดือน:</div>
                   <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.monthlyInterest, true)} /งวด
@@ -3917,7 +3951,7 @@ export default function App() {
                     รวมทั้งสัญญา: {formatBaht(currentCalculation.totalInterest, true)}
                   </div>
                 </div>
-                <div className="glass-mini-card p-2.5 rounded-2xl">
+                <div className="glass-mini-card p-2.5 rounded-2xl min-w-0">
                   <div className="text-[10px] text-slate-400 font-medium">ยอดรวมทั้งสัญญา:</div>
                   <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.totalWithVat, true)}
@@ -3926,7 +3960,7 @@ export default function App() {
                     (ยอดจัด + ดอกเบี้ยรวม)
                   </div>
                 </div>
-                <div className="glass-mini-card p-2.5 rounded-2xl">
+                <div className="glass-mini-card p-2.5 rounded-2xl min-w-0">
                   <div className="text-[10px] text-slate-400 font-medium">ภาษีมูลค่าเพิ่มในสัญญา (7%):</div>
                   <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {formatBaht(currentCalculation.vatAmount, true)}
@@ -4118,7 +4152,7 @@ export default function App() {
             </div>
 
             {/* Term Comparisons Table */}
-            <div data-card-id="comparison">
+            <div data-card-id="comparison" className="min-w-0">
               <TermComparisonTable
                 comparisons={comparisons}
                 selectedTerm={term}
@@ -4129,6 +4163,7 @@ export default function App() {
                   setExpandedCard((prev) => (prev === 'comparison' ? null : 'comparison'));
                 }}
               />
+            </div>
             </div>
 
             {/* Navigation Buttons for Page 3 */}
