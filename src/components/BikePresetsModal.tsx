@@ -146,11 +146,11 @@ export const BikePresetsModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/80 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700/80 ${sheetAnimClass}`}
+        className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full max-w-3xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700/80 ${sheetAnimClass}`}
       >
         {/* iOS Top Pull Indicator */}
         <div className="pt-2.5 pb-1 flex justify-center shrink-0">
@@ -209,19 +209,8 @@ export const BikePresetsModal: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Source & Updated Badge Banner */}
-        <div className="mx-4 sm:mx-6 my-2 px-3.5 py-1.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/8 to-purple-500/10 dark:from-indigo-950/60 dark:via-slate-800/70 dark:to-purple-950/50 backdrop-blur-md rounded-2xl border border-white/70 dark:border-indigo-800/60 flex items-center justify-between text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 shadow-2xs gap-2 shrink-0 flex-wrap">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-indigo-900 dark:text-indigo-200">🏷️ ราคาทางการ Next Capital:</span>
-            <span className="text-slate-600 dark:text-slate-300">อัปเดต รหัสรุ่น, ชื่อรถ, ราคารถ (Max N/F*) ครบถ้วน</span>
-          </div>
-          <span className="font-bold text-indigo-700 dark:text-indigo-200 bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-white dark:border-slate-700 text-[10.5px] shadow-2xs tabular-nums">
-            แสดง {filteredBikes.length} รุ่น
-          </span>
-        </div>
-
         {/* Search & Filter */}
-        <div className="px-4 sm:px-6 pb-2.5 space-y-2 border-b border-white/50 dark:border-slate-800 bg-white/20 dark:bg-slate-900/40 backdrop-blur-md shrink-0">
+        <div className="px-4 sm:px-6 pt-1.5 pb-2.5 space-y-2 border-b border-white/50 dark:border-slate-800 bg-white/20 dark:bg-slate-900/40 backdrop-blur-md shrink-0">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
@@ -265,7 +254,19 @@ export const BikePresetsModal: React.FC<Props> = ({
         </div>
 
         {/* Bike list */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3">
+          {/* Source & Updated Badge Banner */}
+          <div className="px-3.5 py-1.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/8 to-purple-500/10 dark:from-indigo-950/60 dark:via-slate-800/70 dark:to-purple-950/50 backdrop-blur-md rounded-2xl border border-white/70 dark:border-indigo-800/60 flex items-center justify-between text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 shadow-2xs gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-bold text-indigo-900 dark:text-indigo-200">🏷️ ราคาทางการ Next Capital:</span>
+              <span className="text-slate-600 dark:text-slate-300">อัปเดต รหัสรุ่น, ชื่อรถ, ราคารถ (Max N/F*) ครบถ้วน</span>
+            </div>
+            <span className="font-bold text-indigo-700 dark:text-indigo-200 bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-white dark:border-slate-700 text-[10.5px] shadow-2xs tabular-nums">
+              แสดง {filteredBikes.length} รุ่น
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredBikes.map((bike) => {
             const proposal = PROPOSALS[bike.proposalKey];
             return (
@@ -331,6 +332,7 @@ export const BikePresetsModal: React.FC<Props> = ({
               <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">ลองค้นหาด้วยรหัสรุ่น (เช่น ACF125, BJK) หรือชื่อรุ่น (Wave, Giorno, PCX)</p>
             </div>
           )}
+          </div>
         </div>
 
         {/* Footer */}

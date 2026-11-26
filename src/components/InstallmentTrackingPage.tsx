@@ -2032,7 +2032,7 @@ export const InstallmentTrackingPage: React.FC<Props> = ({
 
         <form
           onSubmit={handleSaveForm}
-          className="overflow-y-auto flex-1 overscroll-contain p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-3 text-xs"
+          className="overflow-y-auto flex-1 min-h-0 overscroll-contain p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-3 text-xs"
         >
           {formError && (
             <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/60 dark:border-rose-800/70 dark:text-rose-200 font-bold text-xs">

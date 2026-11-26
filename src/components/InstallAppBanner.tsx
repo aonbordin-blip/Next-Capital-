@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, X, Smartphone, Check, Share, ArrowUpRight, PlusSquare } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NextCapitalLogo } from './NextCapitalLogo';
@@ -82,21 +83,24 @@ export const InstallAppBanner: React.FC = () => {
       </div>
 
       {/* Guide Modal for Manual Install (Android / iOS) */}
-      {shouldRenderGuide && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isClosingGuide) {
-              setShowGuideModal(false);
-            }
-          }}
-          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 ${guideBackdropAnimClass}`}
-        >
+      {shouldRenderGuide &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
-            onClick={(e) => e.stopPropagation()}
-            className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 ${guideSheetAnimClass}`}
+            role="dialog"
+            aria-modal="true"
+            data-modal-portal="true"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isClosingGuide) {
+                setShowGuideModal(false);
+              }
+            }}
+            className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 overflow-y-auto overscroll-contain ${guideBackdropAnimClass}`}
           >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain my-auto p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 ${guideSheetAnimClass}`}
+            >
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-blue-700 dark:text-sky-400" />
@@ -168,9 +172,10 @@ export const InstallAppBanner: React.FC = () => {
             >
               เข้าใจแล้ว
             </button>
-          </div>
-        </div>
-      )}
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 };

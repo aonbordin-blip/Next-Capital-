@@ -892,7 +892,7 @@ export function DvApprovalCard({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
+        <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {modalTab === 'saved' ? (
             <div className="space-y-3">
               {/* Cloud Status + Search Bar */}
@@ -1977,7 +1977,7 @@ export function DvApprovalCard({
             role="dialog"
             aria-modal="true"
             data-modal-portal="true"
-            className={`fixed inset-0 z-[60] bg-slate-950/65 flex items-center justify-center p-3 sm:p-4 ${topicsBackdropAnimClass}`}
+            className={`fixed inset-0 z-[60] bg-slate-950/65 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain ${topicsBackdropAnimClass}`}
             onClick={(e) => {
               if (e.target === e.currentTarget && !isClosingTopicsModal) {
                 setShowAllTopicsModal(false);
@@ -1987,9 +1987,9 @@ export function DvApprovalCard({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-indigo-100 dark:border-indigo-800/60 max-h-[85vh] flex flex-col ${topicsSheetAnimClass}`}
+              className={`bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl border border-indigo-100 dark:border-indigo-800/60 max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 flex flex-col overflow-hidden my-auto ${topicsSheetAnimClass}`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="shrink-0 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 flex items-center justify-center text-indigo-700 dark:text-indigo-300">
                     <Tag className="w-4 h-4" />
@@ -2017,7 +2017,7 @@ export function DvApprovalCard({
                 </button>
               </div>
 
-              <div className="overflow-y-auto py-3 space-y-4 flex-1 pr-1">
+              <div className="overflow-y-auto overscroll-contain py-3 space-y-4 flex-1 min-h-0 pr-1">
                 {Object.entries(groupedTopics).map(([category, items]) => (
                   <div key={category} className="space-y-1.5">
                     <h5 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 px-1 flex items-center gap-1.5">
@@ -2081,7 +2081,7 @@ export function DvApprovalCard({
                 ))}
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="shrink-0 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
                   เลือกแล้ว {topics.filter((t) => t.trim()).length} หัวข้อ
                 </span>

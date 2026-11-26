@@ -931,7 +931,7 @@ export function DailyFinanceReportCard({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
+        <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {/* Quick Date and Officer Subheader Bar */}
           <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-50/70 via-indigo-50/50 to-white dark:from-violet-950/60 dark:via-indigo-950/50 dark:to-slate-900/90 border border-violet-100 dark:border-violet-800/60 flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex items-center gap-2 flex-wrap">

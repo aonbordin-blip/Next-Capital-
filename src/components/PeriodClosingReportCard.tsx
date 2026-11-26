@@ -485,7 +485,7 @@ export const PeriodClosingReportCard: React.FC<Props> = ({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto flex-1 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
+        <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain p-3 sm:p-5 bg-slate-50/60 dark:bg-slate-950/75 space-y-4">
           {/* Top Controls: Month, Period Cycle (1-15 / 16-สิ้นเดือน / ทั้งเดือน), Refresh */}
           <div className="flex flex-col gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex flex-wrap items-center justify-between gap-2">

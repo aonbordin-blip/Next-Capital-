@@ -944,11 +944,11 @@ export const InstallmentShareCardModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 overflow-y-auto ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/85 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden relative ${sheetAnimClass}`}
+        className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden relative ${sheetAnimClass}`}
       >
         {/* Top Accent Strip */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-500" />
@@ -1021,7 +1021,7 @@ export const InstallmentShareCardModal: React.FC<Props> = ({
         {/* Responsive Auto-Scaled Card Preview */}
         <div
           ref={previewContainerRef}
-          className="flex-1 overflow-y-auto bg-slate-100/80 dark:bg-slate-950/70 p-3 sm:p-5 flex justify-center items-start"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-100/80 dark:bg-slate-950/70 p-3 sm:p-5 flex justify-center items-start"
         >
           <div
             style={{

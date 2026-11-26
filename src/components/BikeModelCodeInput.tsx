@@ -366,11 +366,11 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                 setIsModalOpen(false);
               }
             }}
-            className={`fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 ${modelBackdropAnimClass}`}
+            className={`fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/80 overflow-y-auto overscroll-contain ${modelBackdropAnimClass}`}
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700/80 ${modelSheetAnimClass}`}
+              className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full max-w-xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700/80 ${modelSheetAnimClass}`}
             >
               {/* iOS Top Pull Indicator */}
               <div className="pt-2.5 pb-1 flex justify-center shrink-0">
@@ -423,7 +423,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                 /* ========================================================= */
                 /* VIEW 2: FORM TO ADD & SAVE NEW MOTORCYCLE MODEL (รหัส, ชื่อ, ราคา) */
                 /* ========================================================= */
-                <form noValidate onSubmit={handleSaveCustomModel} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/60">
+                <form noValidate onSubmit={handleSaveCustomModel} className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-slate-50/40 dark:bg-slate-950/60">
                   <div className="p-3.5 bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/40 dark:from-blue-950/60 dark:via-indigo-950/50 dark:to-slate-900/80 rounded-2xl border border-blue-200/60 dark:border-indigo-800/60 flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
                     <div className="text-xs text-slate-700 dark:text-slate-300">
@@ -662,7 +662,7 @@ export const BikeModelCodeInput: React.FC<Props> = ({
                   </div>
 
                   {/* Models List - Compact, Elegant iOS Glass Rows */}
-                  <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-2 bg-slate-50/40 dark:bg-slate-950/55">
+                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-2 bg-slate-50/40 dark:bg-slate-950/55">
                     {filteredModels.map((m) => {
                       const isSelected = value.trim().toUpperCase() === m.code.toUpperCase();
                       return (

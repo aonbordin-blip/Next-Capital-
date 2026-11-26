@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Check,
@@ -878,20 +879,23 @@ ${
     </div>
   );
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
+      data-modal-portal="true"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isClosing) {
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto ${backdropAnimClass}`}
+      className={`fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/85 overflow-y-auto overscroll-contain print:p-0 print:bg-white print:static print:inset-auto ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative print:border-none print:shadow-none print:max-w-none print:max-h-none print:w-full ${sheetAnimClass}`}
+        className={`bg-white rounded-3xl w-full max-w-4xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative print:border-none print:shadow-none print:max-w-none print:max-h-none print:w-full ${sheetAnimClass}`}
       >
         {/* Top Specular Accent Sheen */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-600 opacity-95 print:hidden" />
@@ -1049,7 +1053,7 @@ ${
 
         {/* Success Toast */}
         {imageSuccessMessage && (
-          <div className="p-2 text-center bg-emerald-50 border-b border-emerald-200 text-xs font-bold text-emerald-800 animate-fade-in flex items-center justify-center gap-1.5">
+          <div className="shrink-0 p-2 text-center bg-emerald-50 border-b border-emerald-200 text-xs font-bold text-emerald-800 animate-fade-in flex items-center justify-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{imageSuccessMessage}</span>
           </div>
@@ -1058,7 +1062,7 @@ ${
         {/* Scrollable Preview Workspace Container */}
         <div
           ref={previewContainerRef}
-          className="flex-1 overflow-y-auto p-2 sm:p-4 bg-slate-100/90 flex justify-center items-start print:p-0 print:bg-white print:overflow-visible"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2 sm:p-4 bg-slate-100/90 flex justify-center items-start print:p-0 print:bg-white print:overflow-visible"
         >
           {/* Zoom & Centering Container */}
           <div
@@ -1101,6 +1105,7 @@ ${
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

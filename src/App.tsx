@@ -14,8 +14,14 @@ import {
   Smartphone,
   Monitor,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Info,
+  Layers,
+  Moon,
+  Search,
+  Sun,
   ShieldAlert,
   ShieldCheck,
   Receipt,
@@ -119,7 +125,7 @@ import { BoxThemeToggle } from './components/BoxThemeToggle';
 import { useBoxTheme } from './utils/boxTheme';
 
 export default function App() {
-  useBoxTheme();
+  const [boxTheme, setBoxTheme] = useBoxTheme();
   const { user: firebaseUser, syncStatus, syncProfileSettings } = useFirebase();
   const [showCloudSyncModal, setShowCloudSyncModal] = useState<boolean>(false);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
@@ -613,6 +619,14 @@ export default function App() {
       typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
     return window.innerWidth < 1280 || (isCoarsePointer && window.innerWidth <= 1440);
   });
+  const [isTabletViewport, setIsTabletViewport] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 768 && window.innerHeight >= 500;
+  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 1024;
+  });
 
   useEffect(() => {
     const updateViewportMode = () => {
@@ -621,6 +635,7 @@ export default function App() {
       setIsHandheldViewport(
         window.innerWidth < 1280 || (isCoarsePointer && window.innerWidth <= 1440)
       );
+      setIsTabletViewport(window.innerWidth >= 768 && window.innerHeight >= 500);
     };
     updateViewportMode();
     window.addEventListener('resize', updateViewportMode);
@@ -630,6 +645,10 @@ export default function App() {
       window.removeEventListener('orientationchange', updateViewportMode);
     };
   }, []);
+
+  const isTabletWorkspace = isHandheldViewport && isTabletViewport;
+  const isSaasWorkspace =
+    isTabletWorkspace || (!isHandheldViewport && viewMode === 'dashboard');
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
   const [shareTextStyle, setShareTextStyle] = useState<'card' | 'compare' | 'compact'>(() => {
     try {
@@ -1464,6 +1483,7 @@ export default function App() {
   const activeInsurancePlan = insurancePlan !== 'none' ? INSURANCE_PLANS[insurancePlan] : null;
 
   return (
+    <>
     <div
       className={`fixed inset-0 w-full h-full overflow-hidden outer-canvas-bg text-slate-800 dark:text-slate-100 flex flex-col justify-center items-center ${
         isHandheldViewport ? 'p-0' : 'p-0 xl:p-3'
@@ -1506,13 +1526,353 @@ export default function App() {
             ? 'flex-1 h-full max-w-none rounded-none !border-0 !shadow-none'
             : viewMode === 'mobile'
               ? 'flex-initial max-w-[580px] h-[min(920px,calc(100%-3rem))] max-h-[96%] rounded-[36px]'
-              : 'flex-initial max-w-6xl xl:max-w-7xl h-[min(940px,calc(100%-3rem))] max-h-[96%] rounded-[36px]'
-        } glass-container-frame flex flex-col relative overflow-hidden`}
+              : 'flex-initial max-w-[1440px] h-[min(940px,calc(100%-3rem))] max-h-[96%] rounded-[32px]'
+        } glass-container-frame flex ${isSaasWorkspace ? 'flex-row' : 'flex-col'} relative overflow-hidden`}
       >
         {/* Top Specular Highlight Line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none z-30" />
 
-        {/* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */}
+        {/* Collapsible SaaS Left Sidebar (Tablet Edge-to-Edge & Desktop Fullscreen Dashboard) */}
+        {isSaasWorkspace && (
+          <aside
+            aria-label="เมนูหลักแถบข้าง"
+            className={`relative z-20 shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/85 dark:border-slate-800 flex flex-col justify-between transition-[width] duration-200 select-none ${
+              isSidebarCollapsed ? 'w-[74px]' : 'w-[228px] lg:w-[244px]'
+            }`}
+          >
+            {/* Circular Collapse Toggle on Sidebar Edge */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setIsSidebarCollapsed((prev) => !prev);
+              }}
+              className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-sky-400 hover:scale-105 transition-all cursor-pointer z-30"
+              title={isSidebarCollapsed ? 'ขยายเมนูด้านข้าง' : 'ย่อเมนูด้านข้าง'}
+              aria-label={isSidebarCollapsed ? 'ขยายเมนูด้านข้าง' : 'ย่อเมนูด้านข้าง'}
+            >
+              {isSidebarCollapsed ? (
+                <ChevronRight className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronLeft className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-4">
+              {/* Brand Block */}
+              <div
+                className={`flex items-center ${
+                  isSidebarCollapsed ? 'justify-center' : 'gap-2.5 px-1'
+                }`}
+              >
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 p-1.5 shadow-sm flex items-center justify-center shrink-0">
+                  <div className="w-full h-full rounded-lg bg-white flex items-center justify-center">
+                    <NextCapitalLogo size={18} className="flex items-center justify-center" />
+                  </div>
+                </div>
+                {!isSidebarCollapsed && (
+                  <div className="min-w-0">
+                    <div className="text-xs font-black tracking-tight text-slate-900 dark:text-white uppercase truncate">
+                      NEXT CAPITAL
+                    </div>
+                    <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                      MotoLease Calc 2569
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Officer / User Profile Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsOfficerExpanded(true);
+                  setActiveTab('financing');
+                  setExpandedCard(null);
+                  setTimeout(() => {
+                    document
+                      .querySelector('[data-card-id="officer"]')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 120);
+                }}
+                className={`w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/70 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center ${
+                  isSidebarCollapsed ? 'justify-center p-2' : 'gap-2.5 p-2.5 text-left'
+                }`}
+                title="แก้ไขข้อมูลเจ้าหน้าที่ / ตัวแทน"
+              >
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white font-extrabold text-xs flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                  {firebaseUser?.photoURL && failedAvatarUrl !== firebaseUser.photoURL ? (
+                    <img
+                      src={firebaseUser.photoURL}
+                      alt={officerName || 'Officer'}
+                      referrerPolicy="no-referrer"
+                      onError={() => setFailedAvatarUrl(firebaseUser.photoURL || null)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{(officerName || 'จ').slice(0, 2)}</span>
+                  )}
+                </div>
+                {!isSidebarCollapsed && (
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                      {officerName || 'เจ้าหน้าที่'}
+                    </div>
+                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                      {officerCode ? `รหัส ${officerCode}` : 'แตะตั้งค่าเจ้าหน้าที่'}
+                    </div>
+                  </div>
+                )}
+              </button>
+
+              {/* Primary Navigation */}
+              <nav aria-label="แถบนำทางหลัก" className="space-y-1">
+                {NAV_TABS.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  const Icon = tab.icon;
+                  const displayLabel = tab.id === 'home' ? 'แดชบอร์ด' : tab.label;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => handleTabChange(tab.id)}
+                      title={displayLabel}
+                      className={`w-full flex items-center rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+                        isSidebarCollapsed
+                          ? 'justify-center p-2.5'
+                          : 'gap-2.5 px-3 py-2.5 text-left'
+                      } ${
+                        isActive
+                          ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 text-white shadow-md shadow-indigo-500/25'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {!isSidebarCollapsed && <span className="truncate">{displayLabel}</span>}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Quick Workspace Shortcuts */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                {!isSidebarCollapsed && (
+                  <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    จัดการข้อมูลด่วน
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setShowSavedCases(true);
+                  }}
+                  title={`ตารางเคสทั้งหมด (${savedCasesCount})`}
+                  className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer whitespace-nowrap ${
+                    isSidebarCollapsed
+                      ? 'justify-center p-2.5'
+                      : 'justify-between gap-2 px-3 py-2 text-left'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2.5 min-w-0">
+                    <FolderArchive className="w-4 h-4 text-indigo-500 dark:text-sky-400 shrink-0" />
+                    {!isSidebarCollapsed && <span className="truncate">ตารางเคสทั้งหมด</span>}
+                  </span>
+                  {!isSidebarCollapsed && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold tabular-nums">
+                      {savedCasesCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowBikePresets(true);
+                  }}
+                  title="เลือกรุ่นรถจักรยานยนต์"
+                  className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer whitespace-nowrap ${
+                    isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-3 py-2 text-left'
+                  }`}
+                >
+                  <Bike className="w-4 h-4 text-sky-500 shrink-0" />
+                  {!isSidebarCollapsed && <span className="truncate">เลือกรุ่นรถ</span>}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowCloudSyncModal(true);
+                  }}
+                  title="ซิงค์ข้อมูล Cloud"
+                  className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer whitespace-nowrap ${
+                    isSidebarCollapsed
+                      ? 'justify-center p-2.5'
+                      : 'justify-between gap-2 px-3 py-2 text-left'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2.5 min-w-0">
+                    {firebaseUser && syncStatus === 'syncing' ? (
+                      <RefreshCw className="w-4 h-4 text-sky-500 animate-spin shrink-0" />
+                    ) : (
+                      <Cloud className="w-4 h-4 text-emerald-500 shrink-0" />
+                    )}
+                    {!isSidebarCollapsed && <span className="truncate">ซิงค์ Cloud</span>}
+                  </span>
+                  {!isSidebarCollapsed && firebaseUser && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Color Scheme Section */}
+            <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              {isSidebarCollapsed ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    const next =
+                      boxTheme === 'light'
+                        ? 'dimensional'
+                        : boxTheme === 'dimensional'
+                          ? 'dark'
+                          : 'light';
+                    setBoxTheme(next);
+                  }}
+                  title={`เปลี่ยนโหมดสี (ปัจจุบัน: ${
+                    boxTheme === 'light' ? 'สว่าง' : boxTheme === 'dark' ? 'โหมดมืด' : 'มีมิติ'
+                  })`}
+                  className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                >
+                  {boxTheme === 'light' ? (
+                    <Sun className="w-4 h-4 text-amber-500" />
+                  ) : boxTheme === 'dark' ? (
+                    <Moon className="w-4 h-4 text-sky-400" />
+                  ) : (
+                    <Layers className="w-4 h-4 text-indigo-500 dark:text-sky-400" />
+                  )}
+                </button>
+              ) : (
+                <>
+                  <div className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 px-1">
+                    โหมดสีแสดงผล
+                  </div>
+                  <BoxThemeToggle compact className="w-full justify-center" />
+                  <div className="text-[9.5px] text-center text-slate-400 dark:text-slate-500 pt-0.5">
+                    พัฒนาระบบโดย Aonbordin
+                  </div>
+                </>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* Primary Workspace Column (SaaS Top Bar + Main Content + Mobile Capsule) */}
+        <div
+          className={`flex-1 min-w-0 flex flex-col min-h-0 relative ${
+            isSaasWorkspace ? 'bg-slate-50/90 dark:bg-slate-950/90' : ''
+          }`}
+        >
+        {/* Top Header: Compact SaaS Top Bar on Tablet/Dashboard OR Fluid Wave Header on Mobile */}
+        {isSaasWorkspace ? (
+          <header className="shrink-0 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 lg:px-6 py-2.5 flex items-center justify-between gap-3">
+            {/* Search / Bike Model Selector Pill */}
+            <div data-card-id="model-bar" className="flex items-center gap-2 min-w-0 flex-1 max-w-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowBikePresets(true);
+                }}
+                className="flex-1 min-w-0 bg-slate-100/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate font-semibold text-slate-700 dark:text-slate-200">
+                    {selectedBike
+                      ? `รุ่น: ${selectedBike.name}`
+                      : bikeModelCode
+                        ? `รหัสรุ่น: ${bikeModelCode}`
+                        : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
+                  </span>
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-indigo-600 dark:text-sky-300 text-[10.5px] font-bold shadow-2xs shrink-0">
+                  เลือกรุ่นรถ
+                </span>
+              </button>
+              {(selectedBike || bikeModelCode) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBike(null);
+                    setBikeModelCode('');
+                  }}
+                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-500 hover:text-rose-600 cursor-pointer transition-colors shrink-0"
+                  title="ล้างรุ่นรถที่เลือก"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Right Utility & Action Cluster */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeTab === 'financing') {
+                    handleSaveCurrentCase(false);
+                  } else {
+                    handleTabChange('financing');
+                  }
+                }}
+                className="px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:opacity-95 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm shadow-indigo-500/20 cursor-pointer whitespace-nowrap shrink-0 transition-all active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5 shrink-0" />
+                <span>{activeTab === 'financing' ? 'บันทึกเคสนี้' : 'คำนวณเคสใหม่'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowCloudSyncModal(true);
+                }}
+                className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
+                title={
+                  firebaseUser
+                    ? `ซิงค์ Cloud: ${firebaseUser.email}`
+                    : 'เข้าสู่ระบบ Google เพื่อซิงค์เคสขึ้น Cloud อัตโนมัติ'
+                }
+              >
+                {firebaseUser ? (
+                  syncStatus === 'syncing' ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-500 shrink-0" />
+                      <span>กำลังซิงค์</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      <span>Cloud ✓</span>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <Cloud className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                    <span>Cloud Sync</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </header>
+        ) : (
+        /* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */
         <header
           className={`shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white ${
             isHandheldViewport
@@ -1673,14 +2033,17 @@ export default function App() {
             </button>
           </div>
         </header>
+        )}
 
         {/* Main Content Area with 4 Connected Step Pages (ส่วนเนื้อหาที่เลื่อนได้อย่างอิสระ ไม่ดึงส่วนหัวหรือส่วนล่าง) */}
         <main
           ref={mainRef}
           className={`relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${
-            isHandheldViewport
-              ? 'px-2.5 sm:px-3.5 py-2.5 pb-28 space-y-2.5'
-              : 'px-4 md:px-5 py-3.5 pb-28 space-y-3.5'
+            isSaasWorkspace
+              ? 'px-3 sm:px-4 lg:px-6 py-3 sm:py-4 pb-[max(3rem,calc(env(safe-area-inset-bottom)+2.25rem))] space-y-3.5'
+              : isHandheldViewport
+                ? 'px-2.5 sm:px-3.5 py-2.5 pb-28 space-y-2.5'
+                : 'px-4 md:px-5 py-3.5 pb-28 space-y-3.5'
           } overscroll-contain`}
         >
           {/* In-App PWA Install Banner */}
@@ -1850,18 +2213,22 @@ export default function App() {
 
           <div
             className={`${
-              isHandheldViewport
-                ? 'w-full max-w-none'
-                : viewMode === 'dashboard' && (activeTab === 'home' || activeTab === 'installments')
-                  ? 'max-w-5xl'
+              isSaasWorkspace
+                ? activeTab === 'home'
+                  ? 'w-full max-w-[1400px]'
+                  : 'w-full max-w-5xl'
+                : isHandheldViewport
+                  ? 'w-full max-w-none'
                   : 'max-w-2xl'
-            } mx-auto space-y-3 pb-6`}
+            } mx-auto space-y-3 pb-8`}
           >
             {/* ========================================================
                 หน้าโฮมเพจ: แดชบอร์ดภาพรวมผลงาน & สรุปยอดรายเดือน
                 ======================================================== */}
             {activeTab === 'home' && (
               <HomeDashboard
+                variant={isSaasWorkspace ? 'tablet_saas' : 'mobile'}
+                isTablet={isTabletWorkspace}
                 refreshTrigger={casesRevision}
                 officerName={officerName}
                 officerCode={officerCode}
@@ -3999,7 +4366,8 @@ export default function App() {
       </div>
     </main>
 
-        {/* Bottom Floating Crystal Glass Navigation Capsule (โปร่งใสเหมือนแท่งแก้วคริสตัล พร้อมเอฟเฟคแสงสะท้อนและแรงเด้งมีมิติ) */}
+        {/* Bottom Floating Crystal Glass Navigation Capsule (Mobile & Phone Simulator Only) */}
+        {!isSaasWorkspace && (
         <div
           className={`pointer-events-none absolute ${
             isHandheldViewport ? 'bottom-2 inset-x-2' : 'bottom-3 inset-x-4'
@@ -4110,7 +4478,10 @@ export default function App() {
             </nav>
           </div>
         </div>
+        )}
+        </div>
       </div>
+    </div>
 
       {/* Modals */}
       <ProposalSelectModal
@@ -4337,23 +4708,25 @@ export default function App() {
       {/* Cloud Sync & Google Account Modal */}
       {showCloudSyncModal && (
         <div
-          className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[75] flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 backdrop-blur-sm overflow-y-auto overscroll-contain animate-fade-in"
           onClick={() => setShowCloudSyncModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-sky-100 dark:border-slate-700/80 p-4 sm:p-5 space-y-3"
+            className="w-full max-w-md max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-sky-100 dark:border-slate-700/80 flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 flex items-center justify-center">
+            <div className="shrink-0 flex items-center justify-between gap-2 px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 flex items-center justify-center shrink-0">
                   <Cloud className="w-4.5 h-4.5" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
                     ซิงค์ข้อมูล Cloud อัตโนมัติ
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                     เชื่อมต่อบัญชี Google เพื่อซิงค์ข้อมูลข้ามอุปกรณ์แบบเรียลไทม์
                   </p>
                 </div>
@@ -4361,16 +4734,18 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowCloudSyncModal(false)}
-                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer shrink-0"
                 aria-label="ปิดหน้าต่าง Cloud Sync"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <CloudSyncCard localCount={savedCasesCount} />
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5">
+              <CloudSyncCard localCount={savedCasesCount} />
+            </div>
 
-            <div className="flex justify-end">
+            <div className="shrink-0 px-4 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowCloudSyncModal(false)}
@@ -4390,6 +4765,6 @@ export default function App() {
           <MarqueeText fitContent>{toastNotice}</MarqueeText>
         </div>
       )}
-    </div>
+    </>
   );
 }

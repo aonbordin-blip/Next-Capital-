@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useModalTransition } from '../hooks/useModalTransition';
 import { MarqueeText } from './MarqueeText';
 import { CloudSyncCard } from './CloudSyncCard';
@@ -1094,24 +1095,25 @@ export const SavedCasesModal: React.FC<Props> = ({
     onClose
   );
 
-  if (!shouldRender) return null;
+  if (!shouldRender || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
+      data-modal-portal="true"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isClosing) {
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/80 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         className={`bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] w-full ${
           viewMode === 'table' && !detailCase ? 'max-w-5xl' : 'max-w-2xl'
-        } max-h-[94vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden relative transition-all duration-150 ${sheetAnimClass}`}
+        } max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden relative transition-all duration-150 ${sheetAnimClass}`}
       >
         {/* Top Specular Accent Sheen */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-600 opacity-95" />
@@ -1303,7 +1305,18 @@ export const SavedCasesModal: React.FC<Props> = ({
               )}
             </div>
           </div>
+        </div>
 
+        {/* Toast Feedback */}
+        {toastMessage && (
+          <div className="absolute top-16 inset-x-4 mx-auto max-w-sm z-40 p-2.5 rounded-xl bg-slate-900/90 text-white text-xs font-semibold text-center shadow-xl backdrop-blur-md animate-fade-in flex items-center justify-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Main Scrollable Content Area (Controls + Filters + Cases List) */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2.5 sm:p-4 space-y-2.5">
           {/* Cloud Sync / Google Sign-In Status Bar */}
           <CloudSyncCard compact localCount={cases.length} />
 
@@ -1736,18 +1749,7 @@ export const SavedCasesModal: React.FC<Props> = ({
               </div>
             </div>
           )}
-        </div>
 
-        {/* Toast Feedback */}
-        {toastMessage && (
-          <div className="absolute top-16 inset-x-4 mx-auto max-w-sm z-40 p-2.5 rounded-xl bg-slate-900/90 text-white text-xs font-semibold text-center shadow-xl backdrop-blur-md animate-fade-in flex items-center justify-center gap-2">
-            <Check className="w-4 h-4 text-emerald-400" />
-            <span>{toastMessage}</span>
-          </div>
-        )}
-
-        {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3">
           {filteredCases.length === 0 ? (
             <div className="py-12 px-4 text-center space-y-3">
               <div className="w-14 h-14 rounded-3xl bg-sky-50 dark:bg-sky-950/60 text-sky-500 dark:text-sky-400 flex items-center justify-center mx-auto border border-sky-100 dark:border-sky-800/60 shadow-inner">
@@ -2543,7 +2545,7 @@ export const SavedCasesModal: React.FC<Props> = ({
           </div>
 
           {/* Popup Scrollable Body with smooth touch scrolling and overscroll contain */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
               {/* SECTION 1: Status & Delivery Management */}
               <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-sky-50/30 to-white dark:from-slate-800/90 dark:via-slate-800/60 dark:to-slate-900 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
                 <div className="flex items-center justify-between gap-2">
@@ -3639,6 +3641,7 @@ export const SavedCasesModal: React.FC<Props> = ({
           );
         })()}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

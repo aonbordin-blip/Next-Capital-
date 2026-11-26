@@ -1264,14 +1264,14 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
             onClose();
           }
         }}
-        className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 overflow-y-auto ${backdropAnimClass}`}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`bg-white rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200 ${sheetAnimClass}`}
+          className={`bg-white rounded-3xl w-full max-w-3xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 flex flex-col shadow-2xl overflow-hidden my-auto border border-slate-200 ${sheetAnimClass}`}
         >
           {/* Header Action Bar */}
-          <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/70">
+          <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/70">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-600 text-white flex items-center justify-center shadow-md shadow-blue-700/20 flex-shrink-0">
@@ -1381,7 +1381,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           </div>
 
           {imageSuccessMessage && (
-            <div className="px-5 py-2 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between animate-fade-in">
+            <div className="shrink-0 px-5 py-2 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between animate-fade-in">
               <span className="flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-emerald-600" />
                 {imageSuccessMessage}
@@ -1396,7 +1396,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           )}
 
           {/* Modal Interactive Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs text-slate-700 bg-slate-50/50">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4 text-xs text-slate-700 bg-slate-50/50">
             {/* Quick Plan Switcher */}
             <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
@@ -1572,7 +1572,7 @@ ${isPlanB ? `6. ชดเชยรายได้ระหว่างรัก�
           </div>
 
           {/* Modal Footer */}
-          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col items-center justify-center gap-2.5 text-xs">
+          <div className="shrink-0 px-4 sm:px-5 py-3 border-t border-slate-200 bg-white flex flex-col items-center justify-center gap-2.5 text-xs">
             <div className="text-slate-500 text-[11px] text-center">
               แสดงเฉพาะแผน <strong className="text-slate-800">{cleanPlanNameForLine(planDetail.name)}</strong> • ระยะเวลา{' '}
               <strong className="text-slate-800">{activeYears} ปี</strong> • เบี้ยสุทธิ{' '}

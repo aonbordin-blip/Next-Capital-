@@ -40,14 +40,14 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 overflow-y-auto ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto ${sheetAnimClass}`}
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl w-full max-w-3xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 flex flex-col shadow-2xl overflow-hidden my-auto ${sheetAnimClass}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 dark:border-slate-700/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/60 dark:from-slate-900 dark:via-blue-950/50 dark:to-slate-900">
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200/80 dark:border-slate-700/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-amber-50/60 dark:from-slate-900 dark:via-blue-950/50 dark:to-slate-900">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-700/20">
               <ShieldCheck className="w-6 h-6" />
@@ -72,7 +72,7 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 sm:space-y-6 text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
           {/* Quick Plan Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Plan A Card */}
@@ -295,7 +295,7 @@ export const InsuranceComparisonModal: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+        <div className="shrink-0 p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => {

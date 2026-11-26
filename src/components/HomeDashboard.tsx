@@ -34,8 +34,11 @@ import { KpiMiniBucket, KpiSummaryChartCard } from './KpiSummaryChartCard';
 import { DealPipelineAndDealersChartCard } from './DealPipelineAndDealersChartCard';
 import { MarqueeText } from './MarqueeText';
 import { BoxThemeToggle } from './BoxThemeToggle';
+import { TabletSaasDashboard } from './TabletSaasDashboard';
 
 interface HomeDashboardProps {
+  variant?: 'mobile' | 'tablet_saas';
+  isTablet?: boolean;
   refreshTrigger?: number;
   officerName: string;
   officerCode: string;
@@ -221,6 +224,8 @@ function getUnifiedStatus(record: SavedCaseRecord): {
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
+  variant = 'mobile',
+  isTablet = false,
   refreshTrigger,
   officerName,
   officerCode,
@@ -579,6 +584,36 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const recentCases = useMemo(() => periodCases.slice(0, 5), [periodCases]);
 
   const paTierProgress = Math.min(100, Math.max(0, commissionSummary.achievementPercent));
+
+  if (variant === 'tablet_saas') {
+    return (
+      <TabletSaasDashboard
+        isTablet={isTablet}
+        savedCases={savedCases}
+        periodCases={periodCases}
+        recentCases={recentCases}
+        selectedMonth={selectedMonth}
+        currentMonthKey={currentMonthKey}
+        availableMonths={availableMonths}
+        formatMonthLabel={formatMonthLabel}
+        onSelectMonth={(ym) => setSelectedMonth(ym)}
+        onShiftMonth={(delta) => setSelectedMonth((prev) => shiftMonthKey(prev, delta))}
+        stats={periodStats}
+        commissionSummary={commissionSummary}
+        miniSeries={kpiMiniSeries}
+        dealerSummaryList={dealerSummaryList}
+        upcomingInstallmentSummary={upcomingInstallmentSummary}
+        activeDraft={activeDraft}
+        onOpenSavedCases={onOpenSavedCases}
+        onNavigateToCaseForm={onNavigateToCaseForm}
+        onNavigateToDocuments={onNavigateToDocuments}
+        onNavigateToCheckerCommission={onNavigateToCheckerCommission}
+        onNavigateToPeriodClosing={onNavigateToPeriodClosing}
+        onNavigateToInstallments={onNavigateToInstallments}
+        onLoadCase={onLoadCase}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3 sm:space-y-4 animate-tab-fade">

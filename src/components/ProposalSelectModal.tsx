@@ -39,17 +39,17 @@ export const ProposalSelectModal: React.FC<Props> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
       onClick={() => {
         if (!isClosing) onClose();
       }}
     >
       <div
-        className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden my-auto ${sheetAnimClass}`}
+        className={`bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden my-auto ${sheetAnimClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/70">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/70">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 rounded-lg">
               <Layers className="w-4 h-4" />
@@ -73,7 +73,7 @@ export const ProposalSelectModal: React.FC<Props> = ({
         </div>
 
         {/* Proposal List - Compact Single-Row Items */}
-        <div className="p-3 space-y-1.5 max-h-[75vh] overflow-y-auto">
+        <div className="p-3 space-y-1.5 flex-1 min-h-0 overflow-y-auto overscroll-contain">
           {PROPOSAL_KEYS.map((key) => {
             const prop = PROPOSALS[key];
             const isSelected = selectedKey === key;
@@ -126,7 +126,7 @@ export const ProposalSelectModal: React.FC<Props> = ({
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 text-center text-[10px] text-slate-400 dark:text-slate-500">
+        <div className="shrink-0 px-4 py-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 text-center text-[10px] text-slate-400 dark:text-slate-500">
           แสดงแบบแถวเดียวขนาดกะทัดรัด • เลือกได้ 7 ประเภทข้อเสนอ
         </div>
       </div>

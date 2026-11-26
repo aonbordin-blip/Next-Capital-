@@ -103,7 +103,7 @@ export const EligibilityCriteriaModal: React.FC<EligibilityCriteriaModalProps> =
       </div>
 
       {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
         {/* Active Bike / Proposal Banner */}
         <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 dark:from-sky-950/60 dark:via-blue-950/50 dark:to-indigo-950/60 border border-sky-200/90 dark:border-sky-800/70 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">

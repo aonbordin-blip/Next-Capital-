@@ -259,11 +259,11 @@ export const IdCardScannerModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-[72] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/75 backdrop-blur-sm ${backdropAnimClass}`}
+      className={`fixed inset-0 z-[72] flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/75 backdrop-blur-sm overflow-y-auto overscroll-contain ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-lg max-h-[92vh] bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl border border-emerald-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden relative ${sheetAnimClass}`}
+        className={`w-full max-w-lg max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl border border-emerald-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden relative ${sheetAnimClass}`}
       >
         {/* Top Specular Accent */}
         <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-400 to-sky-500 opacity-95" />
@@ -319,7 +319,7 @@ export const IdCardScannerModal: React.FC<Props> = ({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 overscroll-contain">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 overscroll-contain">
           {/* STEP 1: PICK CAMERA OR GALLERY */}
           {step === 'pick' && (
             <div className="space-y-3.5 animate-fade-in">

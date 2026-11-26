@@ -34,14 +34,14 @@ export const ProposalInfoModal: React.FC<Props> = ({
           onClose();
         }
       }}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 ${backdropAnimClass}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden ${sheetAnimClass}`}
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl w-full max-w-2xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto flex flex-col shadow-2xl overflow-hidden ${sheetAnimClass}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/70">
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/70">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-2xs border border-slate-200/80 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
               <NextCapitalLogo size={28} className="flex items-center justify-center" />
@@ -64,7 +64,7 @@ export const ProposalInfoModal: React.FC<Props> = ({
         </div>
 
         {/* Content list */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
           {Object.values(PROPOSALS).map((p) => {
             const isSelected = p.key === selectedKey;
             return (
@@ -169,7 +169,7 @@ export const ProposalInfoModal: React.FC<Props> = ({
         </div>
 
         {/* Footer info */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-800/70 border-t border-slate-200/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center gap-2">
+        <div className="shrink-0 p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/70 border-t border-slate-200/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center gap-2">
           <span>สูตรคำนวณ: ค่างวด = (ยอดจัด + ดอกเบี้ย + VAT 7%) ÷ จำนวนงวด</span>
           <button
             onClick={onClose}

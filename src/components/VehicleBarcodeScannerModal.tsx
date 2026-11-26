@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -600,7 +601,7 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
     handleClose();
   };
 
-  if (!shouldRender) return null;
+  if (!shouldRender || typeof document === 'undefined') return null;
 
   const targetTitle =
     target === 'engine'
@@ -609,15 +610,19 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
       ? 'สแกน / กรอกเลขถัง (Chassis No.)'
       : 'สแกนบาร์โค้ด / กรอกเลขเครื่อง & เลขถัง';
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 z-[70] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/65 backdrop-blur-md ${backdropAnimClass}`}
+      role="dialog"
+      aria-modal="true"
+      data-modal-portal="true"
+      className={`fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 backdrop-blur-md overflow-y-auto overscroll-contain ${backdropAnimClass}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
-        className={`w-full max-w-lg rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-white/80 dark:border-slate-700/80 shadow-2xl flex flex-col max-h-[92dvh] ${sheetAnimClass}`}
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full max-w-lg rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-white/80 dark:border-slate-700/80 shadow-2xl flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 my-auto ${sheetAnimClass}`}
       >
         {/* Top Accent Strip */}
         <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-500 shrink-0" />
@@ -706,7 +711,7 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
         />
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4">
           {step === 'pick' && (
             <div className="space-y-3">
               {/* Option 1: Live Camera Scanner */}
@@ -1046,6 +1051,7 @@ export const VehicleBarcodeScannerModal: React.FC<Props> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

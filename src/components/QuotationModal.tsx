@@ -1196,14 +1196,14 @@ ${
             onClose();
           }
         }}
-        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/65 overflow-y-auto ${backdropAnimClass}`}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-slate-950/65 overflow-y-auto overscroll-contain ${backdropAnimClass}`}
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`bg-white rounded-3xl w-full max-w-4xl max-h-[96vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 relative my-auto ${sheetAnimClass}`}
+          className={`bg-white rounded-3xl w-full max-w-4xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] min-h-0 flex flex-col shadow-2xl overflow-hidden border border-slate-200 relative my-auto ${sheetAnimClass}`}
         >
           {/* Header Bar matching Image 1 */}
-          <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50">
+          <div className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-slate-50">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div className="p-2 sm:p-2.5 bg-gradient-to-br from-blue-700 to-indigo-800 text-white rounded-2xl shadow-md shadow-blue-500/20 flex-shrink-0">
@@ -1292,21 +1292,21 @@ ${
 
           {/* Progress / Success Notifications */}
           {isGeneratingImage && (
-            <div className="bg-blue-50 border-b border-blue-200 text-blue-800 text-xs px-5 py-2 flex items-center justify-center gap-2 animate-pulse">
+            <div className="shrink-0 bg-blue-50 border-b border-blue-200 text-blue-800 text-xs px-5 py-2 flex items-center justify-center gap-2 animate-pulse">
               <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
               <span className="font-semibold">กำลังสร้างรูปภาพใบเสนอราคาคุณภาพสูง... กรุณารอสักครู่</span>
             </div>
           )}
 
           {imageSuccessMessage && (
-            <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-5 py-2 flex items-center justify-center gap-2">
+            <div className="shrink-0 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-5 py-2 flex items-center justify-center gap-2">
               <Check className="w-3.5 h-3.5 text-emerald-600" />
               <span className="font-semibold">{imageSuccessMessage}</span>
             </div>
           )}
 
           {/* Modal Scrollable Body */}
-          <div className="p-3 sm:p-5 overflow-y-auto flex-1 space-y-3.5 bg-slate-50/60">
+          <div className="p-3 sm:p-5 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-3.5 bg-slate-50/60">
             {/* Quick Edit Bar - Allows adjusting Customer & Officer information before downloading */}
             <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700">
@@ -1452,7 +1452,7 @@ ${
           </div>
 
           {/* Modal Sticky Footer matching Image 1 */}
-          <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-col items-center justify-center gap-2.5 text-xs">
+          <div className="shrink-0 px-4 sm:px-5 py-3 border-t border-slate-200 bg-white flex flex-col items-center justify-center gap-2.5 text-xs">
             <div className="text-slate-500 text-[11px] text-center">
               รุ่นรถ: <strong className="text-slate-800">{modelName || 'รถจักรยานยนต์'}</strong> • ยอดจัดรวม:{' '}
               <strong className="text-slate-800">{formatBaht(result.financeAmount)} บาท</strong> • ค่างวด:{' '}
