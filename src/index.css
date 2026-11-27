@@ -1404,6 +1404,51 @@
   animation: kpi-mini-float 3.8s ease-in-out infinite;
 }
 
+/* Seamless Looping Water Wave Motion for Gradient Metric Cards */
+@keyframes card-wave-flow-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes card-wave-flow-right {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes card-wave-swell {
+  0%, 100% {
+    transform: translate3d(0, 1.5px, 0);
+  }
+  50% {
+    transform: translate3d(0, -2.5px, 0);
+  }
+}
+
+.animate-card-wave-front {
+  animation: card-wave-flow-left 5.8s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.animate-card-wave-back {
+  animation: card-wave-flow-right 8.6s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.animate-card-wave-swell {
+  animation: card-wave-swell 3.8s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Prevent Chrome/Android tap black focus outline on Recharts SVG surfaces */
 .recharts-wrapper,
 .recharts-wrapper:focus,
@@ -1434,7 +1479,10 @@
   .animate-kpi-mini-bar,
   .animate-kpi-mini-line,
   .animate-kpi-mini-area,
-  .animate-kpi-mini-float {
+  .animate-kpi-mini-float,
+  .animate-card-wave-front,
+  .animate-card-wave-back,
+  .animate-card-wave-swell {
     animation: none !important;
   }
 }

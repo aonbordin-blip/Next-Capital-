@@ -432,6 +432,64 @@ function buildSteppedDonutSectorPath(
   ].join(' ');
 }
 
+const CARD_WAVE_BACK_STROKE =
+  'M0,27 C25,38 40,38 60,38 C80,38 95,38 120,27 C145,16 160,16 180,16 C200,16 215,16 240,27 C265,38 280,38 300,38 C320,38 335,38 360,27 C385,16 400,16 420,16 C440,16 455,16 480,27';
+const CARD_WAVE_BACK_FILL = `${CARD_WAVE_BACK_STROKE} L480,68 L0,68 Z`;
+
+const CARD_WAVE_FRONT_STROKE =
+  'M0,33 C25,22 40,22 60,22 C80,22 95,22 120,33 C145,44 160,44 180,44 C200,44 215,44 240,33 C265,22 280,22 300,22 C320,22 335,22 360,33 C385,44 400,44 420,44 C440,44 455,44 480,33';
+const CARD_WAVE_FRONT_FILL = `${CARD_WAVE_FRONT_STROKE} L480,68 L0,68 Z`;
+
+const AnimatedCardWaterWave: React.FC<{
+  frontDuration?: string;
+  backDuration?: string;
+  swellDuration?: string;
+  delay?: string;
+}> = ({
+  frontDuration = '5.6s',
+  backDuration = '8.4s',
+  swellDuration = '3.8s',
+  delay = '0s',
+}) => (
+  <div
+    className="pointer-events-none absolute inset-x-0 bottom-0 h-14 overflow-hidden animate-card-wave-swell"
+    style={{ animationDuration: swellDuration, animationDelay: delay }}
+    aria-hidden="true"
+  >
+    {/* Back slower counter-flowing translucent water sheet */}
+    <svg
+      viewBox="0 0 480 64"
+      preserveAspectRatio="none"
+      className="absolute left-0 bottom-0 w-[200%] h-full max-w-none animate-card-wave-back"
+      style={{ animationDuration: backDuration, animationDelay: delay }}
+    >
+      <path d={CARD_WAVE_BACK_FILL} fill="rgba(255,255,255,0.16)" />
+      <path
+        d={CARD_WAVE_BACK_STROKE}
+        fill="none"
+        stroke="rgba(255,255,255,0.36)"
+        strokeWidth="1.2"
+      />
+    </svg>
+
+    {/* Front primary glistening water wave */}
+    <svg
+      viewBox="0 0 480 64"
+      preserveAspectRatio="none"
+      className="absolute left-0 bottom-0 w-[200%] h-full max-w-none animate-card-wave-front"
+      style={{ animationDuration: frontDuration, animationDelay: delay }}
+    >
+      <path d={CARD_WAVE_FRONT_FILL} fill="rgba(255,255,255,0.22)" />
+      <path
+        d={CARD_WAVE_FRONT_STROKE}
+        fill="none"
+        stroke="rgba(255,255,255,0.68)"
+        strokeWidth="1.6"
+      />
+    </svg>
+  </div>
+);
+
 const DEFAULT_MINI_BUCKETS: KpiMiniBucket[] = ['1-5', '6-10', '11-15', '16-20', '21-25', '26+'].map(
   (label) => ({
     label,
@@ -1984,23 +2042,12 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-indigo-600 text-white p-4 text-center flex flex-col items-center justify-center min-h-[118px] shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <svg
-                viewBox="0 0 240 60"
-                preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-11 opacity-35"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0,34 C45,10 85,48 135,24 C175,6 210,36 240,22 L240,60 L0,60 Z"
-                  fill="rgba(255,255,255,0.45)"
-                />
-                <path
-                  d="M0,42 C55,22 105,54 160,30 C195,15 220,40 240,34"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.8)"
-                  strokeWidth="1.8"
-                />
-              </svg>
+              <AnimatedCardWaterWave
+                frontDuration="5.4s"
+                backDuration="8.2s"
+                swellDuration="3.6s"
+                delay="0s"
+              />
               <div className="relative z-10 space-y-1">
                 <div className="text-xl xl:text-2xl font-black tabular-nums tracking-tight drop-shadow-xs">
                   {formatCompactBaht(stats.approvedTotalFinance)}
@@ -2022,23 +2069,12 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-400 via-violet-500 to-indigo-600 text-white p-4 text-center flex flex-col items-center justify-center min-h-[118px] shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
               title="แตะเพื่อเปิดกล่องสรุปยอดค่าน้ำมันและจำลองเป้าหมาย"
             >
-              <svg
-                viewBox="0 0 240 60"
-                preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-11 opacity-35"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0,28 C50,48 95,12 148,36 C188,52 215,18 240,26 L240,60 L0,60 Z"
-                  fill="rgba(255,255,255,0.42)"
-                />
-                <path
-                  d="M0,38 C60,52 102,16 154,36 C194,50 220,24 240,30"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.8)"
-                  strokeWidth="1.8"
-                />
-              </svg>
+              <AnimatedCardWaterWave
+                frontDuration="6.2s"
+                backDuration="9.0s"
+                swellDuration="4.1s"
+                delay="-1.7s"
+              />
               <div className="relative z-10 space-y-1">
                 <div className="text-xl xl:text-2xl font-black tabular-nums tracking-tight drop-shadow-xs flex items-center justify-center gap-1.5">
                   <Fuel className="w-4 h-4 shrink-0" />
@@ -2062,23 +2098,12 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 text-white p-4 text-center flex flex-col items-center justify-center min-h-[118px] shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <svg
-                viewBox="0 0 240 60"
-                preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-11 opacity-35"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0,36 C55,14 95,48 145,28 C185,12 215,38 240,20 L240,60 L0,60 Z"
-                  fill="rgba(255,255,255,0.42)"
-                />
-                <path
-                  d="M0,44 C52,20 98,52 148,32 C188,16 216,42 240,26"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.8)"
-                  strokeWidth="1.8"
-                />
-              </svg>
+              <AnimatedCardWaterWave
+                frontDuration="5.8s"
+                backDuration="8.6s"
+                swellDuration="3.8s"
+                delay="-3.1s"
+              />
               <div className="relative z-10 space-y-1">
                 <div className="text-xl xl:text-2xl font-black tabular-nums tracking-tight drop-shadow-xs">
                   {stats.pendingCount + stats.approvedPendingDeliveryCount} เคส
@@ -2101,23 +2126,12 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500 text-white p-4 text-center flex flex-col items-center justify-center min-h-[118px] shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <svg
-                viewBox="0 0 240 60"
-                preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-11 opacity-35"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0,32 C48,50 96,18 150,38 C192,50 218,22 240,28 L240,60 L0,60 Z"
-                  fill="rgba(255,255,255,0.42)"
-                />
-                <path
-                  d="M0,40 C54,52 104,20 156,40 C196,52 220,28 240,34"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.8)"
-                  strokeWidth="1.8"
-                />
-              </svg>
+              <AnimatedCardWaterWave
+                frontDuration="6.5s"
+                backDuration="9.4s"
+                swellDuration="4.3s"
+                delay="-2.4s"
+              />
               <div className="relative z-10 space-y-1">
                 <div className="text-xl xl:text-2xl font-black tabular-nums tracking-tight drop-shadow-xs">
                   {formatBaht(commissionSummary.totalCommissionBaht)}
