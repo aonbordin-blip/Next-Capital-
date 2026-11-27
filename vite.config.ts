@@ -1,14 +1,28 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+function excludeChatUploadsPlugin(): Plugin {
+  return {
+    name: 'exclude-aistudio-uploads',
+    closeBundle() {
+      const distUploadsDir = path.resolve(import.meta.dirname, 'dist', 'assets', 'aistudio');
+      if (fs.existsSync(distUploadsDir)) {
+        fs.rmSync(distUploadsDir, { recursive: true, force: true });
+      }
+    },
+  };
+}
 
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
+      excludeChatUploadsPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: [
