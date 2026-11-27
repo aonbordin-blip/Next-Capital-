@@ -753,9 +753,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.deliveredCount,
         amount: stats.deliveredFinance,
         pct: (stats.deliveredCount / total) * 100,
-        color: '#06b6d4',
-        gradStart: '#2ef2d6',
-        gradEnd: '#0295d6',
+        color: '#0086d6',
+        gradStart: '#44f5e0',
+        gradEnd: '#0086d6',
+        gradCoords: { x1: '100%', y1: '0%', x2: '0%', y2: '100%' },
         gradId: 'tsdDealGradDelivered',
       },
       {
@@ -764,9 +765,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.approvedPendingDeliveryCount,
         amount: stats.approvedPendingFinance,
         pct: (stats.approvedPendingDeliveryCount / total) * 100,
-        color: '#ff7a1a',
-        gradStart: '#ffa726',
-        gradEnd: '#ff6b1a',
+        color: '#ff6808',
+        gradStart: '#ff9624',
+        gradEnd: '#ff6808',
+        gradCoords: { x1: '0%', y1: '0%', x2: '100%', y2: '100%' },
         gradId: 'tsdDealGradApprovedPending',
       },
       {
@@ -775,9 +777,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.pendingCount,
         amount: stats.pendingFinance,
         pct: (stats.pendingCount / total) * 100,
-        color: '#2563eb',
-        gradStart: '#38bdf8',
-        gradEnd: '#2563eb',
+        color: '#1b5be0',
+        gradStart: '#2e86ff',
+        gradEnd: '#1b5be0',
+        gradCoords: { x1: '0%', y1: '0%', x2: '100%', y2: '100%' },
         gradId: 'tsdDealGradPending',
       },
       {
@@ -786,9 +789,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.rejectedOrCancelledCount,
         amount: stats.rejectedFinance,
         pct: (stats.rejectedOrCancelledCount / total) * 100,
-        color: '#d9048e',
-        gradStart: '#ec008c',
-        gradEnd: '#8e24aa',
+        color: '#f0008c',
+        gradStart: '#f0008c',
+        gradEnd: '#8d009a',
+        gradCoords: { x1: '0%', y1: '100%', x2: '100%', y2: '0%' },
         gradId: 'tsdDealGradClosedOther',
       },
       {
@@ -797,9 +801,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: commissionSummary.totalInsuredContracts,
         amount: commissionSummary.totalCommissionBaht,
         pct: commissionSummary.achievementPercent,
-        color: '#6366f1',
-        gradStart: '#7c78ff',
-        gradEnd: '#38bdf8',
+        color: '#5474ff',
+        gradStart: '#7b61ff',
+        gradEnd: '#5474ff',
+        gradCoords: { x1: '0%', y1: '0%', x2: '100%', y2: '100%' },
         gradId: 'tsdDealGradPaInsured',
       },
     ];
@@ -807,9 +812,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
   }, [stats, commissionSummary]);
 
   const steppedPieSlices = useMemo(() => {
-    const active = dealBreakdownRows
-      .slice(0, 4)
-      .filter((item) => item.count > 0);
+    const active = dealBreakdownRows.filter((item) => item.count > 0);
     if (active.length === 0) return [];
 
     const totalCount = active.reduce((sum, item) => sum + item.count, 0);
@@ -822,13 +825,13 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
     const rankMap = new Map<number, number>();
     rankedIndices.forEach((origIdx, rankIdx) => rankMap.set(origIdx, rankIdx));
 
-    const rInner = 46;
+    const rInner = 45;
     const haloOuterR = 49;
-    const minOuterR = 72;
+    const minOuterR = 64;
     const maxOuterR = 100;
 
     let currentAngle = -215; // Places first slice across top-left like the reference chart
-    return active.map((item, idx) => {
+    const built = active.map((item, idx) => {
       const sweepDeg = (item.count / totalCount) * 360;
       const startDeg = currentAngle;
       const endDeg = startDeg + sweepDeg;
@@ -837,11 +840,11 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
       const ratio = item.count / maxCount;
       const rank = rankMap.get(idx) ?? idx;
       const rankFactor = active.length > 1 ? 1 - rank / (active.length - 1) : 1;
-      const weight = 0.65 * ratio + 0.35 * rankFactor;
+      const weight = 0.58 * ratio + 0.42 * rankFactor;
       const rOuter = minOuterR + (maxOuterR - minOuterR) * weight;
 
       const midDeg = (startDeg + endDeg) / 2;
-      const labelR = haloOuterR + (rOuter - haloOuterR) * 0.54;
+      const labelR = haloOuterR + (rOuter - haloOuterR) * 0.52;
       const labelPos = polarToCartesian(110, 110, labelR, midDeg);
       const showInsideLabel =
         (sweepDeg >= 38 && rOuter - haloOuterR >= 24) ||
@@ -859,6 +862,9 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         showInsideLabel,
       };
     });
+
+    // Render smaller outer-radius slices first so larger stepped slices cast clean 3D shadows over neighbors
+    return [...built].sort((a, b) => a.rOuter - b.rOuter);
   }, [dealBreakdownRows]);
 
   const focusedDealKey = hoveredDealKey ?? pinnedDealKey;
@@ -2213,10 +2219,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
             </div>
 
             {/* Stepped Variable-Radius Gradient Donut Chart */}
-            <div className="col-span-12 sm:col-span-5 relative flex items-center justify-center min-h-[196px]">
+            <div className="col-span-12 sm:col-span-5 relative flex items-center justify-center min-h-[204px]">
               <svg
                 viewBox="0 0 220 220"
-                className="w-[196px] h-[196px] xl:w-[208px] xl:h-[208px] overflow-visible select-none"
+                className="w-[202px] h-[202px] xl:w-[214px] xl:h-[214px] overflow-visible select-none"
                 role="img"
                 aria-label="กราฟวงกลมแสดงสัดส่วนสถานะดีลแบบไล่ระดับรัศมี"
               >
@@ -2225,48 +2231,54 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                     <linearGradient
                       key={row.gradId}
                       id={row.gradId}
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="100%"
+                      x1={row.gradCoords.x1}
+                      y1={row.gradCoords.y1}
+                      x2={row.gradCoords.x2}
+                      y2={row.gradCoords.y2}
                     >
                       <stop offset="0%" stopColor={row.gradStart} />
                       <stop offset="100%" stopColor={row.gradEnd} />
                     </linearGradient>
                   ))}
+                  <filter id="tsdDealSliceBaseShadow" x="-25%" y="-25%" width="150%" height="150%">
+                    <feDropShadow
+                      dx="0"
+                      dy="1.8"
+                      stdDeviation="2.2"
+                      floodColor="#0f172a"
+                      floodOpacity="0.16"
+                    />
+                  </filter>
                   <filter id="tsdDealDonutCenterShadow" x="-30%" y="-30%" width="160%" height="160%">
                     <feDropShadow
                       dx="0"
                       dy="3"
                       stdDeviation="4.5"
                       floodColor="#0f172a"
-                      floodOpacity="0.1"
+                      floodOpacity="0.11"
                     />
                   </filter>
-                  <filter id="tsdDealSliceFocusGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <filter id="tsdDealSliceFocusGlow" x="-25%" y="-25%" width="150%" height="150%">
                     <feDropShadow
                       dx="0"
-                      dy="3"
-                      stdDeviation="4"
+                      dy="3.5"
+                      stdDeviation="4.5"
                       floodColor="#0f172a"
-                      floodOpacity="0.18"
+                      floodOpacity="0.24"
                     />
                   </filter>
                 </defs>
 
                 {steppedPieSlices.length === 0 ? (
                   <path
-                    d={buildSteppedDonutSectorPath(110, 110, 46, 84, -215, 145)}
+                    d={buildSteppedDonutSectorPath(110, 110, 45, 84, -215, 145)}
                     fillRule="evenodd"
                     className="fill-slate-200/90 dark:fill-slate-800"
                   />
                 ) : (
                   steppedPieSlices.map((slice) => {
                     const isFocused = focusedDealKey === slice.key;
-                    const isDimmed =
-                      focusedDealKey !== null &&
-                      focusedDealKey !== 'paInsured' &&
-                      !isFocused;
+                    const isDimmed = focusedDealKey !== null && !isFocused;
                     return (
                       <g
                         key={slice.key}
@@ -2279,7 +2291,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                         style={{
                           transform: isFocused ? 'scale(1.035)' : 'scale(1)',
                           transformOrigin: '110px 110px',
-                          opacity: isDimmed ? 0.36 : 1,
+                          opacity: isDimmed ? 0.34 : 1,
                           transition:
                             'transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
                           cursor: 'pointer',
@@ -2289,7 +2301,14 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                           d={slice.path}
                           fill={`url(#${slice.gradId})`}
                           fillRule="evenodd"
-                          filter={isFocused ? 'url(#tsdDealSliceFocusGlow)' : undefined}
+                          stroke={slice.gradEnd}
+                          strokeOpacity={0.22}
+                          strokeWidth={0.9}
+                          filter={
+                            isFocused
+                              ? 'url(#tsdDealSliceFocusGlow)'
+                              : 'url(#tsdDealSliceBaseShadow)'
+                          }
                         />
                         {slice.showInsideLabel && (
                           <text
@@ -2298,12 +2317,12 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                             textAnchor="middle"
                             dominantBaseline="central"
                             fill="#ffffff"
-                            fontSize="11"
+                            fontSize="11.5"
                             fontWeight="800"
                             style={{
                               pointerEvents: 'none',
                               fontVariantNumeric: 'tabular-nums',
-                              textShadow: '0 1px 2px rgba(15, 23, 42, 0.28)',
+                              textShadow: '0 1px 2.5px rgba(15, 23, 42, 0.25)',
                             }}
                           >
                             {Math.round(slice.pct)}%
@@ -2314,15 +2333,15 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                   })
                 )}
 
-                {/* Soft Icy Outer Halo Ring separating slices from white center */}
+                {/* Prominent Soft Icy Halo Ring separating stepped petals from white center */}
                 <circle
                   cx={110}
                   cy={110}
-                  r={49}
-                  className="fill-slate-100/95 dark:fill-slate-800/95 pointer-events-none"
+                  r={49.5}
+                  className="fill-[#eef4f8] dark:fill-slate-800/95 pointer-events-none"
                 />
 
-                {/* Crisp White Elevated Center Medallion */}
+                {/* Crisp Pure White Elevated Center Medallion */}
                 <g
                   onClick={() => {
                     if (pinnedDealKey) {
@@ -2335,7 +2354,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                   <circle
                     cx={110}
                     cy={110}
-                    r={41}
+                    r={38.5}
                     className="fill-white dark:fill-slate-900"
                     filter="url(#tsdDealDonutCenterShadow)"
                   />
@@ -2352,13 +2371,13 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                   }
                 }}
                 aria-label="ศูนย์กลางกราฟสถานะดีล"
-                className={`absolute w-[76px] h-[76px] rounded-full flex flex-col items-center justify-center text-center px-1 ${
+                className={`absolute w-[74px] h-[74px] rounded-full flex flex-col items-center justify-center text-center px-1 ${
                   pinnedDealKey ? 'cursor-pointer' : 'pointer-events-none'
                 }`}
               >
                 {focusedDealRow ? (
                   <>
-                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 max-w-[68px] truncate leading-tight">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 max-w-[66px] truncate leading-tight">
                       {focusedDealRow.label}
                     </span>
                     <span className="text-[20px] font-black text-slate-800 dark:text-white tabular-nums leading-tight">
@@ -2376,10 +2395,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                   </>
                 ) : (
                   <>
-                    <span className="text-[22px] font-black text-slate-800 dark:text-white tabular-nums leading-none">
+                    <span className="text-[23px] font-black text-slate-800 dark:text-white tabular-nums tracking-tight leading-none">
                       {stats.totalCases}
                     </span>
-                    <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 tabular-nums mt-1 leading-tight">
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tabular-nums mt-1 leading-tight">
                       {stats.totalCases > 0
                         ? `${stats.approvalRate.toFixed(0)}% อนุมัติ`
                         : 'ยังไม่มีเคส'}
