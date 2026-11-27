@@ -532,6 +532,174 @@
   box-shadow: var(--glass-inner-indigo-shadow);
 }
 
+/* ============================================================================
+   Tablet / SaaS Workspace Theme Surfaces (Light vs Dimensional 3D vs Dark)
+   ============================================================================ */
+:root,
+[data-box-theme="dimensional"] {
+  --saas-canvas-bg: radial-gradient(circle at 14% 0%, #d8ecff 0%, #e4f2ff 38%, #eef6ff 72%, #dbeafe 100%);
+  --saas-sidebar-bg: linear-gradient(175deg, rgba(255, 255, 255, 0.94) 0%, rgba(235, 246, 255, 0.88) 55%, rgba(219, 238, 254, 0.82) 100%);
+  --saas-sidebar-border: rgba(255, 255, 255, 0.96);
+  --saas-sidebar-shadow: 8px 0 28px -12px rgba(2, 132, 199, 0.18), inset -1px 0 0 rgba(255, 255, 255, 0.95);
+  --saas-topbar-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(235, 246, 255, 0.86) 100%);
+  --saas-topbar-border: rgba(255, 255, 255, 0.96);
+  --saas-topbar-shadow: 0 10px 26px -12px rgba(2, 132, 199, 0.18), inset 0 1.5px 0 rgba(255, 255, 255, 1);
+
+  --saas-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(238, 247, 255, 0.88) 54%, rgba(219, 238, 254, 0.82) 100%);
+  --saas-card-border: rgba(255, 255, 255, 0.98);
+  --saas-card-shadow:
+    0 16px 34px -12px rgba(2, 132, 199, 0.22),
+    0 5px 12px -4px rgba(15, 23, 42, 0.06),
+    inset 0 2px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -3px 10px 0 rgba(56, 189, 248, 0.12);
+
+  --saas-pill-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(230, 243, 255, 0.9) 100%);
+  --saas-pill-border: rgba(255, 255, 255, 0.98);
+  --saas-pill-shadow: 0 8px 18px -6px rgba(2, 132, 199, 0.2), inset 0 1.5px 1px rgba(255, 255, 255, 1);
+
+  --saas-kpi-indigo-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(238, 242, 255, 0.9) 55%, rgba(214, 224, 255, 0.85) 100%);
+  --saas-kpi-indigo-border: rgba(255, 255, 255, 0.98);
+  --saas-kpi-indigo-shadow: 0 16px 34px -11px rgba(79, 70, 229, 0.24), 0 4px 10px -4px rgba(15, 23, 42, 0.06), inset 0 2px 2px rgba(255, 255, 255, 1), inset 0 -3px 10px rgba(99, 102, 241, 0.11);
+
+  --saas-kpi-emerald-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(236, 253, 245, 0.9) 55%, rgba(204, 246, 229, 0.84) 100%);
+  --saas-kpi-emerald-border: rgba(255, 255, 255, 0.98);
+  --saas-kpi-emerald-shadow: 0 16px 34px -11px rgba(16, 185, 129, 0.23), 0 4px 10px -4px rgba(15, 23, 42, 0.06), inset 0 2px 2px rgba(255, 255, 255, 1), inset 0 -3px 10px rgba(16, 185, 129, 0.11);
+
+  --saas-kpi-amber-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 251, 235, 0.9) 55%, rgba(254, 235, 198, 0.84) 100%);
+  --saas-kpi-amber-border: rgba(255, 255, 255, 0.98);
+  --saas-kpi-amber-shadow: 0 16px 34px -11px rgba(245, 158, 11, 0.23), 0 4px 10px -4px rgba(15, 23, 42, 0.06), inset 0 2px 2px rgba(255, 255, 255, 1), inset 0 -3px 10px rgba(245, 158, 11, 0.11);
+
+  --saas-kpi-violet-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(245, 243, 255, 0.9) 55%, rgba(226, 220, 255, 0.85) 100%);
+  --saas-kpi-violet-border: rgba(255, 255, 255, 0.98);
+  --saas-kpi-violet-shadow: 0 16px 34px -11px rgba(124, 58, 237, 0.23), 0 4px 10px -4px rgba(15, 23, 42, 0.06), inset 0 2px 2px rgba(255, 255, 255, 1), inset 0 -3px 10px rgba(139, 92, 246, 0.11);
+}
+
+[data-box-theme="light"] {
+  --saas-canvas-bg: #f8fafc;
+  --saas-sidebar-bg: #ffffff;
+  --saas-sidebar-border: #e2e8f0;
+  --saas-sidebar-shadow: none;
+  --saas-topbar-bg: rgba(255, 255, 255, 0.96);
+  --saas-topbar-border: #e2e8f0;
+  --saas-topbar-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+
+  --saas-card-bg: #ffffff;
+  --saas-card-border: rgba(226, 232, 240, 0.95);
+  --saas-card-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+
+  --saas-pill-bg: #ffffff;
+  --saas-pill-border: rgba(226, 232, 240, 0.95);
+  --saas-pill-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+
+  --saas-kpi-indigo-bg: #ffffff;
+  --saas-kpi-indigo-border: rgba(226, 232, 240, 0.95);
+  --saas-kpi-indigo-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+
+  --saas-kpi-emerald-bg: #ffffff;
+  --saas-kpi-emerald-border: rgba(226, 232, 240, 0.95);
+  --saas-kpi-emerald-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+
+  --saas-kpi-amber-bg: #ffffff;
+  --saas-kpi-amber-border: rgba(226, 232, 240, 0.95);
+  --saas-kpi-amber-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+
+  --saas-kpi-violet-bg: #ffffff;
+  --saas-kpi-violet-border: rgba(226, 232, 240, 0.95);
+  --saas-kpi-violet-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+[data-box-theme="dark"],
+:root.dark {
+  --saas-canvas-bg: rgba(2, 6, 23, 0.94);
+  --saas-sidebar-bg: rgba(15, 23, 42, 0.95);
+  --saas-sidebar-border: #1e293b;
+  --saas-sidebar-shadow: 6px 0 24px -10px rgba(0, 0, 0, 0.65);
+  --saas-topbar-bg: rgba(15, 23, 42, 0.9);
+  --saas-topbar-border: #1e293b;
+  --saas-topbar-shadow: 0 4px 16px -6px rgba(0, 0, 0, 0.5);
+
+  --saas-card-bg: linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(15, 23, 42, 0.94) 100%);
+  --saas-card-border: #1e293b;
+  --saas-card-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --saas-pill-bg: #0f172a;
+  --saas-pill-border: rgba(51, 65, 85, 0.85);
+  --saas-pill-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+  --saas-kpi-indigo-bg: linear-gradient(135deg, #0f172a 0%, #0f172a 55%, rgba(30, 27, 75, 0.45) 100%);
+  --saas-kpi-indigo-border: #1e293b;
+  --saas-kpi-indigo-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --saas-kpi-emerald-bg: linear-gradient(135deg, #0f172a 0%, #0f172a 55%, rgba(6, 78, 59, 0.38) 100%);
+  --saas-kpi-emerald-border: #1e293b;
+  --saas-kpi-emerald-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --saas-kpi-amber-bg: linear-gradient(135deg, #0f172a 0%, #0f172a 55%, rgba(120, 53, 15, 0.35) 100%);
+  --saas-kpi-amber-border: #1e293b;
+  --saas-kpi-amber-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --saas-kpi-violet-bg: linear-gradient(135deg, #0f172a 0%, #0f172a 55%, rgba(46, 16, 101, 0.4) 100%);
+  --saas-kpi-violet-border: #1e293b;
+  --saas-kpi-violet-shadow: 0 8px 22px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.saas-workspace-canvas {
+  background: var(--saas-canvas-bg);
+  transition: background 0.28s ease;
+}
+
+.saas-sidebar-surface {
+  background: var(--saas-sidebar-bg);
+  border-right: 1.5px solid var(--saas-sidebar-border);
+  box-shadow: var(--saas-sidebar-shadow);
+  transition: background 0.28s ease, border-color 0.24s ease, box-shadow 0.28s ease, width 0.2s ease;
+}
+
+.saas-topbar-surface {
+  background: var(--saas-topbar-bg);
+  border-bottom: 1.5px solid var(--saas-topbar-border);
+  box-shadow: var(--saas-topbar-shadow);
+  transition: background 0.28s ease, border-color 0.24s ease, box-shadow 0.28s ease;
+}
+
+.saas-surface-card {
+  background: var(--saas-card-bg);
+  border: 1.5px solid var(--saas-card-border);
+  box-shadow: var(--saas-card-shadow);
+  transition: background 0.28s ease, border-color 0.24s ease, box-shadow 0.28s ease;
+}
+
+.saas-control-pill {
+  background: var(--saas-pill-bg);
+  border: 1.5px solid var(--saas-pill-border);
+  box-shadow: var(--saas-pill-shadow);
+  transition: background 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.saas-kpi-indigo {
+  background: var(--saas-kpi-indigo-bg);
+  border: 1.5px solid var(--saas-kpi-indigo-border);
+  box-shadow: var(--saas-kpi-indigo-shadow);
+}
+
+.saas-kpi-emerald {
+  background: var(--saas-kpi-emerald-bg);
+  border: 1.5px solid var(--saas-kpi-emerald-border);
+  box-shadow: var(--saas-kpi-emerald-shadow);
+}
+
+.saas-kpi-amber {
+  background: var(--saas-kpi-amber-bg);
+  border: 1.5px solid var(--saas-kpi-amber-border);
+  box-shadow: var(--saas-kpi-amber-shadow);
+}
+
+.saas-kpi-violet {
+  background: var(--saas-kpi-violet-bg);
+  border: 1.5px solid var(--saas-kpi-violet-border);
+  box-shadow: var(--saas-kpi-violet-shadow);
+}
+
 .chart-gpu-layer {
   contain: layout style paint;
   transform: translate3d(0, 0, 0);

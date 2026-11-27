@@ -1667,7 +1667,7 @@ export default function App() {
         {isSaasWorkspace && (
           <aside
             aria-label="เมนูหลักแถบข้าง"
-            className={`relative z-20 shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/85 dark:border-slate-800 flex flex-col justify-between transition-[width] duration-200 select-none ${
+            className={`relative z-20 shrink-0 saas-sidebar-surface backdrop-blur-xl flex flex-col justify-between select-none ${
               isSidebarCollapsed ? 'w-[74px]' : 'w-[228px] lg:w-[244px]'
             }`}
           >
@@ -1906,12 +1906,12 @@ export default function App() {
         {/* Primary Workspace Column (SaaS Top Bar + Main Content + Mobile Capsule) */}
         <div
           className={`flex-1 min-w-0 flex flex-col min-h-0 relative ${
-            isSaasWorkspace ? 'bg-slate-50/90 dark:bg-slate-950/90' : ''
+            isSaasWorkspace ? 'saas-workspace-canvas' : ''
           }`}
         >
         {/* Top Header: Compact SaaS Top Bar on Tablet/Dashboard OR Fluid Wave Header on Mobile */}
         {isSaasWorkspace ? (
-          <header className="shrink-0 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 lg:px-6 py-2.5 flex items-center justify-between gap-3">
+          <header className="shrink-0 z-10 saas-topbar-surface backdrop-blur-md px-4 lg:px-6 py-2.5 flex items-center justify-between gap-3">
             {/* Search / Bike Model Selector + Action & Cloud Buttons Grouped Together */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div data-card-id="model-bar" className="flex items-center gap-2 min-w-0 flex-1 max-w-md lg:max-w-lg">

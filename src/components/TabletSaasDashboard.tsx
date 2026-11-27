@@ -1076,7 +1076,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 px-1 py-0.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 shadow-2xs">
+          <div className="flex items-center gap-0.5 saas-control-pill px-1 py-0.5 rounded-xl">
             <button
               type="button"
               onClick={() => {
@@ -1129,7 +1129,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                 triggerHaptic('light');
                 onSelectMonth(currentMonthKey);
               }}
-              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 text-indigo-600 dark:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer shadow-2xs transition-colors"
+              className="p-2 rounded-xl saas-control-pill text-indigo-600 dark:text-sky-400 hover:brightness-98 cursor-pointer transition-all"
               title="กลับไปยังเดือนปัจจุบัน"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -1165,7 +1165,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               onMouseLeave={() =>
                 setHoveredKpiSlot((prev) => (prev?.card === 'cases' ? null : prev))
               }
-              className="group relative overflow-hidden text-left h-full rounded-2xl bg-gradient-to-br from-white via-white to-indigo-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 border border-slate-200/85 dark:border-slate-800 hover:border-indigo-300/90 dark:hover:border-indigo-600/80 shadow-[0_6px_20px_-8px_rgba(79,70,229,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_8px_22px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] hover:shadow-[0_12px_28px_-8px_rgba(79,70,229,0.22)] hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
+              className="group relative overflow-hidden text-left h-full rounded-2xl saas-kpi-indigo hover:border-indigo-300/90 dark:hover:border-indigo-600/80 hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
             >
               {/* Top Specular Highlight & Corner Ambient Glow */}
               <span
@@ -1397,7 +1397,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               onMouseLeave={() =>
                 setHoveredKpiSlot((prev) => (prev?.card === 'delivered' ? null : prev))
               }
-              className="group relative overflow-hidden text-left h-full rounded-2xl bg-gradient-to-br from-white via-white to-emerald-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/35 border border-slate-200/85 dark:border-slate-800 hover:border-emerald-300/90 dark:hover:border-emerald-600/80 shadow-[0_6px_20px_-8px_rgba(16,185,129,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_8px_22px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] hover:shadow-[0_12px_28px_-8px_rgba(16,185,129,0.22)] hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
+              className="group relative overflow-hidden text-left h-full rounded-2xl saas-kpi-emerald hover:border-emerald-300/90 dark:hover:border-emerald-600/80 hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
             >
               <span
                 className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-emerald-300/35 to-transparent"
@@ -1603,7 +1603,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               onMouseLeave={() =>
                 setHoveredKpiSlot((prev) => (prev?.card === 'finance' ? null : prev))
               }
-              className="group relative overflow-hidden text-left h-full rounded-2xl bg-gradient-to-br from-white via-white to-amber-50/75 dark:from-slate-900 dark:via-slate-900 dark:to-amber-950/35 border border-slate-200/85 dark:border-slate-800 hover:border-amber-300/90 dark:hover:border-amber-600/80 shadow-[0_6px_20px_-8px_rgba(245,158,11,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_8px_22px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] hover:shadow-[0_12px_28px_-8px_rgba(245,158,11,0.22)] hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
+              className="group relative overflow-hidden text-left h-full rounded-2xl saas-kpi-amber hover:border-amber-300/90 dark:hover:border-amber-600/80 hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
             >
               <span
                 className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-amber-300/35 to-transparent"
@@ -1826,7 +1826,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
               onMouseLeave={() =>
                 setHoveredKpiSlot((prev) => (prev?.card === 'pa' ? null : prev))
               }
-              className="group relative overflow-hidden text-left h-full rounded-2xl bg-gradient-to-br from-white via-white to-violet-50/75 dark:from-slate-900 dark:via-slate-900 dark:to-violet-950/40 border border-slate-200/85 dark:border-slate-800 hover:border-violet-300/90 dark:hover:border-violet-600/80 shadow-[0_6px_20px_-8px_rgba(99,102,241,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_8px_22px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] hover:shadow-[0_12px_28px_-8px_rgba(99,102,241,0.22)] hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
+              className="group relative overflow-hidden text-left h-full rounded-2xl saas-kpi-violet hover:border-violet-300/90 dark:hover:border-violet-600/80 hover:-translate-y-0.5 active:scale-[0.99] p-3.5 flex flex-col justify-between gap-2.5 transition-all duration-200 cursor-pointer min-w-0"
             >
               <span
                 className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-violet-300/35 to-transparent"
@@ -2031,7 +2031,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
          ===================================================================== */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
         {/* Left 6 cols: 2x2 Gradient Wave Metric & Action Cards */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/85 dark:border-slate-800 shadow-[0_2px_14px_-4px_rgba(15,23,42,0.06)] p-3.5 flex flex-col justify-between">
+        <div className="lg:col-span-6 saas-surface-card rounded-2xl p-3.5 flex flex-col justify-between">
           <div className="grid grid-cols-2 gap-3 h-full">
             {/* Gradient Card 1: Cyan -> Royal Blue */}
             <button
@@ -2148,7 +2148,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         </div>
 
         {/* Right 6 cols: Deal Details Breakdown Table + Stepped Variable-Radius Gradient Donut */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/85 dark:border-slate-800 shadow-[0_2px_14px_-4px_rgba(15,23,42,0.06)] p-4 sm:p-5 flex flex-col justify-between gap-3">
+        <div className="lg:col-span-6 saas-surface-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -2430,7 +2430,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
          ===================================================================== */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
         {/* Bottom Left 6 cols: Dimensional Animated Performance Statistics Chart */}
-        <div className="lg:col-span-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-white to-indigo-50/55 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/35 border border-slate-200/85 dark:border-slate-800 shadow-[0_8px_24px_-8px_rgba(79,70,229,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_10px_28px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] p-4 flex flex-col justify-between gap-2.5">
+        <div className="lg:col-span-6 relative overflow-hidden rounded-2xl saas-surface-card p-4 flex flex-col justify-between gap-2.5">
           {/* Top Hairline Highlight & Corner Ambient Glow */}
           <span
             className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-indigo-300/35 to-transparent"
@@ -2796,7 +2796,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         </div>
 
         {/* Bottom Right 6 cols: Recent Cases / Timeline & Dealers / Quick Tools */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/85 dark:border-slate-800 shadow-[0_2px_14px_-4px_rgba(15,23,42,0.06)] p-4 flex flex-col justify-between gap-2.5">
+        <div className="lg:col-span-6 saas-surface-card rounded-2xl p-4 flex flex-col justify-between gap-2.5">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
               ข้อมูลเคส · กำหนดชำระ & ทางลัด
@@ -3090,7 +3090,7 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
       {/* =====================================================================
           ROW 4: กราฟสรุปตามร้านตัวแทน & สาขา (Dealers & Branches Chart)
          ===================================================================== */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-white to-sky-50/55 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/35 border border-slate-200/85 dark:border-slate-800 shadow-[0_8px_24px_-8px_rgba(14,165,233,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_10px_28px_-8px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] p-4 space-y-3">
+      <section className="relative overflow-hidden rounded-2xl saas-surface-card p-4 space-y-3">
         <span
           className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent"
           aria-hidden="true"
