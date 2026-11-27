@@ -34,8 +34,6 @@ import {
   FolderArchive,
   Fuel,
   LayoutList,
-  Maximize2,
-  Minimize2,
   PackageCheck,
   Plus,
   RotateCcw,
@@ -630,7 +628,7 @@ const Performance3DBarShape: React.FC<Performance3DBarShapeProps> = ({
 };
 
 export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
-  isTablet = false,
+  isTablet: _isTablet = false,
   savedCases,
   recentCases,
   selectedMonth,
@@ -682,49 +680,6 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
     card: 'cases' | 'delivered' | 'finance' | 'pa';
     idx: number;
   } | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    const doc = document as Document & { webkitFullscreenElement?: Element | null };
-    return Boolean(document.fullscreenElement || doc.webkitFullscreenElement);
-  });
-
-  useEffect(() => {
-    const syncFullscreen = () => {
-      const doc = document as Document & { webkitFullscreenElement?: Element | null };
-      setIsFullscreen(Boolean(document.fullscreenElement || doc.webkitFullscreenElement));
-    };
-    document.addEventListener('fullscreenchange', syncFullscreen);
-    document.addEventListener('webkitfullscreenchange', syncFullscreen);
-    return () => {
-      document.removeEventListener('fullscreenchange', syncFullscreen);
-      document.removeEventListener('webkitfullscreenchange', syncFullscreen);
-    };
-  }, []);
-
-  const handleToggleFullscreen = () => {
-    triggerHaptic('selection');
-    const doc = document as Document & {
-      webkitFullscreenElement?: Element | null;
-      webkitExitFullscreen?: () => Promise<void> | void;
-    };
-    const rootEl = document.documentElement as HTMLElement & {
-      webkitRequestFullscreen?: () => Promise<void> | void;
-    };
-    const activeEl = document.fullscreenElement || doc.webkitFullscreenElement;
-    if (activeEl) {
-      if (typeof document.exitFullscreen === 'function') {
-        void document.exitFullscreen().catch(() => {});
-      } else if (typeof doc.webkitExitFullscreen === 'function') {
-        void Promise.resolve(doc.webkitExitFullscreen()).catch(() => {});
-      }
-      return;
-    }
-    if (typeof document.documentElement.requestFullscreen === 'function') {
-      void document.documentElement.requestFullscreen().catch(() => {});
-    } else if (typeof rootEl.webkitRequestFullscreen === 'function') {
-      void Promise.resolve(rootEl.webkitRequestFullscreen()).catch(() => {});
-    }
-  };
 
   const chartBuckets = useMemo(
     () => (miniSeries && miniSeries.length > 0 ? miniSeries : DEFAULT_MINI_BUCKETS),
@@ -940,32 +895,6 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          {isTablet && (
-            <button
-              type="button"
-              onClick={handleToggleFullscreen}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-all shadow-2xs active:scale-95 ${
-                isFullscreen
-                  ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
-                  : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-600'
-              }`}
-              title={isFullscreen ? 'ออกจากโหมดเต็มจอ' : 'ขยายเต็มหน้าจอแท็บเล็ต'}
-              aria-label={isFullscreen ? 'ออกจากโหมดเต็มจอ' : 'ขยายเต็มหน้าจอแท็บเล็ต'}
-              aria-pressed={isFullscreen}
-            >
-              {isFullscreen ? (
-                <>
-                  <Minimize2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>ออกเต็มจอ</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-3.5 h-3.5 text-indigo-600 dark:text-sky-400 shrink-0" />
-                  <span>เต็มจอ</span>
-                </>
-              )}
-            </button>
-          )}
           <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 px-1 py-0.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 shadow-2xs">
             <button
               type="button"

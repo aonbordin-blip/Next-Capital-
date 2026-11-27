@@ -63,6 +63,8 @@ import {
   ScanLine,
   CreditCard,
   MapPin,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { triggerHaptic } from './utils/haptics';
@@ -654,6 +656,50 @@ export default function App() {
   const isTabletWorkspace = isHandheldViewport && isTabletViewport;
   const isSaasWorkspace =
     isTabletWorkspace || (!isHandheldViewport && viewMode === 'dashboard');
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(() => {
+    if (typeof document === 'undefined') return false;
+    const doc = document as Document & { webkitFullscreenElement?: Element | null };
+    return Boolean(document.fullscreenElement || doc.webkitFullscreenElement);
+  });
+
+  useEffect(() => {
+    const syncFullscreen = () => {
+      const doc = document as Document & { webkitFullscreenElement?: Element | null };
+      setIsFullscreen(Boolean(document.fullscreenElement || doc.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    document.addEventListener('webkitfullscreenchange', syncFullscreen);
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreen);
+      document.removeEventListener('webkitfullscreenchange', syncFullscreen);
+    };
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    triggerHaptic('selection');
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void> | void;
+    };
+    const rootEl = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+    const activeEl = document.fullscreenElement || doc.webkitFullscreenElement;
+    if (activeEl) {
+      if (typeof document.exitFullscreen === 'function') {
+        void document.exitFullscreen().catch(() => {});
+      } else if (typeof doc.webkitExitFullscreen === 'function') {
+        void Promise.resolve(doc.webkitExitFullscreen()).catch(() => {});
+      }
+      return;
+    }
+    if (typeof document.documentElement.requestFullscreen === 'function') {
+      void document.documentElement.requestFullscreen().catch(() => {});
+    } else if (typeof rootEl.webkitRequestFullscreen === 'function') {
+      void Promise.resolve(rootEl.webkitRequestFullscreen()).catch(() => {});
+    }
+  };
+
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
   const [shareTextStyle, setShareTextStyle] = useState<'card' | 'compare' | 'compact'>(() => {
     try {
@@ -996,42 +1042,122 @@ export default function App() {
     const hasInsurance = currentCalculation.insuranceTotalWithVat > 0;
 
     if (activeStyle === 'compact') {
-      const lines: string[] = [
-        `🛵 สรุปค่างวด Next Capital`,
-        `━━━━━━━━━━━━━━━`,
+      const compactInsurance = cleanPlanNameForLine(currentCalculation.insurancePlanName)
+        .replace(/คุ้มครอง\s*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const buildCompactLines = (opts: {
+        shortHeader?: boolean;
+        omitModelCode?: boolean;
+        shortOfficer?: boolean;
+        maxCustomerLen?: number;
+        maxDealerLen?: number;
+        maxModelLen?: number;
+        omitDealer?: boolean;
+      }) => {
+        const truncateStr = (val: string, maxLen?: number) => {
+          if (!maxLen || val.length <= maxLen) return val;
+          return `${val.slice(0, Math.max(1, maxLen - 1)).trimEnd()}…`;
+        };
+
+        const rawBikeName = selectedBike
+          ? opts.omitModelCode || !bikeModelCode
+            ? selectedBike.name
+            : `${selectedBike.name} (${bikeModelCode})`
+          : bikeLabel;
+        const compactBike = truncateStr(rawBikeName, opts.maxModelLen);
+
+        const compactCustomer =
+          customerName || customerPhone
+            ? truncateStr(customerDisplay, opts.maxCustomerLen)
+            : '';
+
+        const compactDealer =
+          !opts.omitDealer && dealerName.trim()
+            ? truncateStr(dealerName.trim(), opts.maxDealerLen)
+            : '';
+
+        const shortOfficerText = opts.shortOfficer
+          ? `${officerName.trim().split(/\s+/)[0] || officerName.trim()}${
+              officerCode.trim() ? ` (${officerCode.trim()})` : ''
+            }`
+          : officerDisplay;
+
+        const lines: string[] = [
+          opts.shortHeader ? `🛵 สรุปค่างวด` : `🛵 สรุปค่างวด Next Capital`,
+        ];
+        if (compactCustomer) {
+          lines.push(`👤 ${compactCustomer}`);
+        }
+        if (compactDealer) {
+          lines.push(`🏪 ${compactDealer}`);
+        }
+        lines.push(
+          `🏍️ ${compactBike}`,
+          `ราคา ${formatBaht(currentCalculation.baseVehiclePrice)} | ดาวน์ ${formatBaht(
+            currentCalculation.downAmount
+          )}`
+        );
+        if (hasInsurance) {
+          lines.push(
+            `จัด ${formatBaht(
+              currentCalculation.vehicleFinanceAmount
+            )} | รวมประกัน(${compactInsurance}) ${formatBaht(
+              currentCalculation.financeAmount,
+              true
+            )}`
+          );
+        } else {
+          lines.push(
+            `ยอดจัด ${formatBaht(currentCalculation.vehicleFinanceAmount)} (ไม่รวมประกัน)`
+          );
+        }
+        lines.push(
+          `🔥 ผ่อน ${formatBaht(currentCalculation.monthlyInstallment)}/ด. × ${
+            currentCalculation.term
+          } งวด (รวม VAT)`
+        );
+        if (includeDeliveryFees && currentCalculation.totalDriveAwayCost) {
+          lines.push(`รับรถรวม ${formatBaht(currentCalculation.totalDriveAwayCost)}`);
+        }
+        lines.push(`ติดต่อ: ${shortOfficerText}`);
+        return lines.join('\n');
+      };
+
+      const candidates = [
+        buildCompactLines({}),
+        buildCompactLines({ omitModelCode: true, shortOfficer: true }),
+        buildCompactLines({
+          omitModelCode: true,
+          shortOfficer: true,
+          maxModelLen: 28,
+          maxDealerLen: 22,
+          maxCustomerLen: 30,
+        }),
+        buildCompactLines({
+          shortHeader: true,
+          omitModelCode: true,
+          shortOfficer: true,
+          maxModelLen: 22,
+          maxDealerLen: 16,
+          maxCustomerLen: 24,
+        }),
+        buildCompactLines({
+          shortHeader: true,
+          omitModelCode: true,
+          shortOfficer: true,
+          omitDealer: true,
+          maxModelLen: 22,
+          maxCustomerLen: 24,
+        }),
       ];
-      if (customerName || customerPhone) {
-        lines.push(`👤 คุณลูกค้า : ${customerDisplay}`);
-      }
-      if (dealerName.trim()) {
-        lines.push(`🏪 ร้านผู้จำหน่าย : ${dealerName.trim()}`);
-      }
-      lines.push(
-        `🏍️ รุ่นรถ : ${bikeLabel}`,
-        `💰 ราคารถ : ${formatBaht(currentCalculation.baseVehiclePrice)} บ. | ดาวน์ : ${formatBaht(currentCalculation.downAmount)} บ.`,
-      );
-      if (hasInsurance) {
-        lines.push(
-          `💵 ยอดจัดตัวรถ (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`,
-          `💳 ยอดจัดรวมประกัน : ${formatBaht(currentCalculation.financeAmount, true)} บ.`
-        );
-      } else {
-        lines.push(
-          `💳 ยอดจัด (ไม่รวมประกัน) : ${formatBaht(currentCalculation.vehicleFinanceAmount)} บ.`
-        );
-      }
-      lines.push(
-        `🛡️ ประกัน : ${insuranceLabel}`,
-        `━━━━━━━━━━━━━━━`,
-        `🔥 ผ่อนเพียง : ${formatBaht(currentCalculation.monthlyInstallment)} บ./เดือน`,
-        `⏱️ ระยะเวลา : ${currentCalculation.term} งวด (${formatTermYearMonth(currentCalculation.term)})`,
-        `✅ รวม VAT 7% แล้ว`
-      );
-      if (includeDeliveryFees && currentCalculation.totalDriveAwayCost) {
-        lines.push(`🏁 วันรับรถรวม : ${formatBaht(currentCalculation.totalDriveAwayCost)} บ.`);
-      }
-      lines.push(`━━━━━━━━━━━━━━━`, `👨‍💼 ติดต่อ : ${officerDisplay}`);
-      return lines.join('\n');
+
+      const fitted = candidates.find((text) => text.length <= 300);
+      if (fitted) return fitted;
+
+      const fallback = candidates[candidates.length - 1];
+      return fallback.length <= 300 ? fallback : `${fallback.slice(0, 299)}…`;
     }
 
     if (activeStyle === 'compare') {
@@ -1786,95 +1912,125 @@ export default function App() {
         {/* Top Header: Compact SaaS Top Bar on Tablet/Dashboard OR Fluid Wave Header on Mobile */}
         {isSaasWorkspace ? (
           <header className="shrink-0 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 lg:px-6 py-2.5 flex items-center justify-between gap-3">
-            {/* Search / Bike Model Selector Pill */}
-            <div data-card-id="model-bar" className="flex items-center gap-2 min-w-0 flex-1 max-w-xl">
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setShowBikePresets(true);
-                }}
-                className="flex-1 min-w-0 bg-slate-100/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs transition-colors cursor-pointer"
-              >
-                <span className="flex items-center gap-2 min-w-0">
-                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate font-semibold text-slate-700 dark:text-slate-200">
-                    {selectedBike
-                      ? `รุ่น: ${selectedBike.name}`
-                      : bikeModelCode
-                        ? `รหัสรุ่น: ${bikeModelCode}`
-                        : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
-                  </span>
-                </span>
-                <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-indigo-600 dark:text-sky-300 text-[10.5px] font-bold shadow-2xs shrink-0">
-                  เลือกรุ่นรถ
-                </span>
-              </button>
-              {(selectedBike || bikeModelCode) && (
+            {/* Search / Bike Model Selector + Action & Cloud Buttons Grouped Together */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div data-card-id="model-bar" className="flex items-center gap-2 min-w-0 flex-1 max-w-md lg:max-w-lg">
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedBike(null);
-                    setBikeModelCode('');
+                    triggerHaptic('light');
+                    setShowBikePresets(true);
                   }}
-                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-500 hover:text-rose-600 cursor-pointer transition-colors shrink-0"
-                  title="ล้างรุ่นรถที่เลือก"
+                  className="flex-1 min-w-0 bg-slate-100/90 hover:bg-slate-100 dark:bg-slate-800/90 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs transition-colors cursor-pointer"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <span className="flex items-center gap-2 min-w-0">
+                    <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate font-semibold text-slate-700 dark:text-slate-200">
+                      {selectedBike
+                        ? `รุ่น: ${selectedBike.name}`
+                        : bikeModelCode
+                          ? `รหัสรุ่น: ${bikeModelCode}`
+                          : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
+                    </span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-indigo-600 dark:text-sky-300 text-[10.5px] font-bold shadow-2xs shrink-0">
+                    เลือกรุ่นรถ
+                  </span>
                 </button>
-              )}
-            </div>
+                {(selectedBike || bikeModelCode) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBike(null);
+                      setBikeModelCode('');
+                    }}
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-500 hover:text-rose-600 cursor-pointer transition-colors shrink-0"
+                    title="ล้างรุ่นรถที่เลือก"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
-            {/* Right Utility & Action Cluster */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeTab === 'financing') {
-                    handleSaveCurrentCase(false);
-                  } else {
-                    handleTabChange('financing');
+              {/* Action & Cloud Cluster Adjacent to Search Bar */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeTab === 'financing') {
+                      handleSaveCurrentCase(false);
+                    } else {
+                      handleTabChange('financing');
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:opacity-95 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm shadow-indigo-500/20 cursor-pointer whitespace-nowrap shrink-0 transition-all active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  <span>{activeTab === 'financing' ? 'บันทึกเคสนี้' : 'คำนวณเคสใหม่'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowCloudSyncModal(true);
+                  }}
+                  className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
+                  title={
+                    firebaseUser
+                      ? `ซิงค์ Cloud: ${firebaseUser.email}`
+                      : 'เข้าสู่ระบบ Google เพื่อซิงค์เคสขึ้น Cloud อัตโนมัติ'
                   }
-                }}
-                className="px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:opacity-95 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm shadow-indigo-500/20 cursor-pointer whitespace-nowrap shrink-0 transition-all active:scale-95"
-              >
-                <Plus className="w-3.5 h-3.5 shrink-0" />
-                <span>{activeTab === 'financing' ? 'บันทึกเคสนี้' : 'คำนวณเคสใหม่'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setShowCloudSyncModal(true);
-                }}
-                className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
-                title={
-                  firebaseUser
-                    ? `ซิงค์ Cloud: ${firebaseUser.email}`
-                    : 'เข้าสู่ระบบ Google เพื่อซิงค์เคสขึ้น Cloud อัตโนมัติ'
-                }
-              >
-                {firebaseUser ? (
-                  syncStatus === 'syncing' ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-500 shrink-0" />
-                      <span>กำลังซิงค์</span>
-                    </>
+                >
+                  {firebaseUser ? (
+                    syncStatus === 'syncing' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-500 shrink-0" />
+                        <span>กำลังซิงค์</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span>Cloud ✓</span>
+                      </>
+                    )
                   ) : (
                     <>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Cloud ✓</span>
+                      <Cloud className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                      <span>Cloud Sync</span>
                     </>
-                  )
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Slot: Tablet Fullscreen Toggle Button */}
+            {isTabletWorkspace && (
+              <button
+                type="button"
+                onClick={handleToggleFullscreen}
+                className={`px-3 py-2 rounded-xl border text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-all shadow-2xs active:scale-95 ${
+                  isFullscreen
+                    ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
+                    : 'bg-white dark:bg-slate-800 border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+                }`}
+                title={isFullscreen ? 'ออกจากโหมดเต็มจอ' : 'ขยายเต็มหน้าจอแท็บเล็ต'}
+                aria-label={isFullscreen ? 'ออกจากโหมดเต็มจอ' : 'ขยายเต็มหน้าจอแท็บเล็ต'}
+                aria-pressed={isFullscreen}
+              >
+                {isFullscreen ? (
+                  <>
+                    <Minimize2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>ออกเต็มจอ</span>
+                  </>
                 ) : (
                   <>
-                    <Cloud className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                    <span>Cloud Sync</span>
+                    <Maximize2 className="w-3.5 h-3.5 text-indigo-600 dark:text-sky-400 shrink-0" />
+                    <span>เต็มจอ</span>
                   </>
                 )}
               </button>
-            </div>
+            )}
           </header>
         ) : (
         /* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */
@@ -4110,11 +4266,21 @@ export default function App() {
                   </div>
 
                   {/* Optional Collapsible Preview Box */}
-                  {showSharePreview && (
-                    <pre className="text-left font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100 bg-white/95 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-800/70 rounded-xl p-3 shadow-inner max-h-56 overflow-y-auto select-text">
-                      {buildInstallmentSummaryText()}
-                    </pre>
-                  )}
+                  {showSharePreview && (() => {
+                    const previewText = buildInstallmentSummaryText();
+                    return (
+                      <div className="space-y-1">
+                        <pre className="text-left font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100 bg-white/95 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-800/70 rounded-xl p-3 shadow-inner max-h-56 overflow-y-auto select-text">
+                          {previewText}
+                        </pre>
+                        <div className="flex items-center justify-end px-1 text-[10px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                          {shareTextStyle === 'compact'
+                            ? `ความยาว ${previewText.length}/300 ตัวอักษร`
+                            : `ความยาว ${previewText.length} ตัวอักษร`}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Action Row: Share Text & Create Share Card Image */}
                   <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
