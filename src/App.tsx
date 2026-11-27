@@ -2035,18 +2035,18 @@ export default function App() {
         ) : (
         /* Top Locked Section: Organic Fluid Wave Header (ล็อคค้างไว้ที่ด้านบน ไม่เลื่อนตาม พอดีกับทุกขนาดหน้าจอ) */
         <header
-          className={`shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] text-white ${
+          className={`shrink-0 z-20 sticky top-0 w-full overflow-hidden bg-gradient-to-br from-[#0284c7] via-[#0ea5e9] to-[#06b6d4] dark:from-[#081022] dark:via-[#0f172a] dark:to-[#0c233a] dark:border-b dark:border-sky-400/20 text-white transition-colors duration-300 ${
             isHandheldViewport
               ? 'pt-2.5 pb-5 px-3.5 rounded-b-[24px]'
               : 'pt-3 pb-5 px-5 rounded-b-[32px]'
-          } shadow-md shadow-sky-950/15`}
+          } shadow-md shadow-sky-950/15 dark:shadow-black/50`}
         >
           {/* Overlapping Organic Water Wave Animation Layers */}
           <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 pointer-events-none overflow-hidden select-none">
             {/* Back Wave (Slow Deep Swell - Soft Translucent Cyan Tone) */}
             <div className="animate-wave-bob-1 absolute inset-x-0 -bottom-2 w-full h-full pointer-events-none">
               <svg
-                className="animate-wave-slow w-[200%] min-w-[200%] max-w-none h-full text-white/25"
+                className="animate-wave-slow w-[200%] min-w-[200%] max-w-none h-full text-white/25 dark:text-sky-400/12"
                 viewBox="0 0 1200 120"
                 preserveAspectRatio="none"
                 fill="currentColor"
@@ -2058,7 +2058,7 @@ export default function App() {
             {/* Front Wave (Surface Ripple - Crisp Bright Wave Tone) */}
             <div className="animate-wave-bob-2 absolute inset-x-0 -bottom-1 w-full h-full pointer-events-none">
               <svg
-                className="animate-wave-fast w-[200%] min-w-[200%] max-w-none h-full text-white/45"
+                className="animate-wave-fast w-[200%] min-w-[200%] max-w-none h-full text-white/45 dark:text-cyan-400/18"
                 viewBox="0 0 1200 120"
                 preserveAspectRatio="none"
                 fill="currentColor"
@@ -2071,14 +2071,14 @@ export default function App() {
           {/* Top Brand Bar */}
           <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5">
             <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white shadow-xs border border-white/90 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-slate-100 shadow-xs border border-white/90 dark:border-slate-700/60 flex items-center justify-center shrink-0 overflow-hidden">
                 <NextCapitalLogo size={22} className="flex items-center justify-center" />
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-[11px] sm:text-xs tracking-tight text-white uppercase drop-shadow-xs">
+                <span className="font-extrabold text-[11px] sm:text-xs tracking-tight text-white dark:text-slate-50 uppercase drop-shadow-xs">
                   Next Capital
                 </span>
-                <span className="text-[9px] sm:text-[9.5px] text-white/85 font-medium -mt-0.5">
+                <span className="text-[9px] sm:text-[9.5px] text-white/85 dark:text-slate-300 font-medium -mt-0.5">
                   บมจ. เน็กซ์ แคปปิตอล
                 </span>
               </div>
@@ -2093,7 +2093,7 @@ export default function App() {
                       triggerHaptic('light');
                       setShowCloudSyncModal(true);
                     }}
-                    className="w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full border border-white/65 bg-emerald-600/85 backdrop-blur-md shadow-xs overflow-hidden flex items-center justify-center shrink-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                    className="w-[22px] h-[22px] sm:w-[26px] sm:h-[26px] rounded-full border border-white/65 dark:border-slate-600/80 bg-emerald-600/85 backdrop-blur-md shadow-xs overflow-hidden flex items-center justify-center shrink-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
                     title={firebaseUser.displayName || firebaseUser.email || 'บัญชีผู้ใช้'}
                     aria-label="โปรไฟล์ผู้ใช้และสถานะ Cloud"
                   >
@@ -2120,7 +2120,7 @@ export default function App() {
                     triggerHaptic('light');
                     setShowCloudSyncModal(true);
                   }}
-                  className="text-[9.5px] sm:text-[10.5px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/25 hover:bg-white/35 backdrop-blur-md text-white border border-white/35 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                  className="text-[9.5px] sm:text-[10.5px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/25 hover:bg-white/35 dark:bg-slate-800/75 dark:hover:bg-slate-700/85 backdrop-blur-md text-white dark:text-slate-100 border border-white/35 dark:border-slate-600/70 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
                   title={
                     firebaseUser
                       ? `ซิงค์ Cloud: ${firebaseUser.email}`
@@ -2152,7 +2152,7 @@ export default function App() {
                   )}
                 </button>
               </div>
-              <span className="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs whitespace-nowrap select-none leading-tight">
+              <span className="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 dark:bg-slate-800/65 backdrop-blur-md text-white dark:text-slate-300 border border-white/30 dark:border-slate-700/70 shadow-xs whitespace-nowrap select-none leading-tight">
                 พัฒนาระบบโดย Aonbordin
               </span>
             </div>
@@ -2161,14 +2161,14 @@ export default function App() {
           {/* Header Title Row */}
           <div className="relative z-10 flex items-center justify-between pt-0.5">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <h1 className="text-base sm:text-lg md:text-xl font-black text-white tracking-tight drop-shadow-xs">
+              <h1 className="text-base sm:text-lg md:text-xl font-black text-white dark:text-slate-50 tracking-tight drop-shadow-xs">
                 MotoLease Calc
               </h1>
-              <span className="text-[9.5px] sm:text-[10px] font-bold bg-white/25 backdrop-blur-md text-white border border-white/30 px-2 py-0.5 rounded-full">
+              <span className="text-[9.5px] sm:text-[10px] font-bold bg-white/25 dark:bg-sky-500/20 backdrop-blur-md text-white dark:text-sky-200 border border-white/30 dark:border-sky-400/30 px-2 py-0.5 rounded-full">
                 2569
               </span>
             </div>
-            <span className="text-[10px] sm:text-[11px] text-white/90 font-medium">
+            <span className="text-[10px] sm:text-[11px] text-white/90 dark:text-slate-300 font-medium">
               ระบบคำนวณค่างวดรถจักรยานยนต์
             </span>
           </div>
@@ -2178,17 +2178,17 @@ export default function App() {
             <button
               type="button"
               onClick={() => setShowBikePresets(true)}
-              className="w-full bg-white/25 hover:bg-white/35 text-white backdrop-blur-md rounded-full py-1.5 sm:py-2 px-3 sm:px-3.5 shadow-sm shadow-sky-950/20 border border-white/40 hover:border-white/60 flex items-center justify-between text-xs transition-all cursor-pointer group"
+              className="w-full bg-white/25 hover:bg-white/35 dark:bg-slate-900/75 dark:hover:bg-slate-800/85 text-white backdrop-blur-md rounded-full py-1.5 sm:py-2 px-3 sm:px-3.5 shadow-sm shadow-sky-950/20 dark:shadow-black/45 border border-white/40 hover:border-white/60 dark:border-sky-400/25 dark:hover:border-sky-400/45 flex items-center justify-between text-xs transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-                <div className="w-5 h-5 rounded-full bg-white/25 text-white flex items-center justify-center shrink-0 border border-white/30 shadow-2xs">
+                <div className="w-5 h-5 rounded-full bg-white/25 dark:bg-sky-500/20 text-white dark:text-sky-300 flex items-center justify-center shrink-0 border border-white/30 dark:border-sky-400/30 shadow-2xs">
                   <Bike className="w-3.5 h-3.5" />
                 </div>
-                <MarqueeText className="text-white/95 font-medium drop-shadow-2xs text-[11px] sm:text-xs">
+                <MarqueeText className="text-white/95 dark:text-slate-200 font-medium drop-shadow-2xs text-[11px] sm:text-xs">
                   {selectedBike ? `รุ่น: ${selectedBike.name}` : bikeModelCode ? `รหัสรุ่น: ${bikeModelCode}` : 'ค้นหาหรือเลือกรุ่นรถจักรยานยนต์...'}
                 </MarqueeText>
               </div>
-              <span className="text-[10px] font-bold text-sky-900 bg-white/95 hover:bg-white px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs transition-all group-hover:scale-105">
+              <span className="text-[10px] font-bold text-sky-900 bg-white/95 hover:bg-white dark:bg-sky-500/25 dark:hover:bg-sky-500/35 dark:text-sky-200 dark:border dark:border-sky-400/35 px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs transition-all group-hover:scale-105">
                 เลือกรุ่นรถ
               </span>
             </button>
