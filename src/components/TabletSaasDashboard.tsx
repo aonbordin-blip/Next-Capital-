@@ -6,9 +6,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -386,6 +383,55 @@ function buildSmoothWavePath(points: Array<{ x: number; y: number }>): string {
   return d;
 }
 
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy + r * Math.sin(rad),
+  };
+}
+
+function buildSteppedDonutSectorPath(
+  cx: number,
+  cy: number,
+  rInner: number,
+  rOuter: number,
+  startDeg: number,
+  endDeg: number
+): string {
+  const sweep = endDeg - startDeg;
+  if (sweep >= 359.9) {
+    const midDeg = startDeg + 180;
+    const o1 = polarToCartesian(cx, cy, rOuter, startDeg);
+    const o2 = polarToCartesian(cx, cy, rOuter, midDeg);
+    const i1 = polarToCartesian(cx, cy, rInner, startDeg);
+    const i2 = polarToCartesian(cx, cy, rInner, midDeg);
+    return [
+      `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)}`,
+      `A ${rOuter} ${rOuter} 0 1 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)}`,
+      `A ${rOuter} ${rOuter} 0 1 1 ${o1.x.toFixed(2)} ${o1.y.toFixed(2)}`,
+      `M ${i1.x.toFixed(2)} ${i1.y.toFixed(2)}`,
+      `A ${rInner} ${rInner} 0 1 0 ${i2.x.toFixed(2)} ${i2.y.toFixed(2)}`,
+      `A ${rInner} ${rInner} 0 1 0 ${i1.x.toFixed(2)} ${i1.y.toFixed(2)}`,
+      'Z',
+    ].join(' ');
+  }
+
+  const outerStart = polarToCartesian(cx, cy, rOuter, startDeg);
+  const outerEnd = polarToCartesian(cx, cy, rOuter, endDeg);
+  const innerEnd = polarToCartesian(cx, cy, rInner, endDeg);
+  const innerStart = polarToCartesian(cx, cy, rInner, startDeg);
+  const largeArc = sweep > 180 ? 1 : 0;
+
+  return [
+    `M ${outerStart.x.toFixed(2)} ${outerStart.y.toFixed(2)}`,
+    `A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${outerEnd.x.toFixed(2)} ${outerEnd.y.toFixed(2)}`,
+    `L ${innerEnd.x.toFixed(2)} ${innerEnd.y.toFixed(2)}`,
+    `A ${rInner} ${rInner} 0 ${largeArc} 0 ${innerStart.x.toFixed(2)} ${innerStart.y.toFixed(2)}`,
+    'Z',
+  ].join(' ');
+}
+
 const DEFAULT_MINI_BUCKETS: KpiMiniBucket[] = ['1-5', '6-10', '11-15', '16-20', '21-25', '26+'].map(
   (label) => ({
     label,
@@ -659,6 +705,8 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
   const [dealerViewMode, setDealerViewMode] = useState<'chart' | 'list'>('chart');
   const [selectedDealerName, setSelectedDealerName] = useState<string | null>(null);
   const [hoveredDealerName, setHoveredDealerName] = useState<string | null>(null);
+  const [hoveredDealKey, setHoveredDealKey] = useState<string | null>(null);
+  const [pinnedDealKey, setPinnedDealKey] = useState<string | null>(null);
   const [showGasolineModal, setShowGasolineModal] = useState<boolean>(false);
   const {
     shouldRender: shouldRenderGasolineModal,
@@ -706,6 +754,9 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         amount: stats.deliveredFinance,
         pct: (stats.deliveredCount / total) * 100,
         color: '#06b6d4',
+        gradStart: '#2ef2d6',
+        gradEnd: '#0295d6',
+        gradId: 'tsdDealGradDelivered',
       },
       {
         key: 'approvedPending',
@@ -713,7 +764,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.approvedPendingDeliveryCount,
         amount: stats.approvedPendingFinance,
         pct: (stats.approvedPendingDeliveryCount / total) * 100,
-        color: '#f59e0b',
+        color: '#ff7a1a',
+        gradStart: '#ffa726',
+        gradEnd: '#ff6b1a',
+        gradId: 'tsdDealGradApprovedPending',
       },
       {
         key: 'pending',
@@ -721,7 +775,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.pendingCount,
         amount: stats.pendingFinance,
         pct: (stats.pendingCount / total) * 100,
-        color: '#3b82f6',
+        color: '#2563eb',
+        gradStart: '#38bdf8',
+        gradEnd: '#2563eb',
+        gradId: 'tsdDealGradPending',
       },
       {
         key: 'closedOther',
@@ -729,7 +786,10 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         count: stats.rejectedOrCancelledCount,
         amount: stats.rejectedFinance,
         pct: (stats.rejectedOrCancelledCount / total) * 100,
-        color: '#ec4899',
+        color: '#d9048e',
+        gradStart: '#ec008c',
+        gradEnd: '#8e24aa',
+        gradId: 'tsdDealGradClosedOther',
       },
       {
         key: 'paInsured',
@@ -738,20 +798,77 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
         amount: commissionSummary.totalCommissionBaht,
         pct: commissionSummary.achievementPercent,
         color: '#6366f1',
+        gradStart: '#7c78ff',
+        gradEnd: '#38bdf8',
+        gradId: 'tsdDealGradPaInsured',
       },
     ];
     return items;
   }, [stats, commissionSummary]);
 
-  const pieSlices = useMemo(() => {
+  const steppedPieSlices = useMemo(() => {
     const active = dealBreakdownRows
       .slice(0, 4)
       .filter((item) => item.count > 0);
-    if (active.length === 0) {
-      return [{ key: 'empty', label: 'ยังไม่มีเคส', count: 1, color: '#e2e8f0' }];
-    }
-    return active;
+    if (active.length === 0) return [];
+
+    const totalCount = active.reduce((sum, item) => sum + item.count, 0);
+    const maxCount = Math.max(...active.map((item) => item.count), 1);
+
+    const rankedIndices = [...active.keys()].sort((a, b) => {
+      const diff = active[b].count - active[a].count;
+      return diff !== 0 ? diff : a - b;
+    });
+    const rankMap = new Map<number, number>();
+    rankedIndices.forEach((origIdx, rankIdx) => rankMap.set(origIdx, rankIdx));
+
+    const rInner = 46;
+    const haloOuterR = 49;
+    const minOuterR = 72;
+    const maxOuterR = 100;
+
+    let currentAngle = -215; // Places first slice across top-left like the reference chart
+    return active.map((item, idx) => {
+      const sweepDeg = (item.count / totalCount) * 360;
+      const startDeg = currentAngle;
+      const endDeg = startDeg + sweepDeg;
+      currentAngle = endDeg;
+
+      const ratio = item.count / maxCount;
+      const rank = rankMap.get(idx) ?? idx;
+      const rankFactor = active.length > 1 ? 1 - rank / (active.length - 1) : 1;
+      const weight = 0.65 * ratio + 0.35 * rankFactor;
+      const rOuter = minOuterR + (maxOuterR - minOuterR) * weight;
+
+      const midDeg = (startDeg + endDeg) / 2;
+      const labelR = haloOuterR + (rOuter - haloOuterR) * 0.54;
+      const labelPos = polarToCartesian(110, 110, labelR, midDeg);
+      const showInsideLabel =
+        (sweepDeg >= 38 && rOuter - haloOuterR >= 24) ||
+        (active.length === 1 && sweepDeg >= 30);
+
+      return {
+        ...item,
+        startDeg,
+        endDeg,
+        sweepDeg,
+        rInner,
+        rOuter,
+        path: buildSteppedDonutSectorPath(110, 110, rInner, rOuter, startDeg, endDeg),
+        labelPos,
+        showInsideLabel,
+      };
+    });
   }, [dealBreakdownRows]);
+
+  const focusedDealKey = hoveredDealKey ?? pinnedDealKey;
+  const focusedDealRow = useMemo(
+    () =>
+      focusedDealKey
+        ? dealBreakdownRows.find((row) => row.key === focusedDealKey) ?? null
+        : null,
+    [dealBreakdownRows, focusedDealKey]
+  );
 
   // Bottom-Left Graph Data (Monthly 8 months OR Last 7 Days)
   const monthlyBarData: StatBarDatum[] = useMemo(() => {
@@ -2010,11 +2127,11 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
           </div>
         </div>
 
-        {/* Right 6 cols: Deal Details Breakdown Table + Bold Donut Chart */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/85 dark:border-slate-800 shadow-[0_2px_14px_-4px_rgba(15,23,42,0.06)] p-4 flex flex-col justify-between gap-3">
+        {/* Right 6 cols: Deal Details Breakdown Table + Stepped Variable-Radius Gradient Donut */}
+        <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/85 dark:border-slate-800 shadow-[0_2px_14px_-4px_rgba(15,23,42,0.06)] p-4 sm:p-5 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
                 รายละเอียดสถานะดีล & ยอดจัด
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -2034,95 +2151,242 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-12 items-center gap-2 flex-1">
-            {/* Compact Table */}
-            <div className="col-span-7 overflow-x-auto">
-              <table className="w-full text-left border-collapse text-[11px] tabular-nums">
+          <div className="grid grid-cols-12 items-center gap-3 flex-1">
+            {/* Clean Tabular Breakdown matching Reference Table */}
+            <div className="col-span-12 sm:col-span-7 overflow-x-auto">
+              <table className="w-full text-left border-collapse text-[11.5px] tabular-nums">
                 <thead>
-                  <tr className="text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                    <th className="py-1.5 font-semibold">สถานะ</th>
-                    <th className="py-1.5 text-right font-semibold">เคส</th>
-                    <th className="py-1.5 text-right font-semibold">ยอด</th>
-                    <th className="py-1.5 text-right font-semibold">%</th>
+                  <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                    <th className="pb-2 font-semibold">สถานะ</th>
+                    <th className="pb-2 text-right font-semibold">เคส</th>
+                    <th className="pb-2 text-right font-semibold">ยอด</th>
+                    <th className="pb-2 text-right font-semibold">%</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/80 dark:divide-slate-800/80">
-                  {dealBreakdownRows.map((row) => (
-                    <tr
-                      key={row.key}
-                      onClick={() => {
-                        triggerHaptic('light');
-                        if (row.key === 'paInsured') {
-                          onNavigateToCheckerCommission();
-                        } else {
-                          onOpenSavedCases();
-                        }
-                      }}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
-                    >
-                      <td className="py-2 pr-1.5 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: row.color }}
-                          />
-                          <span>{row.label}</span>
-                        </span>
-                      </td>
-                      <td className="py-2 px-1 text-right font-bold text-slate-900 dark:text-white">
-                        {row.count}
-                      </td>
-                      <td className="py-2 px-1 text-right font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {formatCompactBaht(row.amount)}
-                      </td>
-                      <td className="py-2 pl-1 text-right font-semibold text-slate-600 dark:text-slate-300">
-                        {row.pct.toFixed(0)}%
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y divide-slate-100/90 dark:divide-slate-800/80">
+                  {dealBreakdownRows.map((row) => {
+                    const isRowHighlighted = focusedDealKey === row.key;
+                    return (
+                      <tr
+                        key={row.key}
+                        onMouseEnter={() => setHoveredDealKey(row.key)}
+                        onMouseLeave={() => setHoveredDealKey(null)}
+                        onClick={() => {
+                          triggerHaptic('light');
+                          if (row.key === 'paInsured') {
+                            onNavigateToCheckerCommission();
+                          } else {
+                            onOpenSavedCases();
+                          }
+                        }}
+                        className={`cursor-pointer transition-colors ${
+                          isRowHighlighted
+                            ? 'bg-slate-50/95 dark:bg-slate-800/75'
+                            : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
+                        }`}
+                      >
+                        <td className="py-2.5 pr-1.5 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="w-3 h-3 rounded-full shrink-0 shadow-[0_1px_4px_rgba(15,23,42,0.16)]"
+                              style={{
+                                background: `linear-gradient(135deg, ${row.gradStart} 0%, ${row.gradEnd} 100%)`,
+                              }}
+                            />
+                            <span>{row.label}</span>
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-1 text-right font-bold text-slate-800 dark:text-white">
+                          {row.count}
+                        </td>
+                        <td className="py-2.5 px-1 text-right font-medium text-slate-500 dark:text-slate-300 whitespace-nowrap">
+                          {formatCompactBaht(row.amount)}
+                        </td>
+                        <td className="py-2.5 pl-1 text-right font-semibold text-slate-500 dark:text-slate-300">
+                          {row.pct > 0 && row.pct < 10 ? row.pct.toFixed(1) : row.pct.toFixed(0)}%
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {/* Bold Multi-Segment Donut Chart */}
-            <div className="col-span-5 relative h-[168px] flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieSlices}
-                    dataKey="count"
-                    nameKey="label"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={44}
-                    outerRadius={68}
-                    paddingAngle={pieSlices.length > 1 ? 3 : 0}
-                    stroke="none"
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    {pieSlices.map((slice) => (
-                      <Cell key={slice.key} fill={slice.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(val: unknown) => [`${val} เคส`, 'จำนวน']}
-                    contentStyle={{
-                      borderRadius: '12px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '11px',
-                    }}
+            {/* Stepped Variable-Radius Gradient Donut Chart */}
+            <div className="col-span-12 sm:col-span-5 relative flex items-center justify-center min-h-[196px]">
+              <svg
+                viewBox="0 0 220 220"
+                className="w-[196px] h-[196px] xl:w-[208px] xl:h-[208px] overflow-visible select-none"
+                role="img"
+                aria-label="กราฟวงกลมแสดงสัดส่วนสถานะดีลแบบไล่ระดับรัศมี"
+              >
+                <defs>
+                  {dealBreakdownRows.map((row) => (
+                    <linearGradient
+                      key={row.gradId}
+                      id={row.gradId}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop offset="0%" stopColor={row.gradStart} />
+                      <stop offset="100%" stopColor={row.gradEnd} />
+                    </linearGradient>
+                  ))}
+                  <filter id="tsdDealDonutCenterShadow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feDropShadow
+                      dx="0"
+                      dy="3"
+                      stdDeviation="4.5"
+                      floodColor="#0f172a"
+                      floodOpacity="0.1"
+                    />
+                  </filter>
+                  <filter id="tsdDealSliceFocusGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow
+                      dx="0"
+                      dy="3"
+                      stdDeviation="4"
+                      floodColor="#0f172a"
+                      floodOpacity="0.18"
+                    />
+                  </filter>
+                </defs>
+
+                {steppedPieSlices.length === 0 ? (
+                  <path
+                    d={buildSteppedDonutSectorPath(110, 110, 46, 84, -215, 145)}
+                    fillRule="evenodd"
+                    className="fill-slate-200/90 dark:fill-slate-800"
                   />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-base font-black text-slate-900 dark:text-white tabular-nums leading-tight">
-                  {stats.totalCases}
-                </span>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                  {stats.approvalRate.toFixed(0)}% อนุมัติ
-                </span>
-              </div>
+                ) : (
+                  steppedPieSlices.map((slice) => {
+                    const isFocused = focusedDealKey === slice.key;
+                    const isDimmed =
+                      focusedDealKey !== null &&
+                      focusedDealKey !== 'paInsured' &&
+                      !isFocused;
+                    return (
+                      <g
+                        key={slice.key}
+                        onMouseEnter={() => setHoveredDealKey(slice.key)}
+                        onMouseLeave={() => setHoveredDealKey(null)}
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setPinnedDealKey((prev) => (prev === slice.key ? null : slice.key));
+                        }}
+                        style={{
+                          transform: isFocused ? 'scale(1.035)' : 'scale(1)',
+                          transformOrigin: '110px 110px',
+                          opacity: isDimmed ? 0.36 : 1,
+                          transition:
+                            'transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <path
+                          d={slice.path}
+                          fill={`url(#${slice.gradId})`}
+                          fillRule="evenodd"
+                          filter={isFocused ? 'url(#tsdDealSliceFocusGlow)' : undefined}
+                        />
+                        {slice.showInsideLabel && (
+                          <text
+                            x={slice.labelPos.x}
+                            y={slice.labelPos.y}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fill="#ffffff"
+                            fontSize="11"
+                            fontWeight="800"
+                            style={{
+                              pointerEvents: 'none',
+                              fontVariantNumeric: 'tabular-nums',
+                              textShadow: '0 1px 2px rgba(15, 23, 42, 0.28)',
+                            }}
+                          >
+                            {Math.round(slice.pct)}%
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })
+                )}
+
+                {/* Soft Icy Outer Halo Ring separating slices from white center */}
+                <circle
+                  cx={110}
+                  cy={110}
+                  r={49}
+                  className="fill-slate-100/95 dark:fill-slate-800/95 pointer-events-none"
+                />
+
+                {/* Crisp White Elevated Center Medallion */}
+                <g
+                  onClick={() => {
+                    if (pinnedDealKey) {
+                      triggerHaptic('light');
+                      setPinnedDealKey(null);
+                    }
+                  }}
+                  style={{ cursor: pinnedDealKey ? 'pointer' : 'default' }}
+                >
+                  <circle
+                    cx={110}
+                    cy={110}
+                    r={41}
+                    className="fill-white dark:fill-slate-900"
+                    filter="url(#tsdDealDonutCenterShadow)"
+                  />
+                </g>
+              </svg>
+
+              {/* Crisp HTML Typography inside Center Medallion */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (pinnedDealKey) {
+                    triggerHaptic('light');
+                    setPinnedDealKey(null);
+                  }
+                }}
+                aria-label="ศูนย์กลางกราฟสถานะดีล"
+                className={`absolute w-[76px] h-[76px] rounded-full flex flex-col items-center justify-center text-center px-1 ${
+                  pinnedDealKey ? 'cursor-pointer' : 'pointer-events-none'
+                }`}
+              >
+                {focusedDealRow ? (
+                  <>
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 max-w-[68px] truncate leading-tight">
+                      {focusedDealRow.label}
+                    </span>
+                    <span className="text-[20px] font-black text-slate-800 dark:text-white tabular-nums leading-tight">
+                      {focusedDealRow.count}
+                    </span>
+                    <span
+                      className="text-[10.5px] font-bold tabular-nums leading-tight"
+                      style={{ color: focusedDealRow.gradEnd }}
+                    >
+                      {focusedDealRow.pct > 0 && focusedDealRow.pct < 10
+                        ? focusedDealRow.pct.toFixed(1)
+                        : focusedDealRow.pct.toFixed(0)}
+                      %
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[22px] font-black text-slate-800 dark:text-white tabular-nums leading-none">
+                      {stats.totalCases}
+                    </span>
+                    <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 tabular-nums mt-1 leading-tight">
+                      {stats.totalCases > 0
+                        ? `${stats.approvalRate.toFixed(0)}% อนุมัติ`
+                        : 'ยังไม่มีเคส'}
+                    </span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
