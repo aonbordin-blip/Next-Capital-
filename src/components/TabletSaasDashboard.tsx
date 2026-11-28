@@ -31,9 +31,12 @@ import {
   FolderArchive,
   Fuel,
   LayoutList,
+  Maximize2,
+  Minimize2,
   PackageCheck,
   Plus,
   RotateCcw,
+  Search,
   ShieldCheck,
   TrendingUp,
   X,
@@ -761,6 +764,9 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
   const [pinnedPerfIdx, setPinnedPerfIdx] = useState<number | null>(null);
   const [rightBottomTab, setRightBottomTab] = useState<'recent' | 'timeline' | 'tools'>('recent');
   const [dealerViewMode, setDealerViewMode] = useState<'chart' | 'list'>('chart');
+  const [dealerMetricMode, setDealerMetricMode] = useState<'cases' | 'finance'>('cases');
+  const [dealerSearchQuery, setDealerSearchQuery] = useState<string>('');
+  const [dealerListExpanded, setDealerListExpanded] = useState<boolean>(false);
   const [selectedDealerName, setSelectedDealerName] = useState<string | null>(null);
   const [hoveredDealerName, setHoveredDealerName] = useState<string | null>(null);
   const [hoveredDealKey, setHoveredDealKey] = useState<string | null>(null);
@@ -1030,19 +1036,47 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
   const spotlightPerfItem =
     effectivePerfIdx !== null ? activeBarData[effectivePerfIdx] ?? null : null;
 
+  const sortedDealerList = useMemo(() => {
+    return [...dealerSummaryList].sort((a, b) => {
+      if (dealerMetricMode === 'finance') {
+        return b.finance - a.finance || b.total - a.total;
+      }
+      return b.total - a.total || b.finance - a.finance;
+    });
+  }, [dealerSummaryList, dealerMetricMode]);
+
+  const dealerRankMap = useMemo(() => {
+    const map = new Map<string, number>();
+    sortedDealerList.forEach((d, idx) => map.set(d.name, idx + 1));
+    return map;
+  }, [sortedDealerList]);
+
+  const filteredDealerList = useMemo(() => {
+    const q = dealerSearchQuery.trim().toLowerCase();
+    if (!q) return sortedDealerList;
+    return sortedDealerList.filter((d) => d.name.toLowerCase().includes(q));
+  }, [sortedDealerList, dealerSearchQuery]);
+
   const maxDealerCases = useMemo(
-    () => Math.max(1, ...dealerSummaryList.map((d) => d.total)),
-    [dealerSummaryList]
+    () => Math.max(1, ...sortedDealerList.map((d) => d.total)),
+    [sortedDealerList]
+  );
+
+  const maxDealerFinance = useMemo(
+    () => Math.max(1, ...sortedDealerList.map((d) => d.finance)),
+    [sortedDealerList]
   );
 
   const focusedDealerName = hoveredDealerName ?? selectedDealerName;
   const focusedDealer = useMemo(() => {
-    if (dealerSummaryList.length === 0) return null;
+    if (sortedDealerList.length === 0) return null;
     if (focusedDealerName) {
-      return dealerSummaryList.find((d) => d.name === focusedDealerName) ?? dealerSummaryList[0];
+      return sortedDealerList.find((d) => d.name === focusedDealerName) ?? sortedDealerList[0];
     }
-    return dealerSummaryList[0];
-  }, [dealerSummaryList, focusedDealerName]);
+    return sortedDealerList[0];
+  }, [sortedDealerList, focusedDealerName]);
+
+  const focusedDealerRank = focusedDealer ? dealerRankMap.get(focusedDealer.name) ?? 1 : 1;
 
   const timelineItems = useMemo(() => {
     if (upcomingInstallmentSummary && upcomingInstallmentSummary.cohorts.length > 0) {
@@ -3109,75 +3143,117 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
       </section>
 
       {/* =====================================================================
-          ROW 4: กราฟสรุปตามร้านตัวแทน & สาขา (Dealers & Branches Chart)
+          ROW 4: กราฟสรุปตามร้านตัวแทน & สาขา (Futuristic Bounded Telemetry Stage)
          ===================================================================== */}
       <section className="relative overflow-hidden rounded-2xl saas-surface-card p-4 space-y-3">
         <span
           className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-sky-300/35 to-transparent"
           aria-hidden="true"
         />
+        <span
+          className="pointer-events-none -right-14 -top-14 absolute w-44 h-44 rounded-full bg-sky-400/10 dark:bg-sky-500/10 blur-2xl"
+          aria-hidden="true"
+        />
 
         {/* Header Row */}
         <div className="relative flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-teal-500 text-white flex items-center justify-center shadow-sm shadow-sky-500/25 ring-1 ring-white/50 dark:ring-white/15 shrink-0">
+            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 via-teal-500 to-emerald-500 text-white flex items-center justify-center shadow-sm shadow-sky-500/25 ring-1 ring-white/60 dark:ring-white/15 shrink-0">
               <Building2 className="w-4 h-4" />
             </span>
             <div className="min-w-0">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
                 กราฟสรุปตามร้านตัวแทน (Dealers)
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                งวด {formatMonthLabel(selectedMonth)} · จำนวนเคสและยอดจัดแยกตามร้าน/สาขา
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate tabular-nums">
+                งวด {formatMonthLabel(selectedMonth)} · {dealerSummaryList.length} ร้าน · {stats.totalCases} เคส ·{' '}
+                {formatCompactBaht(stats.totalFinance)}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {dealerSummaryList.length > 0 && (
-              <div
-                role="group"
-                aria-label="มุมมองกราฟร้านตัวแทน"
-                className="flex items-center gap-0.5 p-0.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setDealerViewMode('chart');
-                  }}
-                  aria-pressed={dealerViewMode === 'chart'}
-                  className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
-                    dealerViewMode === 'chart'
-                      ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
+              <>
+                {/* Metric Scale Switcher: Cases vs Finance */}
+                <div
+                  role="group"
+                  aria-label="เรียงและเทียบสัดส่วนตาม"
+                  className="flex items-center gap-0.5 p-0.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80"
                 >
-                  <BarChart3 className="w-3 h-3" />
-                  <span>แท่งกราฟ</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setDealerViewMode('list');
-                  }}
-                  aria-pressed={dealerViewMode === 'list'}
-                  className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
-                    dealerViewMode === 'list'
-                      ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <LayoutList className="w-3 h-3" />
-                  <span>รายการ</span>
-                </button>
-              </div>
-            )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDealerMetricMode('cases');
+                    }}
+                    aria-pressed={dealerMetricMode === 'cases'}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      dealerMetricMode === 'cases'
+                        ? 'bg-white dark:bg-teal-600 text-teal-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    จำนวนเคส
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDealerMetricMode('finance');
+                    }}
+                    aria-pressed={dealerMetricMode === 'finance'}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      dealerMetricMode === 'finance'
+                        ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    ยอดจัด (฿)
+                  </button>
+                </div>
 
-            <span className="px-2.5 py-1 rounded-xl bg-sky-50/90 dark:bg-sky-950/70 border border-sky-200/80 dark:border-sky-700/70 text-[11px] font-extrabold text-sky-800 dark:text-sky-200 tabular-nums whitespace-nowrap">
-              {dealerSummaryList.length} ร้าน · {stats.totalCases} เคส
-            </span>
+                {/* View Mode Switcher: 3D Chart vs Table */}
+                <div
+                  role="group"
+                  aria-label="มุมมองกราฟร้านตัวแทน"
+                  className="flex items-center gap-0.5 p-0.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDealerViewMode('chart');
+                    }}
+                    aria-pressed={dealerViewMode === 'chart'}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                      dealerViewMode === 'chart'
+                        ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <BarChart3 className="w-3 h-3" />
+                    <span>กราฟ 3D</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDealerViewMode('list');
+                    }}
+                    aria-pressed={dealerViewMode === 'list'}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                      dealerViewMode === 'list'
+                        ? 'bg-white dark:bg-sky-600 text-sky-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <LayoutList className="w-3 h-3" />
+                    <span>ตาราง</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -3200,226 +3276,581 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
             </button>
           </div>
         ) : dealerViewMode === 'chart' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
-            {/* Left 8 cols: Shared-Scale 3D Stacked Bar Chart */}
-            <div className="lg:col-span-8 rounded-2xl bg-slate-50/75 dark:bg-slate-800/45 border border-slate-200/70 dark:border-slate-800 p-3 space-y-2.5 min-w-0">
-              {/* Legend & Reset */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-slate-600 dark:text-slate-300">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
-                    <span>รับรถแล้ว</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-green-300" />
-                    <span>อนุมัติรอรับรถ</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                    <span>รอผล/อื่นๆ</span>
-                  </span>
-                </div>
-                {selectedDealerName && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setSelectedDealerName(null);
-                      setHoveredDealerName(null);
-                    }}
-                    className="text-sky-700 dark:text-sky-300 font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>แสดงทุกร้าน</span>
-                  </button>
-                )}
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+            {/* Left 8 cols: Panoramic Market Share Strip + Bounded 3D Luminous Bar Matrix */}
+            <div className="lg:col-span-8 rounded-2xl bg-gradient-to-b from-slate-50/90 to-slate-100/55 dark:from-slate-800/55 dark:to-slate-900/55 border border-slate-200/80 dark:border-slate-800 p-3 flex flex-col justify-between gap-2.5 min-w-0">
+              {/* Top Panoramic Share Spectrum Bar (All dealers at a glance in 1 compact line) */}
+              {(() => {
+                const totalSpectrum =
+                  dealerMetricMode === 'finance'
+                    ? Math.max(1, sortedDealerList.reduce((sum, d) => sum + d.finance, 0))
+                    : Math.max(1, sortedDealerList.reduce((sum, d) => sum + d.total, 0));
+                const spectrumGradients = [
+                  'from-teal-500 via-emerald-400 to-cyan-400',
+                  'from-sky-500 to-indigo-500',
+                  'from-indigo-500 to-violet-500',
+                  'from-cyan-500 to-sky-400',
+                  'from-amber-400 to-orange-500',
+                  'from-emerald-500 to-lime-400',
+                  'from-fuchsia-500 to-pink-500',
+                  'from-slate-400 to-slate-500',
+                ];
 
-              {/* Horizontal Stacked Bars with Dashed Gridlines */}
-              <div className="relative space-y-1.5">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-2 top-0 bottom-5 z-0"
-                >
-                  {[0, 20, 40, 60, 80].map((posPct) => (
+                return (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2 text-[10.5px]">
+                      <span className="font-bold text-slate-600 dark:text-slate-300 truncate">
+                        สัดส่วนรวมทุกร้าน ({sortedDealerList.length} ร้าน)
+                        {focusedDealer && (
+                          <span className="ml-1.5 font-extrabold text-sky-700 dark:text-sky-300 tabular-nums">
+                            · {focusedDealer.name}{' '}
+                            {((dealerMetricMode === 'finance'
+                              ? focusedDealer.finance
+                              : focusedDealer.total) /
+                              totalSpectrum *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </span>
+                        )}
+                      </span>
+                      <div className="flex items-center gap-2.5 text-[10px] text-slate-500 dark:text-slate-400 shrink-0">
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <span className="w-2 h-2 rounded-full bg-gradient-to-r from-teal-500 to-emerald-400" />
+                          <span>รับรถแล้ว</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <span className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-400 to-lime-300" />
+                          <span>รอรับรถ</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <span className="w-2 h-2 rounded-full bg-slate-400" />
+                          <span>อื่นๆ</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 3D Luminous Proportional Spectrum Tube */}
                     <div
-                      key={posPct}
-                      className="absolute top-0 bottom-0 border-l border-dashed border-slate-300/70 dark:border-slate-700/70"
-                      style={{ left: `${posPct}%` }}
-                    />
-                  ))}
-                </div>
-
-                <div className="relative z-10 space-y-1.5">
-                  {dealerSummaryList.map((d) => {
-                    const isPinned = selectedDealerName === d.name;
-                    const isActive = focusedDealerName === d.name;
-                    const isDimmed = Boolean(focusedDealerName && !isActive);
-                    const barTrackPct = Math.min(80, (d.total / maxDealerCases) * 80);
-                    const delShare = d.total > 0 ? (d.delivered / d.total) * 100 : 0;
-                    const pendShare = d.total > 0 ? (d.approvedPending / d.total) * 100 : 0;
-                    const otherShare = d.total > 0 ? (d.other / d.total) * 100 : 0;
-
-                    return (
-                      <button
-                        key={d.name}
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('selection');
-                          setSelectedDealerName((prev) => (prev === d.name ? null : d.name));
-                        }}
-                        onMouseEnter={() => setHoveredDealerName(d.name)}
-                        onMouseLeave={() => setHoveredDealerName(null)}
-                        aria-pressed={isPinned}
-                        className={`w-full text-left rounded-xl px-2.5 py-1.5 border transition-all duration-150 cursor-pointer space-y-1 ${
-                          isActive
-                            ? 'bg-white dark:bg-slate-800/95 border-sky-300 dark:border-sky-600 shadow-xs'
-                            : isDimmed
-                              ? 'border-transparent opacity-55 hover:opacity-95'
-                              : 'border-transparent hover:bg-white/80 dark:hover:bg-slate-800/65'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-100 truncate min-w-0">
-                            {d.name}
-                          </span>
-                          <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap shrink-0">
-                            รับรถ{' '}
-                            <strong className="text-teal-700 dark:text-teal-300">
-                              {d.delivered}
-                            </strong>
-                            /{d.total} ·{' '}
-                            <strong className="text-sky-700 dark:text-sky-300">
-                              {formatCompactBaht(d.finance)}
-                            </strong>
-                          </span>
-                        </div>
-
-                        <div className="flex items-center w-full h-4">
-                          <div
-                            style={{
-                              width: `${barTrackPct}%`,
-                              minWidth: d.total > 0 ? '16px' : '0px',
+                      className="relative h-3 w-full rounded-full bg-slate-200/80 dark:bg-slate-900/85 p-0.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.16)] flex items-center gap-0.5 overflow-hidden"
+                      role="group"
+                      aria-label="แถบสัดส่วนรวมตามร้านตัวแทน"
+                    >
+                      {sortedDealerList.map((d, idx) => {
+                        const val = dealerMetricMode === 'finance' ? d.finance : d.total;
+                        const sharePct = (val / totalSpectrum) * 100;
+                        if (sharePct <= 0) return null;
+                        const isActive = focusedDealerName === d.name;
+                        const isDimmed = Boolean(focusedDealerName && !isActive);
+                        const grad = spectrumGradients[idx % spectrumGradients.length];
+                        return (
+                          <button
+                            key={`spec-${d.name}`}
+                            type="button"
+                            title={`${d.name} · ${sharePct.toFixed(1)}%`}
+                            onClick={() => {
+                              triggerHaptic('selection');
+                              setSelectedDealerName((prev) => (prev === d.name ? null : d.name));
                             }}
-                            className={`relative h-3.5 rounded-full overflow-hidden flex transition-all duration-500 ease-out shadow-2xs ${
+                            onMouseEnter={() => setHoveredDealerName(d.name)}
+                            onMouseLeave={() => setHoveredDealerName(null)}
+                            style={{ width: `${Math.max(sharePct, 1.4)}%` }}
+                            className={`relative h-full rounded-full bg-gradient-to-r ${grad} transition-all duration-200 cursor-pointer overflow-hidden ${
                               isActive
-                                ? 'ring-2 ring-sky-400/80 shadow-[0_0_10px_rgba(14,165,233,0.35)]'
-                                : 'border border-white/80 dark:border-slate-700/70'
+                                ? 'brightness-110 ring-1 ring-white dark:ring-sky-300 shadow-[0_0_8px_rgba(14,165,233,0.45)]'
+                                : isDimmed
+                                  ? 'opacity-35'
+                                  : 'opacity-90 hover:opacity-100'
                             }`}
                           >
-                            {d.delivered > 0 && (
-                              <div
-                                style={{ width: `${delShare}%` }}
-                                className="h-full bg-gradient-to-r from-teal-500 to-emerald-500"
-                              />
-                            )}
-                            {d.approvedPending > 0 && (
-                              <div
-                                style={{ width: `${pendShare}%` }}
-                                className="h-full bg-gradient-to-r from-emerald-400 to-green-300"
-                              />
-                            )}
-                            {d.other > 0 && (
-                              <div
-                                style={{ width: `${otherShare}%` }}
-                                className="h-full bg-gradient-to-r from-slate-400 to-slate-500"
-                              />
-                            )}
                             <span
                               aria-hidden="true"
-                              className="pointer-events-none absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/40 to-transparent"
+                              className="pointer-events-none absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/45 to-transparent"
                             />
-                          </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
-                          <span className="ml-2 text-[11px] font-black tabular-nums text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0">
-                            {d.total} เคส
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* X-Axis Scale Ticks */}
-                <div className="relative mx-2 h-4 text-[9.5px] font-bold text-slate-400 dark:text-slate-500 tabular-nums select-none pt-0.5">
-                  <span className="absolute left-0">0</span>
-                  {maxDealerCases >= 4 && (
-                    <span className="absolute -translate-x-1/2" style={{ left: '40%' }}>
-                      {Math.round(maxDealerCases / 2)}
-                    </span>
+              {/* Utility Row: Inline Search + Expand/Compact + Reset */}
+              {(sortedDealerList.length > 5 || selectedDealerName || dealerSearchQuery) && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  {sortedDealerList.length > 5 ? (
+                    <div className="relative flex-1 min-w-[160px] max-w-[260px]">
+                      <Search className="w-3 h-3 text-slate-400 pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={dealerSearchQuery}
+                        onChange={(e) => setDealerSearchQuery(e.target.value)}
+                        placeholder={`ค้นหาร้านใน ${sortedDealerList.length} สาขา...`}
+                        aria-label="ค้นหาร้านตัวแทน"
+                        className="w-full pl-7 pr-6 py-1 rounded-xl bg-white/90 dark:bg-slate-900/75 border border-slate-200/80 dark:border-slate-700/80 text-[11px] font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/50"
+                      />
+                      {dealerSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setDealerSearchQuery('')}
+                          aria-label="ล้างคำค้นหาร้าน"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div />
                   )}
-                  <span className="absolute -translate-x-1/2" style={{ left: '80%' }}>
-                    {maxDealerCases} เคส
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            {/* Right 4 cols: Focused Dealer Insight + Total Reconciliation */}
-            <div className="lg:col-span-4 space-y-2.5 min-w-0">
-              {focusedDealer && (
-                <div className="rounded-2xl bg-gradient-to-br from-sky-50/90 via-white to-teal-50/85 dark:from-sky-950/60 dark:via-slate-900 dark:to-teal-950/50 border border-sky-200/80 dark:border-sky-800/70 p-3.5 space-y-2.5 shadow-2xs">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300 block">
-                        {focusedDealerName ? 'ร้านที่เลือกดู' : 'อันดับ 1 สูงสุด'}
-                      </span>
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white truncate mt-0.5">
-                        {focusedDealer.name}
-                      </h4>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-lg bg-sky-600 text-white text-[11px] font-black tabular-nums shrink-0">
-                      {focusedDealer.total} เคส
-                    </span>
-                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {selectedDealerName && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setSelectedDealerName(null);
+                          setHoveredDealerName(null);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200/80 dark:border-sky-700/70 text-[10.5px] text-sky-700 dark:text-sky-300 font-bold hover:brightness-95 inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>ล้างที่เลือก</span>
+                      </button>
+                    )}
 
-                  <div className="grid grid-cols-3 gap-1.5 text-center text-[10.5px] tabular-nums">
-                    <div className="rounded-xl bg-white/90 dark:bg-slate-800/85 border border-slate-200/70 dark:border-slate-700/70 p-2">
-                      <div className="text-slate-500 dark:text-slate-400 font-medium">รับรถแล้ว</div>
-                      <div className="text-sm font-black text-teal-700 dark:text-teal-300 mt-0.5">
-                        {focusedDealer.delivered}
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white/90 dark:bg-slate-800/85 border border-slate-200/70 dark:border-slate-700/70 p-2">
-                      <div className="text-slate-500 dark:text-slate-400 font-medium">รอรับรถ</div>
-                      <div className="text-sm font-black text-emerald-700 dark:text-emerald-300 mt-0.5">
-                        {focusedDealer.approvedPending}
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white/90 dark:bg-slate-800/85 border border-slate-200/70 dark:border-slate-700/70 p-2">
-                      <div className="text-slate-500 dark:text-slate-400 font-medium">อื่นๆ</div>
-                      <div className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
-                        {focusedDealer.other}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-sky-200/60 dark:border-slate-700/70 space-y-1 text-[11px] tabular-nums">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวมร้านนี้</span>
-                      <span className="font-black text-indigo-700 dark:text-sky-300">
-                        {formatBaht(Math.round(focusedDealer.finance))}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-slate-500 dark:text-slate-400">ยอดจัดรับรถแล้ว</span>
-                      <span className="font-bold text-teal-700 dark:text-teal-300">
-                        {formatBaht(Math.round(focusedDealer.deliveredFinance))}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-slate-500 dark:text-slate-400">สัดส่วนจากเคสทั้งหมด</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">
-                        {stats.totalCases > 0
-                          ? `${((focusedDealer.total / stats.totalCases) * 100).toFixed(1)}%`
-                          : '0%'}
-                      </span>
-                    </div>
+                    {filteredDealerList.length > 6 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setDealerListExpanded((prev) => !prev);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-white/90 dark:bg-slate-900/75 border border-slate-200/80 dark:border-slate-700/80 text-[10.5px] text-slate-600 dark:text-slate-300 font-bold hover:text-sky-700 dark:hover:text-sky-300 inline-flex items-center gap-1 cursor-pointer whitespace-nowrap transition-colors"
+                      >
+                        {dealerListExpanded ? (
+                          <>
+                            <Minimize2 className="w-3 h-3" />
+                            <span>ย่อกรอบกราฟ</span>
+                          </>
+                        ) : (
+                          <>
+                            <Maximize2 className="w-3 h-3" />
+                            <span>กางครบ {filteredDealerList.length} ร้าน</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Total Reconciliation Box */}
+              {/* Bounded-Height 3D Luminous Bar Viewport with Aligned Scale Gridlines */}
+              <div className="relative flex-1 flex flex-col justify-between">
+                <div className="relative">
+                  {/* Vertical Dashed Gridlines aligned 1:1 with the bar tracks (left-2.5 .. right-[86px]) */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-0 bottom-0 left-2.5 right-[86px] z-0"
+                  >
+                    {[0, 25, 50, 75, 100].map((posPct) => (
+                      <div
+                        key={posPct}
+                        className="absolute top-0 bottom-0 border-l border-dashed border-slate-300/65 dark:border-slate-700/65"
+                        style={{ left: `${posPct}%` }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Scrollable Bounded List (caps height when dealer count grows) */}
+                  <div
+                    className={`relative z-10 space-y-1.5 ${
+                      dealerListExpanded
+                        ? ''
+                        : 'max-h-[268px] overflow-y-auto overscroll-contain tsd-slim-scroll pr-1'
+                    }`}
+                  >
+                    {filteredDealerList.length === 0 ? (
+                      <div className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
+                        ไม่พบร้านที่ตรงกับ &ldquo;{dealerSearchQuery}&rdquo;
+                      </div>
+                    ) : (
+                      filteredDealerList.map((d, idx) => {
+                        const rank = dealerRankMap.get(d.name) ?? idx + 1;
+                        const isPinned = selectedDealerName === d.name;
+                        const isActive = focusedDealerName === d.name;
+                        const isDimmed = Boolean(focusedDealerName && !isActive);
+
+                        const primaryRatio =
+                          dealerMetricMode === 'finance'
+                            ? d.finance / maxDealerFinance
+                            : d.total / maxDealerCases;
+                        const barTrackPct = Math.min(100, Math.max(d.total > 0 ? 4 : 0, primaryRatio * 100));
+
+                        const delShare =
+                          dealerMetricMode === 'finance'
+                            ? d.finance > 0
+                              ? (d.deliveredFinance / d.finance) * 100
+                              : 0
+                            : d.total > 0
+                              ? (d.delivered / d.total) * 100
+                              : 0;
+                        const nonDelShare = Math.max(0, 100 - delShare);
+                        const pendPartRatio =
+                          d.total - d.delivered > 0 ? d.approvedPending / (d.total - d.delivered) : 0;
+                        const pendShare =
+                          dealerMetricMode === 'finance'
+                            ? nonDelShare * pendPartRatio
+                            : d.total > 0
+                              ? (d.approvedPending / d.total) * 100
+                              : 0;
+                        const otherShare = Math.max(0, 100 - delShare - pendShare);
+
+                        const rankBadgeClass =
+                          rank === 1
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-2xs shadow-amber-500/30'
+                            : rank === 2
+                              ? 'bg-gradient-to-br from-sky-400 to-indigo-500 text-white shadow-2xs shadow-sky-500/25'
+                              : rank === 3
+                                ? 'bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-2xs shadow-teal-500/25'
+                                : 'bg-slate-200/85 dark:bg-slate-700/85 text-slate-600 dark:text-slate-300';
+
+                        return (
+                          <button
+                            key={d.name}
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('selection');
+                              setSelectedDealerName((prev) => (prev === d.name ? null : d.name));
+                            }}
+                            onMouseEnter={() => setHoveredDealerName(d.name)}
+                            onMouseLeave={() => setHoveredDealerName(null)}
+                            aria-pressed={isPinned}
+                            className={`group w-full text-left rounded-xl px-2.5 py-1.5 border transition-all duration-150 cursor-pointer space-y-1 ${
+                              isActive
+                                ? 'bg-white dark:bg-slate-800/95 border-sky-300/95 dark:border-sky-500/80 shadow-sm shadow-sky-500/10'
+                                : isDimmed
+                                  ? 'border-transparent opacity-50 hover:opacity-95'
+                                  : 'border-transparent hover:bg-white/85 dark:hover:bg-slate-800/70'
+                            }`}
+                          >
+                            {/* Top Info Line */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span
+                                  className={`w-4 h-4 rounded-md text-[9.5px] font-black tabular-nums flex items-center justify-center shrink-0 ${rankBadgeClass}`}
+                                >
+                                  {rank}
+                                </span>
+                                <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                                  {d.name}
+                                </span>
+                              </div>
+                              <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap shrink-0">
+                                รับรถ{' '}
+                                <strong className="text-teal-700 dark:text-teal-300">
+                                  {d.delivered}
+                                </strong>
+                                /{d.total} ·{' '}
+                                <strong className="text-sky-700 dark:text-sky-300">
+                                  {dealerMetricMode === 'finance'
+                                    ? `${d.total} เคส`
+                                    : formatCompactBaht(d.finance)}
+                                </strong>
+                              </span>
+                            </div>
+
+                            {/* Bottom 3D Recessed Track + Luminous Liquid Bar + Fixed-Width Right Metric */}
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex-1 h-3 rounded-full bg-slate-200/75 dark:bg-slate-900/80 shadow-[inset_0_1px_2px_rgba(15,23,42,0.14)] overflow-hidden p-[1px]">
+                                <div
+                                  style={{
+                                    width: `${barTrackPct}%`,
+                                    animationDelay: `${Math.min(idx, 10) * 35}ms`,
+                                  }}
+                                  className={`animate-dealer-bar-grow relative h-full rounded-full overflow-hidden flex transition-[box-shadow,filter] duration-200 ${
+                                    isActive
+                                      ? 'shadow-[0_0_12px_rgba(14,165,233,0.45)] brightness-105'
+                                      : ''
+                                  }`}
+                                >
+                                  {delShare > 0 && (
+                                    <div
+                                      style={{ width: `${delShare}%` }}
+                                      className="h-full bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-400"
+                                    />
+                                  )}
+                                  {pendShare > 0 && (
+                                    <div
+                                      style={{ width: `${pendShare}%` }}
+                                      className="h-full bg-gradient-to-r from-emerald-400 to-lime-300"
+                                    />
+                                  )}
+                                  {otherShare > 0 && (
+                                    <div
+                                      style={{ width: `${otherShare}%` }}
+                                      className="h-full bg-gradient-to-r from-slate-400 to-slate-500"
+                                    />
+                                  )}
+                                  {/* 3D Top Bevel Specular Highlight */}
+                                  <span
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute inset-x-0 top-0 h-[48%] bg-gradient-to-b from-white/45 to-transparent"
+                                  />
+                                  {/* Smooth Hover/Active Sheen Sweep */}
+                                  <span
+                                    aria-hidden="true"
+                                    className={`dealer-bar-sheen pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-transparent via-white/55 to-transparent -translate-x-full ${
+                                      isActive ? 'dealer-bar-sheen-active' : ''
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+
+                              <span className="w-[68px] text-right text-[11px] font-black tabular-nums text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0">
+                                {dealerMetricMode === 'finance'
+                                  ? formatCompactBaht(d.finance)
+                                  : `${d.total} เคส`}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Pinned X-Axis Scale Footer aligned to Bar Tracks */}
+                <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-700/70 space-y-1">
+                  <div className="relative ml-2.5 mr-[86px] h-4 text-[9.5px] font-bold text-slate-400 dark:text-slate-500 tabular-nums select-none">
+                    <span className="absolute left-0">0</span>
+                    <span className="absolute -translate-x-1/2" style={{ left: '50%' }}>
+                      {dealerMetricMode === 'finance'
+                        ? formatCompactBaht(maxDealerFinance / 2)
+                        : Math.round(maxDealerCases / 2)}
+                    </span>
+                    <span className="absolute right-0">
+                      {dealerMetricMode === 'finance'
+                        ? formatCompactBaht(maxDealerFinance)
+                        : `${maxDealerCases} เคส`}
+                    </span>
+                  </div>
+
+                  {!dealerListExpanded && filteredDealerList.length > 5 && (
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-1">
+                      <span>เลื่อนภายในกรอบเพื่อดูครบทั้ง {filteredDealerList.length} ร้าน</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setDealerListExpanded(true);
+                        }}
+                        className="font-bold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
+                      >
+                        ขยายดูทั้งหมด →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right 4 cols: Futuristic Radial Spotlight Pod + Portfolio Reconciliation */}
+            <div className="lg:col-span-4 flex flex-col justify-between gap-2.5 min-w-0">
+              {focusedDealer &&
+                (() => {
+                  const total = Math.max(1, focusedDealer.total);
+                  const delPct = (focusedDealer.delivered / total) * 100;
+                  const pendPct = (focusedDealer.approvedPending / total) * 100;
+                  const otherPct = Math.max(0, 100 - delPct - pendPct);
+                  const ringR = 37;
+                  const ringC = 2 * Math.PI * ringR;
+                  const delLen = (delPct / 100) * ringC;
+                  const pendLen = (pendPct / 100) * ringC;
+                  const otherLen = (otherPct / 100) * ringC;
+                  const avgFinancePerCase = Math.round(focusedDealer.finance / total);
+                  const caseSharePct =
+                    stats.totalCases > 0 ? (focusedDealer.total / stats.totalCases) * 100 : 0;
+                  const financeSharePct =
+                    stats.totalFinance > 0 ? (focusedDealer.finance / stats.totalFinance) * 100 : 0;
+
+                  return (
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50/95 via-white to-teal-50/85 dark:from-sky-950/60 dark:via-slate-900 dark:to-teal-950/50 border border-sky-200/85 dark:border-sky-800/75 p-3.5 space-y-3 shadow-xs">
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none -right-8 -top-8 absolute w-24 h-24 rounded-full bg-teal-400/15 dark:bg-teal-400/10 blur-xl"
+                      />
+
+                      {/* Spotlight Header */}
+                      <div className="relative flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 block">
+                            อันดับ #{focusedDealerRank} ·{' '}
+                            {focusedDealerName ? 'ร้านที่กำลังดู' : 'ผลงานสูงสุด'}
+                          </span>
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white truncate mt-0.5">
+                            {focusedDealer.name}
+                          </h4>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-sky-600 to-teal-600 text-white text-[11px] font-black tabular-nums shrink-0 shadow-2xs">
+                          {focusedDealer.total} เคส
+                        </span>
+                      </div>
+
+                      {/* 3D SVG Segmented Conversion Ring + Compact 3-Row Breakdown */}
+                      <div className="relative flex items-center gap-3">
+                        <div className="relative w-[88px] h-[88px] shrink-0 flex items-center justify-center">
+                          <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 overflow-visible">
+                            <defs>
+                              <linearGradient id="tsdDealerRingDel" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#14b8a6" />
+                                <stop offset="100%" stopColor="#22d3ee" />
+                              </linearGradient>
+                              <linearGradient id="tsdDealerRingPend" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#34d399" />
+                                <stop offset="100%" stopColor="#a3e635" />
+                              </linearGradient>
+                              <filter id="tsdDealerRingGlow" x="-25%" y="-25%" width="150%" height="150%">
+                                <feDropShadow dx="0" dy="1.5" stdDeviation="2.2" floodColor="#0d9488" floodOpacity="0.32" />
+                              </filter>
+                            </defs>
+                            <circle
+                              cx={50}
+                              cy={50}
+                              r={ringR}
+                              fill="none"
+                              stroke="currentColor"
+                              className="text-slate-200/80 dark:text-slate-800"
+                              strokeWidth={9}
+                            />
+                            {otherLen > 0 && (
+                              <circle
+                                cx={50}
+                                cy={50}
+                                r={ringR}
+                                fill="none"
+                                stroke="#94a3b8"
+                                strokeWidth={9}
+                                strokeLinecap="round"
+                                strokeDasharray={`${otherLen} ${ringC}`}
+                                strokeDashoffset={-(delLen + pendLen)}
+                                style={{
+                                  transition:
+                                    'stroke-dasharray 450ms cubic-bezier(0.16, 1, 0.3, 1), stroke-dashoffset 450ms cubic-bezier(0.16, 1, 0.3, 1)',
+                                }}
+                              />
+                            )}
+                            {pendLen > 0 && (
+                              <circle
+                                cx={50}
+                                cy={50}
+                                r={ringR}
+                                fill="none"
+                                stroke="url(#tsdDealerRingPend)"
+                                strokeWidth={9}
+                                strokeLinecap="round"
+                                strokeDasharray={`${pendLen} ${ringC}`}
+                                strokeDashoffset={-delLen}
+                                style={{
+                                  transition:
+                                    'stroke-dasharray 450ms cubic-bezier(0.16, 1, 0.3, 1), stroke-dashoffset 450ms cubic-bezier(0.16, 1, 0.3, 1)',
+                                }}
+                              />
+                            )}
+                            {delLen > 0 && (
+                              <circle
+                                cx={50}
+                                cy={50}
+                                r={ringR}
+                                fill="none"
+                                stroke="url(#tsdDealerRingDel)"
+                                strokeWidth={9.5}
+                                strokeLinecap="round"
+                                strokeDasharray={`${delLen} ${ringC}`}
+                                strokeDashoffset={0}
+                                filter="url(#tsdDealerRingGlow)"
+                                style={{
+                                  transition:
+                                    'stroke-dasharray 450ms cubic-bezier(0.16, 1, 0.3, 1)',
+                                }}
+                              />
+                            )}
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                            <span className="text-[15px] font-black text-slate-900 dark:text-white tabular-nums leading-none">
+                              {delPct.toFixed(0)}%
+                            </span>
+                            <span className="text-[9px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">
+                              รับรถแล้ว
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Clean Tabular Status Breakdown */}
+                        <div className="flex-1 min-w-0 divide-y divide-sky-200/50 dark:divide-slate-700/60 text-[11px] tabular-nums">
+                          <div className="py-1 flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-full bg-teal-500 shrink-0" />
+                              <span>รับรถแล้ว</span>
+                            </span>
+                            <span className="font-black text-teal-700 dark:text-teal-300">
+                              {focusedDealer.delivered}
+                            </span>
+                          </div>
+                          <div className="py-1 flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                              <span>รอรับรถ</span>
+                            </span>
+                            <span className="font-black text-emerald-700 dark:text-emerald-300">
+                              {focusedDealer.approvedPending}
+                            </span>
+                          </div>
+                          <div className="py-1 flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+                              <span>รอผล/อื่นๆ</span>
+                            </span>
+                            <span className="font-black text-slate-700 dark:text-slate-200">
+                              {focusedDealer.other}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Financial & Share Telemetry Rows */}
+                      <div className="pt-2 border-t border-sky-200/65 dark:border-slate-700/70 space-y-1.5 text-[11px] tabular-nums">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400">ยอดจัดรวมร้านนี้</span>
+                          <span className="font-black text-indigo-700 dark:text-sky-300">
+                            {formatBaht(Math.round(focusedDealer.finance))}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400">ยอดจัดรับรถแล้ว</span>
+                          <span className="font-bold text-teal-700 dark:text-teal-300">
+                            {formatBaht(Math.round(focusedDealer.deliveredFinance))}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400">เฉลี่ยยอดจัด / เคส</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-200">
+                            {formatBaht(avgFinancePerCase)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400">สัดส่วนเคส · ยอดจัด</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">
+                            {caseSharePct.toFixed(1)}% · {financeSharePct.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              {/* Total Portfolio Reconciliation Box */}
               <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 p-3 space-y-1.5 text-[11px] tabular-nums">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-bold text-slate-700 dark:text-slate-200">
@@ -3450,47 +3881,59 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
             </div>
           </div>
         ) : (
-          /* List View Mode */
-          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
+          /* List View Mode (Bounded height with sticky header) */
+          <div className="overflow-auto max-h-[360px] tsd-slim-scroll rounded-2xl border border-slate-200/80 dark:border-slate-800">
             <table className="w-full text-left border-collapse text-xs tabular-nums">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-700">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-xs text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-700">
                   <th className="py-2.5 px-3 font-bold">#</th>
                   <th className="py-2.5 px-3 font-bold">ร้านตัวแทน / สาขา</th>
                   <th className="py-2.5 px-3 text-right font-bold">ทั้งหมด</th>
                   <th className="py-2.5 px-3 text-right font-bold">รับรถแล้ว</th>
                   <th className="py-2.5 px-3 text-right font-bold">รอรับรถ</th>
                   <th className="py-2.5 px-3 text-right font-bold">อื่นๆ</th>
+                  <th className="py-2.5 px-3 text-right font-bold">อัตราส่งมอบ</th>
                   <th className="py-2.5 px-3 text-right font-bold">ยอดจัดรวม</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {dealerSummaryList.map((d, idx) => (
-                  <tr
-                    key={d.name}
-                    className="hover:bg-sky-50/50 dark:hover:bg-slate-800/60 transition-colors"
-                  >
-                    <td className="py-2 px-3 font-bold text-slate-400">{idx + 1}</td>
-                    <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-100">
-                      {d.name}
-                    </td>
-                    <td className="py-2 px-3 text-right font-black text-slate-900 dark:text-white">
-                      {d.total} เคส
-                    </td>
-                    <td className="py-2 px-3 text-right font-bold text-teal-700 dark:text-teal-300">
-                      {d.delivered}
-                    </td>
-                    <td className="py-2 px-3 text-right font-semibold text-emerald-700 dark:text-emerald-300">
-                      {d.approvedPending}
-                    </td>
-                    <td className="py-2 px-3 text-right text-slate-500 dark:text-slate-400">
-                      {d.other}
-                    </td>
-                    <td className="py-2 px-3 text-right font-extrabold text-indigo-700 dark:text-sky-300 whitespace-nowrap">
-                      {formatBaht(Math.round(d.finance))}
-                    </td>
-                  </tr>
-                ))}
+                {sortedDealerList.map((d, idx) => {
+                  const delRate = d.total > 0 ? (d.delivered / d.total) * 100 : 0;
+                  return (
+                    <tr
+                      key={d.name}
+                      onClick={() => {
+                        triggerHaptic('selection');
+                        setSelectedDealerName(d.name);
+                        setDealerViewMode('chart');
+                      }}
+                      className="hover:bg-sky-50/60 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                    >
+                      <td className="py-2 px-3 font-bold text-slate-400">{idx + 1}</td>
+                      <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-100">
+                        {d.name}
+                      </td>
+                      <td className="py-2 px-3 text-right font-black text-slate-900 dark:text-white">
+                        {d.total} เคส
+                      </td>
+                      <td className="py-2 px-3 text-right font-bold text-teal-700 dark:text-teal-300">
+                        {d.delivered}
+                      </td>
+                      <td className="py-2 px-3 text-right font-semibold text-emerald-700 dark:text-emerald-300">
+                        {d.approvedPending}
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-500 dark:text-slate-400">
+                        {d.other}
+                      </td>
+                      <td className="py-2 px-3 text-right font-bold text-teal-700 dark:text-teal-300">
+                        {delRate.toFixed(0)}%
+                      </td>
+                      <td className="py-2 px-3 text-right font-extrabold text-indigo-700 dark:text-sky-300 whitespace-nowrap">
+                        {formatBaht(Math.round(d.finance))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
