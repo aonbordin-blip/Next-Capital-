@@ -1668,37 +1668,48 @@ export default function App() {
           <aside
             aria-label="เมนูหลักแถบข้าง"
             className={`relative z-20 shrink-0 saas-sidebar-surface backdrop-blur-xl flex flex-col justify-between select-none ${
-              isSidebarCollapsed ? 'w-[74px]' : 'w-[228px] lg:w-[244px]'
+              isSidebarCollapsed ? 'w-[76px]' : 'w-[236px] lg:w-[252px]'
             }`}
           >
-            {/* Circular Collapse Toggle on Sidebar Edge */}
+            {/* Ambient Moving Aurora & Crystal Edge Layer (hidden cleanly in Light mode) */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden sidebar-aurora-layer" aria-hidden="true">
+              <div className="absolute -top-12 -left-10 w-44 h-44 rounded-full bg-gradient-to-br from-sky-300/35 via-indigo-300/20 to-transparent dark:from-sky-500/18 dark:via-indigo-500/12 blur-2xl animate-sidebar-aurora" />
+              <div className="absolute -bottom-14 -right-10 w-40 h-40 rounded-full bg-gradient-to-tl from-cyan-300/30 via-sky-200/15 to-transparent dark:from-cyan-500/15 dark:via-blue-600/10 blur-2xl" />
+              <div className="absolute inset-y-4 right-0 w-[1px] bg-gradient-to-b from-white/80 via-sky-200/40 to-transparent dark:from-sky-400/25 dark:via-slate-700/20" />
+            </div>
+
+            {/* 3D Glossy Circular Collapse Toggle on Sidebar Edge */}
             <button
               type="button"
               onClick={() => {
                 triggerHaptic('light');
                 setIsSidebarCollapsed((prev) => !prev);
               }}
-              className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-sky-400 hover:scale-105 transition-all cursor-pointer z-30"
+              className="group absolute -right-3.5 top-6 w-7 h-7 rounded-full saas-control-pill flex items-center justify-center text-slate-600 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-300 hover:scale-110 active:scale-95 transition-all cursor-pointer z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               title={isSidebarCollapsed ? 'ขยายเมนูด้านข้าง' : 'ย่อเมนูด้านข้าง'}
               aria-label={isSidebarCollapsed ? 'ขยายเมนูด้านข้าง' : 'ย่อเมนูด้านข้าง'}
             >
               {isSidebarCollapsed ? (
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
               ) : (
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" />
               )}
             </button>
 
-            <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-4">
-              {/* Brand Block */}
+            <div className="relative z-10 flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-4">
+              {/* Brand Block with 3D Floating Jewel Tile */}
               <div
                 className={`flex items-center ${
                   isSidebarCollapsed ? 'justify-center' : 'gap-2.5 px-1'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 p-1.5 shadow-sm flex items-center justify-center shrink-0">
-                  <div className="w-full h-full rounded-lg bg-white flex items-center justify-center">
-                    <NextCapitalLogo size={18} className="flex items-center justify-center" />
+                <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 p-[2px] shadow-md shadow-sky-500/25 flex items-center justify-center shrink-0 overflow-hidden transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105">
+                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-950 flex items-center justify-center relative overflow-hidden">
+                    <NextCapitalLogo size={20} className="relative z-10 flex items-center justify-center" />
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-sky-200/45 to-transparent animate-crystal-sheen"
+                    />
                   </div>
                 </div>
                 {!isSidebarCollapsed && (
@@ -1706,14 +1717,14 @@ export default function App() {
                     <div className="text-xs font-black tracking-tight text-slate-900 dark:text-white uppercase truncate">
                       NEXT CAPITAL
                     </div>
-                    <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                    <div className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       MotoLease Calc 2569
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Officer / User Profile Card */}
+              {/* Officer / User Profile 3D Crystal Card */}
               <button
                 type="button"
                 onClick={() => {
@@ -1727,40 +1738,66 @@ export default function App() {
                       ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }, 120);
                 }}
-                className={`w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/70 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center ${
-                  isSidebarCollapsed ? 'justify-center p-2' : 'gap-2.5 p-2.5 text-left'
+                className={`group relative overflow-hidden w-full rounded-2xl sidebar-profile-card active:scale-[0.985] cursor-pointer flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                  isSidebarCollapsed ? 'justify-center p-1.5' : 'gap-2.5 p-2.5 text-left'
                 }`}
                 title="แก้ไขข้อมูลเจ้าหน้าที่ / ตัวแทน"
               >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white font-extrabold text-xs flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
-                  {firebaseUser?.photoURL && failedAvatarUrl !== firebaseUser.photoURL ? (
-                    <img
-                      src={firebaseUser.photoURL}
-                      alt={officerName || 'Officer'}
-                      referrerPolicy="no-referrer"
-                      onError={() => setFailedAvatarUrl(firebaseUser.photoURL || null)}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span>{(officerName || 'จ').slice(0, 2)}</span>
-                  )}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-3 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/90 to-transparent dark:via-sky-300/25"
+                />
+                <div className="relative w-9 h-9 shrink-0 rounded-full p-[2px] transition-transform duration-200 group-hover:scale-105">
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-cyan-300 opacity-85 animate-sidebar-avatar-ring"
+                  />
+                  <div className="relative w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white font-extrabold text-xs flex items-center justify-center overflow-hidden ring-2 ring-white dark:ring-slate-900">
+                    {firebaseUser?.photoURL && failedAvatarUrl !== firebaseUser.photoURL ? (
+                      <img
+                        src={firebaseUser.photoURL}
+                        alt={officerName || 'Officer'}
+                        referrerPolicy="no-referrer"
+                        onError={() => setFailedAvatarUrl(firebaseUser.photoURL || null)}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{(officerName || 'จ').slice(0, 2)}</span>
+                    )}
+                  </div>
                 </div>
                 {!isSidebarCollapsed && (
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
-                      {officerName || 'เจ้าหน้าที่'}
+                  <>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                        {officerName || 'เจ้าหน้าที่'}
+                      </div>
+                      <div className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 truncate tabular-nums">
+                        {officerCode ? `รหัส ${officerCode}` : 'แตะตั้งค่าเจ้าหน้าที่'}
+                      </div>
                     </div>
-                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
-                      {officerCode ? `รหัส ${officerCode}` : 'แตะตั้งค่าเจ้าหน้าที่'}
-                    </div>
-                  </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-sky-600 dark:group-hover:text-sky-400" />
+                  </>
                 )}
               </button>
 
-              {/* Primary Navigation */}
-              <nav aria-label="แถบนำทางหลัก" className="space-y-1">
+              {/* Primary Navigation with Sliding 3D Capsule Indicator */}
+              <nav aria-label="แถบนำทางหลัก" className="relative flex flex-col gap-1.5">
+                {/* Sliding 3D Gradient Active Capsule */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-[44px] rounded-2xl sidebar-nav-active-pill overflow-hidden"
+                  style={{
+                    transform: `translate3d(0, ${Math.max(0, NAV_TABS.findIndex((t) => t.id === activeTab)) * 50}px, 0)`,
+                  }}
+                >
+                  <div className="absolute inset-x-2.5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 to-transparent" />
+                  <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-sidebar-sheen" />
+                </div>
+
                 {NAV_TABS.map((tab) => {
                   const isActive = activeTab === tab.id;
+                  const isJustTapped = navAnimState.tab === tab.id && navAnimState.key > 0;
                   const Icon = tab.icon;
                   const displayLabel = tab.id === 'home' ? 'แดชบอร์ด' : tab.label;
                   return (
@@ -1769,27 +1806,46 @@ export default function App() {
                       type="button"
                       onClick={() => handleTabChange(tab.id)}
                       title={displayLabel}
-                      className={`w-full flex items-center rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`group relative z-10 h-[44px] w-full flex items-center rounded-2xl font-bold text-xs transition-colors duration-200 cursor-pointer whitespace-nowrap active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                         isSidebarCollapsed
-                          ? 'justify-center p-2.5'
-                          : 'gap-2.5 px-3 py-2.5 text-left'
+                          ? 'justify-center px-1'
+                          : 'justify-between gap-2.5 px-2.5 text-left'
                       } ${
                         isActive
-                          ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 text-white shadow-md shadow-indigo-500/25'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
+                          ? 'text-white'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-white/65 dark:hover:bg-slate-800/65 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      {!isSidebarCollapsed && <span className="truncate">{displayLabel}</span>}
+                      <span className="inline-flex items-center gap-2.5 min-w-0">
+                        <span
+                          key={isJustTapped ? `${tab.id}-${navAnimState.key}` : tab.id}
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                            isActive
+                              ? 'bg-white/22 border border-white/35 shadow-inner text-white'
+                              : 'sidebar-icon-socket text-slate-600 dark:text-slate-300 group-hover:text-sky-600 dark:group-hover:text-sky-400 group-hover:scale-110 group-hover:-rotate-3'
+                          } ${isJustTapped ? 'animate-tab-icon' : ''}`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                        </span>
+                        {!isSidebarCollapsed && (
+                          <span className="truncate transition-transform duration-200 group-hover:translate-x-0.5">
+                            {displayLabel}
+                          </span>
+                        )}
+                      </span>
+                      {!isSidebarCollapsed && isActive && (
+                        <ChevronRight className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      )}
                     </button>
                   );
                 })}
               </nav>
 
               {/* Quick Workspace Shortcuts */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+              <div className="pt-2.5 border-t border-slate-200/75 dark:border-slate-800/85 space-y-1">
                 {!isSidebarCollapsed && (
-                  <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  <div className="px-2 pb-1 text-[10.5px] font-bold tracking-wide text-slate-400 dark:text-slate-500">
                     จัดการข้อมูลด่วน
                   </div>
                 )}
@@ -1800,18 +1856,20 @@ export default function App() {
                     setShowSavedCases(true);
                   }}
                   title={`ตารางเคสทั้งหมด (${savedCasesCount})`}
-                  className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer whitespace-nowrap ${
+                  className={`group sidebar-shortcut-btn h-[40px] w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer whitespace-nowrap active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                     isSidebarCollapsed
-                      ? 'justify-center p-2.5'
-                      : 'justify-between gap-2 px-3 py-2 text-left'
+                      ? 'justify-center px-1'
+                      : 'justify-between gap-2 px-2.5 text-left'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2.5 min-w-0">
-                    <FolderArchive className="w-4 h-4 text-indigo-500 dark:text-sky-400 shrink-0" />
+                    <span className="w-7 h-7 rounded-lg bg-indigo-50/90 dark:bg-indigo-950/70 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
+                      <FolderArchive className="w-3.5 h-3.5 text-indigo-600 dark:text-sky-400 shrink-0" />
+                    </span>
                     {!isSidebarCollapsed && <span className="truncate">ตารางเคสทั้งหมด</span>}
                   </span>
                   {!isSidebarCollapsed && (
-                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold tabular-nums">
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold tabular-nums">
                       {savedCasesCount}
                     </span>
                   )}
@@ -1824,12 +1882,21 @@ export default function App() {
                     setShowBikePresets(true);
                   }}
                   title="เลือกรุ่นรถจักรยานยนต์"
-                  className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer whitespace-nowrap ${
-                    isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-3 py-2 text-left'
+                  className={`group sidebar-shortcut-btn h-[40px] w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer whitespace-nowrap active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    isSidebarCollapsed
+                      ? 'justify-center px-1'
+                      : 'justify-between gap-2 px-2.5 text-left'
                   }`}
                 >
-                  <Bike className="w-4 h-4 text-sky-500 shrink-0" />
-                  {!isSidebarCollapsed && <span className="truncate">เลือกรุ่นรถ</span>}
+                  <span className="inline-flex items-center gap-2.5 min-w-0">
+                    <span className="w-7 h-7 rounded-lg bg-sky-50/90 dark:bg-sky-950/70 border border-sky-200/60 dark:border-sky-800/60 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
+                      <Bike className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                    </span>
+                    {!isSidebarCollapsed && <span className="truncate">เลือกรุ่นรถ</span>}
+                  </span>
+                  {!isSidebarCollapsed && (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  )}
                 </button>
 
                 <button
@@ -1839,29 +1906,34 @@ export default function App() {
                     setShowCloudSyncModal(true);
                   }}
                   title="ซิงค์ข้อมูล Cloud"
-                  className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer whitespace-nowrap ${
+                  className={`group sidebar-shortcut-btn h-[40px] w-full flex items-center rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer whitespace-nowrap active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                     isSidebarCollapsed
-                      ? 'justify-center p-2.5'
-                      : 'justify-between gap-2 px-3 py-2 text-left'
+                      ? 'justify-center px-1'
+                      : 'justify-between gap-2 px-2.5 text-left'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2.5 min-w-0">
-                    {firebaseUser && syncStatus === 'syncing' ? (
-                      <RefreshCw className="w-4 h-4 text-sky-500 animate-spin shrink-0" />
-                    ) : (
-                      <Cloud className="w-4 h-4 text-emerald-500 shrink-0" />
-                    )}
+                    <span className="w-7 h-7 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/70 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
+                      {firebaseUser && syncStatus === 'syncing' ? (
+                        <RefreshCw className="w-3.5 h-3.5 text-sky-500 animate-spin shrink-0" />
+                      ) : (
+                        <Cloud className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      )}
+                    </span>
                     {!isSidebarCollapsed && <span className="truncate">ซิงค์ Cloud</span>}
                   </span>
                   {!isSidebarCollapsed && firebaseUser && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                      <span>พร้อม</span>
+                    </span>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Bottom Color Scheme Section */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            {/* Bottom Color Scheme Glass Dock */}
+            <div className="relative z-10 p-3 border-t border-slate-200/75 dark:border-slate-800/85 space-y-2">
               {isSidebarCollapsed ? (
                 <button
                   type="button"
@@ -1878,23 +1950,25 @@ export default function App() {
                   title={`เปลี่ยนโหมดสี (ปัจจุบัน: ${
                     boxTheme === 'light' ? 'สว่าง' : boxTheme === 'dark' ? 'โหมดมืด' : 'มีมิติ'
                   })`}
-                  className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                  className="group w-full h-[42px] rounded-2xl sidebar-theme-dock flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
                   {boxTheme === 'light' ? (
-                    <Sun className="w-4 h-4 text-amber-500" />
+                    <Sun className="w-4 h-4 text-amber-500 transition-transform duration-300 group-hover:rotate-45" />
                   ) : boxTheme === 'dark' ? (
-                    <Moon className="w-4 h-4 text-sky-400" />
+                    <Moon className="w-4 h-4 text-sky-400 transition-transform duration-300 group-hover:-rotate-12" />
                   ) : (
-                    <Layers className="w-4 h-4 text-indigo-500 dark:text-sky-400" />
+                    <Layers className="w-4 h-4 text-indigo-500 dark:text-sky-400 transition-transform duration-300 group-hover:scale-110" />
                   )}
                 </button>
               ) : (
                 <>
-                  <div className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 px-1">
-                    โหมดสีแสดงผล
+                  <div className="rounded-2xl sidebar-theme-dock p-2 space-y-1.5">
+                    <div className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 px-1">
+                      โหมดสีแสดงผล
+                    </div>
+                    <BoxThemeToggle compact className="w-full justify-center" />
                   </div>
-                  <BoxThemeToggle compact className="w-full justify-center" />
-                  <div className="text-[9.5px] text-center text-slate-400 dark:text-slate-500 pt-0.5">
+                  <div className="text-[9.5px] text-center text-slate-400 dark:text-slate-500">
                     พัฒนาระบบโดย Aonbordin
                   </div>
                 </>
