@@ -68,8 +68,8 @@ export const PROPOSALS: Record<ProposalKey, ProposalDefinition> = {
     category: 'รถครอบครัว / ออโตเมติกขนาดเล็ก',
     defaultDownMode: 'amount',
     defaultDownValue: 5000,
-    validTerms: [12, 18, 24, 30, 36, 42],
-    description: 'อัตราดอกเบี้ย Flat Rate 1.06% - 1.10% ต่อเดือน ตามระยะเวลางวดผ่อน',
+    validTerms: [12, 18, 24, 30, 36, 42, 48],
+    description: 'อัตราดอกเบี้ย Flat Rate 1.06% - 1.11% ต่อเดือน ตามระยะเวลางวดผ่อน',
     badgeColor: 'bg-blue-100 text-blue-700 border-blue-200',
     conditionNote: 'คำนวณตามหลักเกณฑ์เช่าซื้อมาตรฐาน Flat Rate',
   },
@@ -875,7 +875,8 @@ export function calculateLease(
     else if (validTerm === 24) proposalMonthlyRate = 0.0107;
     else if (validTerm === 30) proposalMonthlyRate = 0.0108;
     else if (validTerm === 36) proposalMonthlyRate = 0.0109; // ขออัตรา 1.090%
-    else proposalMonthlyRate = 0.011; // 42
+    else if (validTerm === 42) proposalMonthlyRate = 0.011; // 42
+    else proposalMonthlyRate = 0.0111; // 48
     rateDisplayText = `${(proposalMonthlyRate * 100).toFixed(2)}% ต่อเดือน (Flat Rate)`;
   } else if (proposalKey === 'fazzio') {
     proposalMonthlyRate = 0.011;

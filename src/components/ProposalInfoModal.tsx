@@ -113,6 +113,7 @@ export const ProposalInfoModal: React.FC<Props> = ({
                       <div>• 30 งวด: 1.08%/เดือน</div>
                       <div>• 36 งวด: 1.09%/เดือน</div>
                       <div>• 42 งวด: 1.10%/เดือน</div>
+                      <div>• 48 งวด: 1.11%/เดือน</div>
                     </div>
                   )}
 
