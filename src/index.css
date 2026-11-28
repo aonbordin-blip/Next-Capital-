@@ -1767,6 +1767,35 @@
   will-change: transform;
 }
 
+/* Smooth Continuous Stepped Donut Rotation */
+@keyframes deal-donut-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes deal-donut-counter-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-deal-donut-spin {
+  animation: deal-donut-spin 24s linear infinite;
+  will-change: transform;
+}
+
+.animate-deal-donut-counter-spin {
+  animation: deal-donut-counter-spin 24s linear infinite;
+  will-change: transform;
+}
+
 /* Prevent Chrome/Android tap black focus outline on Recharts SVG surfaces */
 .recharts-wrapper,
 .recharts-wrapper:focus,
@@ -1801,6 +1830,8 @@
   .animate-card-wave-front,
   .animate-card-wave-back,
   .animate-card-wave-swell,
+  .animate-deal-donut-spin,
+  .animate-deal-donut-counter-spin,
   .animate-sidebar-aurora,
   .animate-sidebar-sheen,
   .animate-sidebar-avatar-ring {

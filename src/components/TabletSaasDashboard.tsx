@@ -2290,61 +2290,82 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                     className="fill-slate-200/90 dark:fill-slate-800"
                   />
                 ) : (
-                  steppedPieSlices.map((slice) => {
-                    const isFocused = focusedDealKey === slice.key;
-                    const isDimmed = focusedDealKey !== null && !isFocused;
-                    return (
-                      <g
-                        key={slice.key}
-                        onMouseEnter={() => setHoveredDealKey(slice.key)}
-                        onMouseLeave={() => setHoveredDealKey(null)}
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setPinnedDealKey((prev) => (prev === slice.key ? null : slice.key));
-                        }}
-                        style={{
-                          transform: isFocused ? 'scale(1.035)' : 'scale(1)',
-                          transformOrigin: '110px 110px',
-                          opacity: isDimmed ? 0.34 : 1,
-                          transition:
-                            'transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <path
-                          d={slice.path}
-                          fill={`url(#${slice.gradId})`}
-                          fillRule="evenodd"
-                          stroke={slice.gradEnd}
-                          strokeOpacity={0.22}
-                          strokeWidth={0.9}
-                          filter={
-                            isFocused
-                              ? 'url(#tsdDealSliceFocusGlow)'
-                              : 'url(#tsdDealSliceBaseShadow)'
-                          }
-                        />
-                        {slice.showInsideLabel && (
-                          <text
-                            x={slice.labelPos.x}
-                            y={slice.labelPos.y}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="#ffffff"
-                            fontSize="11.5"
-                            fontWeight="800"
-                            style={{
-                              pointerEvents: 'none',
-                              fontVariantNumeric: 'tabular-nums',
-                              textShadow: '0 1px 2.5px rgba(15, 23, 42, 0.25)',
-                            }}
-                          >
-                            {Math.round(slice.pct)}%
-                          </text>
-                        )}
-                      </g>
-                    );
-                  })
+                  <g
+                    className="animate-deal-donut-spin"
+                    style={{
+                      transformOrigin: '110px 110px',
+                      transformBox: 'view-box',
+                      animationPlayState: focusedDealKey ? 'paused' : 'running',
+                    }}
+                  >
+                    <rect x={0} y={0} width={220} height={220} fill="none" pointerEvents="none" />
+                    {steppedPieSlices.map((slice) => {
+                      const isFocused = focusedDealKey === slice.key;
+                      const isDimmed = focusedDealKey !== null && !isFocused;
+                      return (
+                        <g
+                          key={slice.key}
+                          onMouseEnter={() => setHoveredDealKey(slice.key)}
+                          onMouseLeave={() => setHoveredDealKey(null)}
+                          onClick={() => {
+                            triggerHaptic('light');
+                            setPinnedDealKey((prev) => (prev === slice.key ? null : slice.key));
+                          }}
+                          style={{
+                            transform: isFocused ? 'scale(1.035)' : 'scale(1)',
+                            transformOrigin: '110px 110px',
+                            transformBox: 'view-box',
+                            opacity: isDimmed ? 0.34 : 1,
+                            transition:
+                              'transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <path
+                            d={slice.path}
+                            fill={`url(#${slice.gradId})`}
+                            fillRule="evenodd"
+                            stroke={slice.gradEnd}
+                            strokeOpacity={0.22}
+                            strokeWidth={0.9}
+                            filter={
+                              isFocused
+                                ? 'url(#tsdDealSliceFocusGlow)'
+                                : 'url(#tsdDealSliceBaseShadow)'
+                            }
+                          />
+                          {slice.showInsideLabel && (
+                            <g
+                              className="animate-deal-donut-counter-spin"
+                              style={{
+                                transformOrigin: `${slice.labelPos.x}px ${slice.labelPos.y}px`,
+                                transformBox: 'view-box',
+                                animationPlayState: focusedDealKey ? 'paused' : 'running',
+                                pointerEvents: 'none',
+                              }}
+                            >
+                              <text
+                                x={slice.labelPos.x}
+                                y={slice.labelPos.y}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fill="#ffffff"
+                                fontSize="11.5"
+                                fontWeight="800"
+                                style={{
+                                  pointerEvents: 'none',
+                                  fontVariantNumeric: 'tabular-nums',
+                                  textShadow: '0 1px 2.5px rgba(15, 23, 42, 0.25)',
+                                }}
+                              >
+                                {Math.round(slice.pct)}%
+                              </text>
+                            </g>
+                          )}
+                        </g>
+                      );
+                    })}
+                  </g>
                 )}
 
                 {/* Prominent Soft Icy Halo Ring separating stepped petals from white center */}
