@@ -59,6 +59,10 @@ import {
   EyeOff,
   Barcode,
   ScanLine,
+  Briefcase,
+  Home,
+  BadgeCheck,
+  UserCheck,
 } from 'lucide-react';
 import { SavedCaseRecord, CaseApprovalStatus, VehicleDeliveryStatus, ApprovalDocInfo } from '../types';
 import { formatBaht } from '../data/proposals';
@@ -216,6 +220,26 @@ function formatThaiDateTime(timestamp: number): string {
   } catch {
     return '';
   }
+}
+
+function formatMonthsToThaiDuration(raw?: string): string {
+  if (!raw || !raw.trim()) return '—';
+  const totalMonths = parseInt(raw.trim(), 10);
+  if (isNaN(totalMonths) || totalMonths < 0) return raw.trim();
+  if (totalMonths === 0) return 'น้อยกว่า 1 เดือน';
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  if (years > 0 && months > 0) return `${years} ปี ${months} เดือน`;
+  if (years > 0) return `${years} ปี`;
+  return `${months} เดือน`;
+}
+
+function formatMonthlyIncomeThai(raw?: string): string {
+  if (!raw || !raw.trim()) return '—';
+  const cleaned = raw.replace(/,/g, '').trim();
+  const num = Number(cleaned);
+  if (isNaN(num) || num <= 0) return raw.trim();
+  return `฿${num.toLocaleString('th-TH')} /เดือน`;
 }
 
 type DealStatusKey = 'pending' | 'approved_pending' | 'delivered' | 'rejected' | 'cancelled';
@@ -2498,610 +2522,1119 @@ export const SavedCasesModal: React.FC<Props> = ({
       {/* =========================================================================
           PANEL 2: DEDICATED CASE DETAIL VIEW (หน้ารายละเอียดเคสที่เลือก)
           ========================================================================= */}
-      {detailCase && (
-        <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
-          {/* Popup Header */}
-          <div className="p-3.5 sm:p-5 pb-3 border-b border-sky-100 dark:border-slate-800 flex items-center justify-between gap-2.5 bg-gradient-to-b from-sky-50/90 to-white dark:from-slate-800/90 dark:to-slate-900 shrink-0">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              {/* ปุ่มย้อนกลับไปหน้ารายการเคส */}
+      {detailCase && (() => {
+        const statusMeta = getDealStatusMeta(detailCase);
+        const installmentEntries = detailCase.installmentPayments
+          ? Object.entries(detailCase.installmentPayments)
+              .map(([k, v]) => ({ num: Number(k), status: v }))
+              .filter((item) => !isNaN(item.num) && item.num >= 1 && item.num <= 9)
+              .sort((a, b) => a.num - b.num)
+          : [];
+        const paidInstallmentCount = installmentEntries.filter((i) => i.status === 'paid').length;
+        const hasDeliveryFees =
+          detailCase.includeDeliveryFees ||
+          detailCase.registrationFee > 0 ||
+          detailCase.theftInsuranceFee > 0;
+        const driveAwayTotal =
+          detailCase.snapshot.totalDriveAwayCost ??
+          (detailCase.vehiclePrice +
+            (detailCase.includeDeliveryFees
+              ? (detailCase.registrationFee || 0) + (detailCase.theftInsuranceFee || 0)
+              : 0));
+
+        return (
+          <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
+            {/* Compact Top Navigation Bar (No squeezed customer name here) */}
+            <div className="px-3.5 sm:px-5 py-3 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2.5 bg-white/85 dark:bg-slate-900/90 backdrop-blur-md shrink-0">
               <button
                 type="button"
                 onClick={() => setDetailCase(null)}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/60 text-slate-700 hover:text-sky-800 dark:text-slate-200 dark:hover:text-sky-300 font-bold text-xs flex items-center gap-1 border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer transition-colors duration-150 shrink-0 active:scale-95 select-none touch-manipulation"
+                className="px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/60 text-slate-700 hover:text-sky-800 dark:text-slate-200 dark:hover:text-sky-300 font-bold text-xs flex items-center gap-1 border border-slate-200/80 dark:border-slate-700 cursor-pointer transition-all duration-150 shrink-0 active:scale-95 select-none touch-manipulation"
                 title="กลับไปยังหน้ารายการเคสทั้งหมด"
               >
                 <ChevronLeft className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                <span className="text-[11px]">รายการ</span>
+                <span>รายการ</span>
               </button>
 
-              {detailCase.customerPhotoUrl ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setShowPhotoPreview((v) => !v);
-                  }}
-                  className="shrink-0 cursor-pointer group/avatar relative focus:outline-none"
-                  title="แตะเพื่อดูรูปโปรไฟล์จากบัตรประชาชน"
-                >
-                  <CustomerAvatar
-                    photoUrl={detailCase.customerPhotoUrl}
-                    customerName={getCustomerDisplayName(detailCase)}
-                    size="lg"
-                    imgRingClassName="border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-500/25 shadow-md group-hover/avatar:scale-105 transition-transform"
-                  />
-                </button>
-              ) : (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                {editingId === detailCase.id ? (
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      value={editTitleInput}
-                      onChange={(e) => setEditTitleInput(e.target.value)}
-                      autoFocus
-                      className="px-2.5 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 bg-sky-50 dark:bg-slate-800 border border-sky-300 dark:border-sky-700 rounded-lg focus:outline-none w-full"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleSaveTitle(detailCase.id)}
-                      className="p-1.5 rounded-lg bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700 shrink-0"
-                      title="บันทึกชื่อ"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(null)}
-                      className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-xs cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-600 shrink-0"
-                      title="ยกเลิก"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 min-w-0">
-                      <MarqueeText fitContent>{getCustomerDisplayName(detailCase)}</MarqueeText>
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => handleStartEditTitle(detailCase)}
-                      className="p-1 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer shrink-0"
-                      title="แก้ไขชื่อลูกค้า"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              {/* Quiet unboxed status indicator */}
+              <div className="min-w-0 flex items-center justify-center gap-1.5 text-xs font-extrabold truncate">
+                <span className={`inline-flex items-center gap-1 truncate ${statusMeta.iconColorClass}`}>
+                  {statusMeta.key === 'delivered' ? (
+                    <PackageCheck className="w-3.5 h-3.5 shrink-0" />
+                  ) : statusMeta.key === 'approved_pending' ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  ) : statusMeta.key === 'rejected' ? (
+                    <XCircle className="w-3.5 h-3.5 shrink-0" />
+                  ) : statusMeta.key === 'cancelled' ? (
+                    <Ban className="w-3.5 h-3.5 shrink-0" />
+                  ) : (
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                  <span className="text-slate-800 dark:text-slate-100 truncate">
+                    {statusMeta.label}
+                  </span>
+                </span>
+                {statusMeta.subLabel && (
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate hidden xs:inline sm:inline">
+                    · {statusMeta.subLabel}
+                  </span>
                 )}
-                <MarqueeText className="text-[11px] text-slate-500 dark:text-slate-400">
-                  บันทึกเมื่อ {formatThaiDateTime(detailCase.createdAt)} • {detailCase.snapshot.proposalCode}
-                </MarqueeText>
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDetailCase(null);
+                  onClose();
+                }}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0 active:scale-95"
+                title="ปิดหน้าต่าง"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setDetailCase(null);
-                onClose();
-              }}
-              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-              title="ปิดหน้าต่าง"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+            {/* Scrollable Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto tsd-slim-scroll p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 overscroll-contain bg-slate-50/70 dark:bg-slate-950/60">
+              {/* 1. HERO PROFILE & CASE STATUS CARD */}
+              <section
+                className="case-detail-surface rounded-2xl p-4 sm:p-5 relative overflow-hidden space-y-3.5 animate-case-detail-rise"
+                style={{ animationDelay: '20ms' }}
+              >
+                {/* Ambient subtle float glow */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-14 -right-12 w-44 h-44 rounded-full bg-gradient-to-br from-sky-400/20 via-cyan-300/15 to-indigo-400/15 dark:from-sky-500/15 dark:via-cyan-500/10 dark:to-indigo-500/10 blur-2xl animate-case-ambient-float"
+                />
 
-          {/* Popup Scrollable Body with smooth touch scrolling and overscroll contain */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
-              {showPhotoPreview && detailCase.customerPhotoUrl && (
-                <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-white to-sky-50/70 dark:from-emerald-950/50 dark:via-slate-900 dark:to-sky-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-3 animate-fade-in">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={detailCase.customerPhotoUrl}
-                      alt={getCustomerDisplayName(detailCase)}
-                      className="w-20 h-20 rounded-2xl object-cover object-top border-2 border-emerald-400 dark:border-emerald-500 shadow-md shrink-0"
-                    />
-                    <div className="min-w-0 space-y-1">
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
-                        {getCustomerDisplayName(detailCase)}
-                      </div>
-                      <div className="text-[10.5px] text-emerald-800 dark:text-emerald-300 font-semibold">
-                        รูปโปรไฟล์จากบัตรประชาชน
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('warning');
-                          const updated = updateCaseCustomerPhoto(detailCase.id, undefined);
-                          setCases(updated);
-                          setShowPhotoPreview(false);
-                          showToast('ลบรูปโปรไฟล์ออกจากเคสนี้แล้ว');
-                        }}
-                        className="text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
-                      >
-                        ลบรูปโปรไฟล์นี้ออก
-                      </button>
+                {/* Hero Customer Identity Row (Unclipped Full Name) */}
+                <div className="relative flex items-start gap-3.5">
+                  {detailCase.customerPhotoUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setShowPhotoPreview((v) => !v);
+                      }}
+                      className="relative shrink-0 cursor-pointer group/avatar focus:outline-none"
+                      title="แตะเพื่อดูรูปโปรไฟล์จากบัตรประชาชน"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -inset-1 rounded-full bg-gradient-to-tr from-emerald-400/50 via-sky-400/40 to-teal-400/50 opacity-75 blur-[2px] animate-sidebar-avatar-ring"
+                      />
+                      <CustomerAvatar
+                        photoUrl={detailCase.customerPhotoUrl}
+                        customerName={getCustomerDisplayName(detailCase)}
+                        size="lg"
+                        className="relative w-14 h-14 sm:w-16 sm:h-16"
+                        imgRingClassName="border-2 border-white dark:border-slate-900 ring-2 ring-emerald-500/45 shadow-md group-hover/avatar:scale-105 transition-transform"
+                      />
+                    </button>
+                  ) : (
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-sky-500 via-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/25 shrink-0">
+                      <User className="w-7 h-7 text-white" />
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPhotoPreview(false)}
-                    className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 cursor-pointer shrink-0"
-                    aria-label="ซ่อนตัวอย่างรูปโปรไฟล์"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+                  )}
 
-              {/* SECTION 1: Status & Delivery Management */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-sky-50/30 to-white dark:from-slate-800/90 dark:via-slate-800/60 dark:to-slate-900 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                    <SlidersHorizontal className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                    สถานะการพิจารณาเคส
-                  </span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                    (แตะเพื่อเปลี่ยนสถานะ)
-                  </span>
-                </div>
-
-                {/* Status Switcher Buttons */}
-                <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-200/80 dark:bg-slate-950/60 text-xs font-bold">
-                  {/* รอผล */}
-                  <button
-                    type="button"
-                    onClick={() => handleSetApprovalStatus(detailCase.id, 'pending')}
-                    className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
-                      (!detailCase.approvalStatus || detailCase.approvalStatus === 'pending')
-                        ? 'bg-white dark:bg-slate-800 text-sky-800 dark:text-sky-300 shadow-xs font-extrabold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <Clock className="w-3 h-3 text-sky-500 dark:text-sky-400" />
-                    <span>รอผล</span>
-                  </button>
-
-                  {/* อนุมัติ */}
-                  <button
-                    type="button"
-                    onClick={() => handleSetApprovalStatus(detailCase.id, 'approved')}
-                    className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
-                      detailCase.approvalStatus === 'approved'
-                        ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400'
-                    }`}
-                  >
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>อนุมัติ</span>
-                  </button>
-
-                  {/* ไม่อนุมัติ */}
-                  <button
-                    type="button"
-                    onClick={() => handleSetApprovalStatus(detailCase.id, 'rejected')}
-                    className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
-                      detailCase.approvalStatus === 'rejected'
-                        ? 'bg-rose-600 text-white shadow-xs font-extrabold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400'
-                    }`}
-                  >
-                    <XCircle className="w-3 h-3" />
-                    <span>ไม่อนุมัติ</span>
-                  </button>
-
-                  {/* ยกเลิก */}
-                  <button
-                    type="button"
-                    onClick={() => handleSetApprovalStatus(detailCase.id, 'cancelled')}
-                    className={`py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
-                      detailCase.approvalStatus === 'cancelled'
-                        ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-xs font-extrabold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <Ban className="w-3 h-3" />
-                    <span>ยกเลิก</span>
-                  </button>
-                </div>
-
-                {/* If Approved: Delivery Status Toggle & Dates */}
-                {detailCase.approvalStatus === 'approved' && (
-                  <div className="space-y-3 pt-1 animate-fade-in border-t border-slate-200/80 dark:border-slate-700/80">
-                    {/* Delivery Status Switch */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                        <Bike className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                        การรับมอบรถ:
-                      </span>
-                      <div className="inline-flex rounded-xl p-0.5 bg-slate-200/80 dark:bg-slate-950/60 text-xs font-bold gap-1 shadow-2xs">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    {editingId === detailCase.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={editTitleInput}
+                          onChange={(e) => setEditTitleInput(e.target.value)}
+                          autoFocus
+                          className="px-2.5 py-1.5 text-sm font-bold text-slate-900 dark:text-slate-100 bg-sky-50 dark:bg-slate-800 border border-sky-300 dark:border-sky-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/25 w-full"
+                        />
                         <button
                           type="button"
-                          onClick={() => handleSetDeliveryStatus(detailCase.id, 'pending_delivery')}
-                          className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] ${
-                            (!detailCase.deliveryStatus || detailCase.deliveryStatus === 'pending_delivery')
-                              ? 'bg-amber-500 text-white shadow-xs font-extrabold'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-amber-800 dark:hover:text-amber-300'
-                          }`}
+                          onClick={() => handleSaveTitle(detailCase.id)}
+                          className="p-2 rounded-xl bg-emerald-600 text-white text-xs cursor-pointer hover:bg-emerald-700 shrink-0 active:scale-95 transition-all"
+                          title="บันทึกชื่อ"
                         >
-                          <Clock className="w-3 h-3" />
-                          <span>รอรับรถ ⏳</span>
+                          <Check className="w-4 h-4" />
                         </button>
-
                         <button
                           type="button"
-                          onClick={() => handleSetDeliveryStatus(detailCase.id, 'delivered')}
-                          className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] ${
-                            detailCase.deliveryStatus === 'delivered'
-                              ? 'bg-teal-600 text-white shadow-xs font-extrabold'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-teal-800 dark:hover:text-teal-300'
-                          }`}
+                          onClick={() => setEditingId(null)}
+                          className="p-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-600 shrink-0 active:scale-95 transition-all"
+                          title="ยกเลิก"
                         >
-                          <Check className="w-3 h-3" />
-                          <span>รับรถแล้ว ✓</span>
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
-                    </div>
-
-                    {/* Date Pickers for วันอนุมัติ and วันรับรถ */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                      {/* วันอนุมัติ */}
-                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>วันอนุมัติ:</span>
-                        </div>
-                        <input
-                          type="date"
-                          value={detailCase.approvalDate || toInputDateStr(detailCase.createdAt)}
-                          onChange={(e) => handleSetDates(detailCase.id, { approvalDate: e.target.value })}
-                          className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-emerald-50 dark:bg-emerald-950/60 dark:[color-scheme:dark] px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/70 focus:outline-none cursor-pointer tabular-nums"
-                        />
-                      </div>
-
-                      {/* วันรับรถ */}
-                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-teal-800 dark:text-teal-300">
-                          <PackageCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                          <span>
-                            {detailCase.deliveryStatus === 'delivered' ? 'วันรับรถ:' : 'วันนัดรับ:'}
-                          </span>
-                        </div>
-                        <input
-                          type="date"
-                          value={detailCase.deliveryDate || (detailCase.deliveryStatus === 'delivered' ? toInputDateStr(detailCase.createdAt) : '')}
-                          onChange={(e) => handleSetDates(detailCase.id, { deliveryDate: e.target.value })}
-                          className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-teal-50 dark:bg-teal-950/60 dark:[color-scheme:dark] px-2 py-1 rounded-lg border border-teal-200 dark:border-teal-800/70 focus:outline-none cursor-pointer tabular-nums"
-                        />
-                      </div>
-                    </div>
-
-                    {/* AUTOMATIC FIRST PAYMENT DUE CARD */}
-                    {detailCase.deliveryStatus === 'delivered' && (() => {
-                      const firstDue = calculateFirstPaymentDueDate(detailCase.deliveryDate || detailCase.createdAt);
-                      return (
-                        <div className="bg-gradient-to-r from-indigo-50 via-white to-sky-50/60 dark:from-indigo-950/60 dark:via-slate-900 dark:to-sky-950/40 p-3 sm:p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800/70 space-y-2 shadow-2xs animate-fade-in">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                                <CalendarClock className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 block">
-                                  กำหนดชำระงวดแรก (ขึ้นอัตโนมัติ)
-                                </span>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                                  ชำระทุกวันที่ 2 ของทุกเดือนทุกราย
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/70 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-700">
-                              คำนวณอัตโนมัติ
-                            </span>
-                          </div>
-
-                          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-indigo-100 dark:border-indigo-800/60 shadow-2xs space-y-1">
-                            <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                                วันครบกำหนดชำระงวดแรก:
-                              </span>
-                              <span className="text-sm sm:text-base font-black text-indigo-900 dark:text-indigo-200 tracking-tight tabular-nums">
-                                {firstDue.formattedLong}
-                              </span>
-                            </div>
-                            <div className="pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-[10.5px] text-slate-600 dark:text-slate-300 flex-wrap">
-                              <span>
-                                {firstDue.cycleRangeText} ➔ ชำระงวดแรก 2 {firstDue.monthName}
-                              </span>
-                              <span className="text-[10px] text-indigo-900 dark:text-indigo-200 font-bold bg-indigo-50 dark:bg-indigo-950/70 px-2 py-0.2 rounded-md">
-                                งวดถัดไป: ทุกวันที่ 2 ของทุกเดือน
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* ENGINE & CHASSIS NUMBERS (FOR APPROVED & DELIVERED CASES ONLY) */}
-                    {detailCase.deliveryStatus === 'delivered' && (
-                      <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/85 via-white to-cyan-50/60 dark:from-teal-950/45 dark:via-slate-900 dark:to-cyan-950/35 border border-teal-200 dark:border-teal-800/70 space-y-2.5 shadow-2xs animate-fade-in">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                              <Barcode className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <span className="text-xs font-black text-teal-950 dark:text-teal-100 block">
-                                เลขเครื่อง / เลขตัวถัง (รับรถแล้ว)
-                              </span>
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                                พิมพ์กรอกเองหรือสแกนบาร์โค้ดข้างกล่อง/สติ๊กเกอร์รถ
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {(detailCase.engineNumber || detailCase.chassisNumber) && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const lines = [
-                                    detailCase.engineNumber ? `เลขเครื่อง: ${detailCase.engineNumber}` : '',
-                                    detailCase.chassisNumber ? `เลขตัวถัง: ${detailCase.chassisNumber}` : '',
-                                  ]
-                                    .filter(Boolean)
-                                    .join('\n');
-                                  navigator.clipboard?.writeText(lines);
-                                  triggerHaptic('success');
-                                  showToast('✓ คัดลอกเลขเครื่อง/เลขถังแล้ว');
-                                }}
-                                className="px-2 py-1 rounded-lg bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                              >
-                                <ClipboardCopy className="w-3 h-3" />
-                                <span>คัดลอกคู่</span>
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                triggerHaptic('light');
-                                setBarcodeScannerState({ caseId: detailCase.id, target: 'both' });
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white text-[10.5px] font-extrabold shadow-xs inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
-                            >
-                              <ScanLine className="w-3.5 h-3.5" />
-                              <span>สแกนสติ๊กเกอร์</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {/* เลขเครื่อง */}
-                          <div className="p-2 rounded-xl bg-white/95 dark:bg-slate-900/90 border border-teal-200/80 dark:border-teal-800/60 space-y-1.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-[10.5px] font-extrabold text-teal-900 dark:text-teal-200">
-                                เลขเครื่องยนต์ (Engine No.)
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {detailCase.engineNumber && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      navigator.clipboard?.writeText(detailCase.engineNumber || '');
-                                      triggerHaptic('success');
-                                      showToast('✓ คัดลอกเลขเครื่องแล้ว');
-                                    }}
-                                    className="p-1 rounded-md text-slate-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/60 cursor-pointer transition-colors"
-                                    title="คัดลอกเลขเครื่อง"
-                                  >
-                                    <ClipboardCopy className="w-3 h-3" />
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    triggerHaptic('light');
-                                    setBarcodeScannerState({ caseId: detailCase.id, target: 'engine' });
-                                  }}
-                                  className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/70 dark:hover:bg-teal-900/70 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                                  title="สแกนบาร์โค้ดเลขเครื่อง"
-                                >
-                                  <ScanLine className="w-3 h-3" />
-                                  <span>สแกน</span>
-                                </button>
-                              </div>
-                            </div>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={detailCase.engineNumber || ''}
-                                onChange={(e) =>
-                                  handleSaveVehicleNumbers(detailCase.id, {
-                                    engineNumber: normalizeVehicleSerial(e.target.value),
-                                  })
-                                }
-                                placeholder="เช่น JC75E-1234567"
-                                autoCapitalize="characters"
-                                spellCheck={false}
-                                className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none font-mono font-extrabold text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wide tabular-nums"
-                              />
-                              {detailCase.engineNumber && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleSaveVehicleNumbers(
-                                      detailCase.id,
-                                      { engineNumber: '' },
-                                      'ล้างเลขเครื่องแล้ว'
-                                    )
-                                  }
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
-                                  title="ล้างเลขเครื่อง"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* เลขตัวถัง */}
-                          <div className="p-2 rounded-xl bg-white/95 dark:bg-slate-900/90 border border-cyan-200/80 dark:border-cyan-800/60 space-y-1.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-[10.5px] font-extrabold text-cyan-900 dark:text-cyan-200">
-                                เลขตัวถัง (Chassis No. / VIN)
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {detailCase.chassisNumber && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      navigator.clipboard?.writeText(detailCase.chassisNumber || '');
-                                      triggerHaptic('success');
-                                      showToast('✓ คัดลอกเลขตัวถังแล้ว');
-                                    }}
-                                    className="p-1 rounded-md text-slate-400 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/60 cursor-pointer transition-colors"
-                                    title="คัดลอกเลขตัวถัง"
-                                  >
-                                    <ClipboardCopy className="w-3 h-3" />
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    triggerHaptic('light');
-                                    setBarcodeScannerState({ caseId: detailCase.id, target: 'chassis' });
-                                  }}
-                                  className="px-2 py-0.5 rounded-md bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/70 dark:hover:bg-cyan-900/70 text-cyan-800 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                                  title="สแกนบาร์โค้ดเลขตัวถัง"
-                                >
-                                  <ScanLine className="w-3 h-3" />
-                                  <span>สแกน</span>
-                                </button>
-                              </div>
-                            </div>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={detailCase.chassisNumber || ''}
-                                onChange={(e) =>
-                                  handleSaveVehicleNumbers(detailCase.id, {
-                                    chassisNumber: normalizeVehicleSerial(e.target.value),
-                                  })
-                                }
-                                placeholder="เช่น MLHJC7500R5001234"
-                                autoCapitalize="characters"
-                                spellCheck={false}
-                                className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none font-mono font-extrabold text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wide tabular-nums"
-                              />
-                              {detailCase.chassisNumber && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleSaveVehicleNumbers(
-                                      detailCase.id,
-                                      { chassisNumber: '' },
-                                      'ล้างเลขตัวถังแล้ว'
-                                    )
-                                  }
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
-                                  title="ล้างเลขตัวถัง"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-50 leading-snug break-words">
+                          {getCustomerDisplayName(detailCase)}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditTitle(detailCase)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors cursor-pointer shrink-0"
+                          title="แก้ไขชื่อลูกค้า"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     )}
 
-                    {/* Cross-Month Accounting Notice Banner */}
-                    {detailCase.deliveryStatus === 'delivered' && (() => {
-                      const approvalYM = getCaseApprovalYM(detailCase);
-                      const deliveryYM = getCaseDeliveryYM(detailCase);
-                      if (approvalYM && deliveryYM && approvalYM !== deliveryYM) {
-                        const isCarried = approvalYM < deliveryYM;
+                    {/* Unboxed Metadata Line */}
+                    <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-relaxed flex flex-wrap items-center gap-x-1.5 gap-y-0.5 tabular-nums">
+                      <span>บันทึกเมื่อ {formatThaiDateTime(detailCase.createdAt)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="font-bold text-sky-700 dark:text-sky-300">
+                        {detailCase.snapshot.proposalCode}
+                      </span>
+                      {detailCase.isAceCustomer && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="font-extrabold text-amber-600 dark:text-amber-400 inline-flex items-center gap-0.5">
+                            <Sparkles className="w-3 h-3" />
+                            ลูกค้า ACE
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Expandable ID Card Portrait Preview */}
+                {showPhotoPreview && detailCase.customerPhotoUrl && (
+                  <div className="p-3 rounded-xl bg-emerald-50/75 dark:bg-emerald-950/35 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between gap-3 animate-fade-in">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={detailCase.customerPhotoUrl}
+                        alt={getCustomerDisplayName(detailCase)}
+                        className="w-20 h-20 rounded-2xl object-cover object-top border-2 border-emerald-400 dark:border-emerald-500 shadow-md shrink-0"
+                      />
+                      <div className="min-w-0 space-y-1">
+                        <div className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                          {getCustomerDisplayName(detailCase)}
+                        </div>
+                        <div className="text-[10.5px] text-emerald-800 dark:text-emerald-300 font-semibold">
+                          รูปโปรไฟล์จากบัตรประชาชน (เก็บในเคสเท่านั้น)
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('warning');
+                            const updated = updateCaseCustomerPhoto(detailCase.id, undefined);
+                            setCases(updated);
+                            setShowPhotoPreview(false);
+                            showToast('ลบรูปโปรไฟล์ออกจากเคสนี้แล้ว');
+                          }}
+                          className="text-[10.5px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                        >
+                          ลบรูปโปรไฟล์นี้ออก
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPhotoPreview(false)}
+                      className="p-1.5 rounded-xl bg-white/80 hover:bg-white dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 cursor-pointer shrink-0"
+                      aria-label="ซ่อนตัวอย่างรูปโปรไฟล์"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Status Switcher Section */}
+                <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                      สถานะการพิจารณาเคส
+                    </span>
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium">
+                      แตะเพื่อเปลี่ยนสถานะ
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => handleSetApprovalStatus(detailCase.id, 'pending')}
+                      className={`py-2 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] active:scale-[0.97] ${
+                        (!detailCase.approvalStatus || detailCase.approvalStatus === 'pending')
+                          ? 'bg-white dark:bg-slate-800 text-sky-800 dark:text-sky-300 shadow-xs font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0" />
+                      <span>รอผล</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSetApprovalStatus(detailCase.id, 'approved')}
+                      className={`py-2 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] active:scale-[0.97] ${
+                        detailCase.approvalStatus === 'approved'
+                          ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>อนุมัติ</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSetApprovalStatus(detailCase.id, 'rejected')}
+                      className={`py-2 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] active:scale-[0.97] ${
+                        detailCase.approvalStatus === 'rejected'
+                          ? 'bg-rose-600 text-white shadow-xs font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400'
+                      }`}
+                    >
+                      <XCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>ไม่อนุมัติ</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSetApprovalStatus(detailCase.id, 'cancelled')}
+                      className={`py-2 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 text-[11px] active:scale-[0.97] ${
+                        detailCase.approvalStatus === 'cancelled'
+                          ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-xs font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Ban className="w-3.5 h-3.5 shrink-0" />
+                      <span>ยกเลิก</span>
+                    </button>
+                  </div>
+
+                  {/* Approved Workflow: Delivery, Dates, Due Date, Engine/Chassis, Certificate */}
+                  {detailCase.approvalStatus === 'approved' && (
+                    <div className="space-y-3 pt-3 border-t border-slate-200/70 dark:border-slate-800 animate-fade-in">
+                      {/* Delivery Status Switch */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                          <Bike className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          การรับมอบรถ
+                        </span>
+                        <div className="inline-flex rounded-xl p-0.5 bg-slate-100 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800 text-xs font-bold gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSetDeliveryStatus(detailCase.id, 'pending_delivery')}
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] active:scale-[0.97] ${
+                              (!detailCase.deliveryStatus || detailCase.deliveryStatus === 'pending_delivery')
+                                ? 'bg-amber-500 text-white shadow-xs font-extrabold'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-amber-800 dark:hover:text-amber-300'
+                            }`}
+                          >
+                            <Clock className="w-3 h-3" />
+                            <span>รอรับรถ</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSetDeliveryStatus(detailCase.id, 'delivered')}
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] active:scale-[0.97] ${
+                              detailCase.deliveryStatus === 'delivered'
+                                ? 'bg-teal-600 text-white shadow-xs font-extrabold'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-teal-800 dark:hover:text-teal-300'
+                            }`}
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>รับรถแล้ว</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Date Pickers */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-slate-900/75 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>วันอนุมัติ</span>
+                          </div>
+                          <input
+                            type="date"
+                            value={detailCase.approvalDate || toInputDateStr(detailCase.createdAt)}
+                            onChange={(e) => handleSetDates(detailCase.id, { approvalDate: e.target.value })}
+                            className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-emerald-50 dark:bg-emerald-950/60 dark:[color-scheme:dark] px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/70 focus:outline-none cursor-pointer tabular-nums"
+                          />
+                        </div>
+
+                        <div className="px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-slate-900/75 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-teal-800 dark:text-teal-300">
+                            <PackageCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                            <span>
+                              {detailCase.deliveryStatus === 'delivered' ? 'วันรับรถ' : 'วันนัดรับ'}
+                            </span>
+                          </div>
+                          <input
+                            type="date"
+                            value={detailCase.deliveryDate || (detailCase.deliveryStatus === 'delivered' ? toInputDateStr(detailCase.createdAt) : '')}
+                            onChange={(e) => handleSetDates(detailCase.id, { deliveryDate: e.target.value })}
+                            className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-teal-50 dark:bg-teal-950/60 dark:[color-scheme:dark] px-2 py-1 rounded-lg border border-teal-200 dark:border-teal-800/70 focus:outline-none cursor-pointer tabular-nums"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Automatic First Payment Due */}
+                      {detailCase.deliveryStatus === 'delivered' && (() => {
+                        const firstDue = calculateFirstPaymentDueDate(detailCase.deliveryDate || detailCase.createdAt);
                         return (
-                          <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/70 text-teal-950 dark:text-teal-100 text-xs flex items-start gap-2.5 shadow-2xs">
-                            <BadgePercent className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <div className="font-extrabold text-teal-900 dark:text-teal-200 flex items-center gap-1.5 flex-wrap">
-                                <span>{isCarried ? 'เคสยกยอดมารับรถข้ามเดือน' : 'การนับยอดข้ามเดือน'}</span>
-                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-teal-200/70 dark:bg-teal-900/70 text-teal-900 dark:text-teal-200 font-bold">
-                                  อนุมัติ {formatYearMonthLabel(approvalYM)} ➔ รับรถ {formatYearMonthLabel(deliveryYM)}
-                                </span>
+                          <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 space-y-2 animate-fade-in">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                                  <CalendarClock className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 block">
+                                    กำหนดชำระงวดแรก
+                                  </span>
+                                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                    คำนวณอัตโนมัติ · ชำระทุกวันที่ 2 ของเดือน
+                                  </span>
+                                </div>
                               </div>
-                              <p className="text-[11px] text-teal-800 dark:text-teal-200/90 leading-relaxed font-medium">
-                                ลูกค้ารับรถในเดือน <strong>{formatYearMonthLabel(deliveryYM)}</strong> ระบบจึงนับเป็น<strong>ยอดรับรถของเดือน {formatYearMonthLabel(deliveryYM)}</strong> แต่<strong>ผลอนุมัติยังเป็นยอดของเดือน {formatYearMonthLabel(approvalYM)}</strong> ตามเกณฑ์บันทึกข้อมูล
-                              </p>
+                              <span className="text-sm font-black text-indigo-900 dark:text-indigo-200 tracking-tight tabular-nums text-right">
+                                {firstDue.formattedLong}
+                              </span>
+                            </div>
+
+                            <div className="pt-1.5 border-t border-indigo-200/60 dark:border-indigo-800/50 flex items-center justify-between gap-2 text-[10.5px] text-slate-600 dark:text-slate-300 flex-wrap">
+                              <span>
+                                {firstDue.cycleRangeText} ➔ งวดแรก 2 {firstDue.monthName}
+                              </span>
+                              <span className="text-[10.5px] text-indigo-800 dark:text-indigo-300 font-bold">
+                                งวดถัดไป: ทุกวันที่ 2
+                              </span>
                             </div>
                           </div>
                         );
-                      }
-                      return null;
-                    })()}
+                      })()}
 
-                    {/* Notice Banner: เคสที่อนุมัติเดือนก่อนและยังรอรับรถ */}
-                    {detailCase.approvalStatus === 'approved' && detailCase.deliveryStatus !== 'delivered' && (() => {
-                      const approvalYM = getCaseApprovalYM(detailCase);
-                      const currentYM = getCurrentYearMonthKey();
-                      const targetYM = selectedMonthKey !== 'all' ? selectedMonthKey : currentYM;
-                      if (approvalYM && approvalYM < targetYM) {
-                        return (
-                          <div className="p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800/70 text-amber-950 dark:text-amber-100 text-xs flex items-start gap-2.5 shadow-2xs">
-                            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <div className="font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 flex-wrap">
-                                <span>เคสยกยอดรอรับรถจากเดือนก่อน</span>
-                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-amber-200/80 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 font-bold">
-                                  อนุมัติ {formatYearMonthLabel(approvalYM)} ({formatThaiDateOnly(detailCase.approvalDate)})
+                      {/* Engine & Chassis Numbers */}
+                      {detailCase.deliveryStatus === 'delivered' && (
+                        <div className="p-3 rounded-xl bg-teal-50/70 dark:bg-teal-950/35 border border-teal-200/80 dark:border-teal-800/60 space-y-2.5 animate-fade-in">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                                <Barcode className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <span className="text-xs font-black text-teal-950 dark:text-teal-100 block">
+                                  เลขเครื่อง / เลขตัวถัง
+                                </span>
+                                <span className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                  กรอกหรือสแกนบาร์โค้ดสติ๊กเกอร์รถ
                                 </span>
                               </div>
-                              <p className="text-[11px] text-amber-800 dark:text-amber-200/90 leading-relaxed font-medium">
-                                เคสนี้ผ่านการอนุมัติตั้งแต่เดือน <strong>{formatYearMonthLabel(approvalYM)}</strong> แต่ยังไม่ได้รับรถ ระบบจึงยกยอดมารอรับรถในงวดปัจจุบัน เมื่อลูกค้ามารับรถแล้วสามารถกดเลือก <strong>"รับรถแล้ว ✓"</strong> และระบุวันรับรถได้ทันที
-                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {(detailCase.engineNumber || detailCase.chassisNumber) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const lines = [
+                                      detailCase.engineNumber ? `เลขเครื่อง: ${detailCase.engineNumber}` : '',
+                                      detailCase.chassisNumber ? `เลขตัวถัง: ${detailCase.chassisNumber}` : '',
+                                    ]
+                                      .filter(Boolean)
+                                      .join('\n');
+                                    navigator.clipboard?.writeText(lines);
+                                    triggerHaptic('success');
+                                    showToast('✓ คัดลอกเลขเครื่อง/เลขถังแล้ว');
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[10.5px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <ClipboardCopy className="w-3 h-3" />
+                                  <span>คัดลอกคู่</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic('light');
+                                  setBarcodeScannerState({ caseId: detailCase.id, target: 'both' });
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white text-[10.5px] font-extrabold shadow-xs inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                              >
+                                <ScanLine className="w-3.5 h-3.5" />
+                                <span>สแกนสติ๊กเกอร์</span>
+                              </button>
                             </div>
                           </div>
-                        );
-                      }
-                      return null;
-                    })()}
 
-                    {/* Action Button */}
-                    <div className="pt-1.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="p-2 rounded-lg bg-white/95 dark:bg-slate-900/90 border border-teal-200/70 dark:border-teal-800/50 space-y-1.5">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-[10.5px] font-extrabold text-teal-900 dark:text-teal-200">
+                                  เลขเครื่อง (Engine No.)
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  {detailCase.engineNumber && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard?.writeText(detailCase.engineNumber || '');
+                                        triggerHaptic('success');
+                                        showToast('✓ คัดลอกเลขเครื่องแล้ว');
+                                      }}
+                                      className="p-1 rounded-md text-slate-400 hover:text-teal-700 dark:hover:text-teal-300 cursor-pointer transition-colors"
+                                      title="คัดลอกเลขเครื่อง"
+                                    >
+                                      <ClipboardCopy className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('light');
+                                      setBarcodeScannerState({ caseId: detailCase.id, target: 'engine' });
+                                    }}
+                                    className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/70 dark:hover:bg-teal-900/70 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                    title="สแกนบาร์โค้ดเลขเครื่อง"
+                                  >
+                                    <ScanLine className="w-3 h-3" />
+                                    <span>สแกน</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={detailCase.engineNumber || ''}
+                                  onChange={(e) =>
+                                    handleSaveVehicleNumbers(detailCase.id, {
+                                      engineNumber: normalizeVehicleSerial(e.target.value),
+                                    })
+                                  }
+                                  placeholder="เช่น JC75E-1234567"
+                                  autoCapitalize="characters"
+                                  spellCheck={false}
+                                  className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none font-mono font-extrabold text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wide tabular-nums"
+                                />
+                                {detailCase.engineNumber && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleSaveVehicleNumbers(
+                                        detailCase.id,
+                                        { engineNumber: '' },
+                                        'ล้างเลขเครื่องแล้ว'
+                                      )
+                                    }
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
+                                    title="ล้างเลขเครื่อง"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="p-2 rounded-lg bg-white/95 dark:bg-slate-900/90 border border-cyan-200/70 dark:border-cyan-800/50 space-y-1.5">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-[10.5px] font-extrabold text-cyan-900 dark:text-cyan-200">
+                                  เลขตัวถัง (Chassis / VIN)
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  {detailCase.chassisNumber && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard?.writeText(detailCase.chassisNumber || '');
+                                        triggerHaptic('success');
+                                        showToast('✓ คัดลอกเลขตัวถังแล้ว');
+                                      }}
+                                      className="p-1 rounded-md text-slate-400 hover:text-cyan-700 dark:hover:text-cyan-300 cursor-pointer transition-colors"
+                                      title="คัดลอกเลขตัวถัง"
+                                    >
+                                      <ClipboardCopy className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('light');
+                                      setBarcodeScannerState({ caseId: detailCase.id, target: 'chassis' });
+                                    }}
+                                    className="px-2 py-0.5 rounded-md bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/70 dark:hover:bg-cyan-900/70 text-cyan-800 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800/70 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                    title="สแกนบาร์โค้ดเลขตัวถัง"
+                                  >
+                                    <ScanLine className="w-3 h-3" />
+                                    <span>สแกน</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={detailCase.chassisNumber || ''}
+                                  onChange={(e) =>
+                                    handleSaveVehicleNumbers(detailCase.id, {
+                                      chassisNumber: normalizeVehicleSerial(e.target.value),
+                                    })
+                                  }
+                                  placeholder="เช่น MLHJC7500R5001234"
+                                  autoCapitalize="characters"
+                                  spellCheck={false}
+                                  className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none font-mono font-extrabold text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 uppercase tracking-wide tabular-nums"
+                                />
+                                {detailCase.chassisNumber && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleSaveVehicleNumbers(
+                                        detailCase.id,
+                                        { chassisNumber: '' },
+                                        'ล้างเลขตัวถังแล้ว'
+                                      )
+                                    }
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 text-xs cursor-pointer p-0.5"
+                                    title="ล้างเลขตัวถัง"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Cross-Month Accounting Notice Banner */}
+                      {detailCase.deliveryStatus === 'delivered' && (() => {
+                        const approvalYM = getCaseApprovalYM(detailCase);
+                        const deliveryYM = getCaseDeliveryYM(detailCase);
+                        if (approvalYM && deliveryYM && approvalYM !== deliveryYM) {
+                          const isCarried = approvalYM < deliveryYM;
+                          return (
+                            <div className="p-3 rounded-xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/70 text-teal-950 dark:text-teal-100 text-xs flex items-start gap-2.5">
+                              <BadgePercent className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                              <div className="space-y-0.5">
+                                <div className="font-extrabold text-teal-900 dark:text-teal-200 flex flex-wrap items-center gap-x-1.5">
+                                  <span>{isCarried ? 'เคสยกยอดมารับรถข้ามเดือน' : 'การนับยอดข้ามเดือน'}</span>
+                                  <span className="text-[11px] font-bold text-teal-700 dark:text-teal-300">
+                                    · อนุมัติ {formatYearMonthLabel(approvalYM)} ➔ รับรถ {formatYearMonthLabel(deliveryYM)}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-teal-800 dark:text-teal-200/90 leading-relaxed font-medium">
+                                  ลูกค้ารับรถในเดือน <strong>{formatYearMonthLabel(deliveryYM)}</strong> ระบบจึงนับเป็น<strong>ยอดรับรถของเดือน {formatYearMonthLabel(deliveryYM)}</strong> แต่<strong>ผลอนุมัติยังเป็นยอดของเดือน {formatYearMonthLabel(approvalYM)}</strong> ตามเกณฑ์บันทึกข้อมูล
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* Notice Banner: เคสที่อนุมัติเดือนก่อนและยังรอรับรถ */}
+                      {detailCase.approvalStatus === 'approved' && detailCase.deliveryStatus !== 'delivered' && (() => {
+                        const approvalYM = getCaseApprovalYM(detailCase);
+                        const currentYM = getCurrentYearMonthKey();
+                        const targetYM = selectedMonthKey !== 'all' ? selectedMonthKey : currentYM;
+                        if (approvalYM && approvalYM < targetYM) {
+                          return (
+                            <div className="p-3 rounded-xl bg-amber-50/85 dark:bg-amber-950/45 border border-amber-300/80 dark:border-amber-800/70 text-amber-950 dark:text-amber-100 text-xs flex items-start gap-2.5">
+                              <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                              <div className="space-y-0.5">
+                                <div className="font-extrabold text-amber-900 dark:text-amber-200 flex flex-wrap items-center gap-x-1.5">
+                                  <span>เคสยกยอดรอรับรถจากเดือนก่อน</span>
+                                  <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                                    · อนุมัติ {formatYearMonthLabel(approvalYM)} ({formatThaiDateOnly(detailCase.approvalDate)})
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-amber-800 dark:text-amber-200/90 leading-relaxed font-medium">
+                                  เคสนี้ผ่านการอนุมัติตั้งแต่เดือน <strong>{formatYearMonthLabel(approvalYM)}</strong> แต่ยังไม่ได้รับรถ ระบบจึงยกยอดมารอรับรถในงวดปัจจุบัน เมื่อลูกค้ามารับรถแล้วสามารถกดเลือก <strong>&ldquo;รับรถแล้ว&rdquo;</strong> และระบุวันรับรถได้ทันที
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
                       <button
                         type="button"
                         onClick={() => {
                           triggerHaptic('medium');
                           setApprovalModalCase(detailCase);
                         }}
-                        className="w-full py-2.5 px-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm shadow-emerald-600/25 active:scale-98 transition-all cursor-pointer border border-emerald-400/30"
+                        className="w-full py-2.5 px-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm shadow-emerald-600/25 active:scale-[0.98] transition-all cursor-pointer border border-emerald-400/30"
                       >
                         <FileCheck className="w-4 h-4 text-emerald-100 shrink-0" />
                         <span className="whitespace-nowrap">ดู / พิมพ์ / โหลดภาพ ใบอนุมัติผลชั่วคราว</span>
                       </button>
                     </div>
+                  )}
+                </div>
+              </section>
+
+              {/* 2. FINANCIAL & INSTALLMENT SHOWCASE CARD */}
+              <section
+                className="case-detail-surface rounded-2xl overflow-hidden animate-case-detail-rise"
+                style={{ animationDelay: '75ms' }}
+              >
+                {/* Gradient Hero Financial Strip with Specular Sheen */}
+                <div className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-sky-700 to-indigo-700 dark:from-sky-900 dark:via-slate-900 dark:to-indigo-950 p-4 sm:p-5 text-white">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-case-hero-sheen"
+                  />
+
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="text-[11px] font-bold text-sky-100/90 flex items-center gap-1.5">
+                        <Banknote className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                        ค่างวดต่อเดือน
+                      </span>
+                      <div className="mt-1 flex items-baseline gap-1.5 tabular-nums">
+                        <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                          {formatBaht(detailCase.snapshot.monthlyInstallment)}
+                        </span>
+                        <span className="text-xs font-semibold text-sky-100/80">/ งวด</span>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 tabular-nums">
+                      <span className="text-[11px] font-bold text-sky-100/80 block">
+                        ระยะเวลาผ่อน
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black text-white leading-tight block mt-0.5">
+                        {detailCase.term} <span className="text-xs font-semibold text-sky-100/80">งวด</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative mt-3 pt-2.5 border-t border-white/15 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] text-sky-100/90">
+                    <span className="font-bold truncate">
+                      {detailCase.snapshot.proposalCode}
+                      {detailCase.snapshot.proposalName ? ` · ${detailCase.snapshot.proposalName}` : ''}
+                    </span>
+                    <span className="font-extrabold text-white tabular-nums shrink-0">
+                      {detailCase.snapshot.rateDisplayText}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3-Column Unified Key Metrics Strip */}
+                <div className="grid grid-cols-3 divide-x divide-slate-200/80 dark:divide-slate-800 border-b border-slate-200/80 dark:border-slate-800 bg-white/75 dark:bg-slate-900/60 text-center tabular-nums">
+                  <div className="p-2.5 sm:p-3">
+                    <span className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 block">
+                      ราคารถเงินสด
+                    </span>
+                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 mt-0.5 block">
+                      {formatBaht(detailCase.vehiclePrice)}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3">
+                    <span className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 block">
+                      เงินดาวน์ ({detailCase.snapshot.downPercent.toFixed(1)}%)
+                    </span>
+                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 mt-0.5 block">
+                      {formatBaht(detailCase.snapshot.downAmount)}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3">
+                    <span className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 block">
+                      ยอดจัดไฟแนนซ์
+                    </span>
+                    <span className="text-xs sm:text-sm font-black text-sky-700 dark:text-sky-300 mt-0.5 block">
+                      {formatBaht(detailCase.snapshot.financeAmount, true)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
+                      ถอด VAT {formatBaht(detailCase.snapshot.financeAmount / 1.07)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Complete Hairline Breakdown Rows */}
+                <div className="px-4 py-1 divide-y divide-slate-100 dark:divide-slate-800/80 text-xs tabular-nums">
+                  <div className="py-2.5 flex items-center justify-between gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">
+                      รวมเงินค่างวดทั้งสิ้น
+                    </span>
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                      {formatBaht(detailCase.snapshot.totalWithVat)}
+                    </span>
+                  </div>
+
+                  <div className="py-2.5 flex items-center justify-between gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">
+                      ดอกเบี้ยรวมทั้งสัญญา
+                    </span>
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                      {formatBaht(detailCase.snapshot.totalInterest)}
+                    </span>
+                  </div>
+
+                  <div className="py-2.5 flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                      <Percent className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0" />
+                      อัตราดอกเบี้ยแท้จริง (EIR) & โหมดดอกเบี้ย
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
+                      {detailCase.snapshot.eirAnnualPercent.toFixed(2)}% /ปี ·{' '}
+                      {detailCase.isCustomRateEnabled
+                        ? `กำหนดเอง (${detailCase.customRateInput || '—'}% ${detailCase.customRateType === 'annual' ? 'ต่อปี' : 'ต่อเดือน'})`
+                        : 'ตามตารางแคมเปญ'}
+                      {detailCase.enforceEirCap ? ' · คุมเพดาน 23%' : ''}
+                    </span>
+                  </div>
+
+                  <div className="py-2.5 flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                      <Receipt className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                      ค่าทะเบียน / ประกันรถหาย
+                    </span>
+                    <div className="text-right">
+                      {hasDeliveryFees ? (
+                        <>
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100 block">
+                            ทะเบียน {formatBaht(detailCase.registrationFee || 0)} · รถหาย {formatBaht(detailCase.theftInsuranceFee || 0)}
+                          </span>
+                          <span className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                            {detailCase.includeDeliveryFees ? 'รวมในวันออกรถแล้ว' : 'ไม่ได้รวมในยอดจัด'} · รวมออกรถ {formatBaht(driveAwayTotal)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-semibold text-slate-500 dark:text-slate-400">
+                          ไม่รวมค่าใช้จ่ายเพิ่มเติม
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 flex items-center justify-between gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      ประกันภัยกลุ่ม PA
+                    </span>
+                    <span className={`font-extrabold ${detailCase.insurancePlan && detailCase.insurancePlan !== 'none' ? 'text-teal-800 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
+                      {detailCase.insurancePlan && detailCase.insurancePlan !== 'none'
+                        ? `${detailCase.insurancePlan.toUpperCase()} (${detailCase.insuranceYears} ปี)`
+                        : 'ไม่ทำประกัน PA'}
+                    </span>
+                  </div>
+
+                  {/* 9-Installment Payment Summary (if recorded) */}
+                  {installmentEntries.length > 0 && (
+                    <div className="py-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1">
+                          <CalendarDays className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                          ประวัติการติดตามค่างวด (1–9)
+                        </span>
+                        <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">
+                          ชำระแล้ว {paidInstallmentCount}/{installmentEntries.length} งวด
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                        {installmentEntries.map((item) => {
+                          const isPaid = item.status === 'paid';
+                          return (
+                            <div
+                              key={item.num}
+                              className={`px-2 py-1.5 rounded-lg border text-[10.5px] font-bold flex items-center justify-between gap-1 ${
+                                isPaid
+                                  ? 'bg-emerald-50/80 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/70 text-emerald-800 dark:text-emerald-200'
+                                  : 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/70 text-rose-700 dark:text-rose-300'
+                              }`}
+                            >
+                              <span>งวด {item.num}</span>
+                              <span>{isPaid ? '✓' : 'ค้าง'}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* 3. CUSTOMER PROFILE & THAI ID KYC CARD */}
+              <section
+                className="case-detail-surface rounded-2xl p-4 sm:p-5 space-y-3 animate-case-detail-rise"
+                style={{ animationDelay: '130ms' }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                    <UserCheck className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                    ข้อมูลลูกค้าและเอกสารยืนยันตัวตน
+                  </h4>
+                </div>
+
+                {/* Hairline 2-Col Profile Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 rounded-xl border border-slate-200/80 dark:border-slate-800 divide-y sm:divide-y-0 sm:gap-px bg-slate-200/60 dark:bg-slate-800/70 overflow-hidden text-xs">
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                      ชื่อ-นามสกุล
+                    </span>
+                    <span className="font-extrabold text-slate-900 dark:text-slate-100 mt-0.5 block">
+                      {detailCase.customerName || 'ไม่ระบุชื่อ'}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                        เบอร์โทรศัพท์
+                      </span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5 block">
+                        {detailCase.customerPhone || 'ไม่ระบุเบอร์'}
+                      </span>
+                    </div>
+                    {detailCase.customerPhone && (
+                      <a
+                        href={`tel:${detailCase.customerPhone}`}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1 transition-colors shrink-0 active:scale-95"
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>โทรออก</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                      <Briefcase className="w-3 h-3 text-slate-400" />
+                      อาชีพ
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100 mt-0.5 block">
+                      {detailCase.customerOccupation?.trim() || '—'}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90 tabular-nums">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                      รายได้ต่อเดือน
+                    </span>
+                    <span className="font-extrabold text-emerald-700 dark:text-emerald-300 mt-0.5 block">
+                      {formatMonthlyIncomeThai(detailCase.customerIncome)}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90 tabular-nums">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                      อายุงาน
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100 mt-0.5 block">
+                      {formatMonthsToThaiDuration(detailCase.customerWorkMonths)}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90 tabular-nums">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                      <Home className="w-3 h-3 text-slate-400" />
+                      ระยะเวลาพักอาศัย
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100 mt-0.5 block">
+                      {formatMonthsToThaiDuration(detailCase.customerResidenceMonths)}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                      ประเภทลูกค้า ACE
+                    </span>
+                    <span className={`font-extrabold mt-0.5 block ${detailCase.isAceCustomer ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                      {detailCase.isAceCustomer ? 'ลูกค้า ACE' : 'ลูกค้าทั่วไป'}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-slate-900/90 tabular-nums">
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                      อายุ / วันเดือนปีเกิด
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100 mt-0.5 block">
+                      {detailCase.customerAge || detailCase.customerBirthDate ? (
+                        <>
+                          {detailCase.customerAge ? `อายุ ${detailCase.customerAge} ปี` : ''}
+                          {detailCase.customerAge && detailCase.customerBirthDate ? ' · ' : ''}
+                          {detailCase.customerBirthDate
+                            ? `เกิด ${formatThaiDateFromIso(detailCase.customerBirthDate)}`
+                            : ''}
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Thai ID Card KYC Sub-panel */}
+                {(detailCase.customerIdCard ||
+                  detailCase.customerAddress ||
+                  detailCase.customerBirthDate ||
+                  detailCase.customerAge) && (
+                  <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/35 border border-emerald-200/80 dark:border-emerald-800/60 space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[11px] font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                        <CreditCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>ข้อมูลบัตรประชาชน</span>
+                      </span>
+                      <span className="text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        เก็บในเคสเท่านั้น
+                      </span>
+                    </div>
+
+                    {detailCase.customerIdCard && (
+                      <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-emerald-200/70 dark:border-emerald-800/50">
+                        <div className="min-w-0">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
+                            เลขประจำตัวประชาชน 13 หลัก
+                          </span>
+                          <span className="font-mono font-black text-slate-900 dark:text-slate-100 text-xs sm:text-sm tracking-wider tabular-nums">
+                            {showFullIdCard
+                              ? formatThaiIdDisplay(detailCase.customerIdCard)
+                              : maskThaiIdDisplay(detailCase.customerIdCard)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setShowFullIdCard((v) => !v);
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                            title={showFullIdCard ? 'ซ่อนบางหลัก' : 'แสดงเลขครบ 13 หลัก'}
+                          >
+                            {showFullIdCard ? (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            ) : (
+                              <Eye className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(detailCase.customerIdCard || '');
+                              triggerHaptic('success');
+                              showToast('คัดลอกเลขบัตรประชาชนแล้ว');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/70 dark:hover:bg-emerald-800/70 text-emerald-800 dark:text-emerald-200 font-bold text-[10.5px] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <ClipboardCopy className="w-3 h-3" />
+                            <span>คัดลอก</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {detailCase.customerAddress && (
+                      <div className="p-2.5 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-emerald-200/70 dark:border-emerald-800/50 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                            ที่อยู่ตามบัตรประชาชน
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(detailCase.customerAddress || '');
+                              triggerHaptic('success');
+                              showToast('คัดลอกที่อยู่ตามบัตรแล้ว');
+                            }}
+                            className="text-[10.5px] font-bold text-sky-700 dark:text-sky-300 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <ClipboardCopy className="w-3 h-3" />
+                            <span>คัดลอกที่อยู่</span>
+                          </button>
+                        </div>
+                        <p className="text-[11.5px] font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                          {detailCase.customerAddress}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </section>
 
-              {/* SECTION 2: Google Maps Location & Navigation */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-sky-200/90 dark:border-slate-700 space-y-2.5 shadow-2xs">
+              {/* 4. MOTORCYCLE, DEALER & OFFICER CARD */}
+              <section
+                className="case-detail-surface rounded-2xl p-4 sm:p-5 space-y-3 animate-case-detail-rise"
+                style={{ animationDelay: '185ms' }}
+              >
+                <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <Bike className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                  ข้อมูลรถ ร้านตัวแทน และเจ้าหน้าที่
+                </h4>
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+                  <div className="pb-2.5 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                        ยี่ห้อ / รุ่นรถมอเตอร์ไซค์
+                      </span>
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mt-0.5 block">
+                        {detailCase.bikeBrand ? `${detailCase.bikeBrand} · ` : ''}
+                        {detailCase.bikeModelName || 'ไม่ระบุรุ่น'}
+                      </span>
+                      {detailCase.bikeModelCode && (
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
+                          รหัสรุ่น: {detailCase.bikeModelCode}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0 tabular-nums">
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 block">
+                        ราคารถเงินสด
+                      </span>
+                      <span className="font-black text-slate-900 dark:text-slate-100 text-sm mt-0.5 block">
+                        {formatBaht(detailCase.vehiclePrice)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 flex items-center justify-between gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                      ร้านตัวแทนจำหน่าย (Dealer)
+                    </span>
+                    <span className="font-extrabold text-sky-900 dark:text-sky-300 text-right">
+                      {detailCase.dealerName || '—'}
+                    </span>
+                  </div>
+
+                  <div className="pt-2.5 flex items-start justify-between gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5 shrink-0">
+                      <BadgeCheck className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                      เจ้าหน้าที่ผู้ดูแล
+                    </span>
+                    <div className="text-right">
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100 block">
+                        {detailCase.officerName || '—'}
+                      </span>
+                      {(detailCase.officerCode || detailCase.officerLicense) && (
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums block">
+                          {detailCase.officerCode ? `รหัส ${detailCase.officerCode}` : ''}
+                          {detailCase.officerCode && detailCase.officerLicense ? ' · ' : ''}
+                          {detailCase.officerLicense ? `ใบอนุญาต ${detailCase.officerLicense}` : ''}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 5. GOOGLE MAPS LOCATION & NAVIGATION CARD */}
+              <section
+                className="case-detail-surface rounded-2xl p-4 sm:p-5 space-y-2.5 animate-case-detail-rise"
+                style={{ animationDelay: '240ms' }}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-slate-100">
                     <MapPin className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
-                    <span>ตำแหน่งที่อยู่ปัจจุบัน (คัดลอกจาก Google Maps):</span>
+                    <span>ตำแหน่งที่อยู่ปัจจุบัน (Google Maps)</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => handlePasteLocation(detailCase.id)}
-                    className="text-[10.5px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2 py-0.5 rounded-md border border-sky-200 dark:border-sky-800/70 flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[11px] font-bold text-sky-700 dark:text-sky-300 hover:text-sky-900 dark:hover:text-sky-200 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2.5 py-1 rounded-lg border border-sky-200 dark:border-sky-800/70 flex items-center gap-1 cursor-pointer transition-colors shrink-0 active:scale-95"
                   >
                     <ClipboardCopy className="w-3 h-3" />
                     <span>วางที่อยู่/ลิงก์</span>
@@ -3121,6 +3654,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                       type="button"
                       onClick={() => handleSaveLocation(detailCase.id, '')}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer p-0.5"
+                      title="ล้างที่อยู่"
                     >
                       ✕
                     </button>
@@ -3147,430 +3681,202 @@ export const SavedCasesModal: React.FC<Props> = ({
                     <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-80" />
                   )}
                 </button>
-              </div>
+              </section>
 
-              {/* SECTION 3: Customer & Motorcycle Info */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
-                <span className="font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                  ข้อมูลลูกค้าและรุ่นรถ
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 dark:text-slate-200">
-                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ชื่อลูกค้า:</span>
-                    <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
-                      {detailCase.customerName || 'ไม่ระบุชื่อ'}
-                    </span>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">เบอร์โทรศัพท์:</span>
-                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm tabular-nums">
-                        {detailCase.customerPhone || 'ไม่ระบุเบอร์'}
+              {/* 6. NOTES & APPROVAL PDF DOCUMENT CARD */}
+              {(detailCase.customerNote || detailCase.approvalStatus === 'approved') && (
+                <section
+                  className="case-detail-surface rounded-2xl p-4 sm:p-5 space-y-3.5 animate-case-detail-rise"
+                  style={{ animationDelay: '295ms' }}
+                >
+                  {detailCase.customerNote && (
+                    <div className="p-3 rounded-xl bg-amber-50/75 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-xs space-y-1">
+                      <span className="font-extrabold text-amber-900 dark:text-amber-200 block">
+                        บันทึกเพิ่มเติม
                       </span>
+                      <p className="text-amber-800 dark:text-amber-200/90 leading-relaxed whitespace-pre-wrap">
+                        {detailCase.customerNote}
+                      </p>
                     </div>
-                    {detailCase.customerPhone && (
-                      <a
-                        href={`tel:${detailCase.customerPhone}`}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-[10.5px] border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1 transition-colors"
-                      >
-                        <Phone className="w-3 h-3" />
-                        <span>โทรออก</span>
-                      </a>
-                    )}
-                  </div>
+                  )}
 
-                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 sm:col-span-2 flex items-center justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">รุ่นรถมอเตอร์ไซค์:</span>
-                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1">
-                        <Bike className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
-                        {detailCase.bikeModelName || 'ไม่ระบุรุ่น'}
-                        {detailCase.bikeModelCode && (
-                          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-normal">
-                            ({detailCase.bikeModelCode})
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="text-right shrink-0 tabular-nums">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ราคารถเงินสด:</span>
-                      <span className="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
-                        {formatBaht(detailCase.vehiclePrice)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {detailCase.dealerName && (
-                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 sm:col-span-2 flex items-center justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ร้านตัวแทนจำหน่าย (Dealer):</span>
-                        <span className="font-extrabold text-sky-900 dark:text-sky-300 text-xs sm:text-sm flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
-                          <span>{detailCase.dealerName}</span>
+                  {detailCase.approvalStatus === 'approved' && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-rose-950 dark:text-rose-200">
+                          <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                          <span>เอกสารการอนุมัติ (PDF)</span>
+                        </div>
+                        <span
+                          className={`text-[11px] font-bold ${
+                            detailCase.approvalDoc
+                              ? 'text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        >
+                          {detailCase.approvalDoc ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <span>แนบเอกสารแล้ว</span>
+                            </>
+                          ) : (
+                            <span>ยังไม่ได้แนบเอกสาร</span>
+                          )}
                         </span>
                       </div>
-                    </div>
-                  )}
 
-                  {(detailCase.customerIdCard ||
-                    detailCase.customerAddress ||
-                    detailCase.customerBirthDate ||
-                    detailCase.customerAge) && (
-                    <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/35 border border-emerald-200/80 dark:border-emerald-800/60 sm:col-span-2 space-y-2">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-[10.5px] font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span>ข้อมูลบัตรประชาชน (เก็บในเคสเท่านั้น)</span>
-                        </span>
-                        {(detailCase.customerAge || detailCase.customerBirthDate) && (
-                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                            {detailCase.customerAge ? `อายุ ${detailCase.customerAge} ปี` : ''}
-                            {detailCase.customerAge && detailCase.customerBirthDate ? ' • ' : ''}
-                            {detailCase.customerBirthDate
-                              ? `เกิด ${formatThaiDateFromIso(detailCase.customerBirthDate)}`
-                              : ''}
-                          </span>
-                        )}
-                      </div>
+                      <input
+                        ref={pdfFileInputRef}
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handlePdfUpload(detailCase.id, file);
+                          }
+                        }}
+                        className="hidden"
+                      />
 
-                      {detailCase.customerIdCard && (
-                        <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-emerald-200/70 dark:border-emerald-800/60">
-                          <div>
-                            <span className="text-[9.5px] text-slate-400 dark:text-slate-500 block">
-                              เลขประจำตัวประชาชน 13 หลัก:
-                            </span>
-                            <span className="font-mono font-black text-slate-900 dark:text-slate-100 text-xs sm:text-sm tracking-wider tabular-nums">
-                              {showFullIdCard
-                                ? formatThaiIdDisplay(detailCase.customerIdCard)
-                                : maskThaiIdDisplay(detailCase.customerIdCard)}
-                            </span>
+                      {detailCase.approvalDoc ? (
+                        <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-slate-900/90 border border-rose-200/70 dark:border-rose-800/50 space-y-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1" title={detailCase.approvalDoc.name}>
+                              <MarqueeText className="text-xs font-black text-slate-900 dark:text-slate-100">
+                                {detailCase.approvalDoc.name}
+                              </MarqueeText>
+                              <MarqueeText className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                {formatFileSize(detailCase.approvalDoc.size)} · อัปโหลดเมื่อ {formatThaiDateTime(detailCase.approvalDoc.uploadedAt)}
+                              </MarqueeText>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
+
+                          {inlinePdfDataUrl ? (
+                            <div className="space-y-1 pt-1">
+                              <PdfCanvasViewer
+                                dataUrl={inlinePdfDataUrl}
+                                fileName={detailCase.approvalDoc.name}
+                                mode="inline"
+                                onOpenExternal={() => handleOpenExternalPdf(detailCase)}
+                              />
+                            </div>
+                          ) : isLoadingInlinePdf ? (
+                            <div className="py-8 bg-slate-900 rounded-xl text-center text-xs text-white flex flex-col items-center justify-center gap-2">
+                              <div className="w-5 h-5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+                              <span className="text-[11px] text-slate-300">กำลังแสดงตัวอย่างเอกสาร...</span>
+                            </div>
+                          ) : null}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <button
                               type="button"
-                              onClick={() => {
-                                triggerHaptic('light');
-                                setShowFullIdCard((v) => !v);
-                              }}
-                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
-                              title={showFullIdCard ? 'ซ่อนบางหลัก' : 'แสดงเลขครบ 13 หลัก'}
+                              onClick={() => handleOpenExternalPdf(detailCase)}
+                              disabled={isLoadingPdf}
+                              className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm shadow-rose-500/20 bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white active:scale-[0.98] transition-all cursor-pointer"
+                              title="เปิดดูเอกสารด้วยแอพภายนอกของเครื่อง"
                             >
-                              {showFullIdCard ? (
-                                <EyeOff className="w-3.5 h-3.5" />
-                              ) : (
-                                <Eye className="w-3.5 h-3.5" />
-                              )}
+                              <ExternalLink className="w-4 h-4 shrink-0" />
+                              <span>เปิดดูเอกสารจากแอพภายนอก</span>
                             </button>
+
                             <button
                               type="button"
-                              onClick={() => {
-                                navigator.clipboard?.writeText(detailCase.customerIdCard || '');
-                                triggerHaptic('success');
-                                showToast('คัดลอกเลขบัตรประชาชนแล้ว');
+                              onClick={async () => {
+                                if (!detailCase) return;
+                                const data = await getApprovalDocData(detailCase.id);
+                                if (data?.dataUrl) {
+                                  downloadPdfFile(
+                                    data.dataUrl,
+                                    data.name || detailCase.approvalDoc?.name || 'เอกสารการอนุมัติ.pdf'
+                                  );
+                                  triggerHaptic('success');
+                                  showToast('✓ ดาวน์โหลดไฟล์ PDF เรียบร้อย');
+                                }
                               }}
-                              className="px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/70 dark:hover:bg-emerald-800/70 text-emerald-800 dark:text-emerald-200 font-bold text-[10px] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                              className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 active:scale-[0.98] transition-all cursor-pointer"
+                              title="ดาวน์โหลดไฟล์ PDF เก็บไว้ในอุปกรณ์"
                             >
-                              <ClipboardCopy className="w-3 h-3" />
-                              <span>คัดลอก</span>
+                              <Download className="w-4 h-4 shrink-0 text-slate-600 dark:text-slate-300" />
+                              <span>ดาวน์โหลด PDF</span>
                             </button>
                           </div>
-                        </div>
-                      )}
 
-                      {detailCase.customerAddress && (
-                        <div className="p-2 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-emerald-200/70 dark:border-emerald-800/60 space-y-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[9.5px] text-slate-400 dark:text-slate-500">
-                              ที่อยู่ตามบัตรประชาชน:
-                            </span>
+                          <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-xs">
                             <button
                               type="button"
-                              onClick={() => {
-                                navigator.clipboard?.writeText(detailCase.customerAddress || '');
-                                triggerHaptic('success');
-                                showToast('คัดลอกที่อยู่ตามบัตรแล้ว');
-                              }}
-                              className="text-[10px] font-bold text-sky-700 dark:text-sky-300 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                              onClick={() => pdfFileInputRef.current?.click()}
+                              disabled={isUploadingPdf}
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                              title="เลือกไฟล์ PDF ใหม่เพื่อแทนที่ไฟล์เดิม"
                             >
-                              <ClipboardCopy className="w-3 h-3" />
-                              <span>คัดลอกที่อยู่</span>
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>เปลี่ยนไฟล์</span>
                             </button>
+
+                            {deleteDocConfirmId === detailCase.id ? (
+                              <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/70 px-2 py-0.5 rounded-lg">
+                                <span className="text-[10px] text-rose-800 dark:text-rose-200 font-bold">ยืนยันลบไฟล์?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePdfDoc(detailCase.id)}
+                                  className="px-2 py-0.5 rounded-md bg-rose-600 text-white font-bold text-[10px] cursor-pointer"
+                                >
+                                  ลบ
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteDocConfirmId(null)}
+                                  className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-[10px] cursor-pointer"
+                                >
+                                  ยกเลิก
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setDeleteDocConfirmId(detailCase.id)}
+                                className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                                title="ลบเอกสารออกจากเคสนี้"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>ลบเอกสาร</span>
+                              </button>
+                            )}
                           </div>
-                          <p className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
-                            {detailCase.customerAddress}
-                          </p>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* SECTION 4: Financial & Installment Breakdown */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-slate-200/90 dark:border-slate-700/80 space-y-3 shadow-2xs">
-                <span className="text-xs font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                  <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  สรุปข้อมูลทางการเงินและค่างวด
-                </span>
-
-                {/* 4 Large Highlight Stat Cards */}
-                <div className="grid grid-cols-2 gap-2 text-xs tabular-nums">
-                  <div className="p-3 rounded-2xl bg-gradient-to-br from-sky-50 to-cyan-50/50 dark:from-sky-950/60 dark:to-cyan-950/40 border border-sky-200 dark:border-sky-800/70">
-                    <span className="text-[10.5px] font-bold text-sky-800 dark:text-sky-300 block">ค่างวดต่อเดือน:</span>
-                    <span className="text-lg sm:text-xl font-black text-sky-800 dark:text-sky-200 tracking-tight block">
-                      {formatBaht(detailCase.snapshot.monthlyInstallment)}
-                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> /งวด</span>
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70">
-                    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 block">ระยะเวลาผ่อน:</span>
-                    <span className="text-lg sm:text-xl font-black text-slate-800 dark:text-slate-100 block">
-                      {detailCase.term}
-                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> งวด</span>
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                      {detailCase.snapshot.rateDisplayText}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70">
-                    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 block">เงินดาวน์:</span>
-                    <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 block">
-                      {formatBaht(detailCase.snapshot.downAmount)}
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                      ({detailCase.snapshot.downPercent.toFixed(1)}%)
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70">
-                    <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 block">ยอดจัดไฟแนนซ์:</span>
-                    <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 block">
-                      {formatBaht(detailCase.snapshot.financeAmount, true)}
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                      ถอด VAT: {formatBaht(detailCase.snapshot.financeAmount / 1.07)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Additional Detailed Numbers */}
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 text-[11px] space-y-1.5 text-slate-600 dark:text-slate-300 tabular-nums">
-                  <div className="flex items-center justify-between">
-                    <span>รวมเงินค่างวดทั้งสิ้น:</span>
-                    <span className="font-extrabold text-slate-900 dark:text-slate-100">
-                      {formatBaht(detailCase.snapshot.totalWithVat)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>ดอกเบี้ยรวมทั้งสัญญา:</span>
-                    <span className="font-extrabold text-slate-900 dark:text-slate-100">
-                      {formatBaht(detailCase.snapshot.totalInterest)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>อัตราดอกเบี้ยแท้จริง (EIR):</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {detailCase.snapshot.eirAnnualPercent.toFixed(2)}% ต่อปี
-                    </span>
-                  </div>
-                  {detailCase.insurancePlan && detailCase.insurancePlan !== 'none' && (
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/70">
-                      <span className="flex items-center gap-1 text-teal-800 dark:text-teal-300 font-bold">
-                        <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                        ประกันภัยกลุ่ม PA:
-                      </span>
-                      <span className="font-extrabold text-teal-900 dark:text-teal-200">
-                        {detailCase.insurancePlan.toUpperCase()} ({detailCase.insuranceYears} ปี)
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* SECTION 5: Notes & Proposal Info */}
-              {detailCase.customerNote && (
-                <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-xs space-y-1">
-                  <span className="font-bold text-amber-900 dark:text-amber-200">บันทึกเพิ่มเติม:</span>
-                  <p className="text-amber-800 dark:text-amber-200/90 leading-relaxed">{detailCase.customerNote}</p>
-                </div>
-              )}
-
-              {/* SECTION 6: Approval Document (เอกสารการอนุมัติ PDF) */}
-              {detailCase.approvalStatus === 'approved' && (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-rose-50/60 via-white to-red-50/30 dark:from-rose-950/30 dark:via-slate-900 dark:to-red-950/20 border border-rose-200 dark:border-rose-800/70 space-y-3 shadow-2xs animate-fade-in">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-rose-950 dark:text-rose-200">
-                      <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                      <span>เอกสารการอนุมัติ (PDF):</span>
-                    </div>
-                    {detailCase.approvalDoc ? (
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/70 inline-flex items-center gap-1 shadow-2xs">
-                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        แนบเอกสารแล้ว
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                        ยังไม่ได้แนบเอกสาร
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Hidden file input for uploading PDF */}
-                  <input
-                    ref={pdfFileInputRef}
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handlePdfUpload(detailCase.id, file);
-                      }
-                    }}
-                    className="hidden"
-                  />
-
-                  {detailCase.approvalDoc ? (
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/90 border border-rose-100 dark:border-rose-800/50 shadow-2xs space-y-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1" title={detailCase.approvalDoc.name}>
-                          <MarqueeText className="text-xs font-black text-slate-900 dark:text-slate-100">
-                            {detailCase.approvalDoc.name}
-                          </MarqueeText>
-                          <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {formatFileSize(detailCase.approvalDoc.size)} • อัปโหลดเมื่อ {formatThaiDateTime(detailCase.approvalDoc.uploadedAt)}
-                          </MarqueeText>
-                        </div>
-                      </div>
-
-                      {inlinePdfDataUrl ? (
-                        <div className="space-y-1 pt-1">
-                          <PdfCanvasViewer
-                            dataUrl={inlinePdfDataUrl}
-                            fileName={detailCase.approvalDoc.name}
-                            mode="inline"
-                            onOpenExternal={() => handleOpenExternalPdf(detailCase)}
-                          />
-                        </div>
-                      ) : isLoadingInlinePdf ? (
-                        <div className="py-8 bg-slate-900 rounded-xl text-center text-xs text-white flex flex-col items-center justify-center gap-2">
-                          <div className="w-5 h-5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-[11px] text-slate-300">กำลังแสดงตัวอย่างเอกสาร...</span>
-                        </div>
-                      ) : null}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenExternalPdf(detailCase)}
-                          disabled={isLoadingPdf}
-                          className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm shadow-rose-500/20 bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white active:scale-[0.98] transition-all cursor-pointer"
-                          title="เปิดดูเอกสารด้วยแอพภายนอกของเครื่อง (เช่น PDF Viewer, Google Drive, เบราว์เซอร์)"
-                        >
-                          <ExternalLink className="w-4 h-4 shrink-0" />
-                          <span>เปิดดูเอกสารจากแอพภายนอก</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (!detailCase) return;
-                            const data = await getApprovalDocData(detailCase.id);
-                            if (data?.dataUrl) {
-                              downloadPdfFile(
-                                data.dataUrl,
-                                data.name || detailCase.approvalDoc?.name || 'เอกสารการอนุมัติ.pdf'
-                              );
-                              triggerHaptic('success');
-                              showToast('✓ ดาวน์โหลดไฟล์ PDF เรียบร้อย');
-                            }
-                          }}
-                          className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 active:scale-[0.98] transition-all cursor-pointer"
-                          title="ดาวน์โหลดไฟล์ PDF เก็บไว้ในอุปกรณ์"
-                        >
-                          <Download className="w-4 h-4 shrink-0 text-slate-600 dark:text-slate-300" />
-                          <span>ดาวน์โหลด PDF</span>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                        <button
-                          type="button"
+                      ) : (
+                        <div
                           onClick={() => pdfFileInputRef.current?.click()}
-                          disabled={isUploadingPdf}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
-                          title="เลือกไฟล์ PDF ใหม่เพื่อแทนที่ไฟล์เดิม"
+                          className="p-4 rounded-xl border-2 border-dashed border-rose-300 dark:border-rose-800/70 hover:border-rose-400 dark:hover:border-rose-600 bg-rose-50/30 dark:bg-slate-900/70 hover:bg-rose-50/70 dark:hover:bg-rose-950/30 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group text-center"
                         >
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>เปลี่ยนไฟล์</span>
-                        </button>
-
-                        {deleteDocConfirmId === detailCase.id ? (
-                          <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/70 px-2 py-0.5 rounded-lg">
-                            <span className="text-[10px] text-rose-800 dark:text-rose-200 font-bold">ยืนยันลบไฟล์?</span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePdfDoc(detailCase.id)}
-                              className="px-2 py-0.5 rounded-md bg-rose-600 text-white font-bold text-[10px] cursor-pointer"
-                            >
-                              ลบ
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteDocConfirmId(null)}
-                              className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-[10px] cursor-pointer"
-                            >
-                              ยกเลิก
-                            </button>
+                          <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-colors shadow-2xs">
+                            <UploadCloud className="w-5 h-5" />
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setDeleteDocConfirmId(detailCase.id)}
-                            className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                            title="ลบเอกสารออกจากเคสนี้"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>ลบเอกสาร</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      onClick={() => pdfFileInputRef.current?.click()}
-                      className="p-4 rounded-xl border-2 border-dashed border-rose-300 dark:border-rose-800/70 hover:border-rose-400 dark:hover:border-rose-600 bg-white dark:bg-slate-900/70 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group text-center"
-                    >
-                      <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-colors shadow-2xs">
-                        <UploadCloud className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-rose-700 dark:group-hover:text-rose-300 block">
-                          {isUploadingPdf ? 'กำลังอัปโหลดไฟล์...' : 'คลิกเพื่ออัปโหลดไฟล์ PDF เอกสารการอนุมัติ'}
-                        </span>
-                        <span className="text-[10.5px] text-slate-400 dark:text-slate-500 mt-0.5 block">
-                          รองรับไฟล์ .PDF (เช่น เอกสารอนุมัติสินเชื่อ, ใบแจ้งผลการพิจารณา)
-                        </span>
-                      </div>
-                      <div className="mt-1 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 group-hover:bg-rose-600 text-rose-700 dark:text-rose-300 group-hover:text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 pointer-events-none">
-                        <Paperclip className="w-3.5 h-3.5" />
-                        <span>เลือกไฟล์ PDF จากอุปกรณ์</span>
-                      </div>
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-rose-700 dark:group-hover:text-rose-300 block">
+                              {isUploadingPdf ? 'กำลังอัปโหลดไฟล์...' : 'คลิกเพื่ออัปโหลดไฟล์ PDF เอกสารการอนุมัติ'}
+                            </span>
+                            <span className="text-[10.5px] text-slate-400 dark:text-slate-500 mt-0.5 block">
+                              รองรับไฟล์ .PDF (เช่น เอกสารอนุมัติสินเชื่อ, ใบแจ้งผลการพิจารณา)
+                            </span>
+                          </div>
+                          <div className="mt-1 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 group-hover:bg-rose-600 text-rose-700 dark:text-rose-300 group-hover:text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 pointer-events-none">
+                            <Paperclip className="w-3.5 h-3.5" />
+                            <span>เลือกไฟล์ PDF จากอุปกรณ์</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </section>
               )}
             </div>
 
-            {/* Popup Action Footer */}
-            <div className="p-3 sm:px-5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
+            {/* Sticky Frosted Action Footer */}
+            <div className="p-3 sm:px-5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
               {deleteConfirmId === detailCase.id ? (
                 <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/70 px-2 py-1 rounded-xl shadow-2xs">
                   <span className="text-[10px] text-rose-800 dark:text-rose-200 font-bold">ลบเคสนี้?</span>
@@ -3593,7 +3899,7 @@ export const SavedCasesModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(detailCase.id)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer shrink-0"
                   title="ลบเคสนี้"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -3650,7 +3956,8 @@ export const SavedCasesModal: React.FC<Props> = ({
               </div>
             </div>
           </div>
-        )}
+        );
+      })()}
 
         {/* Provisional Approval Certificate Modal */}
         {approvalModalCase && (
