@@ -15,6 +15,20 @@ const ALLOWED_MIME_TYPES = new Set([
   'image/heif',
 ]);
 
+interface RawBoundingBox {
+  ymin?: number;
+  xmin?: number;
+  ymax?: number;
+  xmax?: number;
+}
+
+type NormalizedBox = {
+  ymin: number;
+  xmin: number;
+  ymax: number;
+  xmax: number;
+};
+
 interface RawScanResult {
   isThaiNationalId?: boolean;
   idNumber?: string;
@@ -27,6 +41,10 @@ interface RawScanResult {
   expiryDateIso?: string;
   isLifetime?: boolean;
   addressTh?: string;
+  cardOrientationDeg?: number;
+  cardBox?: RawBoundingBox;
+  faceBox?: RawBoundingBox;
+  headBox?: RawBoundingBox;
   unreadableReason?: string;
 }
 
@@ -110,17 +128,32 @@ function isTransientError(error: unknown): boolean {
 }
 
 const ID_SCAN_SYSTEM_INSTRUCTION = [
-  'You are a high-speed, high-accuracy Thai National ID Card (บัตรประจำตัวประชาชน) OCR extractor.',
-  'Images may be slightly tilted, rotated, cropped, photocopied (including "สำเนาถูกต้อง" watermarks), or ThaiD digital ID screenshots.',
-  'Always rotate mentally if needed and extract all readable fields accurately.',
+  'You are a high-speed, high-accuracy Thai National ID Card (บัตรประจำตัวประชาชน) OCR and portrait-box locator.',
+  'Images may be tilted, rotated (0/90/180/270 deg), photographed on a table, photocopied ("สำเนาถูกต้อง"), or ThaiD digital ID screenshots.',
+  'Always read all fields accurately and locate the cardholder portrait photo precisely.',
   'Rules:',
   '- idNumber: 13 digits only (no hyphens/spaces). Check confusing digits carefully (0/8, 1/7, 5/6, 3/8).',
   '- fullNameTh: Thai honorific + first name + last name (e.g. "นายสมชาย ใจดี").',
   '- dateOfBirthIso: Convert Buddhist Era year on card (e.g. 2535 -> 2535 - 543 = 1992) to YYYY-MM-DD. If only month/year or year is shown, use 01 for missing day/month.',
   '- expiryDateIso & isLifetime: If "ตลอดชีพ" set isLifetime=true and expiryDateIso="". Otherwise convert BE date to YYYY-MM-DD.',
   '- addressTh: Single-line clean Thai address as printed on card (do not invent postal code).',
+  '- cardOrientationDeg: Return 0, 90, 180, or 270 indicating the clockwise rotation in degrees needed to make the Thai ID card upright (text reading normally left-to-right).',
+  '- cardBox: Normalized 0-1000 coordinates { ymin, xmin, ymax, xmax } in the EXACT input image orientation tightly framing the entire Thai ID card rectangle (excluding surrounding background/table).',
+  '- faceBox: Normalized 0-1000 coordinates { ymin, xmin, ymax, xmax } in the EXACT input image orientation framing ONLY the cardholder\'s solid main portrait photograph rectangle on the bottom-right side of the card (the rectangular photo zone containing the head, shoulders, and the 170/160/150/140 height scale lines). NEVER pick the small faint/transparent ghost watermark face in the middle of the card. Keep coordinates strictly inside the portrait zone (do not include text to the left like "Date of Expiry", do not include numbers below the portrait, and if a colored highlight rectangle is drawn around the portrait, keep coordinates cleanly inside the colored border line).',
+  '- headBox: Normalized 0-1000 coordinates { ymin, xmin, ymax, xmax } in the EXACT input image orientation tightly framing just the cardholder\'s head/hair (top of hair to chin, ear to ear) inside faceBox.',
   '- Set isThaiNationalId=false ONLY when the image is clearly not a Thai ID card / photocopy / ThaiD ID and no name or ID digits can be read.',
 ].join('\n');
+
+const BOUNDING_BOX_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    ymin: { type: Type.NUMBER },
+    xmin: { type: Type.NUMBER },
+    ymax: { type: Type.NUMBER },
+    xmax: { type: Type.NUMBER },
+  },
+  required: ['ymin', 'xmin', 'ymax', 'xmax'],
+};
 
 const ID_SCAN_RESPONSE_SCHEMA = {
   type: Type.OBJECT,
@@ -168,6 +201,24 @@ const ID_SCAN_RESPONSE_SCHEMA = {
     addressTh: {
       type: Type.STRING,
       description: 'Full Thai address printed on the card.',
+    },
+    cardOrientationDeg: {
+      type: Type.INTEGER,
+      description: 'Clockwise rotation degrees (0, 90, 180, or 270) needed to orient the card upright.',
+    },
+    cardBox: {
+      ...BOUNDING_BOX_SCHEMA,
+      description: 'Normalized 0-1000 bounding box of the entire Thai ID card rectangle in input orientation.',
+    },
+    faceBox: {
+      ...BOUNDING_BOX_SCHEMA,
+      description:
+        'Normalized 0-1000 bounding box of the main cardholder portrait rectangle (bottom-right with 170/160/150/140 height scale) in input orientation.',
+    },
+    headBox: {
+      ...BOUNDING_BOX_SCHEMA,
+      description:
+        'Normalized 0-1000 tight bounding box of the cardholder head/hair inside faceBox in input orientation.',
     },
     unreadableReason: {
       type: Type.STRING,
@@ -285,6 +336,173 @@ function parseThaiDateFallback(rawThaiDate?: string): string {
   return `${ceYear}-${month}-${String(dayNum).padStart(2, '0')}`;
 }
 
+function normalizeCardOrientation(rawDeg?: unknown): 0 | 90 | 180 | 270 {
+  const n = Number(rawDeg);
+  if (!Number.isFinite(n)) return 0;
+  const mod = ((Math.round(n / 90) * 90) % 360 + 360) % 360;
+  if (mod === 90 || mod === 180 || mod === 270) return mod;
+  return 0;
+}
+
+function sanitizeBox(raw?: RawBoundingBox | null, minSize = 30, allowFull = false): NormalizedBox | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const ymin = Number(raw.ymin);
+  const xmin = Number(raw.xmin);
+  const ymax = Number(raw.ymax);
+  const xmax = Number(raw.xmax);
+  if (
+    !Number.isFinite(ymin) ||
+    !Number.isFinite(xmin) ||
+    !Number.isFinite(ymax) ||
+    !Number.isFinite(xmax)
+  ) {
+    return undefined;
+  }
+  const cymin = Math.max(0, Math.min(1000, Math.round(ymin)));
+  const cxmin = Math.max(0, Math.min(1000, Math.round(xmin)));
+  const cymax = Math.max(0, Math.min(1000, Math.round(ymax)));
+  const cxmax = Math.max(0, Math.min(1000, Math.round(xmax)));
+  const h = cymax - cymin;
+  const w = cxmax - cxmin;
+  if (h < minSize || w < minSize) return undefined;
+  if (!allowFull && h > 920 && w > 920) return undefined;
+  return { ymin: cymin, xmin: cxmin, ymax: cymax, xmax: cxmax };
+}
+
+function rotateBoxClockwise(box: NormalizedBox, deg: 0 | 90 | 180 | 270): NormalizedBox {
+  if (deg === 0) return { ...box };
+  if (deg === 90) {
+    return {
+      ymin: box.xmin,
+      xmin: 1000 - box.ymax,
+      ymax: box.xmax,
+      xmax: 1000 - box.ymin,
+    };
+  }
+  if (deg === 180) {
+    return {
+      ymin: 1000 - box.ymax,
+      xmin: 1000 - box.xmax,
+      ymax: 1000 - box.ymin,
+      xmax: 1000 - box.xmin,
+    };
+  }
+  // 270 clockwise
+  return {
+    ymin: 1000 - box.xmax,
+    xmin: box.ymin,
+    ymax: 1000 - box.xmin,
+    xmax: box.ymax,
+  };
+}
+
+function refineThaiIdGeometry(parsed: RawScanResult): {
+  cardOrientationDeg: 0 | 90 | 180 | 270;
+  cardBox?: NormalizedBox;
+  faceBox?: NormalizedBox;
+  headBox?: NormalizedBox;
+} {
+  const deg = normalizeCardOrientation(parsed.cardOrientationDeg);
+  const invDeg = ((360 - deg) % 360) as 0 | 90 | 180 | 270;
+
+  const rawCardBox = sanitizeBox(parsed.cardBox, 180, true);
+  const rawFaceBox = sanitizeBox(parsed.faceBox, 30, false);
+  const rawHeadBox = sanitizeBox(parsed.headBox, 20, false);
+
+  const uCard = rawCardBox ? rotateBoxClockwise(rawCardBox, deg) : undefined;
+  let uFace = rawFaceBox ? rotateBoxClockwise(rawFaceBox, deg) : undefined;
+  let uHead = rawHeadBox ? rotateBoxClockwise(rawHeadBox, deg) : undefined;
+
+  // Cross-validate against physical Thai National ID bottom-right portrait geometry
+  // (Portrait slot sits cleanly in 74.5%..97.6% width and 44.5%..92.0% height of the card)
+  if (uCard) {
+    const cardW = uCard.xmax - uCard.xmin;
+    const cardH = uCard.ymax - uCard.ymin;
+    if (cardW >= 180 && cardH >= 150) {
+      const tmpl: NormalizedBox = {
+        xmin: Math.round(uCard.xmin + cardW * 0.745),
+        xmax: Math.round(uCard.xmin + cardW * 0.976),
+        ymin: Math.round(uCard.ymin + cardH * 0.445),
+        ymax: Math.round(uCard.ymin + cardH * 0.92),
+      };
+
+      const isFaceInPortraitZone = (b: NormalizedBox): boolean => {
+        const cx = (b.xmin + b.xmax) / 2;
+        const cy = (b.ymin + b.ymax) / 2;
+        const bw = b.xmax - b.xmin;
+        const bh = b.ymax - b.ymin;
+        // Reject ghost watermark face (center-left of card) or whole-card mistakes
+        return (
+          cx >= uCard.xmin + cardW * 0.62 &&
+          cx <= uCard.xmax + cardW * 0.04 &&
+          cy >= uCard.ymin + cardH * 0.3 &&
+          cy <= uCard.ymax + cardH * 0.04 &&
+          bw <= cardW * 0.36 &&
+          bh <= cardH * 0.68
+        );
+      };
+
+      if (!uFace || !isFaceInPortraitZone(uFace)) {
+        uFace = tmpl;
+        if (uHead && !isFaceInPortraitZone(uHead)) {
+          uHead = undefined;
+        }
+      } else {
+        // Clamp against leaking left onto text or bottom onto laser digits,
+        // and expand gently if Gemini returned an overly tight face-only crop instead of the portrait frame
+        const minLeft = Math.round(uCard.xmin + cardW * 0.718);
+        const maxRight = Math.round(uCard.xmin + cardW * 0.99);
+        const minTop = Math.round(uCard.ymin + cardH * 0.38);
+        const maxBottom = Math.round(uCard.ymin + cardH * 0.945);
+
+        uFace = {
+          xmin: Math.max(minLeft, uFace.xmin),
+          xmax: Math.min(maxRight, uFace.xmax),
+          ymin: Math.max(minTop, uFace.ymin),
+          ymax: Math.min(maxBottom, uFace.ymax),
+        };
+
+        // If Gemini's faceBox is much smaller than the portrait slot (e.g. tight face only),
+        // widen/extend toward the standard portrait slot bounds while preserving face center
+        const bw = uFace.xmax - uFace.xmin;
+        const bh = uFace.ymax - uFace.ymin;
+        if (bw < cardW * 0.14 || bh < cardH * 0.25) {
+          if (!uHead) {
+            uHead = { ...uFace };
+          }
+          uFace = {
+            xmin: Math.min(uFace.xmin, tmpl.xmin),
+            xmax: Math.max(uFace.xmax, tmpl.xmax),
+            ymin: Math.min(uFace.ymin, tmpl.ymin),
+            ymax: Math.max(uFace.ymax, tmpl.ymax),
+          };
+        }
+      }
+    }
+  }
+
+  // Ensure headBox stays consistent inside faceBox
+  if (uFace && uHead) {
+    const hcx = (uHead.xmin + uHead.xmax) / 2;
+    const hcy = (uHead.ymin + uHead.ymax) / 2;
+    const insideFace =
+      hcx >= uFace.xmin - 15 &&
+      hcx <= uFace.xmax + 15 &&
+      hcy >= uFace.ymin - 15 &&
+      hcy <= uFace.ymax + 15;
+    if (!insideFace) {
+      uHead = undefined;
+    }
+  }
+
+  return {
+    cardOrientationDeg: deg,
+    cardBox: rawCardBox,
+    faceBox: uFace ? sanitizeBox(rotateBoxClockwise(uFace, invDeg), 24, false) : undefined,
+    headBox: uHead ? sanitizeBox(rotateBoxClockwise(uHead, invDeg), 16, false) : undefined,
+  };
+}
+
 async function startServer() {
   const app = express();
 
@@ -336,7 +554,7 @@ async function startServer() {
 
       const callModel = () =>
         ai.models.generateContent({
-          model: 'gemini-3.1-flash-lite',
+          model: 'gemini-4-hydrogen',
           contents: {
             parts: [
               {
@@ -346,13 +564,13 @@ async function startServer() {
                 },
               },
               {
-                text: 'อ่านข้อมูลจากบัตรประชาชนไทยในภาพนี้แล้วส่งกลับเป็น JSON ตามสคีมา',
+                text: 'อ่านข้อมูลบัตรประชาชนไทยในภาพนี้ พร้อมระบุ cardOrientationDeg, cardBox, faceBox (กรอบรูปถ่ายบุคคลมุมขวาล่างที่มีสเกลวัดส่วนสูง 170/160/150/140) และ headBox แล้วส่งกลับเป็น JSON ตามสคีมา',
               },
             ],
           },
           config: {
             systemInstruction: ID_SCAN_SYSTEM_INSTRUCTION,
-            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+            thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             responseMimeType: 'application/json',
             responseSchema: ID_SCAN_RESPONSE_SCHEMA,
           },
@@ -431,8 +649,10 @@ async function startServer() {
         return;
       }
 
+      const geometry = refineThaiIdGeometry(parsed);
+
       console.log(
-        `[scan-id-card] OK in ${Date.now() - reqStart}ms (${Math.round(approxBytes / 1024)}KB)`
+        `[scan-id-card] OK in ${Date.now() - reqStart}ms (${Math.round(approxBytes / 1024)}KB, rot=${geometry.cardOrientationDeg}${geometry.faceBox ? ', faceBox' : ''}${geometry.headBox ? ', headBox' : ''})`
       );
 
       res.json({
@@ -448,6 +668,10 @@ async function startServer() {
           expiryDateIso,
           isLifetime: Boolean(parsed.isLifetime),
           addressTh,
+          cardOrientationDeg: geometry.cardOrientationDeg,
+          ...(geometry.cardBox ? { cardBox: geometry.cardBox } : {}),
+          ...(geometry.faceBox ? { faceBox: geometry.faceBox } : {}),
+          ...(geometry.headBox ? { headBox: geometry.headBox } : {}),
         },
       });
     } catch (error) {

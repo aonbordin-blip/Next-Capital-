@@ -1,3 +1,10 @@
+export interface FaceBoundingBox {
+  ymin: number;
+  xmin: number;
+  ymax: number;
+  xmax: number;
+}
+
 export interface ThaiIdScanData {
   idNumber: string;
   titleTh?: string;
@@ -9,6 +16,33 @@ export interface ThaiIdScanData {
   expiryDateIso?: string;
   isLifetime?: boolean;
   addressTh: string;
+  cardOrientationDeg?: number;
+  cardBox?: FaceBoundingBox;
+  faceBox?: FaceBoundingBox;
+  headBox?: FaceBoundingBox;
+}
+
+export interface PortraitCropOptions {
+  headBox?: FaceBoundingBox | null;
+  cardOrientationDeg?: number;
+  innerInsetRatio?: number;
+  offsetXRatio?: number;
+  offsetYRatio?: number;
+  zoom?: number;
+}
+
+const MAX_CUSTOMER_PHOTO_DATA_URL_LEN = 45000;
+
+export function sanitizeCustomerPhotoDataUrl(raw?: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.length > MAX_CUSTOMER_PHOTO_DATA_URL_LEN) {
+    return undefined;
+  }
+  if (!/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+    return undefined;
+  }
+  return trimmed;
 }
 
 export function normalizeThaiIdDigits(raw?: string | null): string {
@@ -235,5 +269,208 @@ export async function compressImageForIdScan(file: File): Promise<{
     throw decodeErr;
   } finally {
     URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function normalizeOrientationDeg(deg?: number): 0 | 90 | 180 | 270 {
+  if (typeof deg !== 'number' || !Number.isFinite(deg)) return 0;
+  const mod = ((Math.round(deg / 90) * 90) % 360 + 360) % 360;
+  if (mod === 90 || mod === 180 || mod === 270) return mod;
+  return 0;
+}
+
+function rotateNormBoxClockwise(
+  box: FaceBoundingBox,
+  deg: 0 | 90 | 180 | 270
+): FaceBoundingBox {
+  if (deg === 0) return { ...box };
+  if (deg === 90) {
+    return {
+      ymin: box.xmin,
+      xmin: 1000 - box.ymax,
+      ymax: box.xmax,
+      xmax: 1000 - box.ymin,
+    };
+  }
+  if (deg === 180) {
+    return {
+      ymin: 1000 - box.ymax,
+      xmin: 1000 - box.xmax,
+      ymax: 1000 - box.ymin,
+      xmax: 1000 - box.xmin,
+    };
+  }
+  return {
+    ymin: 1000 - box.xmax,
+    xmin: box.ymin,
+    ymax: 1000 - box.xmin,
+    xmax: box.ymax,
+  };
+}
+
+export async function cropIdCardFacePortrait(
+  sourceDataUrl: string,
+  faceBox?: FaceBoundingBox | null,
+  options?: PortraitCropOptions
+): Promise<string | undefined> {
+  if (!sourceDataUrl || !faceBox) return undefined;
+  const { ymin, xmin, ymax, xmax } = faceBox;
+  if (
+    !Number.isFinite(ymin) ||
+    !Number.isFinite(xmin) ||
+    !Number.isFinite(ymax) ||
+    !Number.isFinite(xmax)
+  ) {
+    return undefined;
+  }
+  if (ymax <= ymin || xmax <= xmin) return undefined;
+
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('Image decode failed'));
+      el.src = sourceDataUrl;
+    });
+
+    const natW = img.naturalWidth || img.width;
+    const natH = img.naturalHeight || img.height;
+    if (!natW || !natH) return undefined;
+
+    const deg = normalizeOrientationDeg(options?.cardOrientationDeg);
+    let drawSource: CanvasImageSource = img;
+    let uW = natW;
+    let uH = natH;
+    let uFaceNorm: FaceBoundingBox = {
+      ymin: Math.max(0, Math.min(1000, ymin)),
+      xmin: Math.max(0, Math.min(1000, xmin)),
+      ymax: Math.max(0, Math.min(1000, ymax)),
+      xmax: Math.max(0, Math.min(1000, xmax)),
+    };
+    let uHeadNorm: FaceBoundingBox | undefined = options?.headBox
+      ? {
+          ymin: Math.max(0, Math.min(1000, options.headBox.ymin)),
+          xmin: Math.max(0, Math.min(1000, options.headBox.xmin)),
+          ymax: Math.max(0, Math.min(1000, options.headBox.ymax)),
+          xmax: Math.max(0, Math.min(1000, options.headBox.xmax)),
+        }
+      : undefined;
+
+    if (deg !== 0) {
+      const rotCanvas = document.createElement('canvas');
+      const swapDims = deg === 90 || deg === 270;
+      uW = swapDims ? natH : natW;
+      uH = swapDims ? natW : natH;
+      rotCanvas.width = uW;
+      rotCanvas.height = uH;
+      const rCtx = rotCanvas.getContext('2d');
+      if (rCtx) {
+        rCtx.translate(uW / 2, uH / 2);
+        rCtx.rotate((deg * Math.PI) / 180);
+        rCtx.drawImage(img, -natW / 2, -natH / 2, natW, natH);
+        drawSource = rotCanvas;
+        uFaceNorm = rotateNormBoxClockwise(uFaceNorm, deg);
+        if (uHeadNorm) {
+          uHeadNorm = rotateNormBoxClockwise(uHeadNorm, deg);
+        }
+      } else {
+        uW = natW;
+        uH = natH;
+      }
+    }
+
+    const bx1 = (uFaceNorm.xmin / 1000) * uW;
+    const by1 = (uFaceNorm.ymin / 1000) * uH;
+    const bx2 = (uFaceNorm.xmax / 1000) * uW;
+    const by2 = (uFaceNorm.ymax / 1000) * uH;
+
+    const bw = bx2 - bx1;
+    const bh = by2 - by1;
+    if (bw < 16 || bh < 16) return undefined;
+
+    // Trim slightly inside the detected portrait slot / red border line
+    // so annotation strokes or outer card text never leak into the avatar
+    const inset = Math.max(0, Math.min(0.12, options?.innerInsetRatio ?? 0.025));
+    const ix1 = bx1 + bw * inset;
+    const ix2 = bx2 - bw * inset;
+    const iy1 = by1 + bh * inset;
+    const iy2 = by2 - bh * inset;
+    const ibw = Math.max(12, ix2 - ix1);
+    const ibh = Math.max(12, iy2 - iy1);
+
+    const zoom = Math.max(0.7, Math.min(1.45, options?.zoom ?? 1));
+    // Thai ID portrait box is ~4:5 vertical; Math.min(ibw, ibh) keeps square crop 100% inside left/right boundaries
+    const baseSide = Math.min(ibw, ibh);
+    const side = Math.max(20, Math.min(Math.min(uW, uH), baseSide / zoom));
+
+    let centerX = (ix1 + ix2) / 2;
+    let sy = iy1 + Math.max(0, (ibh - side) * 0.1);
+
+    if (
+      uHeadNorm &&
+      uHeadNorm.xmax > uHeadNorm.xmin &&
+      uHeadNorm.ymax > uHeadNorm.ymin
+    ) {
+      const hx1 = (uHeadNorm.xmin / 1000) * uW;
+      const hx2 = (uHeadNorm.xmax / 1000) * uW;
+      const hy1 = (uHeadNorm.ymin / 1000) * uH;
+      const headCx = (hx1 + hx2) / 2;
+      if (headCx >= ix1 - ibw * 0.1 && headCx <= ix2 + ibw * 0.1) {
+        centerX = headCx * 0.72 + centerX * 0.28;
+      }
+      // Leave ~13% headroom above top of hair so head + shoulders frame nicely
+      const candidateSy = hy1 - side * 0.13;
+      if (candidateSy >= iy1 - bh * 0.05 && candidateSy <= iy2 - side * 0.5) {
+        sy = candidateSy;
+      }
+    }
+
+    const offsetXRatio = options?.offsetXRatio ?? 0;
+    const offsetYRatio = options?.offsetYRatio ?? 0;
+    let sx = centerX - side / 2 + offsetXRatio * side;
+    sy = sy + offsetYRatio * side;
+
+    // Keep strictly inside portrait frame horizontally/vertically when zoomed in (>= 1)
+    if (zoom >= 1 && side <= ibw) {
+      sx = Math.max(ix1, Math.min(ix2 - side, sx));
+    } else {
+      sx = Math.max(0, Math.min(uW - side, sx));
+    }
+
+    if (zoom >= 1 && side <= ibh) {
+      sy = Math.max(iy1, Math.min(iy2 - side, sy));
+    } else {
+      sy = Math.max(0, Math.min(uH - side, sy));
+    }
+
+    const sw = Math.max(1, Math.round(Math.min(side, uW - sx)));
+    const sh = Math.max(1, Math.round(Math.min(side, uH - sy)));
+    const rx = Math.max(0, Math.round(sx));
+    const ry = Math.max(0, Math.round(sy));
+
+    const renderAvatar = (targetPx: number, quality: number): string => {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetPx;
+      canvas.height = targetPx;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return '';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, targetPx, targetPx);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(drawSource, rx, ry, sw, sh, 0, 0, targetPx, targetPx);
+      return canvas.toDataURL('image/jpeg', quality);
+    };
+
+    let result = renderAvatar(160, 0.85);
+    if (result.length > 28000) {
+      result = renderAvatar(160, 0.72);
+    }
+    if (result.length > 36000) {
+      result = renderAvatar(128, 0.7);
+    }
+    return sanitizeCustomerPhotoDataUrl(result);
+  } catch {
+    return undefined;
   }
 }

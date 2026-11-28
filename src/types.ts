@@ -154,6 +154,7 @@ export interface SavedCaseRecord {
   customerIdCard?: string; // เลขบัตรประชาชน 13 หลัก (เก็บในข้อมูลเคสเท่านั้น ไม่แสดงในใบเสนอราคา)
   customerAddress?: string; // ที่อยู่ตามบัตรประชาชน (เก็บในข้อมูลเคสเท่านั้น ไม่แสดงในใบเสนอราคา)
   customerBirthDate?: string; // วันเดือนปีเกิด ISO YYYY-MM-DD จากบัตรประชาชน
+  customerPhotoUrl?: string; // รูปใบหน้าโปรไฟล์ขนาดย่อจากบัตรประชาชน (เก็บในข้อมูลเคสเท่านั้น)
   customerWorkMonths?: string;
   customerIncome?: string;
   customerResidenceMonths?: string;

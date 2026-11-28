@@ -81,6 +81,7 @@ import {
   updateCaseGoogleMapsLocation,
   updateCaseVehicleNumbers,
   updateCaseApprovalDoc,
+  updateCaseCustomerPhoto,
   getGoogleMapsNavigationUrl,
   calculateFirstPaymentDueDate,
   clearAllCaseRecords,
@@ -99,6 +100,7 @@ import { PdfCanvasViewer } from './PdfCanvasViewer';
 import { ProvisionalApprovalModal, ProvisionalApprovalData } from './ProvisionalApprovalModal';
 import { normalizeVehicleSerial, VehicleBarcodeTarget } from '../utils/vehicleNumberUtils';
 import { VehicleBarcodeScannerModal } from './VehicleBarcodeScannerModal';
+import { CustomerAvatar } from './CustomerAvatar';
 
 interface Props {
   isOpen: boolean;
@@ -320,6 +322,7 @@ export const SavedCasesModal: React.FC<Props> = ({
   // Provisional Approval Certificate Modal State
   const [approvalModalCase, setApprovalModalCase] = useState<SavedCaseRecord | null>(null);
   const [showFullIdCard, setShowFullIdCard] = useState<boolean>(true);
+  const [showPhotoPreview, setShowPhotoPreview] = useState<boolean>(false);
   const [barcodeScannerState, setBarcodeScannerState] = useState<{
     caseId: string;
     target: VehicleBarcodeTarget;
@@ -356,6 +359,7 @@ export const SavedCasesModal: React.FC<Props> = ({
       setDeleteDocConfirmId(null);
       setInlinePdfDataUrl(null);
       setIsLoadingInlinePdf(false);
+      setShowPhotoPreview(false);
       setBarcodeScannerState(null);
     }
   }, [isOpen, initialShowAllMonths]);
@@ -381,6 +385,10 @@ export const SavedCasesModal: React.FC<Props> = ({
       }
     }
   }, [cases]);
+
+  useEffect(() => {
+    setShowPhotoPreview(false);
+  }, [detailCase?.id]);
 
   // Automatically load PDF data for instant inline preview when detailCase has an approvalDoc
   useEffect(() => {
@@ -1846,24 +1854,44 @@ export const SavedCasesModal: React.FC<Props> = ({
 
                                   {/* ชื่อลูกค้า (Sticky Left) */}
                                   <td
-                                    className={`sticky left-0 z-10 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/70 dark:border-slate-700/80 max-w-[185px] align-middle ${
+                                    className={`sticky left-0 z-10 backdrop-blur-xs py-2.5 px-3 border-r border-slate-200/70 dark:border-slate-700/80 max-w-[205px] align-middle ${
                                       isCurrentEditing
                                         ? 'bg-amber-50/95 dark:bg-amber-950/80 group-hover:bg-amber-50 dark:group-hover:bg-amber-950/90'
                                         : 'bg-white/95 dark:bg-slate-900/95 group-hover:bg-sky-50/80 dark:group-hover:bg-sky-950/60'
                                     }`}
                                   >
-                                    <div className="flex items-center gap-1 min-w-0">
-                                      <span className="font-extrabold text-xs text-slate-900 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300 truncate">
-                                        {custName}
-                                      </span>
-                                      {isCurrentEditing && (
-                                        <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shrink-0">
-                                          แก้ไข
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate tabular-nums">
-                                      {record.customerPhone ? record.customerPhone : formatThaiDateOnly(record.createdAt)}
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <CustomerAvatar
+                                        photoUrl={record.customerPhotoUrl}
+                                        customerName={custName}
+                                        size="sm"
+                                        fallbackClassName={
+                                          isApproved
+                                            ? isDelivered
+                                              ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800/70'
+                                              : 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70'
+                                            : record.approvalStatus === 'rejected'
+                                            ? 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/70'
+                                            : record.approvalStatus === 'cancelled'
+                                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                                            : 'bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/70'
+                                        }
+                                      />
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1 min-w-0">
+                                          <span className="font-extrabold text-xs text-slate-900 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300 truncate">
+                                            {custName}
+                                          </span>
+                                          {isCurrentEditing && (
+                                            <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shrink-0">
+                                              แก้ไข
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate tabular-nums">
+                                          {record.customerPhone ? record.customerPhone : formatThaiDateOnly(record.createdAt)}
+                                        </div>
+                                      </div>
                                     </div>
                                   </td>
 
@@ -2067,8 +2095,11 @@ export const SavedCasesModal: React.FC<Props> = ({
                             {/* Top Row */}
                             <div className="flex items-center justify-between gap-2 min-w-0">
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div
-                                  className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-2xs border ${
+                                <CustomerAvatar
+                                  photoUrl={record.customerPhotoUrl}
+                                  customerName={custName}
+                                  size="md"
+                                  fallbackClassName={
                                     isApproved
                                       ? isDelivered
                                         ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800/70'
@@ -2078,10 +2109,8 @@ export const SavedCasesModal: React.FC<Props> = ({
                                       : record.approvalStatus === 'cancelled'
                                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                                       : 'bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/70'
-                                  }`}
-                                >
-                                  {firstLetter}
-                                </div>
+                                  }
+                                />
 
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5 min-w-0">
@@ -2261,7 +2290,12 @@ export const SavedCasesModal: React.FC<Props> = ({
                           >
                             {/* Card Top */}
                             <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                <CustomerAvatar
+                                  photoUrl={record.customerPhotoUrl}
+                                  customerName={custName}
+                                  size="sm"
+                                />
                                 <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors">
                                   {custName}
                                 </h3>
@@ -2480,9 +2514,28 @@ export const SavedCasesModal: React.FC<Props> = ({
                 <span className="text-[11px]">รายการ</span>
               </button>
 
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
-                <User className="w-5 h-5 text-white" />
-              </div>
+              {detailCase.customerPhotoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowPhotoPreview((v) => !v);
+                  }}
+                  className="shrink-0 cursor-pointer group/avatar relative focus:outline-none"
+                  title="แตะเพื่อดูรูปโปรไฟล์จากบัตรประชาชน"
+                >
+                  <CustomerAvatar
+                    photoUrl={detailCase.customerPhotoUrl}
+                    customerName={getCustomerDisplayName(detailCase)}
+                    size="lg"
+                    imgRingClassName="border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-500/25 shadow-md group-hover/avatar:scale-105 transition-transform"
+                  />
+                </button>
+              ) : (
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 {editingId === detailCase.id ? (
                   <div className="flex items-center gap-1.5">
@@ -2546,6 +2599,47 @@ export const SavedCasesModal: React.FC<Props> = ({
 
           {/* Popup Scrollable Body with smooth touch scrolling and overscroll contain */}
           <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
+              {showPhotoPreview && detailCase.customerPhotoUrl && (
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-white to-sky-50/70 dark:from-emerald-950/50 dark:via-slate-900 dark:to-sky-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-3 animate-fade-in">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={detailCase.customerPhotoUrl}
+                      alt={getCustomerDisplayName(detailCase)}
+                      className="w-20 h-20 rounded-2xl object-cover object-top border-2 border-emerald-400 dark:border-emerald-500 shadow-md shrink-0"
+                    />
+                    <div className="min-w-0 space-y-1">
+                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                        {getCustomerDisplayName(detailCase)}
+                      </div>
+                      <div className="text-[10.5px] text-emerald-800 dark:text-emerald-300 font-semibold">
+                        รูปโปรไฟล์จากบัตรประชาชน
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('warning');
+                          const updated = updateCaseCustomerPhoto(detailCase.id, undefined);
+                          setCases(updated);
+                          setShowPhotoPreview(false);
+                          showToast('ลบรูปโปรไฟล์ออกจากเคสนี้แล้ว');
+                        }}
+                        className="text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                      >
+                        ลบรูปโปรไฟล์นี้ออก
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPhotoPreview(false)}
+                    className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 cursor-pointer shrink-0"
+                    aria-label="ซ่อนตัวอย่างรูปโปรไฟล์"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               {/* SECTION 1: Status & Delivery Management */}
               <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-sky-50/30 to-white dark:from-slate-800/90 dark:via-slate-800/60 dark:to-slate-900 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
                 <div className="flex items-center justify-between gap-2">

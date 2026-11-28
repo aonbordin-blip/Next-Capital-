@@ -9,6 +9,7 @@ import {
 import { deleteApprovalDocFile, saveApprovalDocDataUrl } from './approvalDocsStorage';
 import { findModelByCode } from '../data/motorcycleModels';
 import { normalizeVehicleSerial } from './vehicleNumberUtils';
+import { sanitizeCustomerPhotoDataUrl } from './thaiIdUtils';
 
 const STORAGE_KEY = 'ncap_saved_cases_v1';
 
@@ -390,6 +391,10 @@ export function saveCaseRecord(
           data.chassisNumber !== undefined
             ? normalizeVehicleSerial(data.chassisNumber) || undefined
             : existing.chassisNumber,
+        customerPhotoUrl:
+          data.customerPhotoUrl !== undefined
+            ? sanitizeCustomerPhotoDataUrl(data.customerPhotoUrl)
+            : existing.customerPhotoUrl,
         installmentPayments:
           data.installmentPayments !== undefined ? data.installmentPayments : existing.installmentPayments,
         approvalDoc: data.approvalDoc !== undefined ? data.approvalDoc : existing.approvalDoc,
@@ -428,6 +433,7 @@ export function saveCaseRecord(
     bikeBrand: data.bikeBrand,
     engineNumber: normalizeVehicleSerial(data.engineNumber) || undefined,
     chassisNumber: normalizeVehicleSerial(data.chassisNumber) || undefined,
+    customerPhotoUrl: sanitizeCustomerPhotoDataUrl(data.customerPhotoUrl),
     installmentPayments: data.installmentPayments,
     approvalDoc: data.approvalDoc,
     id: sanitizeCaseId(data.id),
@@ -623,6 +629,24 @@ export function updateCaseApprovalDoc(
       ? {
           ...c,
           approvalDoc,
+          updatedAt: Date.now(),
+        }
+      : c
+  );
+  return finalizeUpdatedCase(updated, id);
+}
+
+export function updateCaseCustomerPhoto(
+  id: string,
+  customerPhotoUrl?: string
+): SavedCaseRecord[] {
+  const cleanPhoto = sanitizeCustomerPhotoDataUrl(customerPhotoUrl);
+  const cases = getSavedCases();
+  const updated = cases.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          customerPhotoUrl: cleanPhoto,
           updatedAt: Date.now(),
         }
       : c
@@ -868,6 +892,9 @@ function normalizeImportedRecord(
       : {}),
     ...(typeof raw.customerBirthDate === 'string' && raw.customerBirthDate.trim()
       ? { customerBirthDate: raw.customerBirthDate.trim().slice(0, 20) }
+      : {}),
+    ...(sanitizeCustomerPhotoDataUrl(raw.customerPhotoUrl)
+      ? { customerPhotoUrl: sanitizeCustomerPhotoDataUrl(raw.customerPhotoUrl) }
       : {}),
     ...(typeof raw.customerWorkMonths === 'string' && raw.customerWorkMonths
       ? { customerWorkMonths: raw.customerWorkMonths }

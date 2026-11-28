@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { SavedCaseRecord } from '../types';
 import { formatBaht } from '../data/proposals';
+import { CustomerAvatar } from './CustomerAvatar';
 import { triggerHaptic } from '../utils/haptics';
 import { calculateGasolineAllowance } from '../utils/gasolineAllowance';
 import { CheckerCommissionSummary } from '../utils/checkerCommission';
@@ -2947,6 +2948,11 @@ export const TabletSaasDashboard: React.FC<TabletSaasDashboardProps> = ({
                         }}
                         className="w-full py-2 px-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg flex items-center justify-between gap-2 text-left cursor-pointer transition-colors"
                       >
+                        <CustomerAvatar
+                          photoUrl={c.customerPhotoUrl}
+                          customerName={c.customerName?.trim() || c.caseTitle || 'คุณลูกค้า'}
+                          size="sm"
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
                             {c.customerName?.trim() || c.caseTitle || 'คุณลูกค้า'}

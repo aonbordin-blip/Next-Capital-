@@ -85,10 +85,12 @@ import { QuotationModal } from './components/QuotationModal';
 import { ProvisionalApprovalModal } from './components/ProvisionalApprovalModal';
 import { InstallmentShareCardModal } from './components/InstallmentShareCardModal';
 import { IdCardScannerModal, AppliedThaiIdData } from './components/IdCardScannerModal';
+import { CustomerAvatar } from './components/CustomerAvatar';
 import {
   formatThaiDateFromIso,
   formatThaiIdDisplay,
   normalizeThaiIdDigits,
+  sanitizeCustomerPhotoDataUrl,
   validateThaiNationalId,
 } from './utils/thaiIdUtils';
 import { AmortizationModal } from './components/AmortizationModal';
@@ -293,6 +295,13 @@ export default function App() {
       return '';
     }
   });
+  const [customerPhotoUrl, setCustomerPhotoUrl] = useState<string>(() => {
+    try {
+      return sanitizeCustomerPhotoDataUrl(localStorage.getItem('ncap_customer_photo_url')) ?? '';
+    } catch {
+      return '';
+    }
+  });
   const [showIdCardDetails, setShowIdCardDetails] = useState<boolean>(false);
 
   const handleCustomerIdCardChange = (val: string) => {
@@ -314,6 +323,17 @@ export default function App() {
     setCustomerBirthDate(clean);
     try {
       localStorage.setItem('ncap_customer_birth_date', clean);
+    } catch {}
+  };
+  const handleCustomerPhotoUrlChange = (val?: string) => {
+    const clean = sanitizeCustomerPhotoDataUrl(val) ?? '';
+    setCustomerPhotoUrl(clean);
+    try {
+      if (clean) {
+        localStorage.setItem('ncap_customer_photo_url', clean);
+      } else {
+        localStorage.removeItem('ncap_customer_photo_url');
+      }
     } catch {}
   };
 
@@ -1366,7 +1386,8 @@ export default function App() {
     handleCustomerIdCardChange(record.customerIdCard ?? '');
     handleCustomerAddressChange(record.customerAddress ?? '');
     handleCustomerBirthDateChange(record.customerBirthDate ?? '');
-    setShowIdCardDetails(Boolean(record.customerIdCard || record.customerAddress));
+    handleCustomerPhotoUrlChange(record.customerPhotoUrl ?? '');
+    setShowIdCardDetails(Boolean(record.customerIdCard || record.customerAddress || record.customerPhotoUrl));
     handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
     handleCustomerIncomeChange(record.customerIncome ?? '');
     handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
@@ -1463,6 +1484,7 @@ export default function App() {
       customerIdCard: normalizeThaiIdDigits(customerIdCard) || undefined,
       customerAddress: customerAddress.trim() || undefined,
       customerBirthDate: customerBirthDate.trim() || undefined,
+      customerPhotoUrl: sanitizeCustomerPhotoDataUrl(customerPhotoUrl),
       customerWorkMonths: customerWorkMonths.trim() || undefined,
       customerIncome: customerIncome.trim() || undefined,
       customerResidenceMonths: customerResidenceMonths.trim() || undefined,
@@ -1542,7 +1564,8 @@ export default function App() {
     handleCustomerIdCardChange(record.customerIdCard ?? '');
     handleCustomerAddressChange(record.customerAddress ?? '');
     handleCustomerBirthDateChange(record.customerBirthDate ?? '');
-    setShowIdCardDetails(Boolean(record.customerIdCard || record.customerAddress));
+    handleCustomerPhotoUrlChange(record.customerPhotoUrl ?? '');
+    setShowIdCardDetails(Boolean(record.customerIdCard || record.customerAddress || record.customerPhotoUrl));
     handleCustomerWorkMonthsChange(record.customerWorkMonths ?? '');
     handleCustomerIncomeChange(record.customerIncome ?? '');
     handleCustomerResidenceMonthsChange(record.customerResidenceMonths ?? '');
@@ -2600,10 +2623,22 @@ export default function App() {
               >
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-emerald-400/20 to-transparent opacity-90 pointer-events-none" />
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <label className="text-[11px] text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
-                    <span>ข้อมูลลูกค้า</span>
-                  </label>
+                  <div className="flex items-center gap-2 min-w-0">
+                    {customerPhotoUrl && (
+                      <CustomerAvatar
+                        photoUrl={customerPhotoUrl}
+                        customerName={customerName}
+                        size="sm"
+                        imgRingClassName="border-emerald-400/90 dark:border-emerald-500/80 ring-2 ring-emerald-500/20"
+                      />
+                    )}
+                    <label className="text-[11px] text-slate-800 dark:text-slate-100 font-bold flex items-center gap-1.5">
+                      {!customerPhotoUrl && (
+                        <User className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
+                      )}
+                      <span>ข้อมูลลูกค้า</span>
+                    </label>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -2848,7 +2883,7 @@ export default function App() {
                       className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer"
                     >
                       <span>
-                        {showIdCardDetails || customerIdCard || customerAddress
+                        {showIdCardDetails || customerIdCard || customerAddress || customerPhotoUrl
                           ? showIdCardDetails
                             ? 'ซ่อนรายละเอียด'
                             : 'ดู/แก้ไขข้อมูลบัตร'
@@ -2862,24 +2897,38 @@ export default function App() {
                     </button>
                   </div>
 
-                  {!showIdCardDetails && (customerIdCard || customerAddress) && (
+                  {!showIdCardDetails && (customerIdCard || customerAddress || customerPhotoUrl) && (
                     <div
                       onClick={() => setShowIdCardDetails(true)}
-                      className="p-2 rounded-xl bg-white/75 dark:bg-slate-900/70 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] space-y-0.5 cursor-pointer hover:border-emerald-400 transition-colors"
+                      className="p-2 rounded-xl bg-white/75 dark:bg-slate-900/70 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] flex items-center gap-2.5 cursor-pointer hover:border-emerald-400 transition-colors"
                     >
-                      {customerIdCard && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-slate-500 dark:text-slate-400">เลขบัตร 13 หลัก:</span>
-                          <span className="font-mono font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">
-                            {formatThaiIdDisplay(customerIdCard)}
-                          </span>
-                        </div>
+                      {customerPhotoUrl && (
+                        <CustomerAvatar
+                          photoUrl={customerPhotoUrl}
+                          customerName={customerName}
+                          size="md"
+                        />
                       )}
-                      {customerAddress && (
-                        <div className="text-[10.5px] text-slate-600 dark:text-slate-300 truncate">
-                          ที่อยู่: {customerAddress}
-                        </div>
-                      )}
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        {customerIdCard && (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-slate-500 dark:text-slate-400">เลขบัตร 13 หลัก:</span>
+                            <span className="font-mono font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">
+                              {formatThaiIdDisplay(customerIdCard)}
+                            </span>
+                          </div>
+                        )}
+                        {customerAddress && (
+                          <div className="text-[10.5px] text-slate-600 dark:text-slate-300 truncate">
+                            ที่อยู่: {customerAddress}
+                          </div>
+                        )}
+                        {!customerIdCard && !customerAddress && customerPhotoUrl && (
+                          <div className="text-[10.5px] font-semibold text-emerald-800 dark:text-emerald-200">
+                            แนบรูปโปรไฟล์จากบัตรประชาชนแล้ว (จะแสดงในเคสที่บันทึก)
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -2964,11 +3013,36 @@ export default function App() {
                         />
                       </div>
 
+                      {customerPhotoUrl && (
+                        <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CustomerAvatar
+                              photoUrl={customerPhotoUrl}
+                              customerName={customerName}
+                              size="sm"
+                            />
+                            <span className="text-[10.5px] font-bold text-emerald-900 dark:text-emerald-200 truncate">
+                              รูปโปรไฟล์จากบัตร (พร้อมบันทึกเข้าเคส)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              handleCustomerPhotoUrlChange('');
+                            }}
+                            className="text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer shrink-0"
+                          >
+                            ลบรูป
+                          </button>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between gap-2 pt-0.5 text-[10px]">
                         <span className="text-slate-500 dark:text-slate-400">
                           ซิงค์ขึ้น Cloud กับเคส (ไม่แสดงในใบเสนอราคา/LINE)
                         </span>
-                        {(customerIdCard || customerAddress || customerBirthDate) && (
+                        {(customerIdCard || customerAddress || customerBirthDate || customerPhotoUrl) && (
                           <button
                             type="button"
                             onClick={() => {
@@ -2976,6 +3050,7 @@ export default function App() {
                               handleCustomerIdCardChange('');
                               handleCustomerAddressChange('');
                               handleCustomerBirthDateChange('');
+                              handleCustomerPhotoUrlChange('');
                             }}
                             className="text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer shrink-0"
                           >
@@ -4977,9 +5052,14 @@ export default function App() {
           handleCustomerIdCardChange(scanned.idCard);
           handleCustomerAddressChange(scanned.address);
           handleCustomerBirthDateChange(scanned.birthDateIso);
+          if (scanned.photoUrl !== undefined) {
+            handleCustomerPhotoUrlChange(scanned.photoUrl);
+          }
           setShowIdCardDetails(true);
           triggerToast(
-            '✓ นำเข้าข้อมูลบัตรประชาชน (ชื่อ, อายุ, เลข 13 หลัก, ที่อยู่) เรียบร้อยแล้ว'
+            scanned.photoUrl
+              ? '✓ นำเข้าข้อมูลบัตรประชาชนและรูปโปรไฟล์ลูกค้าเรียบร้อยแล้ว'
+              : '✓ นำเข้าข้อมูลบัตรประชาชน (ชื่อ, อายุ, เลข 13 หลัก, ที่อยู่) เรียบร้อยแล้ว'
           );
         }}
       />

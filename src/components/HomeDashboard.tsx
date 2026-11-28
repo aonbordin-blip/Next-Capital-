@@ -35,6 +35,7 @@ import { DealPipelineAndDealersChartCard } from './DealPipelineAndDealersChartCa
 import { MarqueeText } from './MarqueeText';
 import { BoxThemeToggle } from './BoxThemeToggle';
 import { TabletSaasDashboard } from './TabletSaasDashboard';
+import { CustomerAvatar } from './CustomerAvatar';
 
 interface HomeDashboardProps {
   variant?: 'mobile' | 'tablet_saas';
@@ -1086,14 +1087,23 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                       }}
                       className="hover:bg-sky-50/65 dark:hover:bg-slate-800/65 transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 px-3.5 max-w-[230px]">
-                        <MarqueeText className="font-bold text-slate-900 dark:text-slate-100">
-                          {c.customerName?.trim() || c.caseTitle || 'คุณลูกค้า'}
-                        </MarqueeText>
-                        <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          {c.bikeModelName || c.snapshot?.proposalCode || '-'}
-                          {c.dealerName ? ` · ${c.dealerName}` : ''}
-                        </MarqueeText>
+                      <td className="py-2.5 px-3.5 max-w-[250px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CustomerAvatar
+                            photoUrl={c.customerPhotoUrl}
+                            customerName={c.customerName?.trim() || c.caseTitle || 'คุณลูกค้า'}
+                            size="sm"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <MarqueeText className="font-bold text-slate-900 dark:text-slate-100">
+                              {c.customerName?.trim() || c.caseTitle || 'คุณลูกค้า'}
+                            </MarqueeText>
+                            <MarqueeText className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              {c.bikeModelName || c.snapshot?.proposalCode || '-'}
+                              {c.dealerName ? ` · ${c.dealerName}` : ''}
+                            </MarqueeText>
+                          </div>
+                        </div>
                       </td>
                       <td className="py-2.5 px-2.5 whitespace-nowrap">
                         <span

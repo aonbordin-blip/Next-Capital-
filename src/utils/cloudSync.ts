@@ -43,6 +43,7 @@ import {
   mergeCloudDvRequestsIntoLocal,
   sanitizeDvRequestId,
 } from './dvCasesStorage';
+import { sanitizeCustomerPhotoDataUrl } from './thaiIdUtils';
 
 const VALID_PROPOSAL_KEYS: ProposalKey[] = [
   'small_bike',
@@ -645,6 +646,10 @@ export function buildRtdbCasePayload(
   if (typeof record.customerBirthDate === 'string' && record.customerBirthDate.trim()) {
     payload.customerBirthDate = safeStr(record.customerBirthDate.trim(), 20);
   }
+  const cleanPhotoUrl = sanitizeCustomerPhotoDataUrl(record.customerPhotoUrl);
+  if (cleanPhotoUrl) {
+    payload.customerPhotoUrl = cleanPhotoUrl;
+  }
   if (typeof record.customerWorkMonths === 'string' && record.customerWorkMonths) {
     payload.customerWorkMonths = safeStr(record.customerWorkMonths, 20);
   }
@@ -813,6 +818,7 @@ export function fromCloudCaseDoc(
     customerIdCard: typeof data.customerIdCard === 'string' ? data.customerIdCard : undefined,
     customerAddress: typeof data.customerAddress === 'string' ? data.customerAddress : undefined,
     customerBirthDate: typeof data.customerBirthDate === 'string' ? data.customerBirthDate : undefined,
+    customerPhotoUrl: sanitizeCustomerPhotoDataUrl(data.customerPhotoUrl),
     customerWorkMonths: typeof data.customerWorkMonths === 'string' ? data.customerWorkMonths : undefined,
     customerIncome: typeof data.customerIncome === 'string' ? data.customerIncome : undefined,
     customerResidenceMonths:

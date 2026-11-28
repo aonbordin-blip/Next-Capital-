@@ -15,13 +15,22 @@ import {
   X,
   Calendar,
   Pencil,
+  Crop,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { useModalTransition } from '../hooks/useModalTransition';
 import { triggerHaptic } from '../utils/haptics';
 import {
+  FaceBoundingBox,
   ThaiIdScanData,
   calculateAgeFromIsoDate,
   compressImageForIdScan,
+  cropIdCardFacePortrait,
   formatThaiDateFromIso,
   formatThaiIdDisplay,
   isThaiIdExpired,
@@ -35,6 +44,7 @@ export interface AppliedThaiIdData {
   address: string;
   birthDateIso: string;
   age: string;
+  photoUrl?: string;
 }
 
 interface Props {
@@ -66,10 +76,25 @@ export const IdCardScannerModal: React.FC<Props> = ({
   const [address, setAddress] = useState<string>('');
   const [expiryDateIso, setExpiryDateIso] = useState<string>('');
   const [isLifetimeCard, setIsLifetimeCard] = useState<boolean>(false);
+  const [facePhotoUrl, setFacePhotoUrl] = useState<string>('');
+  const [includeFacePhoto, setIncludeFacePhoto] = useState<boolean>(true);
+  const [autoFaceBox, setAutoFaceBox] = useState<FaceBoundingBox | null>(null);
+  const [autoHeadBox, setAutoHeadBox] = useState<FaceBoundingBox | null>(null);
+  const [cardOrientationDeg, setCardOrientationDeg] = useState<number>(0);
+  const [activeFaceBox, setActiveFaceBox] = useState<FaceBoundingBox | null>(null);
+  const [isManualCrop, setIsManualCrop] = useState<boolean>(false);
+  const [showCropAdjuster, setShowCropAdjuster] = useState<boolean>(false);
+  const [cropZoom, setCropZoom] = useState<number>(1);
 
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const cropStageRef = useRef<HTMLDivElement | null>(null);
+  const dragStateRef = useRef<{
+    startX: number;
+    startY: number;
+    originBox: FaceBoundingBox;
+  } | null>(null);
 
   const { shouldRender, isClosing, backdropAnimClass, sheetAnimClass } =
     useModalTransition(isOpen, onClose);
@@ -87,6 +112,15 @@ export const IdCardScannerModal: React.FC<Props> = ({
       setAddress('');
       setExpiryDateIso('');
       setIsLifetimeCard(false);
+      setFacePhotoUrl('');
+      setIncludeFacePhoto(true);
+      setAutoFaceBox(null);
+      setAutoHeadBox(null);
+      setCardOrientationDeg(0);
+      setActiveFaceBox(null);
+      setIsManualCrop(false);
+      setShowCropAdjuster(false);
+      setCropZoom(1);
     } else {
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;
@@ -164,6 +198,15 @@ export const IdCardScannerModal: React.FC<Props> = ({
       const d = json.data;
       const cleanedDigits = normalizeThaiIdDigits(d.idNumber);
       const computedAge = calculateAgeFromIsoDate(d.dateOfBirthIso);
+      const detectedOrientation = typeof d.cardOrientationDeg === 'number' ? d.cardOrientationDeg : 0;
+      const detectedFaceBox = d.faceBox || null;
+      const detectedHeadBox = d.headBox || null;
+      const croppedFace = await cropIdCardFacePortrait(compressed.previewDataUrl, detectedFaceBox, {
+        headBox: detectedHeadBox,
+        cardOrientationDeg: detectedOrientation,
+        zoom: 1,
+      });
+      if (controller.signal.aborted) return;
 
       setFullName(d.fullNameTh || '');
       setIdDigits(cleanedDigits);
@@ -172,6 +215,15 @@ export const IdCardScannerModal: React.FC<Props> = ({
       setAddress(d.addressTh || '');
       setExpiryDateIso(d.expiryDateIso || '');
       setIsLifetimeCard(Boolean(d.isLifetime));
+      setAutoFaceBox(detectedFaceBox);
+      setAutoHeadBox(detectedHeadBox);
+      setCardOrientationDeg(detectedOrientation);
+      setActiveFaceBox(detectedFaceBox);
+      setIsManualCrop(false);
+      setShowCropAdjuster(false);
+      setCropZoom(1);
+      setFacePhotoUrl(croppedFace || '');
+      setIncludeFacePhoto(Boolean(croppedFace));
 
       triggerHaptic('success');
       setStep('review');
@@ -194,6 +246,162 @@ export const IdCardScannerModal: React.FC<Props> = ({
       setStep('error');
     } finally {
       window.clearTimeout(timeoutId);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== 'review' || !previewUrl || !activeFaceBox) return;
+    if (!isManualCrop && cropZoom === 1) return;
+    let cancelled = false;
+    void cropIdCardFacePortrait(previewUrl, activeFaceBox, {
+      headBox: isManualCrop ? null : autoHeadBox,
+      cardOrientationDeg,
+      innerInsetRatio: isManualCrop ? 0.015 : 0.025,
+      zoom: cropZoom,
+    }).then((url) => {
+      if (!cancelled && url) {
+        setFacePhotoUrl(url);
+        setIncludeFacePhoto(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [step, previewUrl, activeFaceBox, isManualCrop, cropZoom, autoHeadBox, cardOrientationDeg]);
+
+  const nudgeActiveBox = (dx: number, dy: number) => {
+    setActiveFaceBox((prev) => {
+      const base: FaceBoundingBox = prev || {
+        ymin: 445,
+        xmin: 710,
+        ymax: 890,
+        xmax: 920,
+      };
+      const w = base.xmax - base.xmin;
+      const h = base.ymax - base.ymin;
+      const nextXmin = Math.max(0, Math.min(1000 - w, Math.round(base.xmin + dx)));
+      const nextYmin = Math.max(0, Math.min(1000 - h, Math.round(base.ymin + dy)));
+      return {
+        xmin: nextXmin,
+        ymin: nextYmin,
+        xmax: nextXmin + w,
+        ymax: nextYmin + h,
+      };
+    });
+    setIsManualCrop(true);
+    triggerHaptic('selection');
+  };
+
+  const handleResetAutoCrop = async () => {
+    if (!previewUrl || !autoFaceBox) return;
+    triggerHaptic('light');
+    setIsManualCrop(false);
+    setCropZoom(1);
+    setActiveFaceBox(autoFaceBox);
+    const url = await cropIdCardFacePortrait(previewUrl, autoFaceBox, {
+      headBox: autoHeadBox,
+      cardOrientationDeg,
+      zoom: 1,
+    });
+    if (url) {
+      setFacePhotoUrl(url);
+      setIncludeFacePhoto(true);
+    }
+  };
+
+  const handleOpenManualCropInit = async () => {
+    if (!previewUrl) return;
+    triggerHaptic('selection');
+    const fallbackBox: FaceBoundingBox = activeFaceBox ||
+      autoFaceBox || { ymin: 445, xmin: 700, ymax: 860, xmax: 910 };
+    setActiveFaceBox(fallbackBox);
+    setShowCropAdjuster(true);
+    if (!facePhotoUrl) {
+      setIsManualCrop(true);
+      const url = await cropIdCardFacePortrait(previewUrl, fallbackBox, {
+        cardOrientationDeg,
+        zoom: cropZoom,
+      });
+      if (url) {
+        setFacePhotoUrl(url);
+        setIncludeFacePhoto(true);
+      }
+    }
+  };
+
+  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = cropStageRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const px = ((e.clientX - rect.left) / rect.width) * 1000;
+    const py = ((e.clientY - rect.top) / rect.height) * 1000;
+
+    const current: FaceBoundingBox = activeFaceBox || {
+      ymin: 445,
+      xmin: 700,
+      ymax: 860,
+      xmax: 910,
+    };
+    const w = current.xmax - current.xmin;
+    const h = current.ymax - current.ymin;
+
+    let origin = current;
+    const inside =
+      px >= current.xmin &&
+      px <= current.xmax &&
+      py >= current.ymin &&
+      py <= current.ymax;
+    if (!inside) {
+      const nextXmin = Math.max(0, Math.min(1000 - w, Math.round(px - w / 2)));
+      const nextYmin = Math.max(0, Math.min(1000 - h, Math.round(py - h / 2)));
+      origin = {
+        xmin: nextXmin,
+        ymin: nextYmin,
+        xmax: nextXmin + w,
+        ymax: nextYmin + h,
+      };
+      setActiveFaceBox(origin);
+      setIsManualCrop(true);
+    }
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragStateRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originBox: origin,
+    };
+  };
+
+  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragStateRef.current;
+    const el = cropStageRef.current;
+    if (!drag || !el) return;
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dx = ((e.clientX - drag.startX) / rect.width) * 1000;
+    const dy = ((e.clientY - drag.startY) / rect.height) * 1000;
+    const w = drag.originBox.xmax - drag.originBox.xmin;
+    const h = drag.originBox.ymax - drag.originBox.ymin;
+    const nextXmin = Math.max(0, Math.min(1000 - w, Math.round(drag.originBox.xmin + dx)));
+    const nextYmin = Math.max(0, Math.min(1000 - h, Math.round(drag.originBox.ymin + dy)));
+    setActiveFaceBox({
+      xmin: nextXmin,
+      ymin: nextYmin,
+      xmax: nextXmin + w,
+      ymax: nextYmin + h,
+    });
+    setIsManualCrop(true);
+  };
+
+  const handleCropPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStateRef.current) {
+      dragStateRef.current = null;
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -236,6 +444,7 @@ export const IdCardScannerModal: React.FC<Props> = ({
       address: cleanAddress,
       birthDateIso: birthDateIso.trim(),
       age: cleanAge,
+      photoUrl: includeFacePhoto && facePhotoUrl ? facePhotoUrl : undefined,
     });
     onClose();
   };
@@ -380,7 +589,7 @@ export const IdCardScannerModal: React.FC<Props> = ({
               <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60 flex items-start gap-2 text-[10.5px] text-emerald-900 dark:text-emerald-200">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <strong>ความปลอดภัยข้อมูลส่วนบุคคล:</strong> รูปภาพบัตรใช้ประมวลผลสกัดข้อความชั่วคราวเท่านั้น ไม่บันทึกรูปบัตรลงคลาวด์ และไม่แสดงเลขบัตร/ที่อยู่ในใบเสนอราคาหรือข้อความ LINE
+                  <strong>ความปลอดภัยข้อมูลส่วนบุคคล:</strong> รูปบัตรเต็มใบใช้ประมวลผลข้อความชั่วคราวเท่านั้น (ตัดเก็บเฉพาะรูปใบหน้าโปรไฟล์ขนาดย่อไว้ในข้อมูลเคส และไม่แสดงข้อมูลบัตร/รูปในใบเสนอราคาหรือข้อความ LINE)
                 </span>
               </div>
             </div>
@@ -469,32 +678,244 @@ export const IdCardScannerModal: React.FC<Props> = ({
           {/* STEP 4: REVIEW & EDIT */}
           {step === 'review' && (
             <div className="space-y-3 animate-fade-in">
-              {/* Compact reference thumbnail + expiry badge */}
-              {previewUrl && (
-                <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80">
-                  <img
-                    src={previewUrl}
-                    alt="ภาพบัตรสำหรับเทียบตัวเลข"
-                    className="w-24 h-16 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shrink-0"
-                  />
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span>สแกนข้อมูลเรียบร้อย — โปรดตรวจทานก่อนบันทึก</span>
-                    </div>
-                    {thaiExpiryDisplay && (
-                      <div
-                        className={`text-[10px] font-bold ${
-                          expiredCard
-                            ? 'text-rose-700 dark:text-rose-300'
-                            : 'text-slate-500 dark:text-slate-400'
-                        }`}
+              {/* Compact reference thumbnail + detected red portrait overlay + interactive fine-tune + expiry badge */}
+              {(previewUrl || facePhotoUrl) && (
+                <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    {previewUrl && (
+                      <button
+                        type="button"
+                        onClick={() => void handleOpenManualCropInit()}
+                        className="relative w-24 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0 bg-slate-200/60 dark:bg-slate-900 cursor-pointer group/thumb"
+                        title="แตะเพื่อดูหรือปรับกรอบรูปลูกค้า"
                       >
-                        วันบัตรหมดอายุ: {thaiExpiryDisplay}
-                        {expiredCard ? ' (บัตรหมดอายุแล้ว!)' : ''}
-                      </div>
+                        <img
+                          src={previewUrl}
+                          alt="ภาพบัตรสำหรับเทียบตัวเลข"
+                          className="w-full h-auto block"
+                        />
+                        {activeFaceBox && (
+                          <div
+                            className="absolute border-2 border-rose-500 shadow-[0_0_0_1px_rgba(255,255,255,0.85)] rounded-[3px] pointer-events-none transition-all duration-150"
+                            style={{
+                              left: `${activeFaceBox.xmin / 10}%`,
+                              top: `${activeFaceBox.ymin / 10}%`,
+                              width: `${(activeFaceBox.xmax - activeFaceBox.xmin) / 10}%`,
+                              height: `${(activeFaceBox.ymax - activeFaceBox.ymin) / 10}%`,
+                            }}
+                          />
+                        )}
+                      </button>
                     )}
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>สแกนข้อมูลเรียบร้อย — โปรดตรวจทานก่อนบันทึก</span>
+                      </div>
+                      {thaiExpiryDisplay && (
+                        <div
+                          className={`text-[10px] font-bold ${
+                            expiredCard
+                              ? 'text-rose-700 dark:text-rose-300'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          วันบัตรหมดอายุ: {thaiExpiryDisplay}
+                          {expiredCard ? ' (บัตรหมดอายุแล้ว!)' : ''}
+                        </div>
+                      )}
+                      {previewUrl && !facePhotoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenManualCropInit()}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold cursor-pointer"
+                        >
+                          <Crop className="w-3 h-3" />
+                          <span>เลือกกรอบรูปลูกค้าเอง</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {facePhotoUrl && (
+                    <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white dark:bg-slate-900/90 border border-emerald-200/80 dark:border-emerald-800/60">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={facePhotoUrl}
+                          alt="รูปใบหน้าจากบัตรประชาชน"
+                          className={`w-12 h-12 rounded-xl object-cover object-top border shrink-0 transition-opacity ${
+                            includeFacePhoto
+                              ? 'border-emerald-400 dark:border-emerald-500 shadow-xs opacity-100'
+                              : 'border-slate-300 dark:border-slate-700 opacity-40 grayscale'
+                          }`}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 truncate">
+                            รูปโปรไฟล์จากบัตรประชาชน
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            {includeFacePhoto
+                              ? isManualCrop
+                                ? 'ปรับกรอบแล้ว • จะบันทึกในเคส'
+                                : 'จับกรอบอัตโนมัติ • จะบันทึกในเคส'
+                              : 'ปิดการแนบรูปโปรไฟล์ในเคสนี้'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {previewUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('selection');
+                              if (!showCropAdjuster && !activeFaceBox) {
+                                void handleOpenManualCropInit();
+                              } else {
+                                setShowCropAdjuster((v) => !v);
+                              }
+                            }}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer transition-colors inline-flex items-center gap-1 ${
+                              showCropAdjuster
+                                ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-700'
+                                : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                            }`}
+                            title="ขยับกรอบหรือซูมรูปใบหน้า"
+                          >
+                            <Crop className="w-3 h-3" />
+                            <span>ปรับกรอบ</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('selection');
+                            setIncludeFacePhoto((v) => !v);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border cursor-pointer transition-colors ${
+                            includeFacePhoto
+                              ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
+                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {includeFacePhoto ? '✓ ใช้รูปนี้' : '+ เปิดใช้รูป'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {showCropAdjuster && previewUrl && activeFaceBox && (
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-800/70 space-y-2 animate-fade-in">
+                      <div className="flex items-center justify-between gap-2 text-[10.5px]">
+                        <span className="font-extrabold text-sky-900 dark:text-sky-200">
+                          ลากกรอบสีแดงหรือกดลูกศรเพื่อปรับตำแหน่งรูป
+                        </span>
+                        {autoFaceBox && (
+                          <button
+                            type="button"
+                            onClick={() => void handleResetAutoCrop()}
+                            className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                          >
+                            คืนค่าอัตโนมัติ
+                          </button>
+                        )}
+                      </div>
+
+                      <div
+                        ref={cropStageRef}
+                        onPointerDown={handleCropPointerDown}
+                        onPointerMove={handleCropPointerMove}
+                        onPointerUp={handleCropPointerUp}
+                        onPointerCancel={handleCropPointerUp}
+                        className="relative w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 touch-none select-none cursor-crosshair"
+                      >
+                        <img
+                          src={previewUrl}
+                          alt="ปรับตำแหน่งกรอบรูปลูกค้า"
+                          draggable={false}
+                          className="w-full h-auto block pointer-events-none"
+                        />
+                        <div
+                          className="absolute border-2 border-rose-500 bg-rose-500/10 shadow-[0_0_0_9999px_rgba(15,23,42,0.35)] rounded pointer-events-none"
+                          style={{
+                            left: `${activeFaceBox.xmin / 10}%`,
+                            top: `${activeFaceBox.ymin / 10}%`,
+                            width: `${(activeFaceBox.xmax - activeFaceBox.xmin) / 10}%`,
+                            height: `${(activeFaceBox.ymax - activeFaceBox.ymin) / 10}%`,
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => nudgeActiveBox(-12, 0)}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                            aria-label="เลื่อนซ้าย"
+                          >
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => nudgeActiveBox(0, -12)}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                            aria-label="เลื่อนขึ้น"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => nudgeActiveBox(0, 12)}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                            aria-label="เลื่อนลง"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => nudgeActiveBox(12, 0)}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                            aria-label="เลื่อนขวา"
+                          >
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCropZoom((z) => Math.max(0.8, Number((z - 0.1).toFixed(2))))
+                            }
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                            aria-label="ซูมออก"
+                          >
+                            <ZoomOut className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="text-[10px] font-bold tabular-nums text-slate-600 dark:text-slate-300 w-10 text-center">
+                            {Math.round(cropZoom * 100)}%
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCropZoom((z) => Math.min(1.4, Number((z + 0.1).toFixed(2))))
+                            }
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                            aria-label="ซูมเข้า"
+                          >
+                            <ZoomIn className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowCropAdjuster(false)}
+                            className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-bold cursor-pointer"
+                          >
+                            เสร็จสิ้น
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
