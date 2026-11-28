@@ -20,7 +20,7 @@ import {
   CalendarClock,
   Award,
 } from 'lucide-react';
-import { CalculationResult, VehicleDeliveryStatus } from '../types';
+import { CalculationResult, CaseApprovalStatus, VehicleDeliveryStatus } from '../types';
 import { formatBaht, cleanPlanNameForLine, formatTermYearMonth } from '../data/proposals';
 import { findModelByCode } from '../data/motorcycleModels';
 import { NextCapitalLogo } from './NextCapitalLogo';
@@ -47,7 +47,9 @@ export interface ProvisionalApprovalData {
   insurancePlanName?: string;
   insuranceYears?: number;
   insuranceTotalWithVat?: number;
+  approvalStatus?: CaseApprovalStatus;
   approvalDate?: string; // YYYY-MM-DD
+  approvalUpdatedAt?: number; // timestamp ณ ตอนที่กดปุ่มอนุมัติ
   deliveryDate?: string; // YYYY-MM-DD
   deliveryStatus?: VehicleDeliveryStatus;
   dealerName?: string;
@@ -128,6 +130,27 @@ const generateApprovalDocNumber = (date: Date = new Date()): string => {
   return `NCAP-APV-${yy}${mm}${dd}-${hh}${min}`;
 };
 
+const resolveApprovalDocNumber = (data: ProvisionalApprovalData): string => {
+  if (data.docNumber) return data.docNumber;
+  if (
+    typeof data.approvalUpdatedAt === 'number' &&
+    Number.isFinite(data.approvalUpdatedAt) &&
+    data.approvalUpdatedAt > 0 &&
+    (!data.approvalStatus || data.approvalStatus === 'approved')
+  ) {
+    return generateApprovalDocNumber(new Date(data.approvalUpdatedAt));
+  }
+  if (
+    data.approvalStatus === 'approved' &&
+    data.approvalDate &&
+    /^\d{4}-\d{2}-\d{2}$/.test(data.approvalDate)
+  ) {
+    const [y, m, d] = data.approvalDate.split('-').map(Number);
+    return generateApprovalDocNumber(new Date(y, m - 1, d, 0, 0, 0, 0));
+  }
+  return generateApprovalDocNumber(new Date());
+};
+
 export const ProvisionalApprovalModal: React.FC<Props> = ({
   isOpen,
   onClose,
@@ -163,7 +186,7 @@ export const ProvisionalApprovalModal: React.FC<Props> = ({
     data.bikeModelCode ? data.bikeModelCode.toUpperCase() : ''
   );
   const [docNumber, setDocNumber] = useState<string>(
-    () => data.docNumber || generateApprovalDocNumber()
+    () => resolveApprovalDocNumber(data)
   );
 
   // Sync state when props change
@@ -175,8 +198,13 @@ export const ProvisionalApprovalModal: React.FC<Props> = ({
     setApprovalDate(data.approvalDate || new Date().toISOString().slice(0, 10));
     if (data.bikeModelCode) setModelCodeState(data.bikeModelCode.toUpperCase());
     if (data.bikeModelName) setModelName(data.bikeModelName);
-    if (data.docNumber) setDocNumber(data.docNumber);
   }, [data]);
+
+  // Sync document reference number strictly from the Approve-button timestamp (or on open if not yet approved)
+  useEffect(() => {
+    if (!isOpen) return;
+    setDocNumber(resolveApprovalDocNumber(data));
+  }, [isOpen, data.docNumber, data.approvalStatus, data.approvalUpdatedAt, data.approvalDate]);
 
   const [copied, setCopied] = useState<boolean>(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);

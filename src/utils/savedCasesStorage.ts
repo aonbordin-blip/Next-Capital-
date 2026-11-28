@@ -398,6 +398,12 @@ export function saveCaseRecord(
         installmentPayments:
           data.installmentPayments !== undefined ? data.installmentPayments : existing.installmentPayments,
         approvalDoc: data.approvalDoc !== undefined ? data.approvalDoc : existing.approvalDoc,
+        approvalUpdatedAt:
+          data.approvalUpdatedAt !== undefined
+            ? data.approvalUpdatedAt
+            : data.approvalStatus === 'approved' && existing.approvalStatus !== 'approved'
+            ? now
+            : existing.approvalUpdatedAt,
         updatedAt: now,
       };
       cases[index] = updated;
@@ -420,6 +426,8 @@ export function saveCaseRecord(
     initialDeliveryStatus === 'delivered' ? (data.deliveryDate || todayStr) : data.deliveryDate;
   const initialDeliveryConfirmedAt =
     initialDeliveryStatus === 'delivered' ? (data.deliveryConfirmedAt || now) : data.deliveryConfirmedAt;
+  const initialApprovalUpdatedAt =
+    initialApprovalStatus === 'approved' ? (data.approvalUpdatedAt || now) : data.approvalUpdatedAt;
 
   const newRecord: SavedCaseRecord = {
     ...data,
@@ -428,6 +436,7 @@ export function saveCaseRecord(
     approvalDate: initialApprovalDate,
     deliveryDate: initialDeliveryDate,
     deliveryConfirmedAt: initialDeliveryConfirmedAt,
+    approvalUpdatedAt: initialApprovalUpdatedAt,
     paymentDueDay: data.paymentDueDay,
     googleMapsLocation: data.googleMapsLocation,
     bikeBrand: data.bikeBrand,
@@ -495,7 +504,8 @@ export function updateCaseApprovalStatus(
   deliveryStatus?: VehicleDeliveryStatus
 ): SavedCaseRecord[] {
   const cases = getSavedCases();
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalTodayDateStr();
+  const now = Date.now();
   const updated = cases.map((c) => {
     if (c.id !== id) return c;
     const resolvedDeliveryStatus: VehicleDeliveryStatus | undefined =
@@ -508,13 +518,18 @@ export function updateCaseApprovalStatus(
         ? (c.approvalDate || todayStr)
         : c.approvalDate;
 
+    const resolvedApprovalUpdatedAt =
+      approvalStatus === 'approved'
+        ? (c.approvalStatus === 'approved' && c.approvalUpdatedAt ? c.approvalUpdatedAt : now)
+        : undefined;
+
     return {
       ...c,
       approvalStatus,
       deliveryStatus: resolvedDeliveryStatus,
       approvalDate: resolvedApprovalDate,
-      updatedAt: Date.now(),
-      approvalUpdatedAt: Date.now(),
+      updatedAt: now,
+      approvalUpdatedAt: resolvedApprovalUpdatedAt,
     };
   });
   return finalizeUpdatedCase(updated, id);
